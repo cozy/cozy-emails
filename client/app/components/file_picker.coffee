@@ -67,11 +67,11 @@ FilePicker = React.createClass
 
         @props.valueLink.requestChange files
 
-    displayFile: (file, params={}) ->
+    displayFile: (file) ->
         unless (url = getFileURL file)
             console.error "broken file : ", file
             return
-        window.open url + serializeData(params)
+        window.open url
 
     render: ->
         classMain = 'file-picker'
@@ -170,10 +170,6 @@ getFileURL = (file) ->
         return URL.createObjectURL file.rawFileObject
     file.url
 
-serializeData = (data) ->
-    data = _.map data, (value, key) -> key + '=' + value
-    if data.length then '?' + data.toString() else ''
-
 module.exports = FilePicker
 
 ###
@@ -243,17 +239,15 @@ FileItem = React.createClass
             span className: 'file-actions',
                 a
                     className: "fa fa-download"
-                    onClick: @doDisplay
+                    'download': file.generatedFileName
+                    'href': getFileURL file
                 if @props.editable
                     i className: "fa fa-times delete", onClick: @doDelete
 
     doDisplay: (event) ->
         event.preventDefault()
         event.stopPropagation()
-        classNames = event.currentTarget.className.split ' '
-        isDownload = -1 < classNames.indexOf 'fa-download'
-        params = download: 1 if isDownload
-        @props.display params
+        @props.display()
 
     doDelete: (e) ->
         e.preventDefault()
