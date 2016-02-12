@@ -260,8 +260,7 @@ module.exports = Menu = React.createClass
                         href: configMailboxUrl
                         className: 'mailbox-config',
                         i
-                            className:
-                                'fa fa-cog'
+                            'className': 'fa fa-cog'
                             'aria-describedby': Tooltips.ACCOUNT_PARAMETERS
                             'data-tooltip-direction': 'right'
 
