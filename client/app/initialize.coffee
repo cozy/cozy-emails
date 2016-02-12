@@ -71,7 +71,7 @@ window.onerror = (msg, url, line, col, error) ->
         window.lastError = exception
 
 # Waits for the DOM to be ready
-window.onload = ->
+document.addEventListener 'DOMContentLoaded', ->
 
     try
         window.__DEV__ = window.location.hostname is 'localhost'
