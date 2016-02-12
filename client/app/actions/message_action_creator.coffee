@@ -125,7 +125,10 @@ module.exports = MessageActionCreator =
                 type: ActionTypes.REFRESH_REQUEST
                 value: {mailboxID}
 
-            XHRUtils.refreshMailbox mailboxID, (error, updated) ->
+            account = AccountStore.getSelected()
+            options = deep: account.get('draftMailbox') is mailboxID
+
+            XHRUtils.refreshMailbox mailboxID, options, (error, updated) ->
                 if error?
                     AppDispatcher.handleViewAction
                         type: ActionTypes.REFRESH_FAILURE
@@ -284,4 +287,3 @@ _loopSeries = (obj, iterator, done) ->
             return done err if err
             return done null if ++i is keys.length
             step()
-
