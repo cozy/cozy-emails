@@ -53,9 +53,9 @@ module.exports = ToolbarMessagesList = React.createClass
                 if params.value
                     flag = params.value
 
-        window.cozyMails.messageClose()
         @redirect
             direction: 'first'
+            fullWidth: true # remove 2nd panel
             action: 'account.mailbox.messages'
             parameters: [
                 @props.accountID, @props.mailboxID,
