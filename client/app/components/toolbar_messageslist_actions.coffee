@@ -7,7 +7,6 @@ ToolboxMove    = require './toolbox_move'
 LayoutActionCreator  = require '../actions/layout_action_creator'
 MessageActionCreator = require '../actions/message_action_creator'
 
-
 module.exports = ActionsToolbarMessagesList = React.createClass
     displayName: 'ActionsToolbarMessagesList'
 
@@ -74,34 +73,32 @@ module.exports = ActionsToolbarMessagesList = React.createClass
 
 
     onDelete: (applyToConversation) ->
-        return unless options = @_getSelectedAndMode(applyToConversation)
-
-        if options.applyToConversation
-            msg = t 'list delete conv confirm', smart_count: options.count
-        else
-            msg = t 'list delete confirm', smart_count: options.count
+        return unless options = @_getSelectedAndMode applyToConversation
 
         doDelete = =>
             MessageActionCreator.delete options, =>
                 if options.count > 0 and @props.messages.count() > 0
                     firstMessageID = @props.messages.first().get('id')
                     MessageActionCreator.setCurrent firstMessageID, true
-            if @props.afterAction?
-                @props.afterAction()
 
-        noConfirm = not @props.settings.get('messageConfirmDelete')
-        if noConfirm
+            @props.afterAction() if @props.afterAction?
+
+        unless @props.settings.get 'messageConfirmDelete'
             doDelete()
         else
-            modal =
+            if options.applyToConversation
+                msg = 'list delete conv confirm'
+            else
+                msg = 'list delete confirm'
+
+            LayoutActionCreator.displayModal
                 title       : t 'app confirm delete'
-                subtitle    : msg
+                subtitle    : t msg, smart_count: options.count
                 closeLabel  : t 'app cancel'
                 actionLabel : t 'app confirm'
                 action      : ->
                     doDelete()
                     LayoutActionCreator.hideModal()
-            LayoutActionCreator.displayModal modal
 
 
     onMove: (to, applyToConversation) ->
