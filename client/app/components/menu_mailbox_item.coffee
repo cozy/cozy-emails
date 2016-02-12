@@ -88,6 +88,7 @@ module.exports = MenuMailboxItem = React.createClass
 
             if @props.account.get('trashMailbox') is mailboxID
                 button
+                    className:                'menu-subaction'
                     'aria-describedby':       Tooltips.EXPUNGE_MAILBOX
                     'data-tooltip-direction': 'right'
                     onClick: @expungeMailbox

@@ -258,7 +258,7 @@ module.exports = Menu = React.createClass
                 if isSelected
                     a
                         href: configMailboxUrl
-                        className: 'mailbox-config',
+                        className: 'mailbox-config menu-subaction',
                         i
                             className:
                                 'fa fa-cog'
