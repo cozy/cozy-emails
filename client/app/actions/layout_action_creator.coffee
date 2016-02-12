@@ -113,9 +113,9 @@ module.exports = LayoutActionCreator =
 
     showMessageList: (panelInfo) ->
         params = panelInfo.parameters
-        {accountID, mailboxID, filter, sort, before, after} = params
 
         # ensure the proper account is selected
+        {accountID, mailboxID} = params
         AccountActionCreator.ensureSelected accountID, mailboxID
 
         AppDispatcher.handleViewAction
