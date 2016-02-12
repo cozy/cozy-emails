@@ -28,7 +28,7 @@ module.exports = MenuMailboxItem = React.createClass
         mailboxID = @props.mailbox.get 'id'
         mailboxUrl = @buildUrl
             direction: 'first'
-            fullWidth: true
+            fullWidth: true  # remove 2nd panel
             action: 'account.mailbox.messages'
             parameters: [@props.account.get('id'), mailboxID]
 
