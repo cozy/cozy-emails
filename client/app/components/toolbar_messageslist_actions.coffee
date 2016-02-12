@@ -7,8 +7,14 @@ ToolboxMove    = require './toolbox_move'
 LayoutActionCreator  = require '../actions/layout_action_creator'
 MessageActionCreator = require '../actions/message_action_creator'
 
+RouterMixin = require '../mixins/router_mixin'
+
 module.exports = ActionsToolbarMessagesList = React.createClass
     displayName: 'ActionsToolbarMessagesList'
+
+    mixins: [
+        RouterMixin
+    ]
 
     propTypes:
         settings:             React.PropTypes.object.isRequired
@@ -82,6 +88,9 @@ module.exports = ActionsToolbarMessagesList = React.createClass
                     MessageActionCreator.setCurrent firstMessageID, true
 
             @props.afterAction() if @props.afterAction?
+
+            # Close Detail Panel for deleted message
+            @redirect (url = @buildClosePanelUrl 'second')
 
         unless @props.settings.get 'messageConfirmDelete'
             doDelete()
