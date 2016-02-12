@@ -100,7 +100,7 @@ module.exports = ActionsToolbarMessagesList = React.createClass
             else
                 msg = 'list delete confirm'
 
-            LayoutActionCreator.displayModal
+            modal =
                 title       : t 'app confirm delete'
                 subtitle    : t msg, smart_count: options.count
                 closeLabel  : t 'app cancel'
@@ -108,7 +108,7 @@ module.exports = ActionsToolbarMessagesList = React.createClass
                 action      : ->
                     doDelete()
                     LayoutActionCreator.hideModal()
-
+            LayoutActionCreator.displayModal modal
 
     onMove: (to, applyToConversation) ->
         return unless options = @_getSelectedAndMode(applyToConversation)
