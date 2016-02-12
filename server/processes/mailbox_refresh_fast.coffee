@@ -228,5 +228,3 @@ module.exports = class MailboxRefreshFast extends Process
             @mailbox.updateAttributes changes, callback
 
         else callback null
-
-
