@@ -68,11 +68,10 @@ FilePicker = React.createClass
         @props.valueLink.requestChange files
 
     displayFile: (file) ->
-        if file.url
-            window.open file.url
-        else if file.rawFileObject
-            window.open URL.createObjectURL file.rawFileObject
-        else console.log "broken file : ", file
+        unless (url = getFileURL file)
+            console.error "broken file : ", file
+            return
+        window.open url
 
     render: ->
         classMain = 'file-picker'
@@ -86,8 +85,8 @@ FilePicker = React.createClass
                         key: file.generatedFileName
                         file: file
                         editable: @props.editable
-                        delete: => @deleteFile file
-                        display: => @displayFile file
+                        delete: @deleteFile
+                        display: @displayFile
                         messageID: @props.messageID
 
             if @props.editable
@@ -166,7 +165,10 @@ FilePicker = React.createClass
             #         @setState {files: currentFiles }
 
 
-
+getFileURL = (file) ->
+    if file.rawFileObject and not file.url
+        return URL.createObjectURL file.rawFileObject
+    file.url
 
 module.exports = FilePicker
 
@@ -200,11 +202,11 @@ FileItem = React.createClass
         }
 
     getInitialState: ->
-        return {}
+        return 'tmpFileURL': getFileURL @props.file
 
     render: ->
         file = @props.file
-        if not(file.url?) and not(file.rawFileObject)
+        unless @state.tmpFileURL
             window.cozyMails.log(new Error "Wrong file #{JSON.stringify(file)}")
             file.url = "message/#{@props.messageID}/attachments/#{file.generatedFileName}"
         type = MessageUtils.getAttachmentType file.contentType
@@ -225,30 +227,29 @@ FileItem = React.createClass
         li className: "file-item", key: @props.key,
             i className: "mime #{type} fa #{iconClass}"
             a
-                className: 'file-name',
-                target: '_blank',
-                onClick: @doDisplay,
-                href: file.url
-                'data-file-url': file.url
-                'data-file-name': file.generatedFileName
-                'data-file-type': file.contentType
+                'className'         : 'file-name'
+                'onClick'           : @doDisplay
+                'data-file-url'     : @state.tmpFileURL
+                'data-file-name'    : file.generatedFileName
+                'data-file-type'    : file.contentType
                 file.generatedFileName
 
             span className: 'file-size',
                 "\(#{(file.length / 1000).toFixed(1)}Ko\)"
             span className: 'file-actions',
                 a
-                    className: "fa fa-download"
-                    href: "#{file.url}?download=1"
+                    'className' : 'fa fa-download'
+                    'download'  : file.generatedFileName
+                    'href'      : getFileURL file
                 if @props.editable
                     i className: "fa fa-times delete", onClick: @doDelete
 
-    doDisplay: (e) ->
-        e.preventDefault()
-        e.stopPropagation()
-        @props.display()
+    doDisplay: (event) ->
+        event.preventDefault()
+        event.stopPropagation()
+        @props.display @props.file
 
-    doDelete: (e) ->
-        e.preventDefault()
-        e.stopPropagation()
-        @props.delete()
+    doDelete: (event) ->
+        event.preventDefault()
+        event.stopPropagation()
+        @props.delete @props.file
