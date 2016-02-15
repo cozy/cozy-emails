@@ -151,8 +151,8 @@ module.exports = MessageActionCreator =
             type: ActionTypes.MESSAGE_TRASH_REQUEST
             value: {target, ref}
 
-        ts = Date.now()
         # send request
+        ts = Date.now()
         XHRUtils.batchDelete target, (error, updated) =>
             if error
                 AppDispatcher.handleViewAction
@@ -168,6 +168,8 @@ module.exports = MessageActionCreator =
                 AppDispatcher.handleViewAction
                     type: ActionTypes.MESSAGE_TRASH_SUCCESS
                     value: {target, ref, updated}
+
+            callback? error, updated
 
 
     move: (target, from, to, callback) ->
