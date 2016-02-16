@@ -206,7 +206,8 @@ module.exports = Compose = React.createClass
             @finalRedirect()
 
 
-    _initCompose: ->
+    componentDidMount: ->
+        setTimeout @_autosave, 30000
 
         # scroll compose window into view
         @getDOMNode().scrollIntoView()
@@ -218,12 +219,6 @@ module.exports = Compose = React.createClass
             , 10
         else if @props.inReplyTo?
             document.getElementById('compose-editor')?.focus()
-
-
-    componentDidMount: ->
-        @_initCompose()
-
-        setTimeout @_autosave, 30000
 
 
     componentDidUpdate: ->
