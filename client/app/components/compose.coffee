@@ -213,14 +213,6 @@ module.exports = Compose = React.createClass
 
     _initCompose: ->
 
-        if @_saveInterval
-            window.clearInterval @_saveInterval
-
-        @_saveInterval = window.setInterval @_autosave, 30000
-
-        # First save of draft
-        @_autosave()
-
         # scroll compose window into view
         @getDOMNode().scrollIntoView()
 
@@ -236,8 +228,12 @@ module.exports = Compose = React.createClass
     componentDidMount: ->
         @_initCompose()
 
+        setTimeout @_autosave, 30000
+
 
     componentDidUpdate: ->
+        setTimeout @_autosave, 30000
+
         switch @state.focus
             when 'cc'
                 setTimeout ->
@@ -253,9 +249,6 @@ module.exports = Compose = React.createClass
 
 
     componentWillUnmount: ->
-        if @_saveInterval
-            window.clearInterval @_saveInterval
-
         # delete draft
         doDelete = =>
             window.setTimeout =>
@@ -444,9 +437,6 @@ module.exports = Compose = React.createClass
                 message.html = MessageUtils.wrapReplyHtml message.html
             else
                 message.text = @state.text.trim()
-
-            if not isDraft and @_saveInterval
-                window.clearInterval @_saveInterval
 
             if isDraft
                 @setState saving: true
