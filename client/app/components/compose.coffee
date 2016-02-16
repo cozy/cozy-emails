@@ -51,11 +51,6 @@ module.exports = Compose = React.createClass
         layout: 'full'
 
 
-    shouldComponentUpdate: (nextProps, nextState) ->
-        return not(_.isEqual(nextState, @state)) or
-            not (_.isEqual(nextProps, @props))
-
-
     render: ->
         return unless @props.accounts
 
