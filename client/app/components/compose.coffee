@@ -124,7 +124,7 @@ module.exports = Compose = React.createClass
                             id: 'compose-subject'
                             name: 'compose-subject'
                             ref: 'subject'
-                            valueLink: @linkState('subject')
+                            valueLink: @linkState 'subject'
                             type: 'text'
                             className: 'form-control compose-subject'
                             placeholder: t "compose subject help"
@@ -138,7 +138,7 @@ module.exports = Compose = React.createClass
                         accounts          : @props.accounts
                         accountID         : @state.accountID
                         settings          : @props.settings
-                        onSend            : @onSend
+                        onSend            : @sendMessage
                         composeInHTML     : @state.composeInHTML
                         focus             : focusEditor
                         ref               : 'editor'
@@ -153,11 +153,9 @@ module.exports = Compose = React.createClass
                         ref: 'attachments'
 
                 ComposeToolbox
-                    saving    : @state.saving
-                    sending   : @state.sending
-                    onSend    : @onSend
+                    onSend    : @sendMessage
                     onDelete  : @onDelete
-                    onDraft   : @onDraft
+                    onDraft   : @saveDraft
                     onCancel  : @onCancel
                     canDelete : @props.message?
 
@@ -207,7 +205,10 @@ module.exports = Compose = React.createClass
 
 
     componentDidMount: ->
-        setTimeout @_autosave, 30000
+        # Initialize @state
+        # with values from server
+        if @props.settings.get 'autosaveDraft'
+            @saveDraft()
 
         # scroll compose window into view
         @getDOMNode().scrollIntoView()
@@ -220,10 +221,8 @@ module.exports = Compose = React.createClass
         else if @props.inReplyTo?
             document.getElementById('compose-editor')?.focus()
 
-
     componentDidUpdate: ->
-        setTimeout @_autosave, 30000
-
+        # focus
         switch @state.focus
             when 'cc'
                 setTimeout ->
@@ -236,7 +235,6 @@ module.exports = Compose = React.createClass
                     document.getElementById('compose-bcc').focus()
                 , 0
                 @setState focus: ''
-
 
     componentWillUnmount: ->
         # delete draft
@@ -342,13 +340,9 @@ module.exports = Compose = React.createClass
             )
             state.isNew = true
             state.accountID ?= @props.selectedAccountID
-            # use another field to prevent the empty conversationID of draft
-            # to override the original conversationID
-            state.originalConversationID = state.conversationID
 
         state.isDraft  = true
-        state.sending  = false
-        state.saving   = false
+
         state.ccShown  = Array.isArray(state.cc) and state.cc.length > 0
         state.bccShown = Array.isArray(state.bcc) and state.bcc.length > 0
         # save initial message content, to don't ask confirmation if
@@ -358,171 +352,108 @@ module.exports = Compose = React.createClass
 
         return state
 
-
     componentWillReceiveProps: (nextProps) ->
         if nextProps.message isnt @props.message
             @props.message = nextProps.message
             @setState @getInitialState()
 
 
-    onDraft: (event) ->
-        event.preventDefault()
-        @_doSend true
-
-
-    onSend: (event) ->
+    saveDraft: (event) ->
         event.preventDefault() if event?
-        @_doSend false
+        @state.isDraft = true
+        @sendActionMessage()
 
+    sendMessage: (event) ->
+        event.preventDefault() if event?
+        @state.isDraft = false
+        @sendActionMessage()
 
-    _doSend: (isDraft) ->
+    validateMessage: ->
+        return if @state.isDraft
+        error =
+            'dest': ['to', 'cc', 'bcc']
+            'subject': ['subject']
+        getGroupedError error, @state
 
+    getMessageFromDOM: ->
+        state = _.clone @state
+        message = {}
+
+        from = {}
         account = @props.accounts.get @state.accountID
+        from.name = name if (name = account.get 'name')
+        from.address = address if (address = account.get 'login')
+        message.from = [from]
 
-        from =
-            name: account.get('name') or undefined
-            address: account.get('login')
+        # TODO : get CC
+        # TODO : get BCC
+        # TODO : get TO
 
-        message =
-            id            : @state.id
-            accountID     : @state.accountID
-            mailboxIDs    : @state.mailboxIDs
-            from          : [from]
-            to            : @state.to
-            cc            : @state.cc
-            bcc           : @state.bcc
-            subject       : @state.subject
-            isDraft       : isDraft
-            attachments   : @state.attachments
-            inReplyTo     : @state.inReplyTo
-            references    : @state.references
+        _.extend state, message
 
-        if not isDraft
-            # Add conversationID when sending message
-            # we don't add conversationID to draft, otherwise the full
-            # conversation would be updated, closing the compose panel
-            message.conversationID = @state.originalConversationID
+    sendActionMessage: ->
+        if (validate = @validateMessage())
+            LayoutActionCreator.alertError t 'compose error no ' + validate[1]
+            return
 
-        valid = true
-        if not isDraft
-            if @state.to.length is 0 and
-               @state.cc.length is 0 and
-               @state.bcc.length is 0
-                valid = false
-                LayoutActionCreator.alertError t "compose error no dest"
-                setTimeout ->
-                    document.getElementById('compose-to').focus()
-                , 0
-            else if @state.subject is ''
-                valid = false
-                LayoutActionCreator.alertError t "compose error no subject"
-                setTimeout =>
-                    @refs.subject.getDOMNode().focus()
-                , 0
+        message = @getMessageFromDOM()
+        return unless (changed = hasChanged @state, message)
 
-        if valid
-            if @state.composeInHTML
-                message.html = @_cleanHTML @state.html
-                message.text = MessageUtils.cleanReplyText message.html
-                message.html = MessageUtils.wrapReplyHtml message.html
-            else
-                message.text = @state.text.trim()
-
-            if isDraft
-                @setState saving: true
-            else
-                @setState sending: true, isDraft: false
-
-            MessageActionCreator.send message, (error, message) =>
-                if (not error?) and (not @state.id?) and (message?)
-                    MessageActionCreator.setCurrent message.id
-
-                state = _.clone @state
-                if isDraft
-                    state.saving = false
-                else
-                    state.isDraft = false
-                    state.sending = false
-                # Don't override local attachments nor message content
-                # (server override cid: URLs with relative URLs)
-                state[key] = value for key, value of message when key isnt 'attachments' and
-                    key isnt 'html' and key isnt 'text'
-
-                state[key] = @state[key] for key in Object.keys(@state) when key isnt "saving"
-
-                # Sometime, when user cancel composing, the component has been
-                # unmounted before we come back from autosave, and setState fails
-                if @isMounted()
-                    @setState state
-
-                if isDraft
+        @props.isSaving = true
+        MessageActionCreator.send message, (error, message) =>
+            if error? or not message?
+                if @state.isDraft
                     msgKo = t "message action draft ko"
                 else
                     msgKo = t "message action sent ko"
-                    msgOk = t "message action sent ok"
-                if error? or not message?
-                    LayoutActionCreator.alertError "#{msgKo} #{error}"
-                else
-                    # don't display confirmation message when draft has been saved
-                    unless isDraft
-                        LayoutActionCreator.notify msgOk, autoclose: true
+                LayoutActionCreator.alertError "#{msgKo} #{error}"
+                return
 
-                    unless @state.id?
-                        MessageActionCreator.setCurrent message.id
+            unless @state.id
+                MessageActionCreator.setCurrent message.id
 
-                    unless isDraft
-                        if message.conversationID?
-                            # reload conversation to update its length
-                            cid = message.conversationID
-                            MessageActionCreator.fetchConversation cid
-                        @finalRedirect()
+                # Initialize @state
+                # Must stay silent (do not use setState)
+                _keys = _.without _.keys(message), 'attachments', 'html', 'text'
+                _.each _keys, (key) =>
+                    if _.isUndefined @state[key]
+                        @state[key] = message[key]
 
+                # use another field to prevent the empty conversationID of draft
+                # to override the original conversationID
+                @state.originalConversationID = @state.conversationID
 
-    _autosave: ->
-        if @props.settings.get 'autosaveDraft'
-            @_doSend true
+            # TODO : move this into render
+            unless @state.isDraft
+                # Display confirmation message
+                # for no-draft email
+                msgOk = t "message action sent ok"
+                LayoutActionCreator.notify msgOk, autoclose: true
 
+                # reload conversation to update its length
+                if (cid = message.conversationID)
+                    MessageActionCreator.fetchConversation cid
 
-    # set source of attached images
-    _cleanHTML: (html) ->
-        parser = new DOMParser()
-        doc    = parser.parseFromString html, "text/html"
+                @finalRedirect()
 
-        if not doc
-            doc = document.implementation.createHTMLDocument("")
-            doc.documentElement.innerHTML = html
-
-        if doc
-            # the contentID of attached images will be in the data-src attribute
-            # override image source with this attribute
-            imageSrc = (image) ->
-                image.setAttribute 'src', "cid:#{image.dataset.src}"
-            images = doc.querySelectorAll 'IMG[data-src]'
-            imageSrc image for image in images
-
-            return doc.documentElement.innerHTML
-        else
-            console.error "Unable to parse HTML content of message"
-            return html
-
+            @props.isSaving = false
 
     onDelete: (e) ->
         e.preventDefault()
 
         subject = @props.message.get 'subject'
-
-        if subject? and not _.isEmpty subject
-            params = subject: @props.message.get 'subject'
+        if subject? and subject isnt ''
+            params = subject: subject
             confirmMessage = t 'mail confirm delete', params
-
         else
             confirmMessage = t 'mail confirm delete nosubject'
 
         doDelete = =>
             LayoutActionCreator.hideModal()
-
-            # this will prevent asking a second time when unmounting component
             messageID = @props.message.get('id')
+
+            # this will prevent asking
+            # a second time when unmounting component
             @setState isDeleted: true, =>
                 MessageActionCreator.delete {messageID}, (error) =>
                     unless error?
@@ -565,3 +496,44 @@ module.exports = Compose = React.createClass
     # Get the file picker component (method used to pass it to the editor)
     getPicker: ->
         return @refs.attachments
+
+
+# set source of attached images
+cleanHTML = (html) ->
+    parser = new DOMParser()
+    doc    = parser.parseFromString html, "text/html"
+
+    if not doc
+        doc = document.implementation.createHTMLDocument("")
+        doc.documentElement.innerHTML = html
+
+    if doc
+        # the contentID of attached images will be in the data-src attribute
+        # override image source with this attribute
+        imageSrc = (image) ->
+            image.setAttribute 'src', "cid:#{image.dataset.src}"
+        images = doc.querySelectorAll 'IMG[data-src]'
+        imageSrc image for image in images
+
+        return doc.documentElement.innerHTML
+    else
+        console.error "Unable to parse HTML content of message"
+        return html
+
+getGroupedError = (error, message) ->
+    type = null
+    group = null
+    _.find error, (properties, key) ->
+        type = _.find properties, (property) ->
+            _.isEmpty message[property]
+        group = key if type?
+        type
+    if type or group then [type, group] else null
+
+hasChanged = (obj0, obj1) ->
+    result = null
+    _.each obj1, (value, key) ->
+        unless _.isEqual obj0[key], value
+            result = {} unless result
+            result[key] = value
+    result
