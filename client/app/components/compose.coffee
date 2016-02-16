@@ -340,7 +340,7 @@ module.exports = Compose = React.createClass
                 composeInHTML: @props.settings.get 'composeInHTML'
                 isNew: false
             if (not message.get('html')?) and message.get('text')
-                state.conposeInHTML = false
+                state.composeInHTML = false
 
             # TODO : smarter ?
             state[key] = value for key, value of message.toJS()
