@@ -50,10 +50,10 @@ module.exports = Compose = React.createClass
     getDefaultProps: ->
         layout: 'full'
 
+    shouldComponentUpdate: (nextProps, nextState) ->
+        !!nextProps.accounts
 
     render: ->
-        return unless @props.accounts
-
         closeUrl = @buildClosePanelUrl @props.layout
 
         classLabel = 'compose-label'
