@@ -205,11 +205,6 @@ module.exports = Compose = React.createClass
 
 
     componentDidMount: ->
-        # Initialize @state
-        # with values from server
-        if @props.settings.get 'autosaveDraft'
-            @saveDraft()
-
         # scroll compose window into view
         @getDOMNode().scrollIntoView()
 
@@ -222,6 +217,11 @@ module.exports = Compose = React.createClass
             document.getElementById('compose-editor')?.focus()
 
     componentDidUpdate: ->
+        # Initialize @state
+        # with values from server
+        if @props.settings.get('autosaveDraft') and not @state.id
+            @saveDraft()
+
         # focus
         switch @state.focus
             when 'cc'
