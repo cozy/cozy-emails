@@ -153,11 +153,12 @@ module.exports = Compose = React.createClass
                         ref: 'attachments'
 
                 ComposeToolbox
-                    onSend    : @sendMessage
-                    onDelete  : @deleteDraft
-                    onDraft   : @saveDraft
-                    onCancel  : @onCancel
-                    canDelete : @props.message?
+                    send      : @sendMessage
+                    delete    : @deleteDraft
+                    save      : @saveDraft
+                    cancel    : @close
+                    canDelete : @state.id?
+                    ref: 'toolbox'
 
                 div className: 'clearfix', null
 
@@ -193,7 +194,7 @@ module.exports = Compose = React.createClass
 
     # Cancel brings back to default view. If it's while replying to a message,
     # it brings back to this message.
-    onCancel: (event) ->
+    close: (event) ->
         event.preventDefault()
 
         # Action after cancelation: call @props.onCancel
@@ -313,14 +314,14 @@ module.exports = Compose = React.createClass
 
             state.accountID ?= @props.selectedAccountID
 
+
         state.isDraft  = true
 
         # save initial message content, to don't ask confirmation if
         # it has not been updated
         state.initHtml = state.html
         state.initText = state.text
-
-        return state
+        state
 
     componentWillReceiveProps: (nextProps) ->
         if nextProps.message isnt @props.message
@@ -331,12 +332,14 @@ module.exports = Compose = React.createClass
     saveDraft: (event) ->
         event.preventDefault() if event?
         @state.isDraft = true
-        @sendActionMessage()
+        @sendActionMessage =>
+            @refs.toolbox.setState action: null
 
     sendMessage: (event) ->
         event.preventDefault() if event?
         @state.isDraft = false
-        @sendActionMessage()
+        @sendActionMessage =>
+            @refs.toolbox.setState action: null
 
     validateMessage: ->
         return if @state.isDraft
@@ -345,11 +348,12 @@ module.exports = Compose = React.createClass
             'subject': ['subject']
         getGroupedError error, @state
 
-    sendActionMessage: ->
+    sendActionMessage: (success) ->
         return if @props.isSaving
         if (validate = @validateMessage())
             console.log 'ERROR', validate
             LayoutActionCreator.alertError t 'compose error no ' + validate[1]
+            success() if _.isFunction success
             return
 
         message = _.clone @state
@@ -392,6 +396,8 @@ module.exports = Compose = React.createClass
                 @finalRedirect()
 
             @props.isSaving = false
+
+            success() if _.isFunction success
 
     deleteDraft: (event) ->
         event.preventDefault() if event
