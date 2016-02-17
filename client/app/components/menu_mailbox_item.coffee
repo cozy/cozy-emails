@@ -2,10 +2,13 @@
 
 classer = React.addons.classSet
 
-RouterMixin     = require '../mixins/router_mixin'
+RouterMixin          = require '../mixins/router_mixin'
 MessageActionCreator = require '../actions/message_action_creator'
-LayoutActionCreator       = require '../actions/layout_action_creator'
+LayoutActionCreator  = require '../actions/layout_action_creator'
+AccountActionCreator = require '../actions/account_action_creator'
+
 {SpecialBoxIcons, Tooltips} = require '../constants/app_constants'
+
 
 module.exports = MenuMailboxItem = React.createClass
     displayName: 'MenuMailboxItem'

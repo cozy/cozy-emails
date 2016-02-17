@@ -31,9 +31,9 @@ module.exports = ToastContainer =  React.createClass
 
 
     render: ->
-        toasts = @state.toasts.map (toast, id) ->
-            Toast {toast, key: id}
-        .toVector().toJS()
+        toasts = @state.toasts.mapEntries ([id, toast]) ->
+            ["toast-#{id}", Toast {toast}]
+        .toJS()
 
         classes = classer
             'toasts-container': true

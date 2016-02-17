@@ -118,6 +118,7 @@ module.exports = React.createClass
                         requestChange: @onTabChanges
                         onSubmit: @onSubmit
                         errors: @state.errors
+                        saving: false
 
                 when 'mailboxes'
                     AccountConfigMailboxes

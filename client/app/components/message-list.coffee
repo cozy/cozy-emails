@@ -52,9 +52,8 @@ module.exports = MessageList = React.createClass
         account   = AccountStore.getByID accountID
         role = AccountStore.getMailboxRole account, mailboxID
         settings = SettingsStore.get()
-        displayConvs = settings.get('displayConversations') and
-                                        role not in CONVERSATION_DISABLED
-
+        displayConvs = !!(settings.get('displayConversations') and
+        role not in CONVERSATION_DISABLED)
         mailbox   = account.get('mailboxes').get mailboxID
         messages  = MessageStore.getMessagesToDisplay mailboxID, displayConvs
 
@@ -129,7 +128,7 @@ module.exports = MessageList = React.createClass
                 Progress value: 0, max: 1
                 MessageListLoader()
             else
-                Progress value: @state.refresh, max: 1
+                Progress value: @state.refresh or 0, max: 1
 
             # Message List
             if @state.messages.size is 0

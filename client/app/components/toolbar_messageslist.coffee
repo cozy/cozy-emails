@@ -17,15 +17,15 @@ module.exports = ToolbarMessagesList = React.createClass
     ]
 
     propTypes:
-        settings:             React.PropTypes.object.isRequired
-        accountID:            React.PropTypes.string.isRequired
-        mailboxID:            React.PropTypes.string.isRequired
+        settings:             React.PropTypes.object
+        accountID:            React.PropTypes.string
+        mailboxID:            React.PropTypes.string
         mailboxes:            React.PropTypes.object.isRequired
         messages:             React.PropTypes.object.isRequired
         edited:               React.PropTypes.bool.isRequired
         selected:             React.PropTypes.object.isRequired
         allSelected:          React.PropTypes.bool.isRequired
-        displayConversations: React.PropTypes.bool.isRequired
+        displayConversations: React.PropTypes.bool
         toggleAll:            React.PropTypes.func.isRequired
         afterAction:          React.PropTypes.func
 
