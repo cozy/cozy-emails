@@ -484,13 +484,13 @@ module.exports = Compose = React.createClass
                     LayoutActionCreator.alertError "#{msgKo} #{error}"
                 else
                     # don't display confirmation message when draft has been saved
-                    if not isDraft
+                    unless isDraft
                         LayoutActionCreator.notify msgOk, autoclose: true
 
-                    if not @state.id?
+                    unless @state.id?
                         MessageActionCreator.setCurrent message.id
 
-                    if not isDraft
+                    unless isDraft
                         if message.conversationID?
                             # reload conversation to update its length
                             cid = message.conversationID
@@ -528,9 +528,10 @@ module.exports = Compose = React.createClass
 
     onDelete: (e) ->
         e.preventDefault()
+
         subject = @props.message.get 'subject'
 
-        if subject? and subject isnt ''
+        if subject? and not _.isEmpty subject
             params = subject: @props.message.get 'subject'
             confirmMessage = t 'mail confirm delete', params
 
@@ -539,23 +540,23 @@ module.exports = Compose = React.createClass
 
         doDelete = =>
             LayoutActionCreator.hideModal()
-            messageID = @props.message.get('id')
+
             # this will prevent asking a second time when unmounting component
+            messageID = @props.message.get('id')
             @setState isDeleted: true, =>
                 MessageActionCreator.delete {messageID}, (error) =>
                     unless error?
                         if @props.callback
                             @props.callback()
                         else
-                            parameters = [
-                                @props.selectedAccountID
-                                @props.selectedMailboxID
-                            ]
-
+                            # Close Message Box
                             @redirect
                                 direction: 'first'
                                 action: 'account.mailbox.messages'
-                                parameters: parameters
+                                parameters: [
+                                    @props.selectedAccountID
+                                    @props.selectedMailboxID
+                                ]
                                 fullWidth: true
 
         modal =
@@ -584,4 +585,3 @@ module.exports = Compose = React.createClass
     # Get the file picker component (method used to pass it to the editor)
     getPicker: ->
         return @refs.attachments
-

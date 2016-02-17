@@ -1,8 +1,9 @@
+AppDispatcher = require '../app_dispatcher'
+
 Store = require '../libs/flux/store/store'
+AccountStore = require './account_store'
 
 {ActionTypes, Dispositions} = require '../constants/app_constants'
-AppDispatcher = require '../app_dispatcher'
-AccountStore = require './account_store'
 
 MessageActionCreator = null
 getMessageActionCreator = ->
@@ -201,7 +202,7 @@ class LayoutStore extends Store
                 key = "account creation ok configuration needed"
 
             @_showNotification
-                message: t(key)
+                message: t key
                 autoclose: true
 
         handle ActionTypes.EDIT_ACCOUNT_FAILURE, ({error}) ->
@@ -213,7 +214,7 @@ class LayoutStore extends Store
 
         handle ActionTypes.EDIT_ACCOUNT_SUCCESS, ->
             @_showNotification
-                message: t('account updated')
+                message: t 'account updated'
                 autoclose: true
 
         handle ActionTypes.CHECK_ACCOUNT_FAILURE, ({error}) ->
@@ -225,7 +226,7 @@ class LayoutStore extends Store
 
         handle ActionTypes.CHECK_ACCOUNT_SUCCESS, ->
             @_showNotification
-                message: t('account checked')
+                message: t 'account checked'
                 autoclose: true
 
         handle ActionTypes.REFRESH_FAILURE, ({error}) ->

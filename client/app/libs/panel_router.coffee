@@ -52,7 +52,6 @@ module.exports = class Router extends Backbone.Router
 
         # Updates the LayoutStore for each matched request
         @on 'route', (name, args) =>
-
             if name is 'default'
                 @current = {firstPanel: null, secondPanel: null}
                 url = @buildUrl
@@ -66,16 +65,15 @@ module.exports = class Router extends Backbone.Router
             [firstPanelInfo, secondPanelInfo] = @_processSubRouting name, args
 
             firstAction = @fluxActionFactory firstPanelInfo
-            secondAction = @fluxActionFactory secondPanelInfo
-
-            @previous = @current
-            @current = firstPanel: firstPanelInfo, secondPanel: secondPanelInfo
-
             if firstAction?
                 firstAction firstPanelInfo, 'first'
 
+            secondAction = @fluxActionFactory secondPanelInfo
             if secondAction?
                 secondAction secondPanelInfo, 'second'
+
+            @previous = @current
+            @current = firstPanel: firstPanelInfo, secondPanel: secondPanelInfo
             @trigger 'fluxRoute', @current
 
 
@@ -83,7 +81,6 @@ module.exports = class Router extends Backbone.Router
         Gets the Flux action to execute given a panel info.
     ###
     fluxActionFactory: (panelInfo) ->
-
         fluxAction = null
         pattern = @patterns[panelInfo?.action]
 

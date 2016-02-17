@@ -98,8 +98,8 @@ module.exports = Panel = React.createClass
         unless @state.accounts.get @props.accountID
             setTimeout =>
                 @redirect
-                    direction: "first"
-                    action: "default"
+                    direction   : 'first'
+                    action      : 'default'
             , 1
             return React.DOM.div null, 'redirecting'
 

@@ -50,10 +50,6 @@ module.exports = LayoutActionCreator =
         AppDispatcher.handleViewAction
             type: type
 
-    minimizePreview: ->
-        AppDispatcher.handleViewAction
-            type: ActionTypes.MINIMIZE_PREVIEW_PANE
-
     refresh: ->
         AppDispatcher.handleViewAction
             type: ActionTypes.REFRESH
@@ -113,9 +109,9 @@ module.exports = LayoutActionCreator =
 
     showMessageList: (panelInfo) ->
         params = panelInfo.parameters
-        {accountID, mailboxID, filter, sort, before, after} = params
 
         # ensure the proper account is selected
+        {accountID, mailboxID} = params
         AccountActionCreator.ensureSelected accountID, mailboxID
 
         AppDispatcher.handleViewAction

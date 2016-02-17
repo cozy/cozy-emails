@@ -33,13 +33,11 @@ module.exports = ToolbarMessagesList = React.createClass
 
         # change here if we add an UI for sorting
         # @props.queryParams is the current value
-        sortOrder = '-'
-        sortField = 'date'
         before = '-'
         after = '-'
         flag = '-'
         type = params.type
-        sort = sortOrder + sortField
+        sort = '-date'
 
         switch type
             when 'from', 'dest'
@@ -55,9 +53,9 @@ module.exports = ToolbarMessagesList = React.createClass
                 if params.value
                     flag = params.value
 
-        window.cozyMails.messageClose()
         @redirect
             direction: 'first'
+            fullWidth: true # remove 2nd panel
             action: 'account.mailbox.messages'
             parameters: [
                 @props.accountID, @props.mailboxID,

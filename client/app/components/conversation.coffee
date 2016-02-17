@@ -31,6 +31,7 @@ module.exports = React.createClass
         selectedMailboxID = AccountStore.getSelectedMailbox()?.get 'id'
         selectedAccount = AccountStore.getSelectedOrDefault()
 
+
         if message?
             conversationID = message?.get('conversationID')
             trashMailboxID = selectedAccount?.get('trashMailbox')
@@ -123,7 +124,7 @@ module.exports = React.createClass
 
 
     render: ->
-        if not @state.conversation
+        unless @state.conversation
             return section
                 key: 'conversation'
                 className: 'conversation panel'
@@ -165,7 +166,6 @@ module.exports = React.createClass
                 a
                     className: 'clickable btn btn-default fa fa-close'
                     href: @buildClosePanelUrl 'second'
-                    onClick: LayoutActionCreator.minimizePreview
 
             for glob, index in messages
                 if _.isArray glob
