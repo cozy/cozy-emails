@@ -128,13 +128,10 @@ module.exports = MailsInput = React.createClass
                 event.dataTransfer.dropEffect = 'none'
 
         # Show field if results
-        className += ' shown' unless _.isEmpty knownContacts
+        className += ' shown' unless (hasNoContact = _.isEmpty knownContacts)
 
         # don't display placeholder if there are dests
-        if knownContacts.length > 0
-            placeholder = ''
-        else
-            placeholder = @props.placeholder
+        placeholder = unless hasNoContact then '' else @props.placeholder
 
         div
             className: className,
