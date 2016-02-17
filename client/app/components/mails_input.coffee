@@ -127,6 +127,9 @@ module.exports = MailsInput = React.createClass
             else
                 event.dataTransfer.dropEffect = 'none'
 
+        # Show field if results
+        className += ' shown' unless _.isEmpty knownContacts
+
         # don't display placeholder if there are dests
         if knownContacts.length > 0
             placeholder = ''

@@ -58,8 +58,6 @@ module.exports = Compose = React.createClass
 
         classLabel = 'compose-label'
         classInput = 'compose-input'
-        classCc    = if @state.ccShown  then ' shown ' else ''
-        classBcc   = if @state.bccShown then ' shown ' else ''
 
         focusEditor = Array.isArray(@state.to) and
             @state.to.length > 0 and
@@ -89,11 +87,13 @@ module.exports = Compose = React.createClass
                             div null
                                 a
                                     className: 'compose-toggle-cc',
-                                    onClick: @onToggleCc,
+                                    onClick: @toggleField,
+                                    'data-ref': 'cc'
                                     t 'compose toggle cc'
                                 a
                                     className: 'compose-toggle-bcc',
-                                    onClick: @onToggleBcc,
+                                    onClick: @toggleField,
+                                    'data-ref': 'bcc'
                                     t 'compose toggle bcc'
 
                 MailsInput
@@ -104,7 +104,7 @@ module.exports = Compose = React.createClass
 
                 MailsInput
                     id: 'compose-cc'
-                    className: 'compose-cc' + classCc
+                    className: 'compose-cc'
                     valueLink: @linkState 'cc'
                     label: t 'compose cc'
                     placeholder: t 'compose cc help'
@@ -112,7 +112,7 @@ module.exports = Compose = React.createClass
 
                 MailsInput
                     id: 'compose-bcc'
-                    className: 'compose-bcc' + classBcc
+                    className: 'compose-bcc'
                     valueLink: @linkState 'bcc'
                     label: t 'compose bcc'
                     placeholder: t 'compose bcc help'
@@ -315,8 +315,6 @@ module.exports = Compose = React.createClass
 
         state.isDraft  = true
 
-        state.ccShown  = Array.isArray(state.cc) and state.cc.length > 0
-        state.bccShown = Array.isArray(state.bcc) and state.bcc.length > 0
         # save initial message content, to don't ask confirmation if
         # it has not been updated
         state.initHtml = state.html
@@ -421,19 +419,10 @@ module.exports = Compose = React.createClass
             actionLabel : t 'mail confirm delete delete'
         , doDelete
 
-    onToggleCc: (e) ->
-        toggle = (e) -> e.classList.toggle 'shown'
-        toggle e for e in @getDOMNode().querySelectorAll '.compose-cc'
-        focus = if not @state.ccShown then 'cc' else ''
-        @setState ccShown: not @state.ccShown, focus: focus
-
-
-    onToggleBcc: (e) ->
-        toggle = (e) -> e.classList.toggle 'shown'
-        toggle e for e in @getDOMNode().querySelectorAll '.compose-bcc'
-        focus = if not @state.bccShown then 'bcc' else ''
-        @setState bccShown: not @state.bccShown, focus: focus
-
+    toggleField: (event) ->
+        target = event.currentTarget.getAttribute 'data-ref'
+        element = @refs[target].getDOMNode()
+        element.classList.toggle 'shown'
 
     # Get the file picker component (method used to pass it to the editor)
     getPicker: ->
