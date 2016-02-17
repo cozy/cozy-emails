@@ -154,7 +154,7 @@ module.exports = Compose = React.createClass
 
                 ComposeToolbox
                     onSend    : @sendMessage
-                    onDelete  : @onDelete
+                    onDelete  : @deleteDraft
                     onDraft   : @saveDraft
                     onCancel  : @onCancel
                     canDelete : @props.message?
@@ -236,90 +236,56 @@ module.exports = Compose = React.createClass
                 , 0
                 @setState focus: ''
 
-    componentWillUnmount: ->
-        # delete draft
+    showModal: (params, success) ->
+        return unless @state.originalConversationID
+
         doDelete = =>
-            window.setTimeout =>
-                LayoutActionCreator.hideModal()
-                messageID = @state.id
-                MessageActionCreator.delete {messageID, silent, isDraft: true, inReplyTo: @props.inReplyTo}
-            , 5
+            messageID = @state.id
+            MessageActionCreator.delete {messageID}
+            LayoutActionCreator.hideModal()
 
-        # save draft one last time
+            if @props.callback
+                @props.callback()
+                return
+
+            # specific callback
+            success() if _.isFunction success
+
+        _.extend params, action: doDelete
+        LayoutActionCreator.displayModal params
+
+    componentWillUnmount: ->
         doSave = =>
-            if @state.originalConversationID?
-                # save one last time the draft, adding the conversationID
-                message =
-                    id            : @state.id
-                    accountID     : @state.accountID
-                    mailboxIDs    : @state.mailboxIDs
-                    from          : @state.from
-                    to            : @state.to
-                    cc            : @state.cc
-                    bcc           : @state.bcc
-                    subject       : @state.subject
-                    isDraft       : true
-                    attachments   : @state.attachments
-                    inReplyTo     : @state.inReplyTo
-                    references    : @state.references
-                    text          : @state.text
-                    html          : @state.html
-                    conversationID: @state.originalConversationID
-                MessageActionCreator.send message, (error, message) ->
-                    if error? or not message?
-                        msg = "#{t "message action draft ko"} #{error}"
-                        LayoutActionCreator.alertError msg
-                    else
-                        msg = "#{t "message action draft ok"}"
-                        LayoutActionCreator.notify msg, autoclose: true
-                        if message.conversationID?
-                            # reload conversation to update its length
-                            cid = message.conversationID
-                            MessageActionCreator.fetchConversation cid
-            else
+            LayoutActionCreator.hideModal()
+            MessageActionCreator.send @state, (error, message) ->
+                if error? or not message?
+                    msg = "#{t "message action draft ko"} #{error}"
+                    LayoutActionCreator.alertError msg
+                    return
 
+                msg = "#{t "message action draft ok"}"
+                LayoutActionCreator.notify msg, autoclose: true
 
-        # If message has not been sent, ask if we should keep it or not
-        #  - if yes, and the draft belongs to a conversation, add the
-        #    conversationID and save the draft
-        #  - if no, delete the draft
-        if not @state.isDeleted and @state.isDraft and @state.id?
+                # reload conversation to update its length
+                if message.conversationID?
+                    cid = message.conversationID
+                    MessageActionCreator.fetchConversation cid
 
-            if @state.composeInHTML
-                newContent = MessageUtils.cleanReplyText(@state.html).replace /\s/gim, ''
-                oldContent = MessageUtils.cleanReplyText(@state.initHtml).replace /\s/gim, ''
-                updated = newContent isnt oldContent
-            else
-                updated = @state.text isnt @state.initText
+        init = =>
+            @showModal
+                title       : t 'app confirm delete'
+                subtitle    : t 'compose confirm keep draft'
+                closeLabel  : t 'compose confirm draft keep'
+                actionLabel : t 'compose confirm draft delete'
+                closeModal  : doSave
 
-            # if draft has not been updated, delete without asking confirmation
-            silent = @state.isNew and not updated
-            if silent
-                doDelete()
-            else
-                # we need a timeout because of React's components life cycle
-                setTimeout ->
-                    # display a modal asking if we should keep or delete the draft
-                    modal =
-                        title       : t 'app confirm delete'
-                        subtitle    : t 'compose confirm keep draft'
-                        closeModal  : ->
-                            doSave()
-                            LayoutActionCreator.hideModal()
-                        closeLabel  : t 'compose confirm draft keep'
-                        actionLabel : t 'compose confirm draft delete'
-                        action      : doDelete
-                    LayoutActionCreator.displayModal modal
-                , 0
-
+        setTimeout init, 0
 
     getInitialState: ->
-
         # edition of an existing draft
         if message = @props.message
             state =
                 composeInHTML: @props.settings.get 'composeInHTML'
-                isNew: false
             if (not message.get('html')?) and message.get('text')
                 state.composeInHTML = false
 
@@ -331,6 +297,7 @@ module.exports = Compose = React.createClass
         # new draft
         else
             account = @props.accounts.get @props.selectedAccountID
+
             state = MessageUtils.makeReplyMessage(
                 account.get('login'),
                 @props.inReplyTo,
@@ -338,7 +305,12 @@ module.exports = Compose = React.createClass
                 @props.settings.get('composeInHTML'),
                 account.get('signature')
             )
-            state.isNew = true
+
+            from = {}
+            from.name = name if (name = account.get 'name')
+            from.address = address if (address = account.get 'login')
+            state.from = [from]
+
             state.accountID ?= @props.selectedAccountID
 
         state.isDraft  = true
@@ -375,29 +347,14 @@ module.exports = Compose = React.createClass
             'subject': ['subject']
         getGroupedError error, @state
 
-    getMessageFromDOM: ->
-        state = _.clone @state
-        message = {}
-
-        from = {}
-        account = @props.accounts.get @state.accountID
-        from.name = name if (name = account.get 'name')
-        from.address = address if (address = account.get 'login')
-        message.from = [from]
-
-        # TODO : get CC
-        # TODO : get BCC
-        # TODO : get TO
-
-        _.extend state, message
-
     sendActionMessage: ->
+        return if @props.isSaving
         if (validate = @validateMessage())
+            console.log 'ERROR', validate
             LayoutActionCreator.alertError t 'compose error no ' + validate[1]
             return
 
-        message = @getMessageFromDOM()
-        return unless (changed = hasChanged @state, message)
+        message = _.clone @state
 
         @props.isSaving = true
         MessageActionCreator.send message, (error, message) =>
@@ -438,46 +395,31 @@ module.exports = Compose = React.createClass
 
             @props.isSaving = false
 
-    onDelete: (e) ->
-        e.preventDefault()
+    deleteDraft: (event) ->
+        event.preventDefault() if event
 
-        subject = @props.message.get 'subject'
-        if subject? and subject isnt ''
+        if _.isEmpty (subject = @state.subject)
             params = subject: subject
             confirmMessage = t 'mail confirm delete', params
         else
             confirmMessage = t 'mail confirm delete nosubject'
 
         doDelete = =>
-            LayoutActionCreator.hideModal()
-            messageID = @props.message.get('id')
+            @redirect
+                direction: 'first'
+                action: 'account.mailbox.messages'
+                fullWidth: true
+                parameters: [
+                    @props.selectedAccountID
+                    @props.selectedMailboxID
+                ]
 
-            # this will prevent asking
-            # a second time when unmounting component
-            @setState isDeleted: true, =>
-                MessageActionCreator.delete {messageID}, (error) =>
-                    unless error?
-                        if @props.callback
-                            @props.callback()
-                        else
-                            # Close Message Box
-                            @redirect
-                                direction: 'first'
-                                action: 'account.mailbox.messages'
-                                parameters: [
-                                    @props.selectedAccountID
-                                    @props.selectedMailboxID
-                                ]
-                                fullWidth: true
-
-        modal =
+        @showModal
             title       : t 'mail confirm delete title'
             subtitle    : confirmMessage
             closeLabel  : t 'mail confirm delete cancel'
             actionLabel : t 'mail confirm delete delete'
-            action      : doDelete
-        LayoutActionCreator.displayModal modal
-
+        , doDelete
 
     onToggleCc: (e) ->
         toggle = (e) -> e.classList.toggle 'shown'
@@ -496,7 +438,6 @@ module.exports = Compose = React.createClass
     # Get the file picker component (method used to pass it to the editor)
     getPicker: ->
         return @refs.attachments
-
 
 # set source of attached images
 cleanHTML = (html) ->
