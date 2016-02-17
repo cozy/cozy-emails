@@ -38,7 +38,7 @@ module.exports = ToastContainer =  React.createClass
         classes = classer
             'toasts-container': true
             'action-hidden': @state.hidden
-            'has-toasts': toasts.length isnt 0
+            'has-toasts': toasts.size isnt 0
 
         div className: classes,
             CSSTransitionGroup transitionName: "toast",
@@ -70,4 +70,3 @@ module.exports = ToastContainer =  React.createClass
 
     componentDidUpdate: ->
         @_clearToasts()
-

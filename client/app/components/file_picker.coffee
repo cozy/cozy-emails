@@ -34,9 +34,9 @@ FilePicker = React.createClass
     propTypes:
         editable: React.PropTypes.bool
         display:  React.PropTypes.func
-        value:    React.PropTypes.instanceOf Immutable.Vector
+        value:    React.PropTypes.instanceOf Immutable.List
         valueLink: React.PropTypes.shape
-            value: React.PropTypes.instanceOf Immutable.Vector
+            value: React.PropTypes.instanceOf Immutable.List
             requestChange: React.PropTypes.func
         messageID: React.PropTypes.string
 
@@ -44,7 +44,7 @@ FilePicker = React.createClass
     getDefaultProps: ->
         editable: false
         valueLink:
-            value: Immutable.Vector.empty()
+            value: Immutable.List()
             requestChange: ->
 
     getInitialState: ->
@@ -56,14 +56,13 @@ FilePicker = React.createClass
 
     addFiles: (files) ->
         files = (@_fromDOM file for file in files)
-        files = @state.files.concat(files).toVector()
+        files = @state.files.concat(files)
 
         @props.valueLink.requestChange files
 
     deleteFile: (file) ->
         files = @state.files.filter (f) ->
             f.get('generatedFileName') isnt file.generatedFileName
-        .toVector()
 
         @props.valueLink.requestChange files
 
@@ -133,8 +132,9 @@ FilePicker = React.createClass
 
     # convert from DOM Files to file picker format
     _fromDOM: (file) ->
-        idx = @state.files.filter (f) -> f.get('fileName') is file.name
-            .count()
+        idx = @state.files
+            .filter (f) -> f.get('fileName') is file.name
+            .size
         name = file.name
         if idx > 0
             dotpos = file.name.indexOf '.'

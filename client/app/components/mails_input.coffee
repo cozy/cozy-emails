@@ -111,7 +111,7 @@ module.exports = MailsInput = React.createClass
         classLabel = 'compose-label control-label'
         listClass  = classer
             'contact-form': true
-            open: @state.open and @state.contacts?.length > 0
+            open: @state.open and @state.contacts?.size > 0
         current    = 0
 
         # in Chrome, we need to cancel some events for drop to work
@@ -128,7 +128,7 @@ module.exports = MailsInput = React.createClass
                 event.dataTransfer.dropEffect = 'none'
 
         # don't display placeholder if there are dests
-        if knownContacts.length > 0
+        if knownContacts.size > 0
             placeholder = ''
         else
             placeholder = @props.placeholder
@@ -206,7 +206,7 @@ module.exports = MailsInput = React.createClass
             return false
 
     onKeyDown: (evt) ->
-        count    = @state.contacts?.count()
+        count    = @state.contacts?.size
         selected = @state.selected
         switch evt.key
             when "Enter"
@@ -214,7 +214,7 @@ module.exports = MailsInput = React.createClass
                 # adding a contact to the current list
                 @addContactFromInput() if 13 in [evt.keyCode, evt.which]
 
-                if @state.contacts?.count() > 0
+                if @state.contacts?.size > 0
                     contact = @state.contacts.slice(selected).first()
                     @onContact contact
                 else
@@ -273,7 +273,7 @@ module.exports = MailsInput = React.createClass
                     # Trick to make sure that the alert error is not pop up
                     # twiced due to multiple blur and key down.
                     # Do not display anything when the field is blurred.
-                    isContacts = @state.contacts?.length is 0
+                    isContacts = @state.contacts?.size is 0
                     if not isBlur and isContacts
 
                         msg = t 'compose wrong email format',

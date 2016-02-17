@@ -18,7 +18,7 @@ module.exports =
             selected: @state.selected.intersect @getSelectables props, state
 
     hasSelected: ->
-        @state.selected.length > 0
+        @state.selected.size > 0
 
     allSelected: ->
         @state.allSelected
@@ -31,13 +31,13 @@ module.exports =
     setAllSelected: ->
         @setState
             allSelected: true,
-            selected: Immutable.Set.from @getSelectables()
+            selected: Immutable.Set @getSelectables()
 
     addToSelected: (key) ->
         selected = @state.selected.add key
-        allLength = @getSelectablesLength?() or @getSelectables().length
+        allLength = @getSelectablesLength?() or @getSelectables().size
         @setState
-            allSelected: selected.length is allLength
+            allSelected: selected.size is allLength
             selected: selected
 
     removeFromSelected: (key) ->

@@ -83,7 +83,7 @@ module.exports = ActionsToolbarMessagesList = React.createClass
 
         doDelete = =>
             MessageActionCreator.delete options, =>
-                if options.count > 0 and @props.messages.count() > 0
+                if options.count > 0 and @props.messages.size > 0
                     firstMessageID = @props.messages.first().get('id')
                     MessageActionCreator.setCurrent firstMessageID, true
             if @props.afterAction?
@@ -110,7 +110,7 @@ module.exports = ActionsToolbarMessagesList = React.createClass
         from = @props.mailboxID
 
         MessageActionCreator.move options, from, to, =>
-            if options.count > 0 and @props.messages.count() > 0
+            if options.count > 0 and @props.messages.size > 0
                 firstMessageID = @props.messages.first().get('id')
                 MessageActionCreator.setCurrent firstMessageID, true
         if @props.afterAction?

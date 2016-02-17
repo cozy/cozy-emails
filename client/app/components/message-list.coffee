@@ -132,7 +132,7 @@ module.exports = MessageList = React.createClass
                 Progress value: @state.refresh, max: 1
 
             # Message List
-            if @state.messages.count() is 0
+            if @state.messages.size is 0
                 if @state.fetching
                     p className: 'listFetching list-loading', t 'list fetching'
                 else

@@ -86,7 +86,7 @@ module.exports = Menu = React.createClass
             role: 'menubar'
             'aria-expanded': @state.isDrawerExpanded,
 
-            if @state.accounts.length
+            if @state.accounts.size
                 @renderComposeButton()
 
             nav className: 'mainmenu',
@@ -103,7 +103,7 @@ module.exports = Menu = React.createClass
                                     className: 'account-details',
                                         span {}, @state.search
 
-                if @state.accounts.length
+                if @state.accounts.size
                     @state.accounts
                     .sort @selectedFirstSort
                     .map @getAccountRender
@@ -143,7 +143,7 @@ module.exports = Menu = React.createClass
                 span className: 'item-label', " #{t 'menu compose'}"
 
     renderNewMailboxButton: () ->
-        if @state.accounts.length
+        if @state.accounts.size
             selectedAccountUrl = @buildUrl
                 direction: 'first'
                 action: 'account.mailbox.messages'
@@ -210,7 +210,7 @@ module.exports = Menu = React.createClass
             icon = 'fa-ellipsis-h'
             toggleFavoritesLabel = t 'menu favorites on'
 
-        allBoxesAreFavorite = @state.mailboxes.length is @state.favorites.length
+        allBoxesAreFavorite = @state.mailboxes.size is @state.favorites.size
 
         configMailboxUrl = @buildUrl
             direction: 'first'
@@ -248,7 +248,7 @@ module.exports = Menu = React.createClass
                                     account.get 'login'
 
                     if progress = refreshes.get(accountID)
-                        if progress.get('errors').length
+                        if progress.get('errors').size
                             span className: 'refresh-error',
                                 i
                                     className: 'fa warning',

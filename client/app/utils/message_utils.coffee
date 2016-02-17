@@ -118,7 +118,7 @@ module.exports = MessageUtils =
     makeReplyMessage: (myAddress, inReplyTo, action, inHTML, signature) ->
         message =
             composeInHTML: inHTML
-            attachments: Immutable.Vector.empty()
+            attachments: Immutable.List()
 
         if inReplyTo
             message.accountID = inReplyTo.get 'accountID'

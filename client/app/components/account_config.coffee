@@ -75,7 +75,7 @@ module.exports = React.createClass
 
     getCurrentTab: ->
         mailboxes = @state.editedAccount.get 'mailboxes'
-        defaultTab = if mailboxes?.length is 0 then 'mailboxes' else 'account'
+        defaultTab = if mailboxes?.size is 0 then 'mailboxes' else 'account'
         return @props.tab or defaultTab
 
     onTabChangesDoSubmit: (changes) ->
