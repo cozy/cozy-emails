@@ -256,6 +256,8 @@ module.exports = Compose = React.createClass
         LayoutActionCreator.displayModal params
 
     componentWillUnmount: ->
+        return if @props.lastUpdate is @state.date
+
         doSave = =>
             LayoutActionCreator.hideModal()
             MessageActionCreator.send @state, (error, message) ->
@@ -357,6 +359,7 @@ module.exports = Compose = React.createClass
         message = _.clone @state
 
         @props.isSaving = true
+        @props.lastUpdate = message.date
         MessageActionCreator.send message, (error, message) =>
             if error? or not message?
                 if @state.isDraft
