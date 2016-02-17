@@ -344,14 +344,12 @@ module.exports = Compose = React.createClass
     validateMessage: ->
         return if @state.isDraft
         error =
-            'dest': ['to', 'cc', 'bcc']
-            'subject': ['subject']
-        getGroupedError error, @state
+            'dest': ['to']
+        getGroupedError error, @state, _.isEmpty
 
     sendActionMessage: (success) ->
         return if @props.isSaving
         if (validate = @validateMessage())
-            console.log 'ERROR', validate
             LayoutActionCreator.alertError t 'compose error no ' + validate[1]
             success() if _.isFunction success
             return
@@ -456,12 +454,12 @@ cleanHTML = (html) ->
         console.error "Unable to parse HTML content of message"
         return html
 
-getGroupedError = (error, message) ->
+getGroupedError = (error, message, test) ->
     type = null
     group = null
     _.find error, (properties, key) ->
         type = _.find properties, (property) ->
-            _.isEmpty message[property]
+            test message[property]
         group = key if type?
         type
     if type or group then [type, group] else null
