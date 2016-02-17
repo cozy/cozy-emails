@@ -115,41 +115,51 @@ module.exports = MessageUtils =
     # It add appropriate headers to the message. It adds style tags when
     # required too.
     # It adds signature at the end of the zone where the user will type.
-    makeReplyMessage: (myAddress, inReplyTo, action, inHTML, signature) ->
+    makeReplyMessage: (props) ->
+        account = props.accounts.get props.selectedAccountID
+        account =
+            id: props.selectedAccountID
+            name: account.get 'name'
+            address: account.get 'login'
+            signature: account.get 'signature'
+
         message =
-            composeInHTML: inHTML
-            attachments: Immutable.Vector.empty()
+            composeInHTML   : props.settings.get 'composeInHTML'
+            attachments     : Immutable.Vector.empty()
+            accountID       : account.id
+            isDraft         : true
+            from            : [
+                    name: account.name
+                    address: account.address
+                ]
 
-        if inReplyTo
-            message.accountID = inReplyTo.get 'accountID'
-            message.conversationID = inReplyTo.get 'conversationID'
-            dateHuman = @formatReplyDate inReplyTo.get 'createdAt'
-            sender = @displayAddresses inReplyTo.get 'from'
+        # edition of an existing draft
+        if (_message = props.message)
+            _.extend message, _message.toJS()
+            message.attachments = _message.get 'attachments'
+            delete props.message
 
-            text = inReplyTo.get 'text'
-            html = inReplyTo.get 'html'
+        # Format text
+        text = message.text or ''
+        html = message.html
+        if text? and not html? and message.composeInHTML
+            try
+                html = markdown.toHTML text
+            catch e
+                console.error "Error converting message to Markdown: #{e}"
+                html = "<div class='text'>#{text}</div>"
 
-            text = '' unless text? # Some message have no content, only attachements
+        if html? and not text? and not message.composeInHTML
+            text = toMarkdown html
 
-            if text? and not html? and inHTML
-                try
-                    html = markdown.toHTML text
-                catch e
-                    console.error "Error converting message to Markdown: #{e}"
-                    html = "<div class='text'>#{text}</div>"
+        if (inReplyTo = props.inReplyTo)
+            _.extend message,
+                inReplyTo: [replyID = inReplyTo.get 'id']
+                references: (inReplyTo.get('references') or []).concat replyID
 
-            if html? and not text? and not inHTML
-                text = toMarkdown html
-
-            message.inReplyTo  = [inReplyTo.get 'id']
-            message.references = inReplyTo.get('references') or []
-            message.references = message.references.concat message.inReplyTo
-
-        if signature? and signature.length > 0
-            isSignature = true
-        else
-            isSignature = false
-
+        isSignature = !!!_.isEmpty(signature = account.signature)
+        dateHuman = @formatReplyDate message.createdAt
+        sender = @displayAddresses message.from
         options = {
             message
             inReplyTo
@@ -161,8 +171,7 @@ module.exports = MessageUtils =
             isSignature
         }
 
-        switch action
-
+        switch props.action
             when ComposeActions.REPLY
                 @setMessageAsReply options
 
@@ -176,10 +185,11 @@ module.exports = MessageUtils =
                 @setMessageAsDefault options
 
         # remove my address from dests
-        notMe = (dest) -> return dest.address isnt myAddress
+        notMe = (dest) -> return dest.address isnt account.address
         message.to = message.to.filter notMe
         message.cc = message.cc.filter notMe
-        return message
+
+        message
 
 
     # Build message to display in composer in case of a reply to a message:

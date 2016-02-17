@@ -132,7 +132,7 @@ module.exports = Compose = React.createClass
                 div className: 'compose-content',
                     ComposeEditor
                         id                : 'compose-editor'
-                        messageID         : @props.message?.get 'id'
+                        messageID         : @state.id
                         html              : @linkState('html')
                         text              : @linkState('text')
                         accounts          : @props.accounts
@@ -217,11 +217,16 @@ module.exports = Compose = React.createClass
         else if @props.inReplyTo?
             document.getElementById('compose-editor')?.focus()
 
+    isNew: ->
+        not @state.originalConversationID
+
+    unsetNew: ->
+        @state.originalConversationID = @state.conversationID
+
     componentDidUpdate: ->
         # Initialize @state
         # with values from server
-        if @props.settings.get('autosaveDraft') and not @state.id
-            @saveDraft()
+        @saveDraft() if @isNew()
 
         # focus
         switch @state.focus
@@ -256,7 +261,24 @@ module.exports = Compose = React.createClass
         LayoutActionCreator.displayModal params
 
     componentWillUnmount: ->
-        return if @props.lastUpdate is @state.date
+        success = (error, message) =>
+            msg = "#{t "message action draft ok"}"
+            LayoutActionCreator.notify msg, autoclose: true
+
+            # reload conversation to update its length
+            if message and message.conversationID?
+                cid = message.conversationID
+                MessageActionCreator.fetchConversation cid
+
+
+        if @props.lastUpdate is @state.date
+            message = @state
+            error = null
+            setTimeout ->
+                success error, message
+            , 0
+            return
+
 
         doSave = =>
             LayoutActionCreator.hideModal()
@@ -264,15 +286,10 @@ module.exports = Compose = React.createClass
                 if error? or not message?
                     msg = "#{t "message action draft ko"} #{error}"
                     LayoutActionCreator.alertError msg
+                    success error, message
                     return
 
-                msg = "#{t "message action draft ok"}"
-                LayoutActionCreator.notify msg, autoclose: true
-
-                # reload conversation to update its length
-                if message.conversationID?
-                    cid = message.conversationID
-                    MessageActionCreator.fetchConversation cid
+                success error, message
 
         init = =>
             @showModal
@@ -284,51 +301,9 @@ module.exports = Compose = React.createClass
 
         setTimeout init, 0
 
+
     getInitialState: ->
-        # edition of an existing draft
-        if message = @props.message
-            state =
-                composeInHTML: @props.settings.get 'composeInHTML'
-            if (not message.get('html')?) and message.get('text')
-                state.composeInHTML = false
-
-            # TODO : smarter ?
-            state[key] = value for key, value of message.toJS()
-            # we want the immutable attachments
-            state.attachments = message.get 'attachments'
-
-        # new draft
-        else
-            account = @props.accounts.get @props.selectedAccountID
-
-            state = MessageUtils.makeReplyMessage(
-                account.get('login'),
-                @props.inReplyTo,
-                @props.action,
-                @props.settings.get('composeInHTML'),
-                account.get('signature')
-            )
-
-            from = {}
-            from.name = name if (name = account.get 'name')
-            from.address = address if (address = account.get 'login')
-            state.from = [from]
-
-            state.accountID ?= @props.selectedAccountID
-
-
-        state.isDraft  = true
-
-        # save initial message content, to don't ask confirmation if
-        # it has not been updated
-        state.initHtml = state.html
-        state.initText = state.text
-        state
-
-    componentWillReceiveProps: (nextProps) ->
-        if nextProps.message isnt @props.message
-            @props.message = nextProps.message
-            @setState @getInitialState()
+        MessageUtils.makeReplyMessage @props
 
 
     saveDraft: (event) ->
@@ -367,6 +342,9 @@ module.exports = Compose = React.createClass
                 else
                     msgKo = t "message action sent ko"
                 LayoutActionCreator.alertError "#{msgKo} #{error}"
+
+                @props.isSaving = false
+                success() if _.isFunction success
                 return
 
             unless @state.id
@@ -379,9 +357,9 @@ module.exports = Compose = React.createClass
                     if _.isUndefined @state[key]
                         @state[key] = message[key]
 
-                # use another field to prevent the empty conversationID of draft
-                # to override the original conversationID
-                @state.originalConversationID = @state.conversationID
+            # use another field to prevent the empty conversationID of draft
+            # to override the original conversationID
+            @unsetNew() if @isNew()
 
             # TODO : move this into render
             unless @state.isDraft
@@ -397,7 +375,6 @@ module.exports = Compose = React.createClass
                 @finalRedirect()
 
             @props.isSaving = false
-
             success() if _.isFunction success
 
     deleteDraft: (event) ->
