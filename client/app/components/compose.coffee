@@ -50,6 +50,15 @@ module.exports = Compose = React.createClass
     getDefaultProps: ->
         layout: 'full'
 
+    getInitialState: ->
+        MessageUtils.makeReplyMessage @props
+
+    isNew: ->
+        not @state.originalConversationID
+
+    unsetNew: ->
+        @state.originalConversationID = @state.conversationID
+
     shouldComponentUpdate: (nextProps, nextState) ->
         !!nextProps.accounts
 
@@ -61,6 +70,75 @@ module.exports = Compose = React.createClass
             nextState.html = MessageUtils.wrapReplyHtml nextState.html
         else
             nextState.text = nextState.text.trim()
+
+    componentDidMount: ->
+        # scroll compose window into view
+        @getDOMNode().scrollIntoView()
+
+        # Focus
+        if not Array.isArray(@state.to) or @state.to.length is 0
+            setTimeout ->
+                document.getElementById('compose-to')?.focus()
+            , 10
+        else if @props.inReplyTo?
+            document.getElementById('compose-editor')?.focus()
+
+    componentDidUpdate: ->
+        # Initialize @state
+        # with values from server
+        @saveDraft() if @isNew()
+
+        # focus
+        switch @state.focus
+            when 'cc'
+                setTimeout ->
+                    document.getElementById('compose-cc').focus()
+                , 0
+                @setState focus: ''
+
+            when 'bcc'
+                setTimeout ->
+                    document.getElementById('compose-bcc').focus()
+                , 0
+                @setState focus: ''
+
+    componentWillUnmount: ->
+        success = (error, message) =>
+            msg = "#{t "message action draft ok"}"
+            LayoutActionCreator.notify msg, autoclose: true
+
+            # reload conversation to update its length
+            if message and message.conversationID?
+                cid = message.conversationID
+                MessageActionCreator.fetchConversation cid
+
+        unless (hasChanged = @props.lastUpdate isnt @state.date)
+            message = @state
+            error = null
+            setTimeout ->
+                success error, message
+            , 0
+            return
+
+        # Show Modal
+        init = =>
+            @showModal
+                title       : t 'app confirm delete'
+                subtitle    : t 'compose confirm keep draft'
+                closeLabel  : t 'compose confirm draft keep'
+                actionLabel : t 'compose confirm draft delete'
+                closeModal  : =>
+                    LayoutActionCreator.hideModal()
+                    MessageActionCreator.send @state, (error, message) ->
+                        if error? or not message?
+                            msg = "#{t "message action draft ko"} #{error}"
+                            LayoutActionCreator.alertError msg
+                            success error, message
+                            return
+
+                        success error, message
+
+        setTimeout init, 0
 
     render: ->
         # Each render do not send data to server
@@ -217,44 +295,6 @@ module.exports = Compose = React.createClass
         else
             @finalRedirect()
 
-
-    componentDidMount: ->
-        # scroll compose window into view
-        @getDOMNode().scrollIntoView()
-
-        # Focus
-        if not Array.isArray(@state.to) or @state.to.length is 0
-            setTimeout ->
-                document.getElementById('compose-to')?.focus()
-            , 10
-        else if @props.inReplyTo?
-            document.getElementById('compose-editor')?.focus()
-
-    isNew: ->
-        not @state.originalConversationID
-
-    unsetNew: ->
-        @state.originalConversationID = @state.conversationID
-
-    componentDidUpdate: ->
-        # Initialize @state
-        # with values from server
-        @saveDraft() if @isNew()
-
-        # focus
-        switch @state.focus
-            when 'cc'
-                setTimeout ->
-                    document.getElementById('compose-cc').focus()
-                , 0
-                @setState focus: ''
-
-            when 'bcc'
-                setTimeout ->
-                    document.getElementById('compose-bcc').focus()
-                , 0
-                @setState focus: ''
-
     showModal: (params, success) ->
         return if @isNew()
 
@@ -273,47 +313,6 @@ module.exports = Compose = React.createClass
         _.extend params, action: doDelete
         LayoutActionCreator.displayModal params
 
-    componentWillUnmount: ->
-        success = (error, message) =>
-            msg = "#{t "message action draft ok"}"
-            LayoutActionCreator.notify msg, autoclose: true
-
-            # reload conversation to update its length
-            if message and message.conversationID?
-                cid = message.conversationID
-                MessageActionCreator.fetchConversation cid
-
-        unless (hasChanged = @props.lastUpdate isnt @state.date)
-            message = @state
-            error = null
-            setTimeout ->
-                success error, message
-            , 0
-            return
-
-        # Show Modal
-        init = =>
-            @showModal
-                title       : t 'app confirm delete'
-                subtitle    : t 'compose confirm keep draft'
-                closeLabel  : t 'compose confirm draft keep'
-                actionLabel : t 'compose confirm draft delete'
-                closeModal  : =>
-                    LayoutActionCreator.hideModal()
-                    MessageActionCreator.send @state, (error, message) ->
-                        if error? or not message?
-                            msg = "#{t "message action draft ko"} #{error}"
-                            LayoutActionCreator.alertError msg
-                            success error, message
-                            return
-
-                        success error, message
-
-        setTimeout init, 0
-
-    getInitialState: ->
-        MessageUtils.makeReplyMessage @props
-
     saveDraft: (event) ->
         event.preventDefault() if event?
         @state.isDraft = true
@@ -328,8 +327,7 @@ module.exports = Compose = React.createClass
 
     validateMessage: ->
         return if @state.isDraft
-        error =
-            'dest': ['to']
+        error = 'dest': ['to']
         getGroupedError error, @state, _.isEmpty
 
     sendActionMessage: (success) ->
@@ -427,11 +425,3 @@ getGroupedError = (error, message, test) ->
         group = key if type?
         type
     if type or group then [type, group] else null
-
-hasChanged = (obj0, obj1) ->
-    result = null
-    _.each obj1, (value, key) ->
-        unless _.isEqual obj0[key], value
-            result = {} unless result
-            result[key] = value
-    result
