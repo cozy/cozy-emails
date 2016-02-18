@@ -64,12 +64,12 @@ module.exports = Compose = React.createClass
 
     componentWillUpdate: (nextProps, nextState) ->
         nextState.attachments = Immutable.Vector.from nextState.attachments
-        if nextState.composeInHTML
-            nextState.html = MessageUtils.cleanHTML nextState.html
-            nextState.text = MessageUtils.cleanReplyText nextState.html
-            nextState.html = MessageUtils.wrapReplyHtml nextState.html
-        else
-            nextState.text = nextState.text.trim()
+
+        unless _.isEmpty (text = nextState.text.trim())
+            if nextState.composeInHTML
+                nextState.html = MessageUtils.cleanHTML nextState.html
+                nextState.text = MessageUtils.cleanReplyText nextState.html
+                nextState.html = MessageUtils.wrapReplyHtml nextState.html
 
     componentDidMount: ->
         # scroll compose window into view
