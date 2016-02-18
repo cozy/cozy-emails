@@ -135,6 +135,7 @@ module.exports = MessageUtils =
 
         # edition of an existing draft
         if (_message = props.message)
+            props.action = ComposeActions.EDIT unless props.action
             _.extend message, _message.toJS()
             message.attachments = _message.get 'attachments'
             delete props.message
