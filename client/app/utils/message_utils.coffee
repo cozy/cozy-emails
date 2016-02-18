@@ -472,6 +472,25 @@ module.exports = MessageUtils =
 
         return text.substr 0, 1024
 
+    # set source of attached images
+    cleanHTML: (html) ->
+        parser = new DOMParser()
+        unless (doc = parser.parseFromString html, "text/html")
+            doc = document.implementation.createHTMLDocument("")
+            doc.documentElement.innerHTML = html
+            unless doc
+                console.error "Unable to parse HTML content of message"
+                return html
+
+        # the contentID of attached images will be in the data-src attribute
+        # override image source with this attribute
+        imageSrc = (image) ->
+            image.setAttribute 'src', "cid:#{image.dataset.src}"
+        images = doc.querySelectorAll 'IMG[data-src]'
+        imageSrc image for image in images
+
+        doc.documentElement.innerHTML
+
     # Remove from given string:
     # * html tags
     # * extra spaces between reply markers and text

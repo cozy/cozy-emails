@@ -51,8 +51,16 @@ module.exports = Compose = React.createClass
         layout: 'full'
 
     shouldComponentUpdate: (nextProps, nextState) ->
-        nextState.attachments = Immutable.Vector.from nextState.attachments
         !!nextProps.accounts
+
+    componentWillUpdate: (nextProps, nextState) ->
+        nextState.attachments = Immutable.Vector.from nextState.attachments
+        if nextState.composeInHTML
+            nextState.html = MessageUtils.cleanHTML nextState.html
+            nextState.text = MessageUtils.cleanReplyText nextState.html
+            nextState.html = MessageUtils.wrapReplyHtml nextState.html
+        else
+            nextState.text = nextState.text.trim()
 
     render: ->
         # Each render do not send data to server
@@ -306,7 +314,6 @@ module.exports = Compose = React.createClass
     getInitialState: ->
         MessageUtils.makeReplyMessage @props
 
-
     saveDraft: (event) ->
         event.preventDefault() if event?
         @state.isDraft = true
@@ -410,28 +417,6 @@ module.exports = Compose = React.createClass
     # Get the file picker component (method used to pass it to the editor)
     getPicker: ->
         return @refs.attachments
-
-# set source of attached images
-cleanHTML = (html) ->
-    parser = new DOMParser()
-    doc    = parser.parseFromString html, "text/html"
-
-    if not doc
-        doc = document.implementation.createHTMLDocument("")
-        doc.documentElement.innerHTML = html
-
-    if doc
-        # the contentID of attached images will be in the data-src attribute
-        # override image source with this attribute
-        imageSrc = (image) ->
-            image.setAttribute 'src', "cid:#{image.dataset.src}"
-        images = doc.querySelectorAll 'IMG[data-src]'
-        imageSrc image for image in images
-
-        return doc.documentElement.innerHTML
-    else
-        console.error "Unable to parse HTML content of message"
-        return html
 
 getGroupedError = (error, message, test) ->
     type = null
