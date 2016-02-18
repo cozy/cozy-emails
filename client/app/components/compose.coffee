@@ -63,8 +63,6 @@ module.exports = Compose = React.createClass
         !!nextProps.accounts
 
     componentWillUpdate: (nextProps, nextState) ->
-        nextState.attachments = Immutable.Vector.from nextState.attachments
-
         unless _.isEmpty (text = nextState.text.trim())
             if nextState.composeInHTML
                 nextState.html = MessageUtils.cleanHTML nextState.html
@@ -339,7 +337,7 @@ module.exports = Compose = React.createClass
 
         @props.isSaving = true
         @props.lastUpdate = @state.date
-        MessageActionCreator.send @state, (error, message) =>
+        MessageActionCreator.send _.clone(@state), (error, message) =>
             if error? or not message?
                 if @state.isDraft
                     msgKo = t "message action draft ko"
@@ -364,6 +362,7 @@ module.exports = Compose = React.createClass
             # use another field to prevent the empty conversationID of draft
             # to override the original conversationID
             @unsetNew() if @isNew()
+
 
             # TODO : move this into render
             unless @state.isDraft
