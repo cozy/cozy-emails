@@ -261,9 +261,9 @@ module.exports = Compose = React.createClass
     # selection and message information.
     finalRedirect: ->
         if @props.inReplyTo?
-            conversationID = @props.inReplyTo.get('conversationID')
-            accountID = @props.inReplyTo.get('accountID')
-            messageID = @props.inReplyTo.get('id')
+            conversationID = @state.conversationID
+            accountID = @props.selectedAccountID
+            messageID = @state.id
             mailboxes = Object.keys @props.inReplyTo.get 'mailboxIDs'
             mailboxID = AccountStore.pickBestBox accountID, mailboxes
 
