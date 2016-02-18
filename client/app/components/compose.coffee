@@ -54,6 +54,10 @@ module.exports = Compose = React.createClass
         !!nextProps.accounts
 
     render: ->
+        # Each render do not send data to server
+        # update date for client modifications
+        @state.date = new Date().toISOString()
+
         closeUrl = @buildClosePanelUrl @props.layout
 
         classLabel = 'compose-label'
@@ -243,7 +247,7 @@ module.exports = Compose = React.createClass
                 @setState focus: ''
 
     showModal: (params, success) ->
-        return unless @state.originalConversationID
+        return if @isNew()
 
         doDelete = =>
             messageID = @state.id
@@ -270,8 +274,7 @@ module.exports = Compose = React.createClass
                 cid = message.conversationID
                 MessageActionCreator.fetchConversation cid
 
-
-        if @props.lastUpdate is @state.date
+        unless (hasChanged = @props.lastUpdate isnt @state.date)
             message = @state
             error = null
             setTimeout ->
@@ -279,28 +282,25 @@ module.exports = Compose = React.createClass
             , 0
             return
 
-
-        doSave = =>
-            LayoutActionCreator.hideModal()
-            MessageActionCreator.send @state, (error, message) ->
-                if error? or not message?
-                    msg = "#{t "message action draft ko"} #{error}"
-                    LayoutActionCreator.alertError msg
-                    success error, message
-                    return
-
-                success error, message
-
+        # Show Modal
         init = =>
             @showModal
                 title       : t 'app confirm delete'
                 subtitle    : t 'compose confirm keep draft'
                 closeLabel  : t 'compose confirm draft keep'
                 actionLabel : t 'compose confirm draft delete'
-                closeModal  : doSave
+                closeModal  : =>
+                    LayoutActionCreator.hideModal()
+                    MessageActionCreator.send @state, (error, message) ->
+                        if error? or not message?
+                            msg = "#{t "message action draft ko"} #{error}"
+                            LayoutActionCreator.alertError msg
+                            success error, message
+                            return
+
+                        success error, message
 
         setTimeout init, 0
-
 
     getInitialState: ->
         MessageUtils.makeReplyMessage @props
@@ -331,11 +331,9 @@ module.exports = Compose = React.createClass
             success() if _.isFunction success
             return
 
-        message = _.clone @state
-
         @props.isSaving = true
-        @props.lastUpdate = message.date
-        MessageActionCreator.send message, (error, message) =>
+        @props.lastUpdate = @state.date
+        MessageActionCreator.send @state, (error, message) =>
             if error? or not message?
                 if @state.isDraft
                     msgKo = t "message action draft ko"
