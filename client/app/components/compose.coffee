@@ -311,13 +311,13 @@ module.exports = Compose = React.createClass
         event.preventDefault() if event?
         @state.isDraft = true
         @sendActionMessage =>
-            @refs.toolbox.setState action: null
+            @refs.toolbox.setState action: null if @refs.toolbox
 
     sendMessage: (event) ->
         event.preventDefault() if event?
         @state.isDraft = false
         @sendActionMessage =>
-            @refs.toolbox.setState action: null
+            @refs.toolbox.setState action: null if @refs.toolbox
 
     validateMessage: ->
         return if @state.isDraft
