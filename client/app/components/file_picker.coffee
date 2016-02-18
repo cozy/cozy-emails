@@ -48,11 +48,13 @@ FilePicker = React.createClass
             requestChange: ->
 
     getInitialState: ->
-        files: @props.value or @props.valueLink.value
+        value = @props.value or @props.valueLink.value
+        files: Immutable.Vector.from value
         target: false
 
     componentWillReceiveProps: (props) ->
-        @setState files: props.value or props.valueLink.value
+        value = props.value or props.valueLink.value
+        @setState files: Immutable.Vector.from value
 
     addFiles: (files) ->
         files = (@_fromDOM file for file in files)
@@ -64,7 +66,6 @@ FilePicker = React.createClass
         files = @state.files.filter (f) ->
             f.get('generatedFileName') isnt file.generatedFileName
         .toVector()
-
         @props.valueLink.requestChange files
 
     displayFile: (file) ->

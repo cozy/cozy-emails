@@ -51,6 +51,7 @@ module.exports = Compose = React.createClass
         layout: 'full'
 
     shouldComponentUpdate: (nextProps, nextState) ->
+        nextState.attachments = Immutable.Vector.from nextState.attachments
         !!nextProps.accounts
 
     render: ->
