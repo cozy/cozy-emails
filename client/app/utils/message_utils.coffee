@@ -115,7 +115,7 @@ module.exports = MessageUtils =
     # It add appropriate headers to the message. It adds style tags when
     # required too.
     # It adds signature at the end of the zone where the user will type.
-    makeReplyMessage: (props) ->
+    createBasicMessage: (props) ->
         account = props.accounts.get props.selectedAccountID
         account =
             id: props.selectedAccountID

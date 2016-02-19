@@ -51,7 +51,7 @@ module.exports = Compose = React.createClass
         layout: 'full'
 
     getInitialState: ->
-        MessageUtils.makeReplyMessage @props
+        MessageUtils.createBasicMessage @props
 
     isNew: ->
         not @state.conversationID
@@ -67,7 +67,7 @@ module.exports = Compose = React.createClass
                 hasChanged: @hasChanged @props, @state
 
             # Display another message
-            state = MessageUtils.makeReplyMessage nextProps
+            state = MessageUtils.createBasicMessage nextProps
             @setState state
 
 
