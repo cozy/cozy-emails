@@ -133,7 +133,7 @@ module.exports = MailsInput = React.createClass
 
         # don't display placeholder if there are dests
         hasNoContact = _.isEmpty knownContacts
-        placeholder = unless hasNoContact then '' else @props.placeholder
+        placeholder = if hasNoContact then @props.placeholder else ''
 
         div
             className: className,
