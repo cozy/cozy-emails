@@ -62,6 +62,18 @@ module.exports = Compose = React.createClass
     shouldComponentUpdate: (nextProps, nextState) ->
         !!nextProps.accounts
 
+    componentWillReceiveProps: (nextProps) ->
+        if nextProps.message
+            # Save current message
+            @saveMessage @state,
+                silent: true
+                hasChanged: @hasChanged @props, @state
+
+            # Display another message
+            state = MessageUtils.makeReplyMessage nextProps
+            @setState state
+
+
     componentWillUpdate: (nextProps, nextState) ->
         unless _.isEmpty (text = nextState.text.trim())
             if nextState.composeInHTML
@@ -86,6 +98,13 @@ module.exports = Compose = React.createClass
         # with values from server
         @saveDraft() if @isNew()
 
+        # Each state:change do not send data to server
+        # update date for client modifications
+        unless @props.lastUpdate
+            @props.lastUpdate = @state.date
+        else
+            @state.date = new Date().toISOString()
+
         # focus
         switch @state.focus
             when 'cc'
@@ -100,49 +119,57 @@ module.exports = Compose = React.createClass
                 , 0
                 @setState focus: ''
 
+    hasChanged: (props, state) ->
+        (props.lastUpdate and props.lastUpdate isnt state.date) or false
+
     componentWillUnmount: ->
-        success = (error, message) =>
-            msg = "#{t "message action draft ok"}"
-            LayoutActionCreator.notify msg, autoclose: true
+        @saveMessage @state, hasChanged: @hasChanged(@props, @state)
+
+    saveMessage: (state, options={}) ->
+        fetch = (error, message) =>
+            return if error or not message
+
+            unless options.silent
+                msg = "#{t "message action draft ok"}"
+                LayoutActionCreator.notify msg, autoclose: true
 
             # reload conversation to update its length
-            if message and message.conversationID?
-                cid = message.conversationID
-                MessageActionCreator.fetchConversation cid
+            cid = message.conversationID
+            MessageActionCreator.fetchConversation cid
 
-        unless (hasChanged = @props.lastUpdate isnt @state.date)
-            message = @state
-            error = null
-            setTimeout ->
-                success error, message
-            , 0
+        save = =>
+            MessageActionCreator.send _.clone(state), (error, message) ->
+                if error? or not message?
+                    msg = "#{t "message action draft ko"} #{error}"
+                    LayoutActionCreator.alertError msg
+                    success error, message
+                    return
+
+                fetch error, message
+
+        # Fetch
+        unless options.hasChanged
             return
 
-        # Show Modal
+        # Do not ask for save
+        if options.silent
+            save()
+            return
+
+        # Ask for changes
         init = =>
             @showModal
                 title       : t 'app confirm delete'
                 subtitle    : t 'compose confirm keep draft'
                 closeLabel  : t 'compose confirm draft keep'
                 actionLabel : t 'compose confirm draft delete'
-                closeModal  : =>
+                closeModal  : ->
                     LayoutActionCreator.hideModal()
-                    MessageActionCreator.send @state, (error, message) ->
-                        if error? or not message?
-                            msg = "#{t "message action draft ko"} #{error}"
-                            LayoutActionCreator.alertError msg
-                            success error, message
-                            return
-
-                        success error, message
-
+                    save()
         setTimeout init, 0
 
-    render: ->
-        # Each render do not send data to server
-        # update date for client modifications
-        @state.date = new Date().toISOString()
 
+    render: ->
         closeUrl = @buildClosePanelUrl @props.layout
 
         classLabel = 'compose-label'
@@ -336,7 +363,6 @@ module.exports = Compose = React.createClass
             return
 
         @props.isSaving = true
-        @props.lastUpdate = @state.date
         MessageActionCreator.send _.clone(@state), (error, message) =>
             if error? or not message?
                 if @state.isDraft
@@ -363,7 +389,6 @@ module.exports = Compose = React.createClass
             # to override the original conversationID
             @unsetNew() if @isNew()
 
-
             # TODO : move this into render
             unless @state.isDraft
                 # Display confirmation message
@@ -377,6 +402,7 @@ module.exports = Compose = React.createClass
 
                 @finalRedirect()
 
+            @props.lastUpdate = @state.date
             @props.isSaving = false
             success() if _.isFunction success
 
