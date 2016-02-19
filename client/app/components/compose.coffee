@@ -163,6 +163,7 @@ module.exports = Compose = React.createClass
 
         classLabel = 'compose-label'
         classInput = 'compose-input'
+        prefixKey = @state.id or 'new'
 
         focusEditor = Array.isArray(@state.to) and
             @state.to.length > 0 and
@@ -206,6 +207,7 @@ module.exports = Compose = React.createClass
                     valueLink: @linkState 'to'
                     label: t 'compose to'
                     ref: 'to'
+                        key: 'to-' + prefixKey
 
                 MailsInput
                     id: 'compose-cc'
@@ -214,6 +216,7 @@ module.exports = Compose = React.createClass
                     label: t 'compose cc'
                     placeholder: t 'compose cc help'
                     ref: 'cc'
+                    key: 'cc-' + prefixKey
 
                 MailsInput
                     id: 'compose-bcc'
@@ -222,6 +225,7 @@ module.exports = Compose = React.createClass
                     label: t 'compose bcc'
                     placeholder: t 'compose bcc help'
                     ref: 'bcc'
+                    key: 'bcc-' + prefixKey
 
                 div className: 'form-group',
                     div className: classInput,
@@ -245,10 +249,10 @@ module.exports = Compose = React.createClass
                         settings          : @props.settings
                         onSend            : @sendMessage
                         composeInHTML     : @state.composeInHTML
-                        focus             : focusEditor
-                        ref               : 'editor'
                         getPicker         : @getPicker
                         useIntents        : @props.useIntents
+                        ref               : 'editor'
+                        key               : 'editor-' + prefixKey
 
                 div className: 'attachements',
                     FilePicker
@@ -256,6 +260,7 @@ module.exports = Compose = React.createClass
                         editable: true
                         valueLink: @linkState 'attachments'
                         ref: 'attachments'
+                        key: 'attachments-' + prefixKey
 
                 ComposeToolbox
                     send      : @sendMessage
@@ -263,7 +268,8 @@ module.exports = Compose = React.createClass
                     save      : @saveDraft
                     cancel    : @close
                     canDelete : @state.id?
-                    ref: 'toolbox'
+                    ref       : 'toolbox'
+                    ref       : 'toolbox-' + prefixKey
 
                 div className: 'clearfix', null
 
