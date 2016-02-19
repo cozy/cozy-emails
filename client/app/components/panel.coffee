@@ -135,9 +135,11 @@ module.exports = Panel = React.createClass
         # Generates the edit draft composition form.
         else if @props.action is 'edit'
             messageID = @props.messageID
-            options.message = MessageStore.getByID messageID
-            options.key += '-' + messageID
-            component = Compose options
+            if (message = MessageStore.getByID messageID)
+                options.key += '-' + messageID
+                component = Compose _.extend options,
+                    key: options.key + '-' + messageID
+                    message: message
 
         # Generates the reply composition form.
         else if @props.action is 'compose.reply'
