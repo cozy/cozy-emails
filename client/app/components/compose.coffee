@@ -207,7 +207,7 @@ module.exports = Compose = React.createClass
                     valueLink: @linkState 'to'
                     label: t 'compose to'
                     ref: 'to'
-                        key: 'to-' + prefixKey
+                    key: 'to-' + prefixKey
 
                 MailsInput
                     id: 'compose-cc'
