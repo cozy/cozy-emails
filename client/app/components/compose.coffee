@@ -54,10 +54,7 @@ module.exports = Compose = React.createClass
         MessageUtils.makeReplyMessage @props
 
     isNew: ->
-        not @state.originalConversationID
-
-    unsetNew: ->
-        @state.originalConversationID = @state.conversationID
+        not @state.conversationID
 
     shouldComponentUpdate: (nextProps, nextState) ->
         !!nextProps.accounts
@@ -384,10 +381,6 @@ module.exports = Compose = React.createClass
                 _.each _keys, (key) =>
                     if _.isUndefined @state[key]
                         @state[key] = message[key]
-
-            # use another field to prevent the empty conversationID of draft
-            # to override the original conversationID
-            @unsetNew() if @isNew()
 
             # TODO : move this into render
             unless @state.isDraft
