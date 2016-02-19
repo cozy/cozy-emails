@@ -419,7 +419,7 @@ module.exports = Compose = React.createClass
     toggleField: (event) ->
         ref = event.currentTarget.getAttribute 'data-ref'
         view = @refs[ref]
-        value = !!!view.state.focus
+        value = !view.state.focus
 
         view.setState focus: value
 
