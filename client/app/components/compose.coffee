@@ -111,7 +111,9 @@ module.exports = Compose = React.createClass
         delete @props.lastUpdate
 
     componentWillUnmount: ->
-        @closeSaveDraft @state, hasChanged: @hasChanged(@props, @state)
+        @closeSaveDraft @state,
+            hasChanged: @hasChanged(@props, @state)
+            silent: true
 
     closeSaveDraft: (state, options={}) ->
         fetch = (error, message) =>
