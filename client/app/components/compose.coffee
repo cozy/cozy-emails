@@ -426,9 +426,11 @@ module.exports = Compose = React.createClass
         , doDelete
 
     toggleField: (event) ->
-        target = event.currentTarget.getAttribute 'data-ref'
-        element = @refs[target].getDOMNode()
-        element.classList.toggle 'shown'
+        ref = event.currentTarget.getAttribute 'data-ref'
+        view = @refs[ref]
+        value = !!!view.state.focus
+
+        view.setState focus: value
 
     # Get the file picker component (method used to pass it to the editor)
     getPicker: ->
