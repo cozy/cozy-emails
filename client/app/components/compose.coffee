@@ -62,7 +62,7 @@ module.exports = Compose = React.createClass
     componentWillReceiveProps: (nextProps) ->
         if nextProps.message
             # Save current message
-            @saveMessage @state,
+            @closeSaveDraft @state,
                 silent: true
                 hasChanged: @hasChanged @props, @state
 
@@ -120,9 +120,9 @@ module.exports = Compose = React.createClass
         (props.lastUpdate and props.lastUpdate isnt state.date) or false
 
     componentWillUnmount: ->
-        @saveMessage @state, hasChanged: @hasChanged(@props, @state)
+        @closeSaveDraft @state, hasChanged: @hasChanged(@props, @state)
 
-    saveMessage: (state, options={}) ->
+    closeSaveDraft: (state, options={}) ->
         fetch = (error, message) =>
             return if error or not message
 
@@ -297,13 +297,17 @@ module.exports = Compose = React.createClass
                 secondPanel:
                     action: 'conversation'
                     parameters: {conversationID, messageID}
+            return
 
         # Else it should bring to the default view
-        else
-            @redirect
-                direction: 'first'
-                action: 'default'
-                fullWidth: true
+        @redirect
+            direction: 'first'
+            action: 'account.mailbox.messages'
+            fullWidth: true
+            parameters: [
+                @props.selectedAccountID
+                @props.selectedMailboxID
+            ]
 
     # Cancel brings back to default view. If it's while replying to a message,
     # it brings back to this message.
@@ -344,8 +348,18 @@ module.exports = Compose = React.createClass
     sendMessage: (event) ->
         event.preventDefault() if event?
         @state.isDraft = false
-        @sendActionMessage =>
-            @refs.toolbox.setState action: null if @refs.toolbox
+        @sendActionMessage (error, message) =>
+            if error
+                msgKo = t "message action sent ko"
+                LayoutActionCreator.alertError "#{msgKo} #{error}"
+                return
+
+            # Display confirmation message
+            # for no-draft email
+            msgOk = t "message action sent ok"
+            LayoutActionCreator.notify msgOk, autoclose: true
+
+            @finalRedirect()
 
     validateMessage: ->
         return if @state.isDraft
@@ -356,7 +370,7 @@ module.exports = Compose = React.createClass
         return if @props.isSaving
         if (validate = @validateMessage())
             LayoutActionCreator.alertError t 'compose error no ' + validate[1]
-            success() if _.isFunction success
+            success(null, @state) if _.isFunction success
             return
 
         @props.isSaving = true
@@ -364,12 +378,10 @@ module.exports = Compose = React.createClass
             if error? or not message?
                 if @state.isDraft
                     msgKo = t "message action draft ko"
-                else
-                    msgKo = t "message action sent ko"
-                LayoutActionCreator.alertError "#{msgKo} #{error}"
+                    LayoutActionCreator.alertError "#{msgKo} #{error}"
 
                 @props.isSaving = false
-                success() if _.isFunction success
+                success(error, message) if _.isFunction success
                 return
 
             unless @state.id
@@ -382,22 +394,9 @@ module.exports = Compose = React.createClass
                     if _.isUndefined @state[key]
                         @state[key] = message[key]
 
-            # TODO : move this into render
-            unless @state.isDraft
-                # Display confirmation message
-                # for no-draft email
-                msgOk = t "message action sent ok"
-                LayoutActionCreator.notify msgOk, autoclose: true
-
-                # reload conversation to update its length
-                if (cid = message.conversationID)
-                    MessageActionCreator.fetchConversation cid
-
-                @finalRedirect()
-
             @props.lastUpdate = @state.date
             @props.isSaving = false
-            success() if _.isFunction success
+            success(error, message) if _.isFunction success
 
     deleteDraft: (event) ->
         event.preventDefault() if event
