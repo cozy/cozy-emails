@@ -185,11 +185,6 @@ module.exports = MessageUtils =
             when null
                 @setMessageAsDefault options
 
-        # # remove my address from dests
-        # notMe = (dest) -> return dest.address isnt account.address
-        # message.to = message.to.filter notMe
-        # message.cc = message.cc.filter notMe
-
         message
 
 
