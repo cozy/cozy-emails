@@ -123,6 +123,7 @@ module.exports = Panel = React.createClass
             selectedMailboxID    : @props.selectedMailboxID
             useIntents           : @props.useIntents
             ref                  : 'compose'
+            key                  : @props.action or 'compose'
 
         component = null
 
@@ -133,7 +134,9 @@ module.exports = Panel = React.createClass
 
         # Generates the edit draft composition form.
         else if @props.action is 'edit'
-            options.message = MessageStore.getByID @props.messageID
+            messageID = @props.messageID
+            options.message = MessageStore.getByID messageID
+            options.key += '-' + messageID
             component = Compose options
 
         # Generates the reply composition form.

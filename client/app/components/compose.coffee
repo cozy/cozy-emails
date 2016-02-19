@@ -59,18 +59,6 @@ module.exports = Compose = React.createClass
     shouldComponentUpdate: (nextProps, nextState) ->
         !!nextProps.accounts
 
-    componentWillReceiveProps: (nextProps) ->
-        if nextProps.message
-            # Save current message
-            @closeSaveDraft @state,
-                silent: true
-                hasChanged: @hasChanged @props, @state
-
-            # Display another message
-            state = MessageUtils.createBasicMessage nextProps
-            @setState state
-
-
     componentWillUpdate: (nextProps, nextState) ->
         unless _.isEmpty (text = nextState.text.trim())
             if nextState.composeInHTML
