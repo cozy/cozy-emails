@@ -29,8 +29,8 @@ module.exports = MailsInput = React.createClass
         return state
 
     componentWillReceiveProps: (nextProps) ->
-        isFocus = _.isEmpty nextProps.valueLink.value
-        @setState known: value, focus: not isFocus
+        value = nextProps.valueLink.value
+        @setState known: value, focus: not _.isEmpty value
 
     # Code from the StoreWatch Mixin. We don't use the mixin
     # because we store other things into the state
