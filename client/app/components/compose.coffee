@@ -57,7 +57,7 @@ module.exports = Compose = React.createClass
         not @state.conversationID
 
     shouldComponentUpdate: (nextProps, nextState) ->
-        !!nextProps.accounts
+        not _.isEqual nextState, @state
 
     componentWillUpdate: (nextProps, nextState) ->
         unless _.isEmpty (text = nextState.text.trim())
