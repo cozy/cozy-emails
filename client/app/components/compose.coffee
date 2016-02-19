@@ -119,6 +119,9 @@ module.exports = Compose = React.createClass
     hasChanged: (props, state) ->
         (props.lastUpdate and props.lastUpdate isnt state.date) or false
 
+    resetChange: ->
+        delete @props.lastUpdate
+
     componentWillUnmount: ->
         @closeSaveDraft @state, hasChanged: @hasChanged(@props, @state)
 
@@ -139,7 +142,6 @@ module.exports = Compose = React.createClass
                 if error? or not message?
                     msg = "#{t "message action draft ko"} #{error}"
                     LayoutActionCreator.alertError msg
-                    success error, message
                     return
 
                 fetch error, message
@@ -325,6 +327,10 @@ module.exports = Compose = React.createClass
         return if @isNew()
 
         doDelete = =>
+            # Do not try to save client changes
+            # when componentWillUnmount
+            @resetChange()
+
             messageID = @state.id
             MessageActionCreator.delete {messageID}
             LayoutActionCreator.hideModal()
@@ -407,22 +413,12 @@ module.exports = Compose = React.createClass
         else
             confirmMessage = t 'mail confirm delete nosubject'
 
-        doDelete = =>
-            @redirect
-                direction: 'first'
-                action: 'account.mailbox.messages'
-                fullWidth: true
-                parameters: [
-                    @props.selectedAccountID
-                    @props.selectedMailboxID
-                ]
-
         @showModal
             title       : t 'mail confirm delete title'
             subtitle    : confirmMessage
             closeLabel  : t 'mail confirm delete cancel'
             actionLabel : t 'mail confirm delete delete'
-        , doDelete
+        , @finalRedirect
 
     toggleField: (event) ->
         ref = event.currentTarget.getAttribute 'data-ref'
