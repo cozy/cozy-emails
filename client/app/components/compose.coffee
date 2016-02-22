@@ -268,7 +268,7 @@ module.exports = Compose = React.createClass
                     cancel    : @close
                     canDelete : @state.id?
                     ref       : 'toolbox'
-                    ref       : 'toolbox-' + prefixKey
+                    key       : 'toolbox-' + prefixKey
 
                 div className: 'clearfix', null
 
