@@ -157,7 +157,6 @@ module.exports = Compose = React.createClass
                     save()
         setTimeout init, 0
 
-
     render: ->
         closeUrl = @buildClosePanelUrl @props.layout
 
@@ -307,11 +306,10 @@ module.exports = Compose = React.createClass
                 @props.selectedMailboxID
             ]
 
-    # Cancel brings back to default view. If it's while replying to a message,
+    # Cancel brings back to default view.
+    # If it's while replying to a message,
     # it brings back to this message.
     close: (event) ->
-        event.preventDefault()
-
         # Action after cancelation: call @props.onCancel
         # or navigate to message list.
         if @props.onCancel?

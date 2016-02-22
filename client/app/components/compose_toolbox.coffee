@@ -12,22 +12,25 @@ module.exports = ComposeToolbox = React.createClass
         className = if @state.action is 'send' then 'sending' else 'send'
         t 'compose action ' + className
 
-    save: ->
+    save: (event) ->
+        event.preventDefault() if event
         @triggerAction 'save'
 
-    send: ->
+    send: (event) ->
+        event.preventDefault() if event
         @triggerAction 'send'
 
-    delete: ->
+    delete: (event) ->
+        event.preventDefault() if event
         @triggerAction 'delete'
 
-    cancel: ->
+    cancel: (event) ->
+        event.preventDefault() if event
         @triggerAction 'cancel'
 
     triggerAction: (type) ->
         @setState action : type
-        if (listener = @props[type]) and _.isFunction listener
-            listener?()
+        listener?() if (listener = @props[type])
 
     render: ->
         div className: 'composeToolbox',
@@ -60,6 +63,6 @@ module.exports = ComposeToolbox = React.createClass
                                 span className: 'fa fa-trash-o'
                                 span null, t 'compose action delete'
                     button
-                        onClick: @props.cancel
+                        onClick: @cancel
                         className: 'btn btn-cozy-non-default btn-cancel',
                         t 'app cancel'
