@@ -26,8 +26,8 @@ module.exports = ComposeToolbox = React.createClass
 
     triggerAction: (type) ->
         @setState action : type
-        if (callback = @props[type]) and _.isFunction callback
-            callback()
+        if (listener = @props[type]) and _.isFunction listener
+            listener?()
 
     render: ->
         div className: 'composeToolbox',
