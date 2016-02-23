@@ -26,7 +26,7 @@ module.exports = MailsInput = React.createClass
         state.selected = 0
         state.open     = false
         state.focus    = !!state.known.length
-        return state
+        state
 
     # Code from the StoreWatch Mixin. We don't use the mixin
     # because we store other things into the state
@@ -38,16 +38,13 @@ module.exports = MailsInput = React.createClass
 
     _setStateFromStores: -> @setState @getStateFromStores()
 
-    shouldComponentUpdate: (nextProps, nextState) ->
-        return not(_.isEqual(nextState, @state)) or
-            not (_.isEqual(nextProps, @props))
-
     render: ->
+        @props.valueLink.requestChange @state.known
+
         renderTag = (address, idx) =>
             remove = =>
-                known = @state.known.filter (a) ->
-                    return a.address isnt address.address
-                @props.valueLink.requestChange known
+                @setState known: @state.known.filter (a) ->
+                    a.address isnt address.address
 
             onDragStart = (event) =>
                 event.stopPropagation()
@@ -61,8 +58,7 @@ module.exports = MailsInput = React.createClass
                     event.dataTransfer.setData @props.id, true
 
             onDragEnd = (event) ->
-                if event.dataTransfer.dropEffect is 'move'
-                    remove()
+                remove() if event.dataTransfer.dropEffect is 'move'
 
             if address.name? and address.name.trim() isnt ''
                 display = address.name
@@ -90,12 +86,12 @@ module.exports = MailsInput = React.createClass
         onChange = (event) =>
             value = event.target.value.split ','
             if value.length is 2
-                known = _.clone @state.known
-                known.push(MessageUtils.parseAddress value[0])
-                @props.valueLink.requestChange known
-                @setState unknown: value[1].trim()
+                @setState
+                    known: MessageUtils.parseAddress value[0]
+                    unknown: value[1].trim()
             else
-                @setState unknown: event.target.value
+                @setState
+                    unknown: event.target.value
 
         onInput = (event) =>
             input = @refs.contactInput.getDOMNode()
@@ -251,22 +247,12 @@ module.exports = MailsInput = React.createClass
         # if user cancel compose, component may be unmounted when the timeout
         # is fired
         if @isMounted()
-            state = {}
-            # close suggestion list
-            state.open = false
             # Add current value to list of addresses
             value = @refs.contactInput.getDOMNode().value
-
-            if value.trim() isnt ''
+            unless _.isEmpty value.trim()
                 address = MessageUtils.parseAddress value
-
                 if address.isValid
-                    @state.known.push address
-                    state.known   = @state.known
-                    state.unknown = ''
-                    @props.valueLink.requestChange state.known
-                    @setState state
-
+                    @update address
                 else
                     # Trick to make sure that the alert error is not pop up
                     # twiced due to multiple blur and key down.
@@ -277,39 +263,44 @@ module.exports = MailsInput = React.createClass
                         msg = t 'compose wrong email format',
                             address: address.address
                         LayoutActionCreator.alertError msg
-
             else
-                @setState state
+                @setState open: false
 
 
     onContact: (contact) ->
-        address =
-            name    : contact.get 'fn'
-            address : contact.get 'address'
-        known = _.clone @state.known
-        known.push address
-        @props.valueLink.requestChange known
-        @setState unknown: '', contacts: null, open: false
+        @update
+            name : contact.get 'fn'
+            address: contact.get 'address'
 
         # try to put back the focus at the end of the field
         setTimeout =>
             query = @refs.contactInput.getDOMNode().focus()
         , 200
 
+    update: (known, unknown) ->
+        state =
+            unknown: unknown or ''
+            contacts: null
+            # close suggestion list
+            open: false
+        if known
+            state.known = _.clone @state.known
+            state.known.push known
+
+        @setState state
+
     onDrop: (event) ->
         event.preventDefault()
         event.stopPropagation()
-        {name, address} = JSON.parse(event.dataTransfer.getData 'address')
+
+        data = event.dataTransfer.getData 'address'
+        {name, address} = JSON.parse data
+
         exists = @state.known.some (item) ->
             return item.name is name and item.address is address
+
         if address? and not exists
-            address =
-                name    : name
-                address : address
-            known = _.clone @state.known
-            known.push address
-            @props.valueLink.requestChange known
-            @setState unknown: '', contacts: null, open: false
+            @update name : name, address: address
             event.dataTransfer.dropEffect = 'move'
         else
             event.dataTransfer.dropEffect = 'none'
