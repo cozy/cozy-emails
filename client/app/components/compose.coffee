@@ -49,12 +49,22 @@ module.exports = Compose = React.createClass
 
     getDefaultProps: ->
         layout: 'full'
+        prefixKey: 'new'
 
     getInitialState: ->
-        MessageUtils.createBasicMessage @props
+        state = MessageUtils.createBasicMessage @props
+
+        # TODO : prefixKey should be replaced by state.id
+        # when new message would have a default id
+        @props.prefixKey = state.id if state.id
+
+        state
 
     isNew: ->
         not @state.conversationID
+
+    getChildKey: (name) ->
+        name + '-' + @props.prefixKey
 
     shouldComponentUpdate: (nextProps, nextState) ->
         not _.isEqual nextState, @state
@@ -162,7 +172,6 @@ module.exports = Compose = React.createClass
 
         classLabel = 'compose-label'
         classInput = 'compose-input'
-        prefixKey = @state.id or 'new'
 
         focusEditor = Array.isArray(@state.to) and
             @state.to.length > 0 and
@@ -206,7 +215,7 @@ module.exports = Compose = React.createClass
                     valueLink: @linkState 'to'
                     label: t 'compose to'
                     ref: 'to'
-                    key: 'to-' + prefixKey
+                    key: @getChildKey 'to'
 
                 MailsInput
                     id: 'compose-cc'
@@ -215,7 +224,7 @@ module.exports = Compose = React.createClass
                     label: t 'compose cc'
                     placeholder: t 'compose cc help'
                     ref: 'cc'
-                    key: 'cc-' + prefixKey
+                    key: @getChildKey 'cc'
 
                 MailsInput
                     id: 'compose-bcc'
@@ -224,7 +233,7 @@ module.exports = Compose = React.createClass
                     label: t 'compose bcc'
                     placeholder: t 'compose bcc help'
                     ref: 'bcc'
-                    key: 'bcc-' + prefixKey
+                    key: @getChildKey 'bcc'
 
                 div className: 'form-group',
                     div className: classInput,
@@ -251,7 +260,7 @@ module.exports = Compose = React.createClass
                         getPicker         : @getPicker
                         useIntents        : @props.useIntents
                         ref               : 'editor'
-                        key               : 'editor-' + prefixKey
+                        key               : @getChildKey 'editor'
 
                 div className: 'attachements',
                     FilePicker
@@ -259,7 +268,7 @@ module.exports = Compose = React.createClass
                         editable: true
                         valueLink: @linkState 'attachments'
                         ref: 'attachments'
-                        key: 'attachments-' + prefixKey
+                        key: @getChildKey 'attachments'
 
                 ComposeToolbox
                     send      : @sendMessage
@@ -268,7 +277,7 @@ module.exports = Compose = React.createClass
                     cancel    : @close
                     canDelete : @state.id?
                     ref       : 'toolbox'
-                    key       : 'toolbox-' + prefixKey
+                    key       : @getChildKey 'toolbox'
 
                 div className: 'clearfix', null
 

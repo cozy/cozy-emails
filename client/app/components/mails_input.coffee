@@ -26,7 +26,7 @@ module.exports = MailsInput = React.createClass
     shouldComponentUpdate: (nextProps, nextState) ->
         # Update parent from child
         unless _.isEqual nextProps.valueLink.value, nextState.known
-            @props.valueLink.requestChange nextProps.valueLink.value
+            @props.valueLink.requestChange nextState.known
         not _.isEqual nextState, @state
 
     getInitialState: ->
