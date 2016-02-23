@@ -8,10 +8,12 @@
 *.swp
 *.transifex.coffee
 
-client/bower_components
+.node-version
+
 client/public
-client/app/locales/*.json
-!client/app/locales/en.json
+
+locales
+!locales/en.json
 
 doc
 last.html
