@@ -64,7 +64,6 @@ FilePicker = React.createClass
         files = @state.files.filter (f) ->
             f.get('generatedFileName') isnt file.generatedFileName
         .toVector()
-
         @props.valueLink.requestChange files
 
     displayFile: (file) ->

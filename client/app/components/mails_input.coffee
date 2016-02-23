@@ -25,10 +25,8 @@ module.exports = MailsInput = React.createClass
         state.unknown  = ''
         state.selected = 0
         state.open     = false
+        state.focus    = !!state.known.length
         return state
-
-    componentWillReceiveProps: (nextProps) ->
-        @setState known: nextProps.valueLink.value
 
     # Code from the StoreWatch Mixin. We don't use the mixin
     # because we store other things into the state
@@ -45,7 +43,6 @@ module.exports = MailsInput = React.createClass
             not (_.isEqual(nextProps, @props))
 
     render: ->
-
         renderTag = (address, idx) =>
             remove = =>
                 known = @state.known.filter (a) ->
@@ -127,11 +124,12 @@ module.exports = MailsInput = React.createClass
             else
                 event.dataTransfer.dropEffect = 'none'
 
+        # Show field if results
+        className += ' shown' if @state.focus
+
         # don't display placeholder if there are dests
-        if knownContacts.length > 0
-            placeholder = ''
-        else
-            placeholder = @props.placeholder
+        hasNoContact = _.isEmpty knownContacts
+        placeholder = if hasNoContact then @props.placeholder else ''
 
         div
             className: className,
