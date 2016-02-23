@@ -19,6 +19,16 @@ module.exports = MailsInput = React.createClass
     componentWillMount: ->
         @setState contacts: null, open: false
 
+    componentWillReceiveProps: (nextProps) ->
+        # Update from parent
+        @setState known: nextProps.valueLink.value
+
+    shouldComponentUpdate: (nextProps, nextState) ->
+        # Update parent from child
+        unless _.isEqual nextProps.valueLink.value, nextState.known
+            @props.valueLink.requestChange nextProps.valueLink.value
+        not _.isEqual nextState, @state
+
     getInitialState: ->
         state = @getStateFromStores()
         state.known    = @props.valueLink.value
@@ -39,8 +49,6 @@ module.exports = MailsInput = React.createClass
     _setStateFromStores: -> @setState @getStateFromStores()
 
     render: ->
-        @props.valueLink.requestChange @state.known
-
         renderTag = (address, idx) =>
             remove = =>
                 @setState known: @state.known.filter (a) ->
