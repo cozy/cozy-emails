@@ -1,3 +1,7 @@
+_          = require 'underscore'
+React      = require 'react'
+classNames = require 'classnames'
+
 {div, label, textarea, span, ul, li, a, img, i} = React.DOM
 
 MessageUtils    = require '../utils/message_utils'
@@ -5,7 +9,6 @@ ContactStore    = require '../stores/contact_store'
 ContactActionCreator = require '../actions/contact_action_creator'
 LayoutActionCreator = require '../actions/layout_action_creator'
 
-classer = React.addons.classSet
 
 # Public: input to enter multiple mails
 # @TODO : use something tag-it like
@@ -89,7 +92,7 @@ module.exports = MailsInput = React.createClass
 
         # set focus to input area when clicking into component
         onClick = =>
-            @refs.contactInput.getDOMNode().focus()
+            @refs.contactInput.focus()
 
         onChange = (event) =>
             value = event.target.value.split ','
@@ -102,7 +105,7 @@ module.exports = MailsInput = React.createClass
                     unknown: event.target.value
 
         onInput = (event) =>
-            input = @refs.contactInput.getDOMNode()
+            input = @refs.contactInput
             input.cols = input.value.length + 2
             input.style.height = input.scrollHeight + 'px'
 
@@ -110,7 +113,7 @@ module.exports = MailsInput = React.createClass
            #{@props.className or ''} form-group mail-input #{@props.id}
         """
         classLabel = 'compose-label control-label'
-        listClass  = classer
+        listClass  = classNames
             'contact-form': true
             open: @state.open and @state.contacts?.size > 0
         current    = 0
@@ -171,14 +174,14 @@ module.exports = MailsInput = React.createClass
                                 selected = current is @state.selected
                                 current++
                                 @renderContact contact, selected
-                            .toJS()
+                            .toArray()
 
     renderContact: (contact, selected) ->
         selectContact = =>
             @onContact contact
         avatar = contact.get 'avatar'
 
-        classes = classer
+        classes = classNames
             selected: selected
         li className: classes, onClick: selectContact,
             a null,
@@ -191,7 +194,7 @@ module.exports = MailsInput = React.createClass
                 "#{contact.get 'fn'} <#{contact.get 'address'}>"
 
     onQuery: (char) ->
-        query = @refs.contactInput.getDOMNode().value.split(',').pop().replace(/^\s*/, '')
+        query = @refs.contactInput.value.split(',').pop().replace(/^\s*/, '')
         if char? and typeof char is 'string'
             query += char
             force = false
@@ -228,7 +231,7 @@ module.exports = MailsInput = React.createClass
             when "ArrowDown"
                 @setState selected: if selected is (count - 1) then 0 else selected + 1
             when "Backspace"
-                node = @refs.contactInput.getDOMNode()
+                node = @refs.contactInput
                 node.value = node.value.trim()
                 if node.value.length < 2
                     @setState open: false
@@ -256,7 +259,7 @@ module.exports = MailsInput = React.createClass
         # is fired
         if @isMounted()
             # Add current value to list of addresses
-            value = @refs.contactInput.getDOMNode().value
+            value = @refs.contactInput.value
             unless _.isEmpty value.trim()
                 address = MessageUtils.parseAddress value
                 if address.isValid
@@ -282,7 +285,7 @@ module.exports = MailsInput = React.createClass
 
         # try to put back the focus at the end of the field
         setTimeout =>
-            query = @refs.contactInput.getDOMNode().focus()
+            query = @refs.contactInput.focus()
         , 200
 
     update: (known, unknown) ->

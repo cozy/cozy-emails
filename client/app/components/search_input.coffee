@@ -1,3 +1,5 @@
+React = require 'react'
+
 {div, input, button} = React.DOM
 
 module.exports = React.createClass

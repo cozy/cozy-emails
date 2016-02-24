@@ -1,79 +1,85 @@
-request = superagent
+request = require 'superagent'
+_       = require 'underscore'
 
 AccountTranslator = require './translators/account_translator'
 
 SettingsStore = require '../stores/settings_store'
 
 
-handleResponse = (res, callback, details...) ->
-    if res.ok then callback null, res.body
-    else
-        if res.body?.error is true
-            err = res.body
-        else if res.body?.error
-            err = res.body.error
-        else if res.body
-            err = res.body
+handleResponse = (callback, details...) ->
+    # Prepare the handler to get `err`, `res` from superagent, and next the
+    # contextual args (callback, details...)
+    _handler = (err, res, callback, details) ->
+        if err or not res.ok
+            unless err
+                if res.body?.error is true
+                    err = res.body
+                else if res.body?.error
+                    err = res.body.error
+                else if res.body
+                    err = res.body
+                else
+                    err = new Error "error in #{details[0]}"
+
+            console.error "Error in", details..., err
+            callback err
+
         else
-            err = new Error("error in #{details[0]}")
-        console.log "Error in", details..., err
-        callback err
+            callback null, res.body
+
+    # Returns a partial ready to be used by superagent `end`, with placeholders
+    _.partial _handler, _, _, callback, details
+
 
 module.exports =
     changeSettings: (settings, callback) ->
         request.put "settings"
         .set 'Accept', 'application/json'
         .send settings
-        .end (res) ->
-            handleResponse res, callback, 'changeSettings', settings
+        .end handleResponse callback, 'changeSettings', settings
 
     fetchMessage: (emailID, callback) ->
         request.get "message/#{emailID}"
         .set 'Accept', 'application/json'
-        .end (res) ->
-            handleResponse res, callback, 'fetchMessage', emailID
+        .end handleResponse callback, 'fetchMessage', emailID
 
     fetchConversation: (conversationID, callback) ->
         request.get "messages/batchFetch?conversationID=#{conversationID}"
         .set 'Accept', 'application/json'
-        .end (res) ->
+        .end (err, res) ->
+            _cb = handleResponse(callback, 'fetchConversation', conversationID)
             if res.ok
                 res.body.conversationLengths = {}
                 res.body.conversationLengths[conversationID] = res.body.length
+            _cb(err, res)
 
-            handleResponse res, callback, "fetchConversation", conversationID
 
     fetchMessagesByFolder: (url, callback) ->
         request.get url
         .set 'Accept', 'application/json'
-        .end (res) ->
-            handleResponse res, callback, "fetchMessagesByFolder", url
+        .end handleResponse callback, "fetchMessagesByFolder", url
 
     mailboxCreate: (mailbox, callback) ->
         request.post "mailbox"
         .send mailbox
         .set 'Accept', 'application/json'
-        .end (res) ->
-            handleResponse res, callback, "mailboxCreate", mailbox
+        .end handleResponse callback, "mailboxCreate", mailbox
 
     mailboxUpdate: (data, callback) ->
         request.put "mailbox/#{data.mailboxID}"
         .send data
         .set 'Accept', 'application/json'
-        .end (res) ->
-            handleResponse res, callback, "mailboxUpdate", data
+        .end handleResponse callback, "mailboxUpdate", data
 
     mailboxDelete: (data, callback) ->
         request.del "mailbox/#{data.mailboxID}"
         .set 'Accept', 'application/json'
-        .end (res) ->
-            handleResponse res, callback, "mailboxDelete", data
+        .end handleResponse callback, "mailboxDelete", data
 
     mailboxExpunge: (data, callback) ->
         request.del "mailbox/#{data.mailboxID}/expunge"
         .set 'Accept', 'application/json'
-        .end (res) ->
-            handleResponse res, callback, "mailboxExpunge", data
+        .end handleResponse callback, "mailboxExpunge", data
 
     messageSend: (message, callback) ->
         req = request.post "message"
@@ -90,52 +96,45 @@ module.exports =
             if blob?
                 req.attach name, blob
 
-        req.end (res) ->
-            handleResponse res, callback, "messageSend", message
+        req.end handleResponse callback, "messageSend", message
 
 
     batchFetch: (target, callback) ->
         body = _.extend {}, target
         request.put "messages/batchFetch"
         .send target
-        .end (res) ->
-            handleResponse res, callback, "batchFetch"
+        .end handleResponse callback, "batchFetch"
 
     batchAddFlag: (target, flag, callback) ->
         body = _.extend {flag}, target
         request.put "messages/batchAddFlag"
         .send body
-        .end (res) ->
-            handleResponse res, callback, "batchAddFlag"
+        .end handleResponse callback, "batchAddFlag"
 
     batchRemoveFlag: (target, flag, callback) ->
         body = _.extend {flag}, target
         request.put "messages/batchRemoveFlag"
         .send body
-        .end (res) ->
-            handleResponse res, callback, "batchRemoveFlag"
+        .end handleResponse callback, "batchRemoveFlag"
 
     batchDelete: (target, callback) ->
         body = _.extend {}, target
         request.put "messages/batchTrash"
         .send target
-        .end (res) ->
-            handleResponse res, callback, "batchDelete"
+        .end handleResponse callback, "batchDelete"
 
     batchMove: (target, from, to, callback) ->
         body = _.extend {from, to}, target
         request.put "messages/batchMove"
         .send body
-        .end (res) ->
-            handleResponse res, callback, "batchMove"
+        .end handleResponse callback, "batchMove"
 
     createAccount: (account, callback) ->
         # TODO: validation & sanitization
         request.post 'account'
         .send account
         .set 'Accept', 'application/json'
-        .end (res) ->
-            handleResponse res, callback, "createAccount", account
+        .end handleResponse callback, "createAccount", account
 
     editAccount: (account, callback) ->
 
@@ -145,55 +144,46 @@ module.exports =
         request.put "account/#{rawAccount.id}"
         .send rawAccount
         .set 'Accept', 'application/json'
-        .end (res) ->
-            handleResponse res, callback, "editAccount", account
+        .end handleResponse callback, "editAccount", account
 
     checkAccount: (account, callback) ->
-
         request.put "accountUtil/check"
         .send account
         .set 'Accept', 'application/json'
-        .end (res) ->
-            handleResponse res, callback, "checkAccount"
+        .end handleResponse callback, "checkAccount"
 
     removeAccount: (accountID, callback) ->
 
         request.del "account/#{accountID}"
         .set 'Accept', 'application/json'
-        .end (res) ->
-            handleResponse res, callback, "removeAccount"
+        .end handleResponse callback, "removeAccount"
 
     accountDiscover: (domain, callback) ->
 
         request.get "provider/#{domain}"
         .set 'Accept', 'application/json'
-        .end (res) ->
-            handleResponse res, callback, "accountDiscover"
+        .end handleResponse callback, "accountDiscover"
 
     search: (url, callback) ->
         request.get url
         .set 'Accept', 'application/json'
-        .end (res) ->
-            handleResponse res, callback, "search"
+        .end handleResponse callback, "search"
 
     refresh: (hard, callback) ->
         url = if hard then "refresh?all=true"
         else "refresh"
 
         request.get url
-        .end (res) ->
-            handleResponse res, callback, "refresh"
+        .end handleResponse callback, "refresh"
 
     refreshMailbox: (mailboxID, opts, callback) ->
         request.get "refresh/#{mailboxID}"
         .query opts
-        .end (res) ->
-            handleResponse res, callback, "refreshMailbox"
+        .end handleResponse callback, "refreshMailbox"
 
 
     activityCreate: (options, callback) ->
         request.post "activity"
         .send options
         .set 'Accept', 'application/json'
-        .end (res) ->
-            handleResponse res, callback, "activityCreate", options
+        .end handleResponse callback, "activityCreate", options

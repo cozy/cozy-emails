@@ -1,19 +1,26 @@
+React      = require 'react'
+classNames = require 'classnames'
+
 {
     div, p, form, label, input, button, ul, li, a, span, i,
     fieldset, legend
 } = React.DOM
-classer = React.addons.classSet
 
-AccountInput  = require './account_config_input'
-AccountDelete = require './account_config_delete'
+_ = require 'underscore'
+Immutable = require 'immutable'
+
+{   Form
+    FieldSet
+    FormButtons
+    FormButton} = require('./basic_components').factories
+AccountInput  = React.createFactory require './account_config_input'
+AccountDelete = React.createFactory require './account_config_delete'
 AccountActionCreator = require '../actions/account_action_creator'
 
 RouterMixin = require '../mixins/router_mixin'
-basics = require './basic_components'
 
 discovery2Fields = require '../utils/discovery_to_fields'
 
-{Form, FieldSet, FormButtons, FormButton} = basics
 
 SMTP_OPTIONS =
     'NONE': t("account smtpMethod NONE")
@@ -116,7 +123,7 @@ module.exports = AccountConfigMain = React.createClass
         return AccountInput options
 
     render: ->
-        formClass = classer
+        formClass = classNames
             'form-horizontal': true
             'form-account': true
             'waiting': @props.isWaiting

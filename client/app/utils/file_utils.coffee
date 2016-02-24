@@ -27,3 +27,8 @@ module.exports = FileUtils =
         fileReader.onload = ->
             cb fileReader.result
 
+
+    getFileURL: (file) ->
+        if file.rawFileObject and not file.url
+            return URL.createObjectURL file.rawFileObject
+        file.url

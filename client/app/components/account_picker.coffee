@@ -1,3 +1,6 @@
+_     = require 'underscore'
+React = require 'react'
+
 {div, ul, li, p, span, a, button, input} = React.DOM
 
 RouterMixin = require '../mixins/router_mixin'
@@ -52,9 +55,9 @@ module.exports = React.createClass
                     span className: 'caret'
             ul className: 'dropdown-menu', role: 'menu',
                 @props.accounts
-                .filter (account, key) => key isnt @props.valueLink.value
-                .map (account, key) => @renderAccount(key, account)
-                .toJS()
+                    .filter (account, key) => key isnt @props.valueLink.value
+                    .map (account, key) => @renderAccount(key, account)
+                    .toArray()
 
 
     renderAccount: (key, account) ->

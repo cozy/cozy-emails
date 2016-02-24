@@ -1,7 +1,13 @@
-{div, ul, li, span, a, button} = React.DOM
-{Menu, MenuHeader, MenuItem, MenuDivider} = require './basic_components'
-{FlagsConstants} = require '../constants/app_constants'
+_     = require 'underscore'
+React = require 'react'
 
+{div, ul, li, span, a, button} = React.DOM
+
+{   Menu
+    MenuHeader
+    MenuItem
+    MenuDivider} = require('./basic_components').factories
+{FlagsConstants} = require '../constants/app_constants'
 
 
 # This component is used in 3 places
@@ -141,4 +147,3 @@ module.exports = ToolboxActions = React.createClass
                         onClickValue: id
                         mbox.get('label')
                 .toArray()
-

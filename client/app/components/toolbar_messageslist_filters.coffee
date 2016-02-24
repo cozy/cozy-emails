@@ -1,11 +1,12 @@
+_     = require 'underscore'
+React = require 'react'
+
 {div, ul, li, span, i, button} = React.DOM
 {MessageFilter, Tooltips}      = require '../constants/app_constants'
 
-RouterMixin = require '../mixins/router_mixin'
-
 LayoutActionCreator = require '../actions/layout_action_creator'
 
-DateRangePicker = require './date_range_picker'
+DateRangePicker = React.createFactory require './date_range_picker'
 
 
 module.exports = FiltersToolbarMessagesList = React.createClass

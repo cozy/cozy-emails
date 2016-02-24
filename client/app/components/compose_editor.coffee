@@ -1,4 +1,10 @@
+_      = require 'underscore'
+jQuery = require 'jquery'
+React  = require 'react'
+
 {div, button, textarea} = React.DOM
+
+LinkedStateMixin = require 'react-addons-linked-state-mixin'
 
 FileUtils    = require '../utils/file_utils'
 
@@ -6,7 +12,7 @@ module.exports = ComposeEditor = React.createClass
     displayName: 'ComposeEditor'
 
     mixins: [
-        React.addons.LinkedStateMixin # two-way data binding
+        LinkedStateMixin
     ]
 
     getInitialState: ->
@@ -22,11 +28,11 @@ module.exports = ComposeEditor = React.createClass
 
     # Update parent component when content has been updated
     onHTMLChange: (event) ->
-        @props.html.requestChange @refs.html.getDOMNode().innerHTML
+        @props.html.requestChange @refs.html.innerHTML
 
     # Update parent component when content has been updated
     onTextChange: (event) ->
-        @props.text.requestChange @refs.content.getDOMNode().value
+        @props.text.requestChange @refs.content.value
 
     render: ->
 
@@ -197,7 +203,7 @@ module.exports = ComposeEditor = React.createClass
         else
             # Text message
             if @props.focus
-                node = @refs.content.getDOMNode()
+                node = @refs.content
 
                 if not @props.settings.get 'composeOnTop'
                     rect = node.getBoundingClientRect()
@@ -223,7 +229,7 @@ module.exports = ComposeEditor = React.createClass
     # before the signature if there is one.
     setCursorPosition: ->
         if @props.focus
-            node = @refs.html?.getDOMNode()
+            node = @refs.html?
             if node?
                 document.querySelector(".rt-editor").focus()
                 if not @props.settings.get 'composeOnTop'
@@ -280,7 +286,7 @@ module.exports = ComposeEditor = React.createClass
                     signatureNode.innerHTML = "-- \n<br>#{signatureHtml}</p>"
                 else
                     # append new signature at the end of message
-                    @refs.html.getDOMNode().innerHTML += """
+                    @refs.html.innerHTML += """
                 <p><br></p><p id="signature">-- \n<br>#{signatureHtml}</p>
                     """
             else
@@ -291,7 +297,7 @@ module.exports = ComposeEditor = React.createClass
             # force update of React component
             @onHTMLChange()
         else if @refs.content?
-            node = @refs.content.getDOMNode()
+            node = @refs.content
             oldSig = @props.accounts[oldProps.accountID].signature
             if signature? and signature.length > 0
                 if oldSig and oldSig.length > 0

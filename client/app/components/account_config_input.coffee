@@ -1,8 +1,10 @@
-{div, label, input, textarea} = React.DOM
-{ErrorLine, Dropdown} = require './basic_components'
-classer = React.addons.classSet
+React = require 'react'
 
-RouterMixin = require '../mixins/router_mixin'
+{div, label, input, textarea} = React.DOM
+{ErrorLine, Dropdown} = require('./basic_components').factories
+
+RouterMixin      = require '../mixins/router_mixin'
+LinkedStateMixin = require 'react-addons-linked-state-mixin'
 
 
 # Input used in the account configuration/creation form. An account input can
@@ -12,7 +14,7 @@ module.exports = AccountInput = React.createClass
 
     mixins: [
         RouterMixin
-        React.addons.LinkedStateMixin # two-way data binding
+        LinkedStateMixin
     ]
 
     propTypes:
@@ -104,4 +106,3 @@ module.exports = AccountInput = React.createClass
         if type in ['text', 'email'] or name is 'signature'
             placeHolder = t "account #{name} short"
         return placeHolder
-

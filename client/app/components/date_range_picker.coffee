@@ -1,5 +1,13 @@
+_      = require 'underscore'
+moment = require 'moment'
+React  = require 'react'
+
 {div, ul, li, span, i, button, input} = React.DOM
 {Tooltips} = require '../constants/app_constants'
+
+# datePickerController doesn't exports its top var, so we catch it with the
+# webpack exports-loader
+datePickerController = require 'exports?datePickerController!../../vendor/datePicker/datepicker'
 
 
 momentFormat     = 'DD/MM/YYYY'

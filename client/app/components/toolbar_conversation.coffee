@@ -1,13 +1,17 @@
+React = require 'react'
+
 {nav, div, button, a} = React.DOM
 {Tooltips, FlagsConstants} = require '../constants/app_constants'
-PropTypes             = require '../libs/prop_types'
+PropTypes                  = require '../libs/prop_types'
 
-LayoutActionCreator = require '../actions/layout_action_creator'
+{Button, LinkButton} = require('./basic_components').factories
+ToolboxActions       = React.createFactory require './toolbox_actions'
+
+LayoutActionCreator  = require '../actions/layout_action_creator'
 MessageActionCreator = require '../actions/message_action_creator'
 
-RouterMixin     = require '../mixins/router_mixin'
-ToolboxActions = require './toolbox_actions'
-{Button, LinkButton}  = require './basic_components'
+RouterMixin = require '../mixins/router_mixin'
+
 
 module.exports = React.createClass
     displayName: 'ToolbarConversation'
@@ -39,19 +43,19 @@ module.exports = React.createClass
                 onConversationMove   : @onMove
 
             div className: 'btn-group',
+                if @props.prevConversationID
+                    LinkButton
+                        icon: 'fa-chevron-left'
+                        onClick: @gotoPreviousConversation
+                        'aria-describedby': Tooltips.PREVIOUS_CONVERSATION
+                        'data-tooltip-direction': 'left'
 
-                LinkButton
-                    icon: if @props.prevMessageID then 'fa-chevron-left'
-                    onClick: @gotoPreviousConversation
-                    'aria-describedby': Tooltips.PREVIOUS_CONVERSATION
-                    'data-tooltip-direction': 'left'
-
-                LinkButton
-                    icon: if @props.nextMessageID then 'fa-chevron-right'
-                    onClick: @gotoNextConversation
-                    'aria-describedby': Tooltips.NEXT_CONVERSATION
-                    'data-tooltip-direction': 'left'
-
+                if @props.nextConversationID
+                    LinkButton
+                        icon: 'fa-chevron-right'
+                        onClick: @gotoNextConversation
+                        'aria-describedby': Tooltips.NEXT_CONVERSATION
+                        'data-tooltip-direction': 'left'
 
             Button
                 icon: if @props.fullscreen then 'fa-compress' else 'fa-expand'

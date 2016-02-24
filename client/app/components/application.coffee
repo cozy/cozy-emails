@@ -1,11 +1,14 @@
+require '../styles/application.styl'
+
+React = require 'react'
+
 # React components
 {div, section, main, p, span, a, i, strong, form, input, button} = React.DOM
-Alert          = require './alert'
-Menu           = require './menu'
-Modal          = require './modal'
-Panel          = require './panel'
-ToastContainer = require './toast_container'
-Tooltips       = require './tooltips-manager'
+Menu           = React.createFactory require './menu'
+Modal          = React.createFactory require './modal'
+Panel          = React.createFactory require './panel'
+ToastContainer = React.createFactory require './toast_container'
+Tooltips       = React.createFactory require './tooltips-manager'
 
 # React Mixins
 RouterMixin          = require '../mixins/router_mixin'

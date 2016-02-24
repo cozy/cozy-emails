@@ -1,3 +1,7 @@
+require '../../vendor/aria-tips/aria-tips.css'
+AriaTips = require '../../vendor/aria-tips/aria-tips'
+
+
 module.exports = TooltipRefresherMixin =
 
 

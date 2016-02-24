@@ -1,7 +1,11 @@
+_     = require 'underscore'
+React = require 'react'
+
 {
     div, article, header, footer, ul, li, span, i, p, a, button, pre,
     iframe
 } = React.DOM
+
 
 module.exports = MessageContent = React.createClass
     displayName: 'MessageContent'
@@ -45,7 +49,7 @@ module.exports = MessageContent = React.createClass
         # - if images are not displayed, create the function to display them
         #   and resize the frame
         if @props.messageDisplayHTML and @refs.content
-            frame = @refs.content.getDOMNode()
+            frame = @refs.content
             doc = frame.contentDocument or frame.contentWindow?.document
             checkResize = false # disabled for now
             step = 0
@@ -102,4 +106,3 @@ module.exports = MessageContent = React.createClass
 
     componentDidUpdate: ->
         @_initFrame('update')
-

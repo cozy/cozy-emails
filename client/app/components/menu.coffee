@@ -1,23 +1,25 @@
-{div, aside, nav, ul, li, span, a, i, button} = React.DOM
+_          = require 'underscore'
+React      = require 'react'
+classNames = require 'classnames'
 
-classer = React.addons.classSet
+{div, aside, nav, ul, li, span, a, i, button} = React.DOM
 
 RouterMixin     = require '../mixins/router_mixin'
 StoreWatchMixin = require '../mixins/store_watch_mixin'
 
-AccountActionCreator      = require '../actions/account_action_creator'
-LayoutActionCreator       = require '../actions/layout_action_creator'
-MessageActionCreator      = require '../actions/message_action_creator'
+AccountActionCreator = require '../actions/account_action_creator'
+LayoutActionCreator  = require '../actions/layout_action_creator'
+MessageActionCreator = require '../actions/message_action_creator'
 
 AccountStore   = require '../stores/account_store'
 LayoutStore    = require '../stores/layout_store'
 RefreshesStore = require '../stores/refreshes_store'
-SearchStore = require '../stores/search_store'
+SearchStore    = require '../stores/search_store'
 
 MessageUtils = require '../utils/message_utils'
 colorhash    = require '../utils/colorhash'
 
-MenuMailboxItem = require './menu_mailbox_item'
+MenuMailboxItem = React.createFactory require './menu_mailbox_item'
 
 {SpecialBoxIcons, Tooltips} = require '../constants/app_constants'
 
@@ -32,7 +34,6 @@ specialMailboxes = [
     'junkMailbox'
     'allMailbox'
 ]
-
 
 module.exports = Menu = React.createClass
     displayName: 'Menu'
@@ -105,9 +106,9 @@ module.exports = Menu = React.createClass
 
                 if @state.accounts.size
                     @state.accounts
-                    .sort @selectedFirstSort
-                    .map @getAccountRender
-                    .toJS()
+                        .sort @selectedFirstSort
+                        .map @getAccountRender
+                        .toArray()
 
             nav className: 'submenu',
                 @renderNewMailboxButton()
@@ -121,7 +122,7 @@ module.exports = Menu = React.createClass
 
                 button
                     role: 'menuitem'
-                    className: classer
+                    className: classNames
                         btn:               true
                         fa:                true
                         'drawer-toggle':   true
@@ -198,7 +199,7 @@ module.exports = Menu = React.createClass
 
 
 
-        accountClasses = classer active: isSelected
+        accountClasses = classNames active: isSelected
 
 
         if @state.onlyFavorites
@@ -234,7 +235,7 @@ module.exports = Menu = React.createClass
                         i
                             className: 'avatar'
                             style:
-                                'background-color': accountColor
+                                backgroundColor: accountColor
                             account.get('label')[0]
                         div
                             className: 'account-details',
@@ -272,27 +273,27 @@ module.exports = Menu = React.createClass
                     role: 'group'
                     className: 'list-unstyled mailbox-list',
                     mailboxes?.filter (mailbox) ->
-                        mailbox.get('id') in specialMboxes
-                    .map (mailbox, key) =>
-                        MenuMailboxItem
-                            account:           account,
-                            mailbox:           mailbox,
-                            key:               key,
-                            selectedMailboxID: @state.selectedMailboxID,
-                            refreshes:         refreshes,
-                            displayErrors:     @displayErrors,
-                    .toJS()
+                            mailbox.get('id') in specialMboxes
+                        .map (mailbox, key) =>
+                            MenuMailboxItem
+                                account:           account,
+                                mailbox:           mailbox,
+                                key:               key,
+                                selectedMailboxID: @state.selectedMailboxID,
+                                refreshes:         refreshes,
+                                displayErrors:     @displayErrors,
+                        .toArray()
                     mailboxes?.filter (mailbox) ->
-                        mailbox.get('id') not in specialMboxes
-                    .map (mailbox, key) =>
-                        MenuMailboxItem
-                            account:           account,
-                            mailbox:           mailbox,
-                            key:               key,
-                            selectedMailboxID: @state.selectedMailboxID,
-                            refreshes:         refreshes,
-                            displayErrors:     @displayErrors,
-                    .toJS()
+                            mailbox.get('id') not in specialMboxes
+                        .map (mailbox, key) =>
+                            MenuMailboxItem
+                                account:           account,
+                                mailbox:           mailbox,
+                                key:               key,
+                                selectedMailboxID: @state.selectedMailboxID,
+                                refreshes:         refreshes,
+                                displayErrors:     @displayErrors,
+                        .toArray()
                     unless allBoxesAreFavorite
                         li className: 'toggle-favorites',
                             a

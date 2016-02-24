@@ -1,9 +1,8 @@
 AppDispatcher = require '../app_dispatcher'
 {ActionTypes} = require '../constants/app_constants'
-url = window.location.origin
-pathToSocketIO = "#{window.location.pathname}socket.io"
-socket = io.connect url,
-    path: pathToSocketIO
+
+socket = require('socket.io-client').connect window.location.origin,
+    path: "#{window.location.pathname}socket.io"
     reconnectionDelayMax: 60000
     reconectionDelay: 2000
     reconnectionAttempts: 3

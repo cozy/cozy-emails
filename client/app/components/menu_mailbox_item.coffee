@@ -1,6 +1,8 @@
-{div, aside, nav, ul, li, span, a, i, button} = React.DOM
+_          = require 'underscore'
+React      = require 'react'
+classNames = require 'classnames'
 
-classer = React.addons.classSet
+{div, aside, nav, ul, li, span, a, i, button} = React.DOM
 
 RouterMixin          = require '../mixins/router_mixin'
 MessageActionCreator = require '../actions/message_action_creator'
@@ -51,10 +53,10 @@ module.exports = MenuMailboxItem = React.createClass
                 mailboxIcon = icon
                 specialMailbox = attrib
 
-        classesParent = classer
+        classesParent = classNames
             active: mailboxID is @props.selectedMailboxID
             target: @state.target
-        classesChild = classer
+        classesChild = classNames
             target:  @state.target
             special: specialMailbox
             news:    nbRecent > 0

@@ -1,11 +1,15 @@
-{li, span, i, input} = React.DOM
-classer = React.addons.classSet
+classNames = require 'classnames'
+React      = require 'react'
 
-{Spinner} = require './basic_components'
+{li, span, i, input} = React.DOM
+
+{Spinner} = require('./basic_components').factories
+
 AccountActionCreator = require '../actions/account_action_creator'
 LayoutActionCreator  = require '../actions/layout_action_creator'
-RouterMixin = require '../mixins/router_mixin'
 
+RouterMixin      = require '../mixins/router_mixin'
+LinkedStateMixin = require 'react-addons-linked-state-mixin'
 
 # Line for the mailbox list.
 module.exports = MailboxItem = React.createClass
@@ -13,7 +17,7 @@ module.exports = MailboxItem = React.createClass
 
     mixins: [
         RouterMixin
-        React.addons.LinkedStateMixin # two-way data binding
+        LinkedStateMixin
     ]
 
     propTypes:
@@ -39,7 +43,7 @@ module.exports = MailboxItem = React.createClass
         nbRecent = @props.mailbox.get('nbRecent') or 0
         key = @props.mailbox.get 'id'
 
-        classItem = classer
+        classItem = classNames
             'row': true
             'box': true
             'box-item': true
@@ -143,7 +147,7 @@ module.exports = MailboxItem = React.createClass
         event?.preventDefault()
 
         mailbox =
-            label: @refs.label.getDOMNode().value.trim()
+            label: @refs.label.value.trim()
             mailboxID: @props.mailbox.get 'id'
             accountID: @props.accountID
 
@@ -194,4 +198,3 @@ module.exports = MailboxItem = React.createClass
                         @setState deleting: false
 
         LayoutActionCreator.displayModal modal
-

@@ -1,13 +1,11 @@
+React = require 'react'
+
 {nav, div, button, a} = React.DOM
 
 {MessageFlags, FlagsConstants, Tooltips} = require '../constants/app_constants'
 
-ToolboxActions = require './toolbox_actions'
-ToolboxMove    = require './toolbox_move'
-
-LayoutActionCreator       = require '../actions/layout_action_creator'
-alertError                = LayoutActionCreator.alertError
-alertSuccess              = LayoutActionCreator.notify
+ToolboxActions = React.createFactory require './toolbox_actions'
+ToolboxMove    = React.createFactory require './toolbox_move'
 
 # Shortcuts for buttons classes
 cBtnGroup = 'btn-group btn-group-sm pull-right'
@@ -94,4 +92,3 @@ module.exports = React.createClass
             mailboxes: @props.mailboxes
             onMove:    @props.onMove
             direction: 'right'
-

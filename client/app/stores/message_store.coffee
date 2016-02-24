@@ -1,3 +1,6 @@
+_         = require 'underscore'
+Immutable = require 'immutable'
+
 Store = require '../libs/flux/store/store'
 ContactStore  = require './contact_store'
 AppDispatcher = require '../app_dispatcher'

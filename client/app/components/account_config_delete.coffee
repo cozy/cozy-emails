@@ -1,9 +1,11 @@
+React = require 'react'
+
 { div } = React.DOM
 
 AccountActionCreator = require '../actions/account_action_creator'
 LayoutActionCreator  = require '../actions/layout_action_creator'
 
-{FieldSet, FormButtons, FormButton} = require './basic_components'
+{FieldSet, FormButtons, FormButton} = require('./basic_components').factories
 
 module.exports = AccountConfigDelete = React.createClass
     displayName: 'AccountConfigDelete'

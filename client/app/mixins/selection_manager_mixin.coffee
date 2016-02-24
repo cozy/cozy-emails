@@ -1,3 +1,5 @@
+Immutable = require 'immutable'
+
 NEED_GETSELECTABLES = """
     Components using selection_mananager should provide
     a getSelectables method

@@ -1,30 +1,44 @@
+require '../vendor/print-helper.css'
+require 'bootstrap/dist/css/bootstrap-theme.css'
+require 'bootstrap/dist/css/bootstrap.css'
+
+require 'imports?jQuery=jquery!bootstrap/dist/js/bootstrap.js'
+
+React    = require 'react'
+ReactDOM = require 'react-dom'
+Backbone = require 'backbone'
+Perf     = require 'react-addons-perf'
+
+
 # expose an API for performance
 # performance is not defined in phantomJS
 initPerformances = ->
     referencePoint = 0
     window.start = ->
         referencePoint = performance.now() if performance?.now?
-        React.addons.Perf.start()
+        Perf.start()
     window.stop = ->
         console.log performance.now() - referencePoint if performance?.now?
-        React.addons.Perf.stop()
+        Perf.stop()
     window.printWasted = ->
         stop()
-        React.addons.Perf.printWasted()
+        Perf.printWasted()
     window.printInclusive = ->
         stop()
-        React.addons.Perf.printInclusive()
+        Perf.printInclusive()
     window.printExclusive = ->
         stop()
-        React.addons.Perf.printExclusive()
+        Perf.printExclusive()
 
 logPerformances = ->
     timing = window.performance?.timing
     now = Math.ceil window.performance?.now()
     if timing?
-        message  = "Response: #{timing.responseEnd - timing.navigationStart}ms"
-        message += ", Onload: #{timing.loadEventStart - timing.navigationStart}ms"
-        message += ", Page loaded: #{now}ms"
+        message = "
+            Response: #{timing.responseEnd - timing.navigationStart}ms
+            Onload: #{timing.loadEventStart - timing.navigationStart}ms
+            Page loaded: #{now}ms
+        "
         window.cozyMails.logInfo message
 
 # Init Web Intents
@@ -41,9 +55,9 @@ initIntent = ->
 
 # init plugins
 initPlugins = ->
+    window.settings.plugins ?= {}
+
     PluginUtils = require "./utils/plugin_utils"
-    if not window.settings.plugins?
-        window.settings.plugins = {}
     PluginUtils.merge window.settings.plugins
     PluginUtils.init()
 
@@ -91,7 +105,7 @@ document.addEventListener 'DOMContentLoaded', ->
             "en"
 
         window.cozyMails.setLocale locale
-        LayoutActionCreator = require './actions/layout_action_creator/'
+        LayoutActionCreator = require './actions/layout_action_creator'
         LayoutActionCreator.setDisposition window.settings.layoutStyle
 
         # init plugins
@@ -119,9 +133,10 @@ document.addEventListener 'DOMContentLoaded', ->
         window.router = @router
 
         # Binds the router and flux to the React application
-        Application = require './components/application'
+        Application = React.createFactory require './components/application'
         application = Application router: @router
-        window.rootComponent = React.renderComponent application, document.body
+        rootNode    = document.querySelector '[role=application]'
+        ReactDOM.render application, rootNode
 
         # Starts the application by initializing the router
         Backbone.history.start()
