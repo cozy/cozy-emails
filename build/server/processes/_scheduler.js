@@ -117,7 +117,7 @@ Scheduler.onIdle = function() {
   }
 };
 
-Scheduler.refreshNow = function(mailbox, callback) {
+Scheduler.refreshNow = function(mailbox, deep, callback) {
   var alreadyScheduled, isSameBoxRefresh, refresh;
   isSameBoxRefresh = function(processus) {
     return processus instanceof MailboxRefresh && processus.mailbox === mailbox;
@@ -130,7 +130,8 @@ Scheduler.refreshNow = function(mailbox, callback) {
       queued = _.without(queued, alreadyScheduled);
     }
     refresh = new MailboxRefresh({
-      mailbox: mailbox
+      mailbox: mailbox,
+      deep: deep
     });
     return Scheduler.schedule(refresh, Scheduler.ASAP, callback);
   }
