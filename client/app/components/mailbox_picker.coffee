@@ -27,7 +27,7 @@ module.exports = React.createClass
             .toJS()
 
     render: ->
-        return div null unless @props.mailboxes?.length
+        return div null unless @props.mailboxes?.size
 
         Dropdown
             valueLink: @props.valueLink

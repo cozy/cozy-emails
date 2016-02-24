@@ -2,10 +2,13 @@
 
 classer = React.addons.classSet
 
-RouterMixin     = require '../mixins/router_mixin'
+RouterMixin          = require '../mixins/router_mixin'
 MessageActionCreator = require '../actions/message_action_creator'
-LayoutActionCreator       = require '../actions/layout_action_creator'
+LayoutActionCreator  = require '../actions/layout_action_creator'
+AccountActionCreator = require '../actions/account_action_creator'
+
 {SpecialBoxIcons, Tooltips} = require '../constants/app_constants'
+
 
 module.exports = MenuMailboxItem = React.createClass
     displayName: 'MenuMailboxItem'
@@ -22,12 +25,13 @@ module.exports = MenuMailboxItem = React.createClass
     onClickMailbox: ->
         if @props.mailbox.get('id') is @props.selectedMailboxID and
         @props.account.get 'supportRFC4551'
-            MessageActionCreator.refreshMailbox(@props.selectedMailboxID)
+            MessageActionCreator.refreshMailbox @props.selectedMailboxID
 
     render: ->
         mailboxID = @props.mailbox.get 'id'
         mailboxUrl = @buildUrl
             direction: 'first'
+            fullWidth: true  # remove 2nd panel
             action: 'account.mailbox.messages'
             parameters: [@props.account.get('id'), mailboxID]
 
@@ -88,6 +92,7 @@ module.exports = MenuMailboxItem = React.createClass
 
             if @props.account.get('trashMailbox') is mailboxID
                 button
+                    className:                'menu-subaction'
                     'aria-describedby':       Tooltips.EXPUNGE_MAILBOX
                     'data-tooltip-direction': 'right'
                     onClick: @expungeMailbox

@@ -79,6 +79,7 @@ module.exports = React.createClass
     onDelete: ->
         conversationID = @props.conversationID
         MessageActionCreator.delete {conversationID}
+        @redirect (url = @buildClosePanelUrl 'second')
 
     onMark: (flag) ->
         conversationID = @props.conversationID

@@ -34,7 +34,7 @@ class MessageStore extends Store
     _nextUrl = null
     _noMore = false
 
-    _currentMessages = Immutable.Sequence()
+    _currentMessages = Immutable.Iterable()
     _conversationLengths = Immutable.Map()
     _conversationMemoize = null
     _conversationMemoizeID = null
@@ -221,7 +221,7 @@ class MessageStore extends Store
             message.hasAttachments = message.attachments.length > 0
             message.attachments = message.attachments.map (file) ->
                 Immutable.Map file
-            message.attachments = Immutable.Vector.from message.attachments
+            message.attachments = Immutable.List message.attachments
 
             # message loaded from fixtures for test purpose have a docType
             # that may cause some troubles
@@ -477,7 +477,7 @@ class MessageStore extends Store
             when MessageFilter.FLAGGED
                 MessageFlags.FLAGGED in message.get('flags')
             when MessageFilter.ATTACH
-                message.get('attachments').length > 0
+                message.get('attachments').size > 0
             when MessageFilter.UNSEEN
                 MessageFlags.SEEN not in message.get('flags')
             else
@@ -619,7 +619,6 @@ class MessageStore extends Store
             .filter (message) ->
                 message.get('conversationID') is conversationID
             .sort reverseDateSort
-            .toVector()
 
         return _conversationMemoize
 
@@ -677,4 +676,3 @@ class MessageStore extends Store
 
 
 module.exports = self = new MessageStore()
-

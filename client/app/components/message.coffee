@@ -277,23 +277,29 @@ module.exports = React.createClass
     onDelete: (event) ->
         event.preventDefault()
         event.stopPropagation()
+
+        success = =>
+            messageID = @props.message.get('id')
+            MessageActionCreator.delete {messageID}
+
+             # Close Detail Panel for deleted message
+            @redirect (url = @buildClosePanelUrl 'second')
+
         needConfirmation = @props.settings.get('messageConfirmDelete')
-        messageID = @props.message.get('id')
+        unless needConfirmation
+            success()
+            return
+
         confirmMessage = t 'mail confirm delete',
             subject: @props.message.get('subject')
-
-        if not needConfirmation
-            MessageActionCreator.delete {messageID}
-        else
-            LayoutActionCreator.displayModal
-                title       : t 'app confirm delete'
-                subtitle    : confirmMessage
-                closeLabel  : t 'app cancel'
-                actionLabel : t 'app confirm'
-                action      : ->
-                    MessageActionCreator.delete {messageID}
-                    LayoutActionCreator.hideModal()
-
+        LayoutActionCreator.displayModal
+            title       : t 'app confirm delete'
+            subtitle    : confirmMessage
+            closeLabel  : t 'app cancel'
+            actionLabel : t 'app confirm'
+            action      : ->
+                LayoutActionCreator.hideModal()
+                success()
 
     onConversationDelete: ->
         conversationID = @props.message.get('conversationID')
