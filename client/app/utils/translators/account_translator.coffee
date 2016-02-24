@@ -11,7 +11,8 @@ module.exports = AccountTranslator =
         weight2 = 400
 
         # Creates Immutable OrderedMap of mailboxes
-        mailboxes = Immutable.Sequence raw.mailboxes
+        mailboxes = Immutable.Iterable raw.mailboxes
+            .toKeyedSeq()
             .mapKeys (_, box) -> box.id
             .map (box) ->
 

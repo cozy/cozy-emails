@@ -300,7 +300,7 @@ Spinner = React.createClass
         img
             src: "images/spinner#{suffix}.svg"
             alt: 'spinner'
-            className: 'button-spinner'
+            className: 'button-spinner spin-animate'
 
 
 # Module to display a loading progress bar. It takes a current value and a

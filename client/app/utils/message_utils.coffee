@@ -125,7 +125,7 @@ module.exports = MessageUtils =
 
         message =
             composeInHTML   : props.settings.get 'composeInHTML'
-            attachments     : Immutable.Vector.empty()
+            attachments     : Immutable.List.empty()
             accountID       : account.id
             isDraft         : true
             from            : [
