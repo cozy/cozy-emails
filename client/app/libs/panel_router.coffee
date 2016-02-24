@@ -64,6 +64,9 @@ module.exports = class Router extends Backbone.Router
 
             [firstPanelInfo, secondPanelInfo] = @_processSubRouting name, args
 
+            @previous = @current
+            @current = firstPanel: firstPanelInfo, secondPanel: secondPanelInfo
+
             firstAction = @fluxActionFactory firstPanelInfo
             if firstAction?
                 firstAction firstPanelInfo, 'first'
@@ -72,8 +75,6 @@ module.exports = class Router extends Backbone.Router
             if secondAction?
                 secondAction secondPanelInfo, 'second'
 
-            @previous = @current
-            @current = firstPanel: firstPanelInfo, secondPanel: secondPanelInfo
             @trigger 'fluxRoute', @current
 
 
