@@ -98,12 +98,14 @@ class MessageStore extends Store
 
     # @TODO : memoize me
     _messagesWithInFlights = ->
-        _messages.map (message) ->
+        _messages
+        .map (message) ->
             id = message.get 'id'
             for request in _inFlightByMessageID[id] or []
                 message = _transformMessageWithRequest message, request
             return message
         .filter (msg) -> msg isnt null
+        .toList()
 
     _fixCurrentMessage = (target) ->
         # If target.inReplyTo is set, we are removing a reply, so stay
@@ -545,7 +547,7 @@ class MessageStore extends Store
                 return _currentID is message.get 'id'
             if idx < 0
                 return null
-            else if idx is _conversationMemoize.length - 1
+            else if idx is _conversationMemoize.size - 1
                 # We need first message of previous conversation
                 keys = Object.keys _currentMessages.toJS()
                 idx = keys.indexOf(_conversationMemoize.last().get('id'))

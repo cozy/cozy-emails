@@ -63,12 +63,12 @@ module.exports = React.createClass
 
         nextState.compact = true if @state?.compact isnt false
 
-        if nextState.conversation?.length isnt @state?.conversation?.length
+        if nextState.conversation?.size isnt @state?.conversation?.size
             nextState.expanded = []
             conversation?.forEach (message, key) ->
                 isUnread = MessageFlags.SEEN not in message.get 'flags'
-                isLast   = key is conversation.length - 1
-                if (nextState.expanded.length is 0 and (isUnread or isLast))
+                isLast   = key is conversation.size - 1
+                if (nextState.expanded.size is 0 and (isUnread or isLast))
                     nextState.expanded.push key
             nextState.compact = true
 
@@ -90,7 +90,7 @@ module.exports = React.createClass
             ref                 : 'message'
             accounts            : @state.accounts
             active              : active
-            inConversation      : @state.conversation.length > 1
+            inConversation      : @state.conversation.size > 1
             key                 : key.toString()
             mailboxes           : @state.mailboxes
             message             : @state.conversation.get key
@@ -106,7 +106,7 @@ module.exports = React.createClass
     renderGroup: (messages, key) ->
         # if there are more than 3 messages, by default only render
         # first and last ones
-        if messages.length > 3 and @state.compact
+        if messages.size > 3 and @state.compact
             items = []
             [first, ..., last] = messages
             items.push @renderMessage(first, false)
@@ -115,7 +115,7 @@ module.exports = React.createClass
                 onClick: =>
                     @setState compact: false
                 i className: 'fa fa-refresh'
-                t 'load more messages', messages.length - 2
+                t 'load more messages', messages.size - 2
             items.push @renderMessage(last, false)
         else
             items = (@renderMessage(key, false) for key in messages)
@@ -134,7 +134,7 @@ module.exports = React.createClass
         message = @state.conversation.get 0
         # Sort messages in conversation to find seen messages and group them
         messages = []
-        lastMessageIndex = @state.conversation.length - 1
+        lastMessageIndex = @state.conversation.size - 1
         @state.conversation.forEach (message, key) =>
             if key in @state.expanded
                 messages.push key
