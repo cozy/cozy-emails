@@ -42,13 +42,13 @@ module.exports = React.createClass
 
                 LinkButton
                     icon: if @props.prevMessageID then 'fa-chevron-left'
-                    onClick: @onPrevClicked
+                    onClick: @gotoPreviousConversation
                     'aria-describedby': Tooltips.PREVIOUS_CONVERSATION
                     'data-tooltip-direction': 'left'
 
                 LinkButton
                     icon: if @props.nextMessageID then 'fa-chevron-right'
-                    onClick: @onNextClicked
+                    onClick: @gotoNextConversation
                     'aria-describedby': Tooltips.NEXT_CONVERSATION
                     'data-tooltip-direction': 'left'
 
@@ -58,28 +58,34 @@ module.exports = React.createClass
                 onClick: LayoutActionCreator.toggleFullscreen
                 className: "clickable fullscreen"
 
-    onPrevClicked: ->
-        return null unless @props.prevMessageID
-        @redirect
-            direction: 'second',
-            action: 'conversation',
-            parameters:
-                messageID: @props.prevMessageID
-                conversationID: @props.prevConversationID
+    gotoPreviousConversation: ->
+        messageID = @props.prevMessageID
+        conversationID = @props.prevConversationID
+        if not messageID or not conversationID
+            @redirect (url = @buildClosePanelUrl 'second')
+            return
 
-    onNextClicked: ->
-        return null unless @props.nextMessageID
-        @redirect
-            direction: 'second',
-            action: 'conversation',
-            parameters:
-                messageID: @props.nextMessageID
-                conversationID: @props.nextConversationID
+        parameters = @getUrlParams messageID, conversationID
+        @redirect parameters
+        return
+
+    gotoNextConversation: ->
+        messageID = @props.nextMessageID
+        conversationID = @props.nextConversationID
+        if not messageID or not conversationID
+            @gotoPreviousConversation()
+            return
+
+        parameters = @getUrlParams messageID, conversationID
+        @redirect parameters
+        return
 
     onDelete: ->
+        # Remove conversation
         conversationID = @props.conversationID
         MessageActionCreator.delete {conversationID}
-        @redirect (url = @buildClosePanelUrl 'second')
+
+        @gotoNextConversation()
 
     onMark: (flag) ->
         conversationID = @props.conversationID
@@ -93,6 +99,6 @@ module.exports = React.createClass
     getUrlParams: (messageID, conversationID) ->
         direction: 'second'
         action: 'conversation'
-        parameters: parameters
+        parameters:
             messageID: messageID
             conversationID: conversationID
