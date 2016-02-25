@@ -34,7 +34,7 @@ class MessageStore extends Store
     _nextUrl = null
     _noMore = false
 
-    _currentMessages = Immutable.Iterable()
+    _currentMessages = Immutable.OrderedMap()
     _conversationLengths = Immutable.Map()
     _conversationMemoize = null
     _conversationMemoizeID = null
@@ -106,26 +106,6 @@ class MessageStore extends Store
             return message
         .filter (msg) -> msg isnt null
         .toList()
-
-    _fixCurrentMessage = (target) ->
-        # If target.inReplyTo is set, we are removing a reply, so stay
-        # on current message
-        if target.inReplyTo?
-            return null
-        else
-            messageIDs = target.messageIDs or [target.messageID]
-            currentMessage = self.getCurrentID() or 'not-null'
-            conversationIDs = target.conversationIDs or [target.conversationID]
-            currentConversation = self.getCurrentConversationID() or 'not-null'
-
-            # open next message if the deleted / moved one was open ###
-            if currentMessage in messageIDs or
-            currentConversation in conversationIDs
-                next = self.getNextOrPrevious true
-                if next?
-                    setTimeout ->
-                        window.cozyMails.messageSetCurrent next
-                    , 1
 
     _getMixed = (target) ->
         if target.messageID
@@ -278,12 +258,13 @@ class MessageStore extends Store
 
         handle ActionTypes.MESSAGE_TRASH_REQUEST, ({target, ref}) ->
             messages = _getMixed target
+            # FIXME : voir pkoi si on retire ces deux lignes
+            # ça crée une erreur 400
             target.subject = messages[0]?.get('subject')
             target.accountID = messages[0].get('accountID')
             account = AccountStore.getByID messages[0]?.get('accountID')
             trashBoxID = account?.get? 'trashMailbox'
             _addInFlight {type: 'trash', trashBoxID, messages, ref}
-            _fixCurrentMessage target
 
             for message in messages
                 # Update conversation length
@@ -336,7 +317,6 @@ class MessageStore extends Store
             target.subject = messages[0]?.get('subject')
             target.accountID = messages[0].get('accountID')
             _addInFlight {type: 'move', from, to, messages, ref}
-            _fixCurrentMessage target
             @emit 'change'
 
         handle ActionTypes.MESSAGE_MOVE_SUCCESS, ({target, updated, ref}) ->
@@ -538,71 +518,11 @@ class MessageStore extends Store
     getCurrentConversationID: ->
         return _currentCID
 
-    getPreviousMessage: (isConv) ->
-        if isConv? and isConv
-            if not _conversationMemoize?
-                return null
-            # Conversations displayed
-            idx = _conversationMemoize.findIndex (message) ->
-                return _currentID is message.get 'id'
-            if idx < 0
-                return null
-            else if idx is _conversationMemoize.size - 1
-                # We need first message of previous conversation
-                keys = Object.keys _currentMessages.toJS()
-                idx = keys.indexOf(_conversationMemoize.last().get('id'))
-                if idx < 1
-                    return null
-                else
-                    currentMessage = _currentMessages.get(keys[idx - 1])
-                    convID = currentMessage?.get('conversationID')
-                    return null if not convID?
-                    prev = _messages.filter (message) ->
-                        message.get('conversationID') is convID
-                    .sort reverseDateSort
-                    .first()
-                    return prev
-            else
-                return _conversationMemoize.get(idx + 1)
-        else
-            idx = -1
-            _currentMessages.find (message, index) ->
-                if (test = message.get('id') is _currentID)
-                    idx = index
-                return test
-            return _currentMessages.toArray()[idx - 1]
+    getPreviousConversation: (param={}) ->
+        @getConversation transform: (index) -> ++index
 
-    getNextMessage: (isConv) ->
-        if isConv? and isConv
-
-            if not _conversationMemoize?
-                return null
-            # Conversations displayed
-            idx = _conversationMemoize.findIndex (message) ->
-                return _currentID is message.get 'id'
-            if idx < 0
-                return null
-            else if idx is 0
-                # We need first message of next conversation
-                keys = Object.keys _currentMessages.toJS()
-                idx = keys.indexOf(_conversationMemoize.last().get('id'))
-                if idx is -1 or idx is (keys.length - 1)
-                    return null
-                else
-                    return _currentMessages.get keys[idx + 1]
-            else
-                return _conversationMemoize.get(idx - 1)
-        else
-            idx = -1
-            _currentMessages.find (message, index) ->
-                if (test = message.get('id') is _currentID)
-                    idx = index
-                return test
-            return _currentMessages.toArray()[idx + 1]
-
-    getNextOrPrevious: (isConv) ->
-        @getNextMessage(isConv) or @getPreviousMessage(isConv)
-
+    getNextConversation: (param={}) ->
+        @getConversation transform: (index) -> --index
 
     getCurrentConversation: ->
         conversationID = @getCurrentConversationID()
@@ -611,17 +531,35 @@ class MessageStore extends Store
         else
             return null
 
-    getConversation: (conversationID) ->
-        if _conversationMemoize and _conversationMemoizeID is conversationID
-            return _conversationMemoize
-
+    setConversation: (conversationID) ->
         _conversationMemoizeID = conversationID
         _conversationMemoize = _messagesWithInFlights()
             .filter (message) ->
                 message.get('conversationID') is conversationID
             .sort reverseDateSort
 
-        return _conversationMemoize
+    getConversation: (param={}) ->
+        @setConversation param.conversationID if param.conversationID?
+        return _conversationMemoize unless _.isFunction param.transform
+
+        messageID = @getCurrentID()
+
+        getMessage = (array) ->
+            index0 = array.toArray().findIndex (message) ->
+                messageID is message.get 'id'
+            index = param.transform index0
+            array.toJS()[index]
+
+        # Next message of same conversation
+        if param.type is 'message' and _conversationMemoize.size > 1
+            message = getMessage _conversationMemoize
+
+        # Change Conversation
+        unless message
+            message = getMessage _currentMessages
+
+        return Immutable.Map message
+
 
     # Retrieve a batch of message with various criteria
     # target - is an {Object} with a property messageID or messageIDs or

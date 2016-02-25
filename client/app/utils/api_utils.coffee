@@ -40,9 +40,7 @@ module.exports =
 
 
     getCurrentConversation: ->
-        conversationID = MessageStore.getCurrentConversationID()
-        if conversationID?
-            return MessageStore.getConversation(conversationID)?.toJS()
+        MessageStore.getCurrentConversation()?.toJS()
 
 
     getCurrentActions: ->
@@ -95,21 +93,21 @@ module.exports =
             value: settings
 
     messageNavigate: (direction, inConv) ->
-        if not onMessageList()
-            return
+        return unless onMessageList()
         conv = inConv and SettingsStore.get('displayConversation') and
             SettingsStore.get('displayPreview')
-        if direction is 'prev'
-            next = MessageStore.getPreviousMessage conv
-        else
-            next = MessageStore.getNextMessage conv
-        if not next?
-            return
 
-        @messageSetCurrent next
+        if direction is 'prev'
+            next = MessageStore.getNextConversation()
+        else
+            next = MessageStore.getPreviousConversation()
+
+        @messageSetCurrent(next)
 
 
     messageSetCurrent: (message) ->
+        return unless message?.get('id')
+
         MessageActionCreator.setCurrent message.get('id'), true
 
         if SettingsStore.get('displayPreview')
