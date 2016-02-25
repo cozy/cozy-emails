@@ -289,12 +289,15 @@ module.exports = React.createClass
             MessageActionCreator.delete messageID: @state.currentMessageID
 
             # Goto to next message
-            @redirect
-                direction: 'second',
-                action: 'conversation',
-                parameters:
-                    messageID: nextConversation.get('id')
-                    conversationID: nextConversation.get('conversationID')
+            unless nextConversation.size
+                @redirect (url = @buildClosePanelUrl 'second')
+            else
+                @redirect
+                    direction: 'second',
+                    action: 'conversation',
+                    parameters:
+                        messageID: nextConversation.get('id')
+                        conversationID: nextConversation.get('conversationID')
 
         needConfirmation = @props.settings.get('messageConfirmDelete')
         unless needConfirmation
