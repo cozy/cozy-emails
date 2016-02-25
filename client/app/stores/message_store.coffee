@@ -565,10 +565,12 @@ class MessageStore extends Store
             else
                 return _conversationMemoize.get(idx + 1)
         else
-            keys = Object.keys _currentMessages.toJS()
-            idx = keys.indexOf _currentID
-            return if idx is -1 then null
-            else _currentMessages.get keys[idx - 1]
+            idx = -1
+            _currentMessages.find (message, index) ->
+                if (test = message.get('id') is _currentID)
+                    idx = index
+                return test
+            return _currentMessages.toArray()[idx - 1]
 
     getNextMessage: (isConv) ->
         if isConv? and isConv
@@ -591,15 +593,12 @@ class MessageStore extends Store
             else
                 return _conversationMemoize.get(idx - 1)
         else
-            if not _currentID
-                return _currentMessages?.first()
-
-            keys = Object.keys _currentMessages.toJS()
-            idx = keys.indexOf _currentID
-            if idx is -1 or idx is (keys.length - 1)
-                return null
-            else
-                return _currentMessages.get keys[idx + 1]
+            idx = -1
+            _currentMessages.find (message, index) ->
+                if (test = message.get('id') is _currentID)
+                    idx = index
+                return test
+            return _currentMessages.toArray()[idx + 1]
 
     getNextOrPrevious: (isConv) ->
         @getNextMessage(isConv) or @getPreviousMessage(isConv)
