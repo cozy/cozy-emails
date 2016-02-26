@@ -46,4 +46,4 @@ module.exports =
             selected:  @state.selected.remove key
 
     getSelected: ->
-        @state.selected.toObject()
+        return @state.selected
