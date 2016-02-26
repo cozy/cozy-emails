@@ -84,8 +84,9 @@ module.exports = MessageList = React.createClass
             displayConversations : displayConvs
 
     # for SelectionManagerMixin
-    getSelectables: (props = @props, state = @state) ->
-        state.messages.keySeq()
+    getSelectables: ->
+        @state.messages.map (message) ->
+            message.get('id'): message
 
     getEmptyListMessage: ->
         return @props.emptyListMessage if @props.emptyListMessage
@@ -116,7 +117,7 @@ module.exports = MessageList = React.createClass
                 mailboxes:            @state.mailboxes
                 messages:             @state.messages
                 edited:               @hasSelected()
-                selected:             @getSelected().toObject()
+                selected:             @getSelected()
                 allSelected:          @allSelected()
                 displayConversations: @state.displayConversations
                 toggleAll:            @toggleAll
@@ -155,7 +156,7 @@ module.exports = MessageList = React.createClass
                         mailboxes: @state.mailboxes
                         login: @state.login
                         edited: @hasSelected()
-                        selected: @getSelected().toObject()
+                        selected: @getSelected()
                         allSelected: @allSelected()
                         displayConversations: @state.displayConversations
                         isTrash: @state.isTrash
