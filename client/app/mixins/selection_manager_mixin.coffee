@@ -31,7 +31,7 @@ module.exports =
     setAllSelected: ->
         @setState
             allSelected: true,
-            selected: Immutable.Set @getSelectables()
+            selected: Immutable.Set @getSelectables().toArray()
 
     addToSelected: (key) ->
         selected = @state.selected.add key
