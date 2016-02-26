@@ -85,7 +85,8 @@ module.exports = MessageList = React.createClass
 
     # for SelectionManagerMixin
     getSelectables: ->
-        @state.messages.map (message) -> message.get('id')
+        @state.messages.map (message) ->
+            (out = {})[message.get('id')] = message
 
     getEmptyListMessage: ->
         return @props.emptyListMessage if @props.emptyListMessage
