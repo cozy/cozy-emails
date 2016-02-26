@@ -510,9 +510,23 @@ class MessageStore extends Store
     getCurrentConversationID: ->
         return _currentCID
 
+    ###*
+    * Get older conversation displayed before current
+    *
+    * @param {Function}  transform
+    *
+    * @return {List}
+    ###
     getPreviousConversation: (param={}) ->
         @getConversation transform: (index) -> ++index
 
+    ###*
+    * Get earlier conversation displayed after current
+    *
+    * @param {Function}  transform
+    *
+    * @return {List}
+    ###
     getNextConversation: (param={}) ->
         @getConversation transform: (index) -> --index
 
@@ -530,6 +544,19 @@ class MessageStore extends Store
                 message.get('conversationID') is conversationID
             .sort reverseDateSort
 
+    ###*
+    * Get Conversation
+    *
+    * If none parameters    return current conversation
+    * @param.transform      return the list index needed
+    * @param.type="message" return the closest message
+    *                       instead of conversation
+    *
+    * @param {String}   type
+    * @param {Function} transform
+    *
+    * @return {List}
+    ###
     getConversation: (param={}) ->
         @setConversation param.conversationID if param.conversationID?
         return _conversationMemoize unless _.isFunction param.transform
