@@ -94,12 +94,14 @@ module.exports =
 
     messageNavigate: (direction, inConv) ->
         return unless onMessageList()
+        console.log 'messageNavigate', direction
+
         conv = inConv and SettingsStore.get('displayConversation') and
             SettingsStore.get('displayPreview')
 
-        # The most recent conversation are on top of the list
-        # and older are below
-        # that why order is reversed
+        # when key top is pressed, direction=prev
+        # when key bottom is pressed, direction=next
+        # strange (?!)
         if direction is 'prev'
             next = MessageStore.getNextConversation()
         else
