@@ -26,12 +26,12 @@ module.exports =
     setNoneSelected: ->
         @setState
             allSelected: false,
-            selected: Immutable.Map()
+            selected: Immutable.Set()
 
     setAllSelected: ->
         @setState
             allSelected: true,
-            selected: @getSelectables()
+            selected: Immutable.Set @getSelectables().toArray()
 
     addToSelected: (key) ->
         selected = @state.selected.add key
