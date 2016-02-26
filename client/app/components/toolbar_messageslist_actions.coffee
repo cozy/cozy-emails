@@ -44,7 +44,9 @@ module.exports = ActionsToolbarMessagesList = React.createClass
 
         else
             conversationIDs = selected.map (id) =>
-                @props.messages.get(id).get('conversationID')
+                isMessage = (message) -> message.get('id') is id
+                if (message = @props.messages.find isMessage)
+                    return message.get('conversationID')
 
             return {count, conversationIDs, applyToConversation}
 
