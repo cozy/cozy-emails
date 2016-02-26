@@ -281,17 +281,18 @@ module.exports = React.createClass
         event.stopPropagation()
 
         success = =>
-            # Get next focus message
+            # Get next focus conversation
             unless (nextConversation = MessageStore.getNextConversation()).size
                 nextConversation = MessageStore.getPreviousConversation()
 
             # Then remove message
             MessageActionCreator.delete messageID: @state.currentMessageID
 
-            # Goto to next message
             unless nextConversation.size
+                # Close 2nd panel : no next conversation found
                 @redirect (url = @buildClosePanelUrl 'second')
             else
+                # Goto to next conversation
                 @redirect
                     direction: 'second',
                     action: 'conversation',
