@@ -257,9 +257,7 @@ class MessageStore extends Store
             @emit 'change'
 
         handle ActionTypes.MESSAGE_TRASH_REQUEST, ({target, ref}) ->
-            messages = _getMixed target
-            target.subject = messages[0]?.get('subject')
-            target.accountID = messages[0].get('accountID')
+            messages = @getMixed target
             account = AccountStore.getByID messages[0]?.get('accountID')
             trashBoxID = account?.get? 'trashMailbox'
             _addInFlight {type: 'trash', trashBoxID, messages, ref}
@@ -285,7 +283,7 @@ class MessageStore extends Store
 
         handle ActionTypes.MESSAGE_TRASH_FAILURE, ({target, ref}) ->
             _removeInFlight ref
-            messages = _getMixed target
+            messages = @getMixed target
             for message in messages
                 # Update conversation length
                 conversationID = message.get('conversationID')
@@ -295,9 +293,7 @@ class MessageStore extends Store
             @emit 'change'
 
         handle ActionTypes.MESSAGE_FLAGS_REQUEST, ({target, op, flag, ref}) ->
-            messages = _getMixed target
-            target.subject = messages[0]?.get('subject')
-            target.accountID = messages[0].get('accountID')
+            messages = @getMixed target
             _addInFlight {type: 'flag', op, flag, messages, ref}
             @emit 'change'
 
@@ -311,9 +307,7 @@ class MessageStore extends Store
             @emit 'change'
 
         handle ActionTypes.MESSAGE_MOVE_REQUEST, ({target, from, to, ref}) ->
-            messages = _getMixed target
-            target.subject = messages[0]?.get('subject')
-            target.accountID = messages[0].get('accountID')
+            messages = @getMixed target
             _addInFlight {type: 'move', from, to, messages, ref}
             @emit 'change'
 
@@ -562,10 +556,13 @@ class MessageStore extends Store
     # Retrieve a batch of message with various criteria
     # target - is an {Object} with a property messageID or messageIDs or
     #          conversationID or conversationIDs
+    # target.accountID is needed to success Delete
     #
     # Returns an {Array} of {Immutable.Map} messages
     getMixed: (target) ->
-        _getMixed target
+        messages = _getMixed target
+        target.accountID = messages[0].get('accountID')
+        messages
 
     getConversationsLength: ->
         return _conversationLengths
