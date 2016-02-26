@@ -45,7 +45,6 @@ module.exports = React.createClass
         displayConvs = AccountStore.hasConversationEnabled selectedMailboxID
         displayConvs and= SettingsStore.get 'displayConversation'
 
-
         nextState =
             accounts             : AccountStore.getAll()
             mailboxes            : AccountStore.getSelectedMailboxes()
@@ -68,7 +67,7 @@ module.exports = React.createClass
             conversation?.forEach (message, key) ->
                 isUnread = MessageFlags.SEEN not in message.get 'flags'
                 isLast   = key is conversation.size - 1
-                if (nextState.expanded.size is 0 and (isUnread or isLast))
+                if (nextState.expanded.length is 0 and (isUnread or isLast))
                     nextState.expanded.push key
             nextState.compact = true
 
