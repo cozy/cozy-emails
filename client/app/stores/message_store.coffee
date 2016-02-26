@@ -258,8 +258,6 @@ class MessageStore extends Store
 
         handle ActionTypes.MESSAGE_TRASH_REQUEST, ({target, ref}) ->
             messages = _getMixed target
-            # FIXME : voir pkoi si on retire ces deux lignes
-            # ça crée une erreur 400
             target.subject = messages[0]?.get('subject')
             target.accountID = messages[0].get('accountID')
             account = AccountStore.getByID messages[0]?.get('accountID')
