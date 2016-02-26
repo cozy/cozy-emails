@@ -97,6 +97,9 @@ module.exports =
         conv = inConv and SettingsStore.get('displayConversation') and
             SettingsStore.get('displayPreview')
 
+        # The most recent conversation are on top of the list
+        # and older are below
+        # that why order is reversed
         if direction is 'prev'
             next = MessageStore.getNextConversation()
         else
