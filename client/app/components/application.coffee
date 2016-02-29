@@ -145,6 +145,9 @@ module.exports = Application = React.createClass
                 messageID = secondPanel.parameters.messageID
                 MessageActionCreator.setCurrent messageID, isConv
             else
+                # Remove Fullscreen
+                LayoutActionCreator.toggleFullscreen false
+
                 if firstPanel isnt 'compose'
                     MessageActionCreator.setCurrent null
 
