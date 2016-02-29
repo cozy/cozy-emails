@@ -393,15 +393,15 @@ module.exports = Compose = React.createClass
                 success(error, message) if _.isFunction success
                 return
 
+            # Initialize @state
+            # Must stay silent (do not use setState)
             unless @state.id
                 MessageActionCreator.setCurrent message.id
+                @state.id = message.id
+                @state.conversationID = message.conversationID
 
-                # Initialize @state
-                # Must stay silent (do not use setState)
-                _keys = _.without _.keys(message), 'attachments', 'html', 'text'
-                _.each _keys, (key) =>
-                    if _.isUndefined @state[key]
-                        @state[key] = message[key]
+            # Update State tmp ID
+            @state.mailboxIDs = message.mailboxIDs
 
             @props.lastUpdate = @state.date
             @props.isSaving = false
