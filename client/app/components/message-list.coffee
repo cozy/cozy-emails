@@ -52,9 +52,8 @@ module.exports = MessageList = React.createClass
         account   = AccountStore.getByID accountID
         role = AccountStore.getMailboxRole account, mailboxID
         settings = SettingsStore.get()
-        displayConvs = settings.get('displayConversations') and
-                                        role not in CONVERSATION_DISABLED
-
+        displayConvs = !!(settings.get('displayConversations') and
+        role not in CONVERSATION_DISABLED)
         mailbox   = account.get('mailboxes').get mailboxID
         messages  = MessageStore.getMessagesToDisplay mailboxID, displayConvs
 
@@ -86,7 +85,7 @@ module.exports = MessageList = React.createClass
 
     # for SelectionManagerMixin
     getSelectables: (props = @props, state = @state) ->
-        state.messages.keySeq()
+        state.messages.map (message) -> message.get('id')
 
     getEmptyListMessage: ->
         return @props.emptyListMessage if @props.emptyListMessage
@@ -117,7 +116,7 @@ module.exports = MessageList = React.createClass
                 mailboxes:            @state.mailboxes
                 messages:             @state.messages
                 edited:               @hasSelected()
-                selected:             @getSelected().toObject()
+                selected:             @getSelected()
                 allSelected:          @allSelected()
                 displayConversations: @state.displayConversations
                 toggleAll:            @toggleAll
@@ -129,10 +128,10 @@ module.exports = MessageList = React.createClass
                 Progress value: 0, max: 1
                 MessageListLoader()
             else
-                Progress value: @state.refresh, max: 1
+                Progress value: @state.refresh or 0, max: 1
 
             # Message List
-            if @state.messages.count() is 0
+            if @state.messages.size is 0
                 if @state.fetching
                     p className: 'listFetching list-loading', t 'list fetching'
                 else
@@ -156,7 +155,7 @@ module.exports = MessageList = React.createClass
                         mailboxes: @state.mailboxes
                         login: @state.login
                         edited: @hasSelected()
-                        selected: @getSelected().toObject()
+                        selected: @getSelected()
                         allSelected: @allSelected()
                         displayConversations: @state.displayConversations
                         isTrash: @state.isTrash

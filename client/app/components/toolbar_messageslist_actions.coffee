@@ -7,9 +7,14 @@ ToolboxMove    = require './toolbox_move'
 LayoutActionCreator  = require '../actions/layout_action_creator'
 MessageActionCreator = require '../actions/message_action_creator'
 
+RouterMixin = require '../mixins/router_mixin'
 
 module.exports = ActionsToolbarMessagesList = React.createClass
     displayName: 'ActionsToolbarMessagesList'
+
+    mixins: [
+        RouterMixin
+    ]
 
     propTypes:
         settings:             React.PropTypes.object.isRequired
@@ -39,7 +44,9 @@ module.exports = ActionsToolbarMessagesList = React.createClass
 
         else
             conversationIDs = selected.map (id) =>
-                @props.messages.get(id).get('conversationID')
+                isMessage = (message) -> message.get('id') is id
+                if (message = @props.messages.find isMessage)
+                    return message.get('conversationID')
 
             return {count, conversationIDs, applyToConversation}
 
@@ -74,28 +81,30 @@ module.exports = ActionsToolbarMessagesList = React.createClass
 
 
     onDelete: (applyToConversation) ->
-        return unless options = @_getSelectedAndMode(applyToConversation)
-
-        if options.applyToConversation
-            msg = t 'list delete conv confirm', smart_count: options.count
-        else
-            msg = t 'list delete confirm', smart_count: options.count
+        return unless options = @_getSelectedAndMode applyToConversation
 
         doDelete = =>
             MessageActionCreator.delete options, =>
-                if options.count > 0 and @props.messages.count() > 0
+                if options.count > 0 and @props.messages.size > 0
                     firstMessageID = @props.messages.first().get('id')
                     MessageActionCreator.setCurrent firstMessageID, true
-            if @props.afterAction?
-                @props.afterAction()
 
-        noConfirm = not @props.settings.get('messageConfirmDelete')
-        if noConfirm
+            @props.afterAction() if @props.afterAction?
+
+            # Close Detail Panel for deleted message
+            @redirect (url = @buildClosePanelUrl 'second')
+
+        unless @props.settings.get 'messageConfirmDelete'
             doDelete()
         else
+            if options.applyToConversation
+                msg = 'list delete conv confirm'
+            else
+                msg = 'list delete confirm'
+
             modal =
                 title       : t 'app confirm delete'
-                subtitle    : msg
+                subtitle    : t msg, smart_count: options.count
                 closeLabel  : t 'app cancel'
                 actionLabel : t 'app confirm'
                 action      : ->
@@ -103,14 +112,13 @@ module.exports = ActionsToolbarMessagesList = React.createClass
                     LayoutActionCreator.hideModal()
             LayoutActionCreator.displayModal modal
 
-
     onMove: (to, applyToConversation) ->
         return unless options = @_getSelectedAndMode(applyToConversation)
 
         from = @props.mailboxID
 
         MessageActionCreator.move options, from, to, =>
-            if options.count > 0 and @props.messages.count() > 0
+            if options.count > 0 and @props.messages.size > 0
                 firstMessageID = @props.messages.first().get('id')
                 MessageActionCreator.setCurrent firstMessageID, true
         if @props.afterAction?

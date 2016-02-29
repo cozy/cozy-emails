@@ -1,25 +1,36 @@
 animationDuration = .3s
 
-/*
-  Generic animations
-*/
-@keyframes fadeIn {
-    from {
+/**
+ * Generic animations
+ */
+@keyframes fadeIn
+    from
         opacity 0
-    }
-    to {
-        opacity 1
-    }
-}
 
-/*
-  Slide
-*/
-@keyframes slide {
-    from {
+    to
+        opacity 1
+
+/**
+ * Slide
+ */
+@keyframes slide
+    from
         right 100%
-    }
-    to {
+
+    to
         right -100px
-    }
-}
+
+
+/**
+ * Rotation
+ */
+@keyframes spin
+    from
+        transform rotate(0deg)
+
+    to
+        transform rotate(359deg)
+
+
+.spin-animate
+    animation 800ms linear infinite spin

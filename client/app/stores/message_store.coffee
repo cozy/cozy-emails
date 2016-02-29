@@ -34,7 +34,7 @@ class MessageStore extends Store
     _nextUrl = null
     _noMore = false
 
-    _currentMessages = Immutable.Sequence()
+    _currentMessages = Immutable.OrderedMap()
     _conversationLengths = Immutable.Map()
     _conversationMemoize = null
     _conversationMemoizeID = null
@@ -98,32 +98,14 @@ class MessageStore extends Store
 
     # @TODO : memoize me
     _messagesWithInFlights = ->
-        _messages.map (message) ->
+        _messages
+        .map (message) ->
             id = message.get 'id'
             for request in _inFlightByMessageID[id] or []
                 message = _transformMessageWithRequest message, request
             return message
         .filter (msg) -> msg isnt null
-
-    _fixCurrentMessage = (target) ->
-        # If target.inReplyTo is set, we are removing a reply, so stay
-        # on current message
-        if target.inReplyTo?
-            return null
-        else
-            messageIDs = target.messageIDs or [target.messageID]
-            currentMessage = self.getCurrentID() or 'not-null'
-            conversationIDs = target.conversationIDs or [target.conversationID]
-            currentConversation = self.getCurrentConversationID() or 'not-null'
-
-            # open next message if the deleted / moved one was open ###
-            if currentMessage in messageIDs or
-            currentConversation in conversationIDs
-                next = self.getNextOrPrevious true
-                if next?
-                    setTimeout ->
-                        window.cozyMails.messageSetCurrent next
-                    , 1
+        .toList()
 
     _getMixed = (target) ->
         if target.messageID
@@ -221,7 +203,7 @@ class MessageStore extends Store
             message.hasAttachments = message.attachments.length > 0
             message.attachments = message.attachments.map (file) ->
                 Immutable.Map file
-            message.attachments = Immutable.Vector.from message.attachments
+            message.attachments = Immutable.List message.attachments
 
             # message loaded from fixtures for test purpose have a docType
             # that may cause some troubles
@@ -275,13 +257,10 @@ class MessageStore extends Store
             @emit 'change'
 
         handle ActionTypes.MESSAGE_TRASH_REQUEST, ({target, ref}) ->
-            messages = _getMixed target
-            target.subject = messages[0]?.get('subject')
-            target.accountID = messages[0].get('accountID')
+            messages = @getMixed target
             account = AccountStore.getByID messages[0]?.get('accountID')
             trashBoxID = account?.get? 'trashMailbox'
             _addInFlight {type: 'trash', trashBoxID, messages, ref}
-            _fixCurrentMessage target
 
             for message in messages
                 # Update conversation length
@@ -304,7 +283,7 @@ class MessageStore extends Store
 
         handle ActionTypes.MESSAGE_TRASH_FAILURE, ({target, ref}) ->
             _removeInFlight ref
-            messages = _getMixed target
+            messages = @getMixed target
             for message in messages
                 # Update conversation length
                 conversationID = message.get('conversationID')
@@ -314,9 +293,7 @@ class MessageStore extends Store
             @emit 'change'
 
         handle ActionTypes.MESSAGE_FLAGS_REQUEST, ({target, op, flag, ref}) ->
-            messages = _getMixed target
-            target.subject = messages[0]?.get('subject')
-            target.accountID = messages[0].get('accountID')
+            messages = @getMixed target
             _addInFlight {type: 'flag', op, flag, messages, ref}
             @emit 'change'
 
@@ -330,11 +307,8 @@ class MessageStore extends Store
             @emit 'change'
 
         handle ActionTypes.MESSAGE_MOVE_REQUEST, ({target, from, to, ref}) ->
-            messages = _getMixed target
-            target.subject = messages[0]?.get('subject')
-            target.accountID = messages[0].get('accountID')
+            messages = @getMixed target
             _addInFlight {type: 'move', from, to, messages, ref}
-            _fixCurrentMessage target
             @emit 'change'
 
         handle ActionTypes.MESSAGE_MOVE_SUCCESS, ({target, updated, ref}) ->
@@ -477,7 +451,7 @@ class MessageStore extends Store
             when MessageFilter.FLAGGED
                 MessageFlags.FLAGGED in message.get('flags')
             when MessageFilter.ATTACH
-                message.get('attachments').length > 0
+                message.get('attachments').size > 0
             when MessageFilter.UNSEEN
                 MessageFlags.SEEN not in message.get('flags')
             else
@@ -536,72 +510,25 @@ class MessageStore extends Store
     getCurrentConversationID: ->
         return _currentCID
 
-    getPreviousMessage: (isConv) ->
-        if isConv? and isConv
-            if not _conversationMemoize?
-                return null
-            # Conversations displayed
-            idx = _conversationMemoize.findIndex (message) ->
-                return _currentID is message.get 'id'
-            if idx < 0
-                return null
-            else if idx is _conversationMemoize.length - 1
-                # We need first message of previous conversation
-                keys = Object.keys _currentMessages.toJS()
-                idx = keys.indexOf(_conversationMemoize.last().get('id'))
-                if idx < 1
-                    return null
-                else
-                    currentMessage = _currentMessages.get(keys[idx - 1])
-                    convID = currentMessage?.get('conversationID')
-                    return null if not convID?
-                    prev = _messages.filter (message) ->
-                        message.get('conversationID') is convID
-                    .sort reverseDateSort
-                    .first()
-                    return prev
-            else
-                return _conversationMemoize.get(idx + 1)
-        else
-            keys = Object.keys _currentMessages.toJS()
-            idx = keys.indexOf _currentID
-            return if idx is -1 then null
-            else _currentMessages.get keys[idx - 1]
+    ###*
+    * Get older conversation displayed before current
+    *
+    * @param {Function}  transform
+    *
+    * @return {List}
+    ###
+    getPreviousConversation: (param={}) ->
+        @getConversation transform: (index) -> ++index
 
-    getNextMessage: (isConv) ->
-        if isConv? and isConv
-
-            if not _conversationMemoize?
-                return null
-            # Conversations displayed
-            idx = _conversationMemoize.findIndex (message) ->
-                return _currentID is message.get 'id'
-            if idx < 0
-                return null
-            else if idx is 0
-                # We need first message of next conversation
-                keys = Object.keys _currentMessages.toJS()
-                idx = keys.indexOf(_conversationMemoize.last().get('id'))
-                if idx is -1 or idx is (keys.length - 1)
-                    return null
-                else
-                    return _currentMessages.get keys[idx + 1]
-            else
-                return _conversationMemoize.get(idx - 1)
-        else
-            if not _currentID
-                return _currentMessages?.first()
-
-            keys = Object.keys _currentMessages.toJS()
-            idx = keys.indexOf _currentID
-            if idx is -1 or idx is (keys.length - 1)
-                return null
-            else
-                return _currentMessages.get keys[idx + 1]
-
-    getNextOrPrevious: (isConv) ->
-        @getNextMessage(isConv) or @getPreviousMessage(isConv)
-
+    ###*
+    * Get earlier conversation displayed after current
+    *
+    * @param {Function}  transform
+    *
+    * @return {List}
+    ###
+    getNextConversation: (param={}) ->
+        @getConversation transform: (index) -> --index
 
     getCurrentConversation: ->
         conversationID = @getCurrentConversationID()
@@ -610,26 +537,59 @@ class MessageStore extends Store
         else
             return null
 
-    getConversation: (conversationID) ->
-        if _conversationMemoize and _conversationMemoizeID is conversationID
-            return _conversationMemoize
-
+    setConversation: (conversationID) ->
         _conversationMemoizeID = conversationID
         _conversationMemoize = _messagesWithInFlights()
             .filter (message) ->
                 message.get('conversationID') is conversationID
             .sort reverseDateSort
-            .toVector()
 
-        return _conversationMemoize
+    ###*
+    * Get Conversation
+    *
+    * If none parameters    return current conversation
+    * @param.transform      return the list index needed
+    * @param.type="message" return the closest message
+    *                       instead of conversation
+    *
+    * @param {String}   type
+    * @param {Function} transform
+    *
+    * @return {List}
+    ###
+    getConversation: (param={}) ->
+        @setConversation param.conversationID if param.conversationID?
+        return _conversationMemoize unless _.isFunction param.transform
+
+        messageID = @getCurrentID()
+
+        getMessage = (array) ->
+            index0 = array.toArray().findIndex (message) ->
+                messageID is message.get 'id'
+            index = param.transform index0
+            array.toJS()[index]
+
+        # Next message of same conversation
+        if param.type is 'message' and _conversationMemoize.size > 1
+            message = getMessage _conversationMemoize
+
+        # Change Conversation
+        unless message
+            message = getMessage _currentMessages
+
+        return Immutable.Map message
+
 
     # Retrieve a batch of message with various criteria
     # target - is an {Object} with a property messageID or messageIDs or
     #          conversationID or conversationIDs
+    # target.accountID is needed to success Delete
     #
     # Returns an {Array} of {Immutable.Map} messages
     getMixed: (target) ->
-        _getMixed target
+        messages = _getMixed target
+        target.accountID = messages[0].get('accountID')
+        messages
 
     getConversationsLength: ->
         return _conversationLengths
@@ -677,4 +637,3 @@ class MessageStore extends Store
 
 
 module.exports = self = new MessageStore()
-

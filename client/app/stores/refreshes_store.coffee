@@ -4,8 +4,9 @@ Store = require '../libs/flux/store/store'
 
 
 refreshesToImmutable = (refreshes) ->
-    Immutable.Sequence refreshes
+    Immutable.Iterable refreshes
     # sets objectID as index
+    .toKeyedSeq()
     .mapKeys (_, refresh) -> return refresh.objectID
     .map (refresh) -> Immutable.fromJS refresh
     .toOrderedMap()
@@ -50,4 +51,3 @@ class RefreshesStore extends Store
 
 
 module.exports = new RefreshesStore()
-

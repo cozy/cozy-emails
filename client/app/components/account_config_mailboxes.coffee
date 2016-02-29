@@ -55,7 +55,7 @@ module.exports = AccountConfigMailboxes = React.createClass
             SubTitle className: 'config-title', t "account mailboxes"
 
             ul className: "folder-list list-unstyled boxes container",
-                if @props.editedAccount.get('mailboxes').length
+                if @props.editedAccount.get('mailboxes').size
                     @renderTableHeader()
 
                 @props.editedAccount.get('mailboxes').map (mailbox, key) =>
@@ -177,4 +177,3 @@ module.exports = AccountConfigMailboxes = React.createClass
         return editedAccount.get('sentMailbox')? and \
                editedAccount.get('draftMailbox')? and \
                editedAccount.get('trashMailbox')?
-

@@ -215,7 +215,7 @@ module.exports = AccountConfigMain = React.createClass
                     t 'gmail security link 2'
 
     _renderButtons: ->
-        if @props.errors.length is 0
+        if @props.errors.size is 0
             FieldSet text: t('account actions'),
                 FormButtons null,
                     FormButton
@@ -251,7 +251,7 @@ module.exports = AccountConfigMain = React.createClass
     # Attempt to discover default values depending on target server.
     # The target server is guessed by the email given by the user.
     doDiscovery: (domain) ->
-        if domain? and domain.length > 3 and domain isnt @_lastDiscovered
+        if domain?.size > 3 and domain isnt @_lastDiscovered
             if @discoverTimeout
                 @nextDiscover = domain
             else

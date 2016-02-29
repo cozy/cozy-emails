@@ -184,8 +184,9 @@ module.exports =
         .end (res) ->
             handleResponse res, callback, "refresh"
 
-    refreshMailbox: (mailboxID, callback) ->
+    refreshMailbox: (mailboxID, opts, callback) ->
         request.get "refresh/#{mailboxID}"
+        .query opts
         .end (res) ->
             handleResponse res, callback, "refreshMailbox"
 
@@ -196,4 +197,3 @@ module.exports =
         .set 'Accept', 'application/json'
         .end (res) ->
             handleResponse res, callback, "activityCreate", options
-

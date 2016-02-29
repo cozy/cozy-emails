@@ -41,18 +41,19 @@ module.exports = LayoutActionCreator =
             type: ActionTypes.RESIZE_PREVIEW_PANE
             value: null
 
-    toggleFullscreen: ->
-        type = if LayoutStore.isPreviewFullscreen()
-            ActionTypes.MINIMIZE_PREVIEW_PANE
-        else
+    toggleFullscreen: (value) ->
+        # Get contextual value if
+        # no value is in arguments
+        unless typeof value is 'boolean'
+            value = not LayoutStore.isPreviewFullscreen()
+
+        type = if value
             ActionTypes.MAXIMIZE_PREVIEW_PANE
+        else
+            ActionTypes.MINIMIZE_PREVIEW_PANE
 
         AppDispatcher.handleViewAction
             type: type
-
-    minimizePreview: ->
-        AppDispatcher.handleViewAction
-            type: ActionTypes.MINIMIZE_PREVIEW_PANE
 
     refresh: ->
         AppDispatcher.handleViewAction
@@ -107,15 +108,15 @@ module.exports = LayoutActionCreator =
 
     getDefaultRoute: ->
         # if there is no account, we display the configAccount
-        if AccountStore.getAll().length is 0 then 'account.new'
+        if AccountStore.getAll().size is 0 then 'account.new'
         # else go directly to first account
         else 'account.mailbox.messages'
 
     showMessageList: (panelInfo) ->
         params = panelInfo.parameters
-        {accountID, mailboxID, filter, sort, before, after} = params
 
         # ensure the proper account is selected
+        {accountID, mailboxID} = params
         AccountActionCreator.ensureSelected accountID, mailboxID
 
         AppDispatcher.handleViewAction

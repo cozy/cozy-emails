@@ -13,13 +13,13 @@ class ContactStore extends Store
     _query = ""
 
     # all known contacts
-    _contacts = Immutable.OrderedMap.empty()
+    _contacts = Immutable.OrderedMap()
 
     # result of last search
-    _results  = Immutable.OrderedMap.empty()
+    _results  = Immutable.OrderedMap()
 
     _import = (rawResults) ->
-        _results = Immutable.OrderedMap.empty()
+        _results = Immutable.OrderedMap()
 
         if rawResults?
 
@@ -103,4 +103,3 @@ class ContactStore extends Store
 
 
 module.exports = new ContactStore()
-

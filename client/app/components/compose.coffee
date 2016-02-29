@@ -49,22 +49,129 @@ module.exports = Compose = React.createClass
 
     getDefaultProps: ->
         layout: 'full'
+        prefixKey: 'new'
 
+    getInitialState: ->
+        state = MessageUtils.createBasicMessage @props
+
+        # TODO : prefixKey should be replaced by state.id
+        # when new message would have a default id
+        @props.prefixKey = state.id if state.id
+
+        state
+
+    isNew: ->
+        not @state.conversationID
+
+    getChildKey: (name) ->
+        name + '-' + @props.prefixKey
 
     shouldComponentUpdate: (nextProps, nextState) ->
-        return not(_.isEqual(nextState, @state)) or
-            not (_.isEqual(nextProps, @props))
+        not _.isEqual nextState, @state
 
+    componentWillUpdate: (nextProps, nextState) ->
+        unless _.isEmpty (text = nextState.text.trim())
+            if nextState.composeInHTML
+                nextState.html = MessageUtils.cleanHTML nextState.html
+                nextState.text = MessageUtils.cleanReplyText nextState.html
+                nextState.html = MessageUtils.wrapReplyHtml nextState.html
+
+    componentDidMount: ->
+        # scroll compose window into view
+        @getDOMNode().scrollIntoView()
+
+        # Focus
+        if not Array.isArray(@state.to) or @state.to.length is 0
+            setTimeout ->
+                document.getElementById('compose-to')?.focus()
+            , 10
+        else if @props.inReplyTo?
+            document.getElementById('compose-editor')?.focus()
+
+    componentDidUpdate: ->
+        # Initialize @state
+        # with values from server
+        @saveDraft() if @isNew()
+
+        # Each state:change do not send data to server
+        # update date for client modifications
+        unless @props.lastUpdate
+            @props.lastUpdate = @state.date
+        else
+            @state.date = new Date().toISOString()
+
+        # focus
+        switch @state.focus
+            when 'cc'
+                setTimeout ->
+                    document.getElementById('compose-cc').focus()
+                , 0
+                @setState focus: ''
+
+            when 'bcc'
+                setTimeout ->
+                    document.getElementById('compose-bcc').focus()
+                , 0
+                @setState focus: ''
+
+    hasChanged: (props, state) ->
+        (props.lastUpdate and props.lastUpdate isnt state.date) or false
+
+    resetChange: ->
+        delete @props.lastUpdate
+
+    componentWillUnmount: ->
+        @closeSaveDraft @state,
+            hasChanged: @hasChanged(@props, @state)
+            silent: true
+
+    closeSaveDraft: (state, options={}) ->
+        fetch = (error, message) =>
+            return if error or not message
+
+            unless options.silent
+                msg = "#{t "message action draft ok"}"
+                LayoutActionCreator.notify msg, autoclose: true
+
+            # reload conversation to update its length
+            cid = message.conversationID
+            MessageActionCreator.fetchConversation cid
+
+        save = =>
+            MessageActionCreator.send _.clone(state), (error, message) ->
+                if error? or not message?
+                    msg = "#{t "message action draft ko"} #{error}"
+                    LayoutActionCreator.alertError msg
+                    return
+
+                fetch error, message
+
+        # Fetch
+        unless options.hasChanged
+            return
+
+        # Do not ask for save
+        if options.silent
+            save()
+            return
+
+        # Ask for changes
+        init = =>
+            @showModal
+                title       : t 'app confirm delete'
+                subtitle    : t 'compose confirm keep draft'
+                closeLabel  : t 'compose confirm draft keep'
+                actionLabel : t 'compose confirm draft delete'
+                closeModal  : ->
+                    LayoutActionCreator.hideModal()
+                    save()
+        setTimeout init, 0
 
     render: ->
-        return unless @props.accounts
-
         closeUrl = @buildClosePanelUrl @props.layout
 
         classLabel = 'compose-label'
         classInput = 'compose-input'
-        classCc    = if @state.ccShown  then ' shown ' else ''
-        classBcc   = if @state.bccShown then ' shown ' else ''
 
         focusEditor = Array.isArray(@state.to) and
             @state.to.length > 0 and
@@ -94,11 +201,13 @@ module.exports = Compose = React.createClass
                             div null
                                 a
                                     className: 'compose-toggle-cc',
-                                    onClick: @onToggleCc,
+                                    onClick: @toggleField,
+                                    'data-ref': 'cc'
                                     t 'compose toggle cc'
                                 a
                                     className: 'compose-toggle-bcc',
-                                    onClick: @onToggleBcc,
+                                    onClick: @toggleField,
+                                    'data-ref': 'bcc'
                                     t 'compose toggle bcc'
 
                 MailsInput
@@ -106,22 +215,25 @@ module.exports = Compose = React.createClass
                     valueLink: @linkState 'to'
                     label: t 'compose to'
                     ref: 'to'
+                    key: @getChildKey 'to'
 
                 MailsInput
                     id: 'compose-cc'
-                    className: 'compose-cc' + classCc
+                    className: 'compose-cc'
                     valueLink: @linkState 'cc'
                     label: t 'compose cc'
                     placeholder: t 'compose cc help'
                     ref: 'cc'
+                    key: @getChildKey 'cc'
 
                 MailsInput
                     id: 'compose-bcc'
-                    className: 'compose-bcc' + classBcc
+                    className: 'compose-bcc'
                     valueLink: @linkState 'bcc'
                     label: t 'compose bcc'
                     placeholder: t 'compose bcc help'
                     ref: 'bcc'
+                    key: @getChildKey 'bcc'
 
                 div className: 'form-group',
                     div className: classInput,
@@ -129,7 +241,7 @@ module.exports = Compose = React.createClass
                             id: 'compose-subject'
                             name: 'compose-subject'
                             ref: 'subject'
-                            valueLink: @linkState('subject')
+                            valueLink: @linkState 'subject'
                             type: 'text'
                             className: 'form-control compose-subject'
                             placeholder: t "compose subject help"
@@ -137,18 +249,18 @@ module.exports = Compose = React.createClass
                 div className: 'compose-content',
                     ComposeEditor
                         id                : 'compose-editor'
-                        messageID         : @props.message?.get 'id'
+                        messageID         : @state.id
                         html              : @linkState('html')
                         text              : @linkState('text')
                         accounts          : @props.accounts
                         accountID         : @state.accountID
                         settings          : @props.settings
-                        onSend            : @onSend
+                        onSend            : @sendMessage
                         composeInHTML     : @state.composeInHTML
-                        focus             : focusEditor
-                        ref               : 'editor'
                         getPicker         : @getPicker
                         useIntents        : @props.useIntents
+                        ref               : 'editor'
+                        key               : @getChildKey 'editor'
 
                 div className: 'attachements',
                     FilePicker
@@ -156,15 +268,16 @@ module.exports = Compose = React.createClass
                         editable: true
                         valueLink: @linkState 'attachments'
                         ref: 'attachments'
+                        key: @getChildKey 'attachments'
 
                 ComposeToolbox
-                    saving    : @state.saving
-                    sending   : @state.sending
-                    onSend    : @onSend
-                    onDelete  : @onDelete
-                    onDraft   : @onDraft
-                    onCancel  : @onCancel
-                    canDelete : @props.message?
+                    send      : @sendMessage
+                    delete    : @deleteDraft
+                    save      : @saveDraft
+                    cancel    : @close
+                    canDelete : @state.id?
+                    ref       : 'toolbox'
+                    key       : @getChildKey 'toolbox'
 
                 div className: 'clearfix', null
 
@@ -176,9 +289,9 @@ module.exports = Compose = React.createClass
     # selection and message information.
     finalRedirect: ->
         if @props.inReplyTo?
-            conversationID = @props.inReplyTo.get('conversationID')
-            accountID = @props.inReplyTo.get('accountID')
-            messageID = @props.inReplyTo.get('id')
+            conversationID = @state.conversationID
+            accountID = @props.selectedAccountID
+            messageID = @state.id
             mailboxes = Object.keys @props.inReplyTo.get 'mailboxIDs'
             mailboxID = AccountStore.pickBestBox accountID, mailboxes
 
@@ -190,19 +303,22 @@ module.exports = Compose = React.createClass
                 secondPanel:
                     action: 'conversation'
                     parameters: {conversationID, messageID}
+            return
 
         # Else it should bring to the default view
-        else
-            @redirect
-                direction: 'first'
-                action: 'default'
-                fullWidth: true
+        @redirect
+            direction: 'first'
+            action: 'account.mailbox.messages'
+            fullWidth: true
+            parameters: [
+                @props.selectedAccountID
+                @props.selectedMailboxID
+            ]
 
-    # Cancel brings back to default view. If it's while replying to a message,
+    # Cancel brings back to default view.
+    # If it's while replying to a message,
     # it brings back to this message.
-    onCancel: (event) ->
-        event.preventDefault()
-
+    close: (event) ->
         # Action after cancelation: call @props.onCancel
         # or navigate to message list.
         if @props.onCancel?
@@ -210,378 +326,120 @@ module.exports = Compose = React.createClass
         else
             @finalRedirect()
 
+    showModal: (params, success) ->
+        return if @isNew()
 
-    _initCompose: ->
-
-        if @_saveInterval
-            window.clearInterval @_saveInterval
-
-        @_saveInterval = window.setInterval @_autosave, 30000
-
-        # First save of draft
-        @_autosave()
-
-        # scroll compose window into view
-        @getDOMNode().scrollIntoView()
-
-        # Focus
-        if not Array.isArray(@state.to) or @state.to.length is 0
-            setTimeout ->
-                document.getElementById('compose-to')?.focus()
-            , 10
-        else if @props.inReplyTo?
-            document.getElementById('compose-editor')?.focus()
-
-
-    componentDidMount: ->
-        @_initCompose()
-
-
-    componentDidUpdate: ->
-        switch @state.focus
-            when 'cc'
-                setTimeout ->
-                    document.getElementById('compose-cc').focus()
-                , 0
-                @setState focus: ''
-
-            when 'bcc'
-                setTimeout ->
-                    document.getElementById('compose-bcc').focus()
-                , 0
-                @setState focus: ''
-
-
-    componentWillUnmount: ->
-        if @_saveInterval
-            window.clearInterval @_saveInterval
-
-        # delete draft
         doDelete = =>
-            window.setTimeout =>
-                LayoutActionCreator.hideModal()
-                messageID = @state.id
-                MessageActionCreator.delete {messageID, silent, isDraft: true, inReplyTo: @props.inReplyTo}
-            , 5
+            # Do not try to save client changes
+            # when componentWillUnmount
+            @resetChange()
 
-        # save draft one last time
-        doSave = =>
-            if @state.originalConversationID?
-                # save one last time the draft, adding the conversationID
-                message =
-                    id            : @state.id
-                    accountID     : @state.accountID
-                    mailboxIDs    : @state.mailboxIDs
-                    from          : @state.from
-                    to            : @state.to
-                    cc            : @state.cc
-                    bcc           : @state.bcc
-                    subject       : @state.subject
-                    isDraft       : true
-                    attachments   : @state.attachments
-                    inReplyTo     : @state.inReplyTo
-                    references    : @state.references
-                    text          : @state.text
-                    html          : @state.html
-                    conversationID: @state.originalConversationID
-                MessageActionCreator.send message, (error, message) ->
-                    if error? or not message?
-                        msg = "#{t "message action draft ko"} #{error}"
-                        LayoutActionCreator.alertError msg
-                    else
-                        msg = "#{t "message action draft ok"}"
-                        LayoutActionCreator.notify msg, autoclose: true
-                        if message.conversationID?
-                            # reload conversation to update its length
-                            cid = message.conversationID
-                            MessageActionCreator.fetchConversation cid
-            else
+            messageID = @state.id
+            MessageActionCreator.delete {messageID}
+            LayoutActionCreator.hideModal()
 
+            if @props.callback
+                @props.callback()
+                return
 
-        # If message has not been sent, ask if we should keep it or not
-        #  - if yes, and the draft belongs to a conversation, add the
-        #    conversationID and save the draft
-        #  - if no, delete the draft
-        if not @state.isDeleted and @state.isDraft and @state.id?
+            # specific callback
+            success() if _.isFunction success
 
-            if @state.composeInHTML
-                newContent = MessageUtils.cleanReplyText(@state.html).replace /\s/gim, ''
-                oldContent = MessageUtils.cleanReplyText(@state.initHtml).replace /\s/gim, ''
-                updated = newContent isnt oldContent
-            else
-                updated = @state.text isnt @state.initText
+        _.extend params, action: doDelete
+        LayoutActionCreator.displayModal params
 
-            # if draft has not been updated, delete without asking confirmation
-            silent = @state.isNew and not updated
-            if silent
-                doDelete()
-            else
-                # we need a timeout because of React's components life cycle
-                setTimeout ->
-                    # display a modal asking if we should keep or delete the draft
-                    modal =
-                        title       : t 'app confirm delete'
-                        subtitle    : t 'compose confirm keep draft'
-                        closeModal  : ->
-                            doSave()
-                            LayoutActionCreator.hideModal()
-                        closeLabel  : t 'compose confirm draft keep'
-                        actionLabel : t 'compose confirm draft delete'
-                        action      : doDelete
-                    LayoutActionCreator.displayModal modal
-                , 0
-
-
-    getInitialState: ->
-
-        # edition of an existing draft
-        if message = @props.message
-            state =
-                composeInHTML: @props.settings.get 'composeInHTML'
-                isNew: false
-            if (not message.get('html')?) and message.get('text')
-                state.conposeInHTML = false
-
-            # TODO : smarter ?
-            state[key] = value for key, value of message.toJS()
-            # we want the immutable attachments
-            state.attachments = message.get 'attachments'
-
-        # new draft
-        else
-            account = @props.accounts.get @props.selectedAccountID
-            state = MessageUtils.makeReplyMessage(
-                account.get('login'),
-                @props.inReplyTo,
-                @props.action,
-                @props.settings.get('composeInHTML'),
-                account.get('signature')
-            )
-            state.isNew = true
-            state.accountID ?= @props.selectedAccountID
-            # use another field to prevent the empty conversationID of draft
-            # to override the original conversationID
-            state.originalConversationID = state.conversationID
-
-        state.isDraft  = true
-        state.sending  = false
-        state.saving   = false
-        state.ccShown  = Array.isArray(state.cc) and state.cc.length > 0
-        state.bccShown = Array.isArray(state.bcc) and state.bcc.length > 0
-        # save initial message content, to don't ask confirmation if
-        # it has not been updated
-        state.initHtml = state.html
-        state.initText = state.text
-
-        return state
-
-
-    componentWillReceiveProps: (nextProps) ->
-        if nextProps.message isnt @props.message
-            @props.message = nextProps.message
-            @setState @getInitialState()
-
-
-    onDraft: (event) ->
-        event.preventDefault()
-        @_doSend true
-
-
-    onSend: (event) ->
+    saveDraft: (event) ->
         event.preventDefault() if event?
-        @_doSend false
+        @state.isDraft = true
+        @sendActionMessage =>
+            @refs.toolbox.setState action: null if @refs.toolbox
 
+    sendMessage: (event) ->
+        event.preventDefault() if event?
+        @state.isDraft = false
+        @sendActionMessage (error, message) =>
+            if error
+                msgKo = t "message action sent ko"
+                LayoutActionCreator.alertError "#{msgKo} #{error}"
+                return
 
-    _doSend: (isDraft) ->
+            # Display confirmation message
+            # for no-draft email
+            msgOk = t "message action sent ok"
+            LayoutActionCreator.notify msgOk, autoclose: true
 
-        account = @props.accounts.get @state.accountID
+            @finalRedirect()
 
-        from =
-            name: account.get('name') or undefined
-            address: account.get('login')
+    validateMessage: ->
+        return if @state.isDraft
+        error = 'dest': ['to']
+        getGroupedError error, @state, _.isEmpty
 
-        message =
-            id            : @state.id
-            accountID     : @state.accountID
-            mailboxIDs    : @state.mailboxIDs
-            from          : [from]
-            to            : @state.to
-            cc            : @state.cc
-            bcc           : @state.bcc
-            subject       : @state.subject
-            isDraft       : isDraft
-            attachments   : @state.attachments
-            inReplyTo     : @state.inReplyTo
-            references    : @state.references
+    sendActionMessage: (success) ->
+        return if @props.isSaving
+        if (validate = @validateMessage())
+            LayoutActionCreator.alertError t 'compose error no ' + validate[1]
+            success(null, @state) if _.isFunction success
+            return
 
-        if not isDraft
-            # Add conversationID when sending message
-            # we don't add conversationID to draft, otherwise the full
-            # conversation would be updated, closing the compose panel
-            message.conversationID = @state.originalConversationID
-
-        valid = true
-        if not isDraft
-            if @state.to.length is 0 and
-               @state.cc.length is 0 and
-               @state.bcc.length is 0
-                valid = false
-                LayoutActionCreator.alertError t "compose error no dest"
-                setTimeout ->
-                    document.getElementById('compose-to').focus()
-                , 0
-            else if @state.subject is ''
-                valid = false
-                LayoutActionCreator.alertError t "compose error no subject"
-                setTimeout =>
-                    @refs.subject.getDOMNode().focus()
-                , 0
-
-        if valid
-            if @state.composeInHTML
-                message.html = @_cleanHTML @state.html
-                message.text = MessageUtils.cleanReplyText message.html
-                message.html = MessageUtils.wrapReplyHtml message.html
-            else
-                message.text = @state.text.trim()
-
-            if not isDraft and @_saveInterval
-                window.clearInterval @_saveInterval
-
-            if isDraft
-                @setState saving: true
-            else
-                @setState sending: true, isDraft: false
-
-            MessageActionCreator.send message, (error, message) =>
-                if (not error?) and (not @state.id?) and (message?)
-                    MessageActionCreator.setCurrent message.id
-
-                state = _.clone @state
-                if isDraft
-                    state.saving = false
-                else
-                    state.isDraft = false
-                    state.sending = false
-                # Don't override local attachments nor message content
-                # (server override cid: URLs with relative URLs)
-                state[key] = value for key, value of message when key isnt 'attachments' and
-                    key isnt 'html' and key isnt 'text'
-
-                state[key] = @state[key] for key in Object.keys(@state) when key isnt "saving"
-
-                # Sometime, when user cancel composing, the component has been
-                # unmounted before we come back from autosave, and setState fails
-                if @isMounted()
-                    @setState state
-
-                if isDraft
+        @props.isSaving = true
+        MessageActionCreator.send _.clone(@state), (error, message) =>
+            if error? or not message?
+                if @state.isDraft
                     msgKo = t "message action draft ko"
-                else
-                    msgKo = t "message action sent ko"
-                    msgOk = t "message action sent ok"
-                if error? or not message?
                     LayoutActionCreator.alertError "#{msgKo} #{error}"
-                else
-                    # don't display confirmation message when draft has been saved
-                    if not isDraft
-                        LayoutActionCreator.notify msgOk, autoclose: true
 
-                    if not @state.id?
-                        MessageActionCreator.setCurrent message.id
+                @props.isSaving = false
+                success(error, message) if _.isFunction success
+                return
 
-                    if not isDraft
-                        if message.conversationID?
-                            # reload conversation to update its length
-                            cid = message.conversationID
-                            MessageActionCreator.fetchConversation cid
-                        @finalRedirect()
+            # Initialize @state
+            # Must stay silent (do not use setState)
+            unless @state.id
+                MessageActionCreator.setCurrent message.id
+                @state.id = message.id
+                @state.conversationID = message.conversationID
 
+            # Update State tmp ID
+            @state.mailboxIDs = message.mailboxIDs
 
-    _autosave: ->
-        if @props.settings.get 'autosaveDraft'
-            @_doSend true
+            @props.lastUpdate = @state.date
+            @props.isSaving = false
+            success(error, message) if _.isFunction success
 
+    deleteDraft: (event) ->
+        event.preventDefault() if event
 
-    # set source of attached images
-    _cleanHTML: (html) ->
-        parser = new DOMParser()
-        doc    = parser.parseFromString html, "text/html"
-
-        if not doc
-            doc = document.implementation.createHTMLDocument("")
-            doc.documentElement.innerHTML = html
-
-        if doc
-            # the contentID of attached images will be in the data-src attribute
-            # override image source with this attribute
-            imageSrc = (image) ->
-                image.setAttribute 'src', "cid:#{image.dataset.src}"
-            images = doc.querySelectorAll 'IMG[data-src]'
-            imageSrc image for image in images
-
-            return doc.documentElement.innerHTML
-        else
-            console.error "Unable to parse HTML content of message"
-            return html
-
-
-    onDelete: (e) ->
-        e.preventDefault()
-        subject = @props.message.get 'subject'
-
-        if subject? and subject isnt ''
-            params = subject: @props.message.get 'subject'
+        if _.isEmpty (subject = @state.subject)
+            params = subject: subject
             confirmMessage = t 'mail confirm delete', params
-
         else
             confirmMessage = t 'mail confirm delete nosubject'
 
-        doDelete = =>
-            LayoutActionCreator.hideModal()
-            messageID = @props.message.get('id')
-            # this will prevent asking a second time when unmounting component
-            @setState isDeleted: true, =>
-                MessageActionCreator.delete {messageID}, (error) =>
-                    unless error?
-                        if @props.callback
-                            @props.callback()
-                        else
-                            parameters = [
-                                @props.selectedAccountID
-                                @props.selectedMailboxID
-                            ]
-
-                            @redirect
-                                direction: 'first'
-                                action: 'account.mailbox.messages'
-                                parameters: parameters
-                                fullWidth: true
-
-        modal =
+        @showModal
             title       : t 'mail confirm delete title'
             subtitle    : confirmMessage
             closeLabel  : t 'mail confirm delete cancel'
             actionLabel : t 'mail confirm delete delete'
-            action      : doDelete
-        LayoutActionCreator.displayModal modal
+        , @finalRedirect
 
+    toggleField: (event) ->
+        ref = event.currentTarget.getAttribute 'data-ref'
+        view = @refs[ref]
+        value = !view.state.focus
 
-    onToggleCc: (e) ->
-        toggle = (e) -> e.classList.toggle 'shown'
-        toggle e for e in @getDOMNode().querySelectorAll '.compose-cc'
-        focus = if not @state.ccShown then 'cc' else ''
-        @setState ccShown: not @state.ccShown, focus: focus
-
-
-    onToggleBcc: (e) ->
-        toggle = (e) -> e.classList.toggle 'shown'
-        toggle e for e in @getDOMNode().querySelectorAll '.compose-bcc'
-        focus = if not @state.bccShown then 'bcc' else ''
-        @setState bccShown: not @state.bccShown, focus: focus
-
+        view.setState focus: value
 
     # Get the file picker component (method used to pass it to the editor)
     getPicker: ->
         return @refs.attachments
 
+getGroupedError = (error, message, test) ->
+    type = null
+    group = null
+    _.find error, (properties, key) ->
+        type = _.find properties, (property) ->
+            test message[property]
+        group = key if type?
+        type
+    if type or group then [type, group] else null
