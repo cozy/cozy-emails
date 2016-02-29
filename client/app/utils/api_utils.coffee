@@ -94,7 +94,6 @@ module.exports =
 
     messageNavigate: (direction, inConv) ->
         return unless onMessageList()
-        console.log 'messageNavigate', direction
 
         conv = inConv and SettingsStore.get('displayConversation') and
             SettingsStore.get('displayPreview')
