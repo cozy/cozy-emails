@@ -8,6 +8,8 @@ MessageFooter  = require "./message_footer"
 ToolbarMessage = require './toolbar_message'
 MessageContent = require './message-content'
 
+MessageStore = require '../stores/message_store'
+
 {MessageFlags} = require '../constants/app_constants'
 
 LayoutActionCreator       = require '../actions/layout_action_creator'
@@ -279,11 +281,24 @@ module.exports = React.createClass
         event.stopPropagation()
 
         success = =>
-            messageID = @props.message.get('id')
-            MessageActionCreator.delete {messageID}
+            # Get next focus conversation
+            unless (nextConversation = MessageStore.getNextConversation()).size
+                nextConversation = MessageStore.getPreviousConversation()
 
-             # Close Detail Panel for deleted message
-            @redirect (url = @buildClosePanelUrl 'second')
+            # Then remove message
+            MessageActionCreator.delete messageID: @state.currentMessageID
+
+            unless nextConversation.size
+                # Close 2nd panel : no next conversation found
+                @redirect (url = @buildClosePanelUrl 'second')
+            else
+                # Goto to next conversation
+                @redirect
+                    direction: 'second',
+                    action: 'conversation',
+                    parameters:
+                        messageID: nextConversation.get('id')
+                        conversationID: nextConversation.get('conversationID')
 
         needConfirmation = @props.settings.get('messageConfirmDelete')
         unless needConfirmation

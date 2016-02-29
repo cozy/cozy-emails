@@ -31,14 +31,14 @@ module.exports = React.createClass
         selectedMailboxID = AccountStore.getSelectedMailbox()?.get 'id'
         selectedAccount = AccountStore.getSelectedOrDefault()
 
-
         if message?
             conversationID = message?.get('conversationID')
             trashMailboxID = selectedAccount?.get('trashMailbox')
-            conversation = MessageStore
-                           .getConversation conversationID, trashMailboxID
-            prevMessage = MessageStore.getPreviousMessage(true)
-            nextMessage = MessageStore.getNextMessage(true)
+
+            conversation = MessageStore.getConversation {conversationID}
+            prevMessage = MessageStore.getPreviousConversation()
+            nextMessage = MessageStore.getNextConversation()
+
             length = MessageStore.getConversationsLength().get conversationID
             selectedMailboxID ?= Object.keys(message.get('mailboxIDs'))[0]
 
