@@ -14,7 +14,7 @@ onMessageList = ->
     return router.current.firstPanel?.action in actions
 
 
-module.exports =
+module.exports = Utils =
 
 
     debugLogs: []
@@ -151,8 +151,8 @@ module.exports =
 
     messageClose: ->
         href = window.location.href
-        closeUrl = href.replace /\/message\/[^\/]*\//gi, ''
-        closeUrl = closeUrl.replace /\/conversation\/[^\/]*\/[^\/]*\//gi, ''
+        closeUrl = href.replace /\/message\/[\w-]+/gi, ''
+        closeUrl = closeUrl.replace /\/conversation\/[\w-]+\/[\w-]+/gi, ''
         window.location.href = closeUrl
 
 
@@ -174,6 +174,7 @@ module.exports =
                     smart_count: 1
         if (not confirm)
             MessageActionCreator.delete {messageID}
+            Utils.messageClose()
         else
             modal =
                 title       : t 'app confirm delete'
@@ -183,6 +184,7 @@ module.exports =
                 action      : ->
                     MessageActionCreator.delete {messageID}
                     LayoutActionCreator.hideModal()
+                    Utils.messageClose()
             LayoutActionCreator.displayModal modal
 
 
