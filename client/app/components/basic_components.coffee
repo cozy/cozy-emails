@@ -331,6 +331,7 @@ Icon = React.createClass
         type: React.PropTypes.string.isRequired
 
     render: ->
+
         className = "#{@props.className or ''} fa fa-#{@props.type}"
         i
             className: className
