@@ -175,7 +175,7 @@
         table-layout     fixed
         width            100%
         padding          .5em .4em 1em
-        background-color lighten(lightcolor,90%)
+        background-color lighten(lightcolor,60%)
         border-bottom    1px solid grey-02
 
         main:not(.full) &.active
@@ -195,8 +195,9 @@
     .unseen
         background-color white
 
-        .subject
-            font-weight bold
+        .participants
+            .address-list
+                font-weight bold
 
 
     .wrapper
@@ -253,9 +254,6 @@
         justify-content space-between
 
 
-    .participants
-        font-weight bold
-
     .subject
         font-size (15/16)em
 
@@ -263,16 +261,14 @@
         color     grey-06
         font-size .875em
 
-    .mailboxes
-        font-size .875em
-
-        span
-            display          inline-block
-            margin-right     .5em
-            background-color rgba(grey-02, .67)
-            border-radius    .1em
-            padding          .1em .35em
-            color            darkcolor
+    .mailbox-tag
+        font-size        .8em
+        display          inline-block
+        margin-right     .5em
+        background-color rgba(grey-02, .67)
+        border-radius    .1em
+        padding          .1em .35em
+        color            darkcolor
 
 
     .date
