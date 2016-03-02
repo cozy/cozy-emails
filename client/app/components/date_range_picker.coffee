@@ -5,7 +5,6 @@
 momentFormat     = 'DD/MM/YYYY'
 datePickerFormat = '%d/%m/%Y'
 
-
 module.exports = DateRangePicker = React.createClass
     displayName: 'DateRangePicker'
 
@@ -53,15 +52,11 @@ module.exports = DateRangePicker = React.createClass
 
 
     filterize: ->
-        start = if @state.startDate
-            [d, m, y] = @state.startDate.split '/'
-            "#{y}-#{m}-#{d}T00:00:00.000Z"
+        getValue = (key) =>
+            return unless (value = @state[key + 'Date'])
+            moment(value, momentFormat)[key + 'Of']('day').toISOString()
 
-        end = if @state.endDate
-            [d, m, y] = @state.endDate.split '/'
-            "#{y}-#{m}-#{d}T23:59:59.999Z"
-
-        @props.onDateFilter start, end
+        @props.onDateFilter getValue('start'), getValue('end')
 
 
     onReset: ->
@@ -77,11 +72,11 @@ module.exports = DateRangePicker = React.createClass
         @changeDates 'month'
 
     changeDates: (type) ->
-        value = moment().subtract(1, type).startOf(type) if type
+        value = moment().subtract(1, type) if type
         state =
             isActive    : !!type
-            startDate   : value?.format momentFormat
-            endDate     : value?.endOf(type).format momentFormat
+            startDate   : start = value?.startOf(type).format momentFormat
+            endDate     : end = value?.endOf(type).format momentFormat
 
         @setState state, @filterize
 
