@@ -83,9 +83,11 @@ module.exports = React.createClass
     onDelete: ->
         # Remove conversation
         conversationID = @props.conversationID
+
         MessageActionCreator.delete {conversationID}
 
-        @gotoNextConversation()
+        # Select previous conversation
+        @gotoPreviousConversation()
 
     onMark: (flag) ->
         conversationID = @props.conversationID
