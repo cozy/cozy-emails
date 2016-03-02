@@ -71,6 +71,7 @@ module.exports = Panel = React.createClass
 
         # -- Generates the new message composition form
         else if @props.action is 'compose' or
+                @props.action is 'compose.edit' or
                 @props.action is 'edit' or
                 @props.action is 'compose.reply' or
                 @props.action is 'compose.reply-all' or
@@ -133,7 +134,8 @@ module.exports = Panel = React.createClass
             component = Compose options
 
         # Generates the edit draft composition form.
-        else if @props.action is 'edit'
+        else if @props.action is 'edit' or
+                @props.action is 'compose.edit'
             messageID = @props.messageID
             if (message = MessageStore.getByID messageID)
                 options.key += '-' + messageID

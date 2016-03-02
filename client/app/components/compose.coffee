@@ -384,27 +384,29 @@ module.exports = Compose = React.createClass
 
         @props.isSaving = true
         MessageActionCreator.send _.clone(@state), (error, message) =>
+            @props.isSaving = false
             if error? or not message?
                 if @state.isDraft
                     msgKo = t "message action draft ko"
                     LayoutActionCreator.alertError "#{msgKo} #{error}"
 
-                @props.isSaving = false
                 success(error, message) if _.isFunction success
                 return
 
+            @props.lastUpdate = message.date
+
+            # Refresh URL
+            # to save temporary info
             unless @state.id
-                MessageActionCreator.setCurrent message.id
+                @state.id = message.id
+                @redirect
+                    action: 'compose.edit'
+                    direction: 'first'
+                    fullWidth: true
+                    parameters:
+                        messageID: @state.id
+                return
 
-                # Initialize @state
-                # Must stay silent (do not use setState)
-                _keys = _.without _.keys(message), 'attachments', 'html', 'text'
-                _.each _keys, (key) =>
-                    if _.isUndefined @state[key]
-                        @state[key] = message[key]
-
-            @props.lastUpdate = @state.date
-            @props.isSaving = false
             success(error, message) if _.isFunction success
 
     deleteDraft: (event) ->
