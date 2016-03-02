@@ -165,6 +165,7 @@ module.exports = Utils =
             # Get next message information
             # before delete (context changes)
             next = MessageStore.getPreviousConversation()
+            next = MessageStore.getNextConversation() unless next.size
 
             MessageActionCreator.delete {messageID}
             LayoutActionCreator.hideModal() if isModal
