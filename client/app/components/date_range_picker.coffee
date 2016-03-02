@@ -16,8 +16,8 @@ module.exports = DateRangePicker = React.createClass
     getInitialState: ->
         isActive:  @props.active
         label:     t 'daterangepicker placeholder'
-        startDate: ''
-        endDate:   ''
+        startDate: null
+        endDate:   null
 
 
     shouldComponentUpdate: (nextProps, nextState) ->
@@ -30,9 +30,9 @@ module.exports = DateRangePicker = React.createClass
         if @state.isActive and not nextProps.active
             # we don't call reset here because we don't want to filterize
             @setState
-                isActive:  false
-                startDate: ''
-                endDate:   ''
+                isActive    : false
+                startDate   : null
+                endDate     : null
 
         else if nextProps.active and not @props.active
             @setState isActive: true
@@ -53,8 +53,6 @@ module.exports = DateRangePicker = React.createClass
 
 
     filterize: ->
-        return if not @state.startDate ^ not @state.endDate
-
         start = if @state.startDate
             [d, m, y] = @state.startDate.split '/'
             "#{y}-#{m}-#{d}T00:00:00.000Z"
@@ -66,37 +64,26 @@ module.exports = DateRangePicker = React.createClass
         @props.onDateFilter start, end
 
 
-    reset: ->
-        @setState
-            isActive:  false
-            startDate: ''
-            endDate:   '',
-            @filterize
+    onReset: ->
+        @changeDates()
 
+    onYesterday: ->
+        @changeDates 'day'
 
-    presetYesterday: ->
-        @setState
-            isActive:  true
-            startDate: moment().subtract(1, 'day').format(momentFormat)
-            endDate:   moment().subtract(1, 'day').format(momentFormat),
-            @filterize
+    onLastWeek: ->
+        @changeDates 'week'
 
+    onLastMonth: ->
+        @changeDates 'month'
 
-    presetLastWeek: ->
-        @setState
-            isActive:  true
-            startDate: moment().subtract(1, 'week').format(momentFormat)
-            endDate:   moment().format(momentFormat),
-            @filterize
+    changeDates: (type) ->
+        value = moment().subtract(1, type).startOf(type) if type
+        state =
+            isActive    : !!type
+            startDate   : value?.format momentFormat
+            endDate     : value?.endOf(type).format momentFormat
 
-
-    presetLastMonth: ->
-        @setState
-            isActive:  true
-            startDate: moment().subtract(1, 'month').format(momentFormat)
-            endDate:   moment().format(momentFormat),
-            @filterize
-
+        @setState state, @filterize
 
     render: ->
         div
@@ -120,25 +107,25 @@ module.exports = DateRangePicker = React.createClass
                     li role: 'presentation',
                         button
                             role:    'menuitem'
-                            onClick: @presetYesterday
+                            onClick: @onYesterday
                             t 'daterangepicker presets yesterday'
 
                     li role: 'presentation',
                         button
                             role:    'menuitem'
-                            onClick: @presetLastWeek
+                            onClick: @onLastWeek
                             t 'daterangepicker presets last week'
 
                     li role: 'presentation',
                         button
                             role:    'menuitem'
-                            onClick: @presetLastMonth
+                            onClick: @onLastMonth
                             t 'daterangepicker presets last month'
 
                     li role: 'presentation',
                         button
                             role:    'menuitem'
-                            onClick: @reset
+                            onClick: @onReset
                             t 'daterangepicker clear'
 
                 div className: 'date-pickers',
