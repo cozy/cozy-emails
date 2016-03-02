@@ -138,8 +138,9 @@ module.exports = LayoutActionCreator =
         if search isnt '-'
             MessageActionCreator.fetchSearchResults accountID, search
 
-    showMessage: (panelInfo, direction) ->
+    showMessage: (panelInfo) ->
         {messageID} = panelInfo.parameters
+        return unless messageID
 
         message = MessageStore.getByID messageID
         if message?
@@ -164,26 +165,11 @@ module.exports = LayoutActionCreator =
         if not length? or length > 1
             MessageActionCreator.fetchConversation conversationID
 
-
-    showComposeNewMessage: (panelInfo, direction) ->
-        AccountActionCreator.selectDefaultIfNoneSelected()
-
     # Display compose widget but this time it's aimed to be pre-filled:
     # either with reply/forward or with draft information.
     showComposeMessage: (panelInfo, direction) ->
         AccountActionCreator.selectDefaultIfNoneSelected()
-
-        # If message is not there, it fetches it from server.
-        messageID = panelInfo.parameters.messageID
-        message = MessageStore.getByID messageID
-        unless message?
-            XHRUtils.fetchMessage messageID, (err, rawMessage) ->
-                if err?
-                    LayoutActionCreator.alertError err
-                else
-                    MessageActionCreator.receiveRawMessage rawMessage
-                    AccountActionCreator.selectAccountForMessage rawMessage
-
+        LayoutActionCreator.showMessage panelInfo
 
     showCreateAccount: (panelInfo, direction) ->
         AccountActionCreator.selectAccount null
