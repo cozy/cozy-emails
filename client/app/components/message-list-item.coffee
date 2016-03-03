@@ -1,11 +1,11 @@
 {div, section, p, ul, li, a, span, i, button, input, img} = React.DOM
 {MessageFlags, MailboxFlags} = require '../constants/app_constants'
-{Icon} = require './basic_components'
-RouterMixin           = require '../mixins/router_mixin'
-classer      = React.addons.classSet
-MessageUtils = require '../utils/message_utils'
-colorhash    = require '../utils/colorhash'
-Participants        = require './participant'
+{Icon}               = require './basic_components'
+RouterMixin          = require '../mixins/router_mixin'
+classer              = React.addons.classSet
+MessageUtils         = require '../utils/message_utils'
+colorhash            = require '../utils/colorhash'
+Participants         = require './participant'
 MessageActionCreator = require '../actions/message_action_creator'
 
 
@@ -62,16 +62,19 @@ module.exports = MessageItem = React.createClass
 
                 div className: 'markers-wrapper',
                     Icon
+                        type: 'new-icon'
+                        className: 'hidden' if MessageFlags.SEEN in flags
+
+                    Icon
                         className: 'select'
                         onClick:   @onSelect
                         type: (if @props.selected then 'check-square-o'
                         else 'square-o')
 
-                    if MessageFlags.SEEN not in flags
-                        Icon type: 'circle'
+                    Icon
+                        type: 'star'
+                        className: 'hidden' if MessageFlags.FLAGGED not in flags
 
-                    if MessageFlags.FLAGGED in flags
-                        Icon type: 'star'
 
                 div className: 'avatar-wrapper select-target',
                     if avatar?
