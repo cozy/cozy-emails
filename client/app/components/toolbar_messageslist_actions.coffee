@@ -96,7 +96,7 @@ module.exports = ActionsToolbarMessagesList = React.createClass
 
             unless nextConversation.size
                 # Close 2nd panel : no next conversation found
-                @redirect (url = @buildClosePanelUrl 'second')
+                @redirect @buildClosePanelUrl 'second'
             else
                 # Goto to next conversation
                 @redirect

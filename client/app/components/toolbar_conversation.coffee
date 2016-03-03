@@ -80,7 +80,7 @@ module.exports = React.createClass
 
     goto: (messageID, conversationID) ->
         if not messageID or not conversationID
-            @redirect (url = @buildClosePanelUrl 'second')
+            @redirect @buildClosePanelUrl 'second'
             return
 
         parameters = @getUrlParams messageID, conversationID
