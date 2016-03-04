@@ -18,32 +18,31 @@ module.exports = DateRangePicker = React.createClass
         startDate: null
         endDate:   null
 
+    # shouldComponentUpdate: (nextProps, nextState) ->
+    #     should = not(_.isEqual(nextState, @state)) or
+    #         not (_.isEqual(nextProps, @props))
+    #     return should
+    #
+    #
+    # componentWillReceiveProps: (nextProps) ->
+    #     if @state.isActive and not nextProps.active
+    #         # we don't call reset here because we don't want to filterize
+    #         @setState
+    #             isActive    : false
+    #             startDate   : null
+    #             endDate     : null
+    #
+    #     else if nextProps.active and not @props.active
+    #         @setState isActive: true
 
-    shouldComponentUpdate: (nextProps, nextState) ->
-        should = not(_.isEqual(nextState, @state)) or
-            not (_.isEqual(nextProps, @props))
-        return should
-
-
-    componentWillReceiveProps: (nextProps) ->
-        if @state.isActive and not nextProps.active
-            # we don't call reset here because we don't want to filterize
-            @setState
-                isActive    : false
-                startDate   : null
-                endDate     : null
-
-        else if nextProps.active and not @props.active
-            @setState isActive: true
-
-
+    # FIXME : cassé
     onStartChange: (obj) ->
         date = if obj.target? then obj.target.value else
             "#{obj.dd}/#{obj.mm}/#{obj.yyyy}"
         active = !!date and !!@state.endDate
         @setState isActive: active, startDate: date, @filterize
 
-
+    # FIXME : cassé
     onEndChange: (obj) ->
         date = if obj.target then obj.target.value else
             "#{obj.dd}/#{obj.mm}/#{obj.yyyy}"
@@ -75,8 +74,8 @@ module.exports = DateRangePicker = React.createClass
         value = moment().subtract(1, type) if type
         state =
             isActive    : !!type
-            startDate   : start = value?.startOf(type).format momentFormat
-            endDate     : end = value?.endOf(type).format momentFormat
+            startDate   : value?.startOf(type).format momentFormat
+            endDate     : value?.endOf(type).format momentFormat
 
         @setState state, @filterize
 
