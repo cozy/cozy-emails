@@ -49,6 +49,11 @@ class MessageStore extends Store
                 result[key] = value
         result
 
+    _isFilterEmpty = (str, filter) ->
+        if not filter or not _.isObject filter
+            filter = _getFilter() or {}
+        not (value = filter[str]) or value is '-'
+
     _getURISort = (filter) ->
         filter = _getFilter() unless filter
         "#{filter.order}#{filter.field}"
@@ -634,6 +639,7 @@ class MessageStore extends Store
             hasNextPage: not _noMore
         return params
 
+
     getCurrentURL: ->
         filter = _getFilter()
         mailboxID = AccountStore.getSelectedMailbox().get 'id'
@@ -643,13 +649,13 @@ class MessageStore extends Store
             encodeURIComponent _getURISort()
 
         url = "mailbox/#{mailboxID}/?sort=#{sort}"
-        if filter.type is 'flag' and filter.value isnt '-'
+        if filter.type is 'flag' and _isFilterEmpty 'value', filter
             url += "&flag=#{filter.value}"
 
-        if filter.before isnt '-'
+        if _isFilterEmpty 'before', filter
             url += "&before=#{encodeURIComponent filter.before}"
 
-        if filter.after isnt '-'
+        if _isFilterEmpty 'after', filter
             url += "&after=#{encodeURIComponent filter.after}"
         return url
 
