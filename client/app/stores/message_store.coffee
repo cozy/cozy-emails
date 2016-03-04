@@ -639,6 +639,16 @@ class MessageStore extends Store
             hasNextPage: not _noMore
         return params
 
+    # Uniq Key from URL params
+    #
+    # return a {string}
+    getQueryKey: (str = '') ->
+        filterize = (key) ->
+            filter[key] unless _isFilterEmpty key
+
+        keys = _.compact ['before', 'after'].map filterize
+        keys.unshift str unless _.isEmpty str
+        keys.join('-')
 
     getCurrentURL: ->
         filter = _getFilter()

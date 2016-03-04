@@ -18,23 +18,6 @@ module.exports = DateRangePicker = React.createClass
         startDate: null
         endDate:   null
 
-    shouldComponentUpdate: (nextProps, nextState) ->
-        should = not(_.isEqual(nextState, @state)) or
-            not (_.isEqual(nextProps, @props))
-        return should
-
-
-    componentWillReceiveProps: (nextProps) ->
-        if @state.isActive and not nextProps.active
-            # we don't call reset here because we don't want to filterize
-            @setState
-                isActive    : false
-                startDate   : null
-                endDate     : null
-
-        else if nextProps.active and not @props.active
-            @setState isActive: true
-
     onStartChange: (obj) ->
         date = if obj.target? then obj.target.value else
             "#{obj.dd}/#{obj.mm}/#{obj.yyyy}"
@@ -55,20 +38,19 @@ module.exports = DateRangePicker = React.createClass
 
         @props.onDateFilter getValue('start'), getValue('end')
 
-
     onReset: ->
-        @changeDates()
+        @updateState null
 
     onYesterday: ->
-        @changeDates 'day'
+        @updateState 'day'
 
     onLastWeek: ->
-        @changeDates 'week'
+        @updateState 'week'
 
     onLastMonth: ->
-        @changeDates 'month'
+        @updateState 'month'
 
-    changeDates: (type) ->
+    updateState: (type) ->
         value = moment().subtract(1, type) if type
         state =
             isActive    : !!type

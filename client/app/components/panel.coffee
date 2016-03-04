@@ -27,16 +27,13 @@ module.exports = Panel = React.createClass
     displayName: 'Panel'
 
     mixins: [
-        StoreWatchMixin [AccountStore, MessageStore, SettingsStore, SearchStore]
         TooltipRefesherMixin
         RouterMixin
     ]
 
-    shouldComponentUpdate: (nextProps, nextState) ->
-        should = not(_.isEqual(nextState, @state)) or
-                 not (_.isEqual(nextProps, @props))
-
-        return should
+    # Build initial state from store values.
+    getInitialState: ->
+        @getStateFromStores()
 
     render: ->
         # -- Generates a list of messages for a given account and mailbox
@@ -94,7 +91,6 @@ module.exports = Panel = React.createClass
 
 
     renderList: ->
-
         unless @state.accounts.get @props.accountID
             setTimeout =>
                 @redirect
@@ -103,10 +99,12 @@ module.exports = Panel = React.createClass
             , 1
             return React.DOM.div null, 'redirecting'
 
+        prefix = 'messageList-' + @props.mailboxID
         MessageList
-            key: 'messageList-' + @props.mailboxID
-            accountID: @props.accountID
-            mailboxID: @props.mailboxID
+            key         : MessageStore.getQueryKey prefix
+            accountID   : @props.accountID
+            mailboxID   : @props.mailboxID
+            queryParams : MessageStore.getQueryParams()
 
     # Rendering the compose component requires several parameters. The main one
     # are related to the selected account, the selected mailbox and the compose
