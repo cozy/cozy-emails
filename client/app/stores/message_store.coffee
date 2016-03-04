@@ -22,12 +22,7 @@ class MessageStore extends Store
 
     _messages = Immutable.OrderedMap()
 
-    _sortField   = 'date'
-    _sortOrder   = 1
-    _filterType   = '-'
-    _filterValue   = 'nofilter'
-    _filterBefore  = '-'
-    _filterAfter  = '-'
+    _currentFilter = null
 
     _fetching     = 0
 
@@ -46,6 +41,50 @@ class MessageStore extends Store
     _inFlightByRef = {}
     _inFlightByMessageID = {}
     _undoable = {}
+
+    _difference = (obj0, obj1) ->
+        result = {}
+        _.filter obj0, (value, key) ->
+            unless value is obj1[key]
+                result[key] = value
+        result
+
+    _getURISort = (filter) ->
+        filter = _getFilter() unless filter
+        "#{filter.order}#{filter.field}"
+
+    _getFilter = (getDefault) ->
+        return if not _currentFilter or getDefault
+            field: 'date'
+            order: '+'
+            type: '-'
+            value: 'nofilter'
+            before: '-'
+            after: '-'
+        return _currentFilter
+
+    _setFilter = (params) ->
+        _defaultValue = _getFilter()
+
+        # Update Filter
+        _currentFilter =
+            field: if params.sort then params.sort.substr(1) else _defaultValue.field
+            order: if params.sort then params.sort.substr(0, 1) else _defaultValue.order
+            type: params.type or _defaultValue.type
+            value: params.flag or _defaultValue.value
+            before: params.before or _defaultValue.before
+            after: params.after or _defaultValue.after
+
+        # Update context
+        _queryRef++
+        _noMore = false
+        _nextUrl = null
+
+        return _currentFilter
+
+    _resetFilter = ->
+        value = _getFilter true
+        _setFilter value
 
     _addInFlight = (request) ->
         _inFlightByRef[request.ref] = request
@@ -369,34 +408,15 @@ class MessageStore extends Store
             @emit 'change'
 
         handle ActionTypes.QUERY_PARAMETER_CHANGED, (parameters) ->
+            return if _.isEmpty (params = _difference parameters, _getFilter())
 
-            # _messages  = _messages.clear()
-            # "sort/-date/flag/unseen/before/-/after/-"
-
-            {type, flag, sort, before, after} = parameters
-
-
-
-            if type isnt _filterType or _filterValue isnt flag or
-            _filterBefore isnt before or _filterAfter isnt after or
-            _sortOrder + _sortField isnt sort
-
-                _queryRef++
-                _sortOrder = sort.substr(0, 1)
-                _sortField = sort.substr(1)
-                _filterType = type
-                _filterValue = flag
-                _filterBefore = before
-                _filterAfter = after
-                _noMore = false
-                _nextUrl = null
-
-                if _filterType in ['from', 'dest'] or type in ['from', 'dest']
-                    # we cant properly filter messages by dest or from in the
-                    # client, instead we clear message cache and dont filter
-                    # on display
-                    _messages = _messages.clear()
-                    _conversationMemoize = null
+            filter = _setFilter params
+            if filter.type in ['from', 'dest']
+                # we cant properly filter messages by dest or from in the
+                # client, instead we clear message cache and dont filter
+                # on display
+                _messages = _messages.clear()
+                _conversationMemoize = null
 
             @emit 'change'
 
@@ -407,14 +427,7 @@ class MessageStore extends Store
 
         handle ActionTypes.SELECT_ACCOUNT, (value) ->
             @setCurrentID null
-            _sortOrder = '+'
-            _sortField = 'date'
-            _filterType = 'nofilter'
-            _filterValue = '-'
-            _filterBefore = '-'
-            _filterAfter = '-'
-            _noMore = false
-            _nextUrl = null
+            _resetFilter()
 
         handle ActionTypes.RECEIVE_MESSAGE_DELETE, (id) ->
             _messages = _messages.remove id
@@ -449,7 +462,8 @@ class MessageStore extends Store
                 return true
 
     _matchFlag = (message) ->
-        switch _filterValue
+        filter = _getFilter()
+        switch filter.value
             when MessageFilter.FLAGGED
                 MessageFlags.FLAGGED in message.get('flags')
             when MessageFilter.ATTACH
@@ -461,8 +475,9 @@ class MessageStore extends Store
 
 
     _matchRangeDate = (message) ->
-        date = message.get(_filterType)
-        moment(date).isBefore(_filterAfter) and moment(date).isAfter(_filterBefore)
+        filter = _getFilter()
+        date = message.get filter.type
+        moment(date).isBefore(filter.after) and moment(date).isAfter(filter.before)
 
     ###*
     * Get messages from mailbox, with optional pagination
@@ -477,21 +492,23 @@ class MessageStore extends Store
 
         sequence = _messagesWithInFlights()
         sequence = sequence.filter inMailbox mailboxID
-        if _filterType is 'flag'
+
+        filter = _getFilter()
+        if filter.type is 'flag'
             sequence = sequence.filter _matchFlag
 
-        else if _filterType is 'date'
+        else if filter.type is 'date'
             sequence = sequence.filter _matchRangeDate
 
 
-        # We dont filter for _filterType from and dest because it is
+        # We dont filter for type from and dest because it is
         # complicated by collation and name vs address.
         # Instead we clear the message, see QUERY_PARAMETER_CHANGED handler.
 
         if useConversations
             sequence = sequence.filter dedupConversation()
 
-        sequence = sequence.sort getSortFunction _sortField, _sortOrder
+        sequence = sequence.sort getSortFunction filter.field, filter.order
         _currentMessages = sequence.toOrderedMap()
 
         return _currentMessages
@@ -607,29 +624,33 @@ class MessageStore extends Store
         _undoable[ref]
 
     getQueryParams: ->
-        sort: "#{_sortOrder}#{_sortField}"
-        type: _filterType
-        filter: _filterValue
-        before: _filterBefore
-        after: _filterAfter
-        hasNextPage: not _noMore
+        filter = _getFilter()
+        params =
+            sort: _getURISort()
+            type: filter.type
+            filter: filter.value
+            before: filter.before
+            after: filter.after
+            hasNextPage: not _noMore
+        return params
 
     getCurrentURL: ->
+        filter = _getFilter()
         mailboxID = AccountStore.getSelectedMailbox().get 'id'
-        sort = if _filterType in ['from', 'dest']
-            encodeURIComponent "+#{_filterType}"
+        sort = if filter.type in ['from', 'dest']
+            encodeURIComponent "+#{filter.type}"
         else
-            encodeURIComponent "#{_sortOrder}#{_sortField}"
+            encodeURIComponent _getURISort()
 
         url = "mailbox/#{mailboxID}/?sort=#{sort}"
-        if _filterType is 'flag' and _filterValue isnt '-'
-            url += "&flag=#{_filterValue}"
+        if filter.type is 'flag' and filter.value isnt '-'
+            url += "&flag=#{filter.value}"
 
-        if _filterBefore isnt '-'
-            url += "&before=#{encodeURIComponent _filterBefore}"
+        if filter.before isnt '-'
+            url += "&before=#{encodeURIComponent filter.before}"
 
-        if _filterAfter isnt '-'
-            url += "&after=#{encodeURIComponent _filterAfter}"
+        if filter.after isnt '-'
+            url += "&after=#{encodeURIComponent filter.after}"
         return url
 
     getNextUrl: ->
@@ -640,6 +661,5 @@ class MessageStore extends Store
         else
             _currentUrl = url
             return url
-
 
 module.exports = self = new MessageStore()
