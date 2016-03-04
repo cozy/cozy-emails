@@ -282,8 +282,8 @@ module.exports = React.createClass
 
         success = =>
             # Get next focus conversation
-            unless (nextConversation = MessageStore.getNextConversation()).size
-                nextConversation = MessageStore.getPreviousConversation()
+            nextConversation = MessageStore.getPreviousConversation()
+            nextConversation = MessageStore.getNextConversation() unless nextConversation.size
 
             # Then remove message
             MessageActionCreator.delete messageID: @state.currentMessageID

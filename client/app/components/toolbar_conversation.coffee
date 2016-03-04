@@ -59,33 +59,41 @@ module.exports = React.createClass
                 className: "clickable fullscreen"
 
     gotoPreviousConversation: ->
-        messageID = @props.prevMessageID
-        conversationID = @props.prevConversationID
-        if not messageID or not conversationID
-            @redirect (url = @buildClosePanelUrl 'second')
-            return
-
-        parameters = @getUrlParams messageID, conversationID
-        @redirect parameters
+        if (messageID = @props.prevMessageID)
+            conversationID = @props.prevConversationID
+        else
+            # Current Message is the last of the list
+            messageID = @props.nextMessageID
+            conversationID = @props.nextConversationID
+        @goto messageID, conversationID
         return
 
     gotoNextConversation: ->
-        messageID = @props.nextMessageID
-        conversationID = @props.nextConversationID
+        if (messageID = @props.nextMessageID)
+            conversationID = @props.nextConversationID
+        else
+            # Current Message is the first of the list
+            messageID = @props.prevMessageID
+            conversationID = @props.prevConversationID
+        @goto messageID, conversationID
+        return
+
+    goto: (messageID, conversationID) ->
         if not messageID or not conversationID
-            @gotoPreviousConversation()
+            @redirect @buildClosePanelUrl 'second'
             return
 
         parameters = @getUrlParams messageID, conversationID
         @redirect parameters
-        return
 
     onDelete: ->
         # Remove conversation
         conversationID = @props.conversationID
+
         MessageActionCreator.delete {conversationID}
 
-        @gotoNextConversation()
+        # Select previous conversation
+        @gotoPreviousConversation()
 
     onMark: (flag) ->
         conversationID = @props.conversationID
