@@ -33,11 +33,8 @@ module.exports = ToolbarMessagesList = React.createClass
 
         # change here if we add an UI for sorting
         # @props.queryParams is the current value
-        before = '-'
-        after = '-'
-        flag = '-'
+
         type = params.type
-        sort = '-date'
 
         switch type
             when 'from', 'dest'
@@ -47,7 +44,11 @@ module.exports = ToolbarMessagesList = React.createClass
 
             when 'date'
                 if params.range
+                    # Filter by date
                     [before, after] = params.range
+                else
+                    # Reset date filter
+                    type = null
 
             when 'flag'
                 if params.value
@@ -59,7 +60,7 @@ module.exports = ToolbarMessagesList = React.createClass
             action: 'account.mailbox.messages'
             parameters: [
                 @props.accountID, @props.mailboxID,
-                sort, type, flag, before, after
+                '-date', type, flag, before, after
             ]
 
 

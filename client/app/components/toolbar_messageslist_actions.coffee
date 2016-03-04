@@ -4,6 +4,8 @@
 ToolboxActions = require './toolbox_actions'
 ToolboxMove    = require './toolbox_move'
 
+MessageStore = require '../stores/message_store'
+
 LayoutActionCreator  = require '../actions/layout_action_creator'
 MessageActionCreator = require '../actions/message_action_creator'
 
@@ -84,15 +86,26 @@ module.exports = ActionsToolbarMessagesList = React.createClass
         return unless options = @_getSelectedAndMode applyToConversation
 
         doDelete = =>
-            MessageActionCreator.delete options, =>
-                if options.count > 0 and @props.messages.size > 0
-                    firstMessageID = @props.messages.first().get('id')
-                    MessageActionCreator.setCurrent firstMessageID, true
+            # Get next focus conversation
+            nextConversation = MessageStore.getPreviousConversation()
+            nextConversation = MessageStore.getNextConversation() unless nextConversation.size
+
+            MessageActionCreator.delete options
 
             @props.afterAction() if @props.afterAction?
 
-            # Close Detail Panel for deleted message
-            @redirect (url = @buildClosePanelUrl 'second')
+            unless nextConversation.size
+                # Close 2nd panel : no next conversation found
+                @redirect @buildClosePanelUrl 'second'
+            else
+                # Goto to next conversation
+                @redirect
+                    direction: 'second',
+                    action: 'conversation',
+                    parameters:
+                        messageID: nextConversation.get('id')
+                        conversationID: nextConversation.get('conversationID')
+
 
         unless @props.settings.get 'messageConfirmDelete'
             doDelete()
