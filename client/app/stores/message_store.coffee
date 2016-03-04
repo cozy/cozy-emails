@@ -459,7 +459,8 @@ class MessageStore extends Store
 
 
     _matchRangeDate = (message) ->
-        _filterBefore < message.get(_filterType) < _filterAfter
+        date = message.get(_filterType)
+        moment(date).isBefore(_filterAfter) and moment(date).isAfter(_filterBefore)
 
     ###*
     * Get messages from mailbox, with optional pagination
