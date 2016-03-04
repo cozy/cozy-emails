@@ -479,7 +479,7 @@ class MessageStore extends Store
         if _filterType is 'flag'
             sequence = sequence.filter _matchFlag
 
-        if _filterType in ['date']
+        else if _filterType is 'date'
             sequence = sequence.filter _matchRangeDate
 
         # We dont filter for _filterType from and dest because it is
