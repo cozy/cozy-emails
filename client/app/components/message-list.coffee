@@ -35,7 +35,6 @@ module.exports = MessageList = React.createClass
 
     mixins: [
         SelectionManager
-        ShouldUpdate.UnderscoreEqualitySlow
         RouterMixin,
         TooltipRefresherMixin
         StoreWatchMixin [LayoutStore, AccountStore, MessageStore]
@@ -79,7 +78,6 @@ module.exports = MessageList = React.createClass
             refresh              : refresh
             isTrash              : role is 'trashMailbox'
             conversationLengths  : conversationLengths
-            queryParams          : MessageStore.getQueryParams()
             fullscreen           : LayoutStore.isPreviewFullscreen()
             displayConversations : displayConvs
 
@@ -89,7 +87,7 @@ module.exports = MessageList = React.createClass
 
     getEmptyListMessage: ->
         return @props.emptyListMessage if @props.emptyListMessage
-        switch @state.queryParams.filter
+        switch @props.queryParams.filter
             when MessageFilter.FLAGGED
                 t 'no flagged message'
             when MessageFilter.UNSEEN
@@ -121,7 +119,7 @@ module.exports = MessageList = React.createClass
                 displayConversations: @state.displayConversations
                 toggleAll:            @toggleAll
                 afterAction:          @afterMessageAction
-                queryParams:          @state.queryParams
+                queryParams:          @props.queryParams
                 noFilters:            @props.noFilters
 
             if @state.refresh and not mailbox.get('lastSync')
@@ -165,7 +163,7 @@ module.exports = MessageList = React.createClass
                     @renderFooter()
 
     renderFooter: ->
-        if @state.queryParams.hasNextPage
+        if @props.queryParams.hasNextPage
             p className: 'text-center list-footer',
                 if @state.fetching
                     Spinner()
@@ -226,9 +224,11 @@ module.exports = MessageList = React.createClass
                     @_checkNextInterval = window.setInterval @_loadNext, 10000
             , 0
 
+    componentWillMount: ->
+        setTimeout @loadMoreMessage, 1
+
     componentDidMount: ->
         @_initScroll()
-        setTimeout MessageActionCreator.fetchMoreOfCurrentQuery, 1
 
     componentDidUpdate: ->
         @_initScroll()

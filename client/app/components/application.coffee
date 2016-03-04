@@ -98,13 +98,16 @@ module.exports = Application = React.createClass
 
 
     getPanel: (panel, ref) ->
+        params = panel.parameters
+        prefix = ref + '-' + params.mailboxID
         Panel
             ref               : ref
+            key               : MessageStore.getQueryKey prefix
             action            : panel.action
-            accountID         : panel.parameters.accountID
-            mailboxID         : panel.parameters.mailboxID
-            messageID         : panel.parameters.messageID
-            tab               : panel.parameters.tab
+            accountID         : params.accountID
+            mailboxID         : params.mailboxID
+            messageID         : params.messageID
+            tab               : params.tab
             useIntents        : @state.useIntents
             selectedMailboxID : @state.selectedMailboxID
 
