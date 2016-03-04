@@ -224,9 +224,11 @@ module.exports = MessageList = React.createClass
                     @_checkNextInterval = window.setInterval @_loadNext, 10000
             , 0
 
+    componentWillMount: ->
+        setTimeout @loadMoreMessage, 1
+
     componentDidMount: ->
         @_initScroll()
-        setTimeout @loadMoreMessage, 1
 
     componentDidUpdate: ->
         @_initScroll()
