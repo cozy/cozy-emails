@@ -49,10 +49,8 @@ class MessageStore extends Store
                 result[key] = value
         result
 
-    _isFilterEmpty = (str, filter) ->
-        if not filter or not _.isObject filter
-            filter = _getFilter() or {}
-        not (value = filter[str]) or value is '-'
+    _isFilter = (value) ->
+        value and value isnt '-'
 
     _getURISort = (filter) ->
         filter = _getFilter() unless filter
@@ -643,8 +641,9 @@ class MessageStore extends Store
     #
     # return a {string}
     getQueryKey: (str = '') ->
+        filter = _getFilter()
         filterize = (key) ->
-            filter[key] unless _isFilterEmpty key
+            filter[key] if _isFilter filter[key]
 
         keys = _.compact ['before', 'after'].map filterize
         keys.unshift str unless _.isEmpty str
@@ -659,13 +658,13 @@ class MessageStore extends Store
             encodeURIComponent _getURISort()
 
         url = "mailbox/#{mailboxID}/?sort=#{sort}"
-        if filter.type is 'flag' and _isFilterEmpty 'value', filter
+        if filter.type is 'flag' and _isFilter filter.value
             url += "&flag=#{filter.value}"
 
-        if _isFilterEmpty 'before', filter
+        if _isFilter filter.before
             url += "&before=#{encodeURIComponent filter.before}"
 
-        if _isFilterEmpty 'after', filter
+        if _isFilter filter.after
             url += "&after=#{encodeURIComponent filter.after}"
         return url
 
