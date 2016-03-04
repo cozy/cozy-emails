@@ -3,6 +3,7 @@ ContactStore  = require './contact_store'
 AppDispatcher = require '../app_dispatcher'
 
 AccountStore = require './account_store'
+
 SocketUtils = require '../utils/socketio_utils'
 
 {ActionTypes, MessageFlags, MessageFilter, FlagsConstants} =
@@ -32,6 +33,7 @@ class MessageStore extends Store
 
     _queryRef = 0
     _nextUrl = null
+    _currentUrl = null
     _noMore = false
 
     _currentMessages = Immutable.OrderedMap()
@@ -475,12 +477,12 @@ class MessageStore extends Store
 
         sequence = _messagesWithInFlights()
         sequence = sequence.filter inMailbox mailboxID
-
         if _filterType is 'flag'
             sequence = sequence.filter _matchFlag
 
         else if _filterType is 'date'
             sequence = sequence.filter _matchRangeDate
+
 
         # We dont filter for _filterType from and dest because it is
         # complicated by collation and name vs address.
@@ -612,28 +614,31 @@ class MessageStore extends Store
         after: _filterAfter
         hasNextPage: not _noMore
 
-    getNextUrl: ->
-        if _noMore
-            return null
-        else if _nextUrl
-            _nextUrl
+    getCurrentURL: ->
+        mailboxID = AccountStore.getSelectedMailbox().get 'id'
+        sort = if _filterType in ['from', 'dest']
+            encodeURIComponent "+#{_filterType}"
         else
-            mailboxID = AccountStore.getSelectedMailbox().get 'id'
-            sort = if _filterType in ['from', 'dest']
-                encodeURIComponent "+#{_filterType}"
-            else
-                encodeURIComponent "#{_sortOrder}#{_sortField}"
+            encodeURIComponent "#{_sortOrder}#{_sortField}"
 
-            url = "mailbox/#{mailboxID}/?sort=#{sort}"
-            if _filterType is 'flag' and _filterValue isnt '-'
-                url += "&flag=#{_filterValue}"
+        url = "mailbox/#{mailboxID}/?sort=#{sort}"
+        if _filterType is 'flag' and _filterValue isnt '-'
+            url += "&flag=#{_filterValue}"
 
-            if _filterBefore isnt '-'
-                url += "&before=#{encodeURIComponent _filterBefore}"
+        if _filterBefore isnt '-'
+            url += "&before=#{encodeURIComponent _filterBefore}"
 
-            if _filterAfter isnt '-'
-                url += "&after=#{encodeURIComponent _filterAfter}"
+        if _filterAfter isnt '-'
+            url += "&after=#{encodeURIComponent _filterAfter}"
+        return url
 
+    getNextUrl: ->
+        if _nextUrl
+            return _nextUrl
+        else if _noMore or _currentUrl is (url = @getCurrentURL())
+            return null
+        else
+            _currentUrl = url
             return url
 
 
