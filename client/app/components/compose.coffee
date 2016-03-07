@@ -126,7 +126,7 @@ module.exports = Compose = React.createClass
             # DOM form element :
             # It can be React Component
             ref = path.split('ref=')[1]
-            element = @refs[ref].getDOMNode()
+            element = @refs[ref]?.getDOMNode()
 
         else if (elements = @getDOMNode().querySelectorAll(path))
             element = elements[0]
