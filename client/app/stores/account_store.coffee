@@ -19,16 +19,14 @@ class AccountStore extends Store
     _accountsUnread = Immutable.Map()
     # Creates an OrderedMap of accounts
     # this map will contains the base information for an account
-    _accounts = Immutable.Sequence window.accounts
+    _accounts = Immutable.Iterable window.accounts
+        .toKeyedSeq()
 
         # sort first
-        .sort (mb1, mb2) ->
-            if mb1.label > mb2.label then return 1
-            else if mb1.label < mb2.label then return -1
-            else return 0
+        .sort (mb1, mb2) -> mb1.label.localeCompare mb2.label
 
         # sets account ID as index
-        .mapKeys (_, account) -> return account.id
+        .mapKeys (_, account) -> account.id
 
         # makes account object an immutable Map
         .map (account) ->
@@ -294,7 +292,7 @@ class AccountStore extends Store
         mailboxes = account.get('mailboxes')
         mailbox = mailboxes.filter (mailbox) ->
             return mailbox.get('label').toLowerCase() is 'inbox'
-        if mailbox.count() isnt 0
+        if mailbox.size isnt 0
             return mailbox.first()
         else
             favorites = account.get('favorites')
@@ -320,7 +318,7 @@ class AccountStore extends Store
 
     getSelectedMailboxes: (sorted) ->
 
-        return Immutable.OrderedMap.empty() unless _selectedAccount?
+        return Immutable.OrderedMap() unless _selectedAccount?
 
         result = _selectedAccount.get('mailboxes')
 
@@ -444,4 +442,3 @@ class AccountStore extends Store
 
 
 module.exports = new AccountStore()
-

@@ -9,13 +9,13 @@ _ = require 'lodash'
 async = require 'async'
 ramStore = require '../models/store_account_and_boxes'
 Scheduler = require '../processes/_scheduler'
-MailboxRefreshFast = require '../processes/mailbox_refresh_fast'
 
 # refresh a single mailbox if we can do it fast
 # We can do it fast if the server support RFC4551
 # see {Mailbox::imap_refreshFast}
 module.exports.refresh = (req, res, next) ->
     mailbox = ramStore.getMailbox(req.params.mailboxID)
+    deepRefresh = req.query.deep
     if not mailbox
         return next new NotFound("Mailbox #{req.params.mailboxID}")
 
@@ -26,7 +26,7 @@ module.exports.refresh = (req, res, next) ->
     else if not account.supportRFC4551
         next new BadRequest('Cant refresh a non RFC4551 box')
     else
-        Scheduler.refreshNow mailbox, (err) ->
+        Scheduler.refreshNow mailbox, deepRefresh, (err) ->
             return next err if err
             res.send ramStore.getMailboxClientObject mailbox.id
 
@@ -132,4 +132,3 @@ module.exports.expunge = (req, res, next) ->
             res.send ramStore.getAccountClientObject account.id
     else
         next new BadRequest 'You can only expunge trash mailbox'
-

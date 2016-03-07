@@ -14,7 +14,7 @@ onMessageList = ->
     return router.current.firstPanel?.action in actions
 
 
-module.exports =
+module.exports = Utils =
 
 
     debugLogs: []
@@ -40,9 +40,7 @@ module.exports =
 
 
     getCurrentConversation: ->
-        conversationID = MessageStore.getCurrentConversationID()
-        if conversationID?
-            return MessageStore.getConversation(conversationID)?.toJS()
+        MessageStore.getCurrentConversation()?.toJS()
 
 
     getCurrentActions: ->
@@ -95,21 +93,25 @@ module.exports =
             value: settings
 
     messageNavigate: (direction, inConv) ->
-        if not onMessageList()
-            return
+        return unless onMessageList()
+
         conv = inConv and SettingsStore.get('displayConversation') and
             SettingsStore.get('displayPreview')
-        if direction is 'prev'
-            next = MessageStore.getPreviousMessage conv
-        else
-            next = MessageStore.getNextMessage conv
-        if not next?
-            return
 
-        @messageSetCurrent next
+        # when key top is pressed, direction=prev
+        # when key bottom is pressed, direction=next
+        # strange (?!)
+        if direction is 'prev'
+            next = MessageStore.getNextConversation()
+        else
+            next = MessageStore.getPreviousConversation()
+
+        @messageSetCurrent(next)
 
 
     messageSetCurrent: (message) ->
+        return unless message?.get('id')
+
         MessageActionCreator.setCurrent message.get('id'), true
 
         if SettingsStore.get('displayPreview')
@@ -149,39 +151,49 @@ module.exports =
 
     messageClose: ->
         href = window.location.href
-        closeUrl = href.replace /\/message\/[^\/]*\//gi, ''
-        closeUrl = closeUrl.replace /\/conversation\/[^\/]*\/[^\/]*\//gi, ''
-        window.location.href = closeUrl
+        href = href.replace /\/message\/[\w-]+/gi, ''
+        href = href.replace /\/conversation\/[\w-]+\/[\w-]+/gi, ''
+        window.location.href = href
 
 
     messageDeleteCurrent: ->
-        if not onMessageList()
-            return
         messageID = MessageStore.getCurrentID()
-        if not messageID?
+        if not onMessageList() or not messageID?
             return
-        settings = SettingsStore.get()
-        conversation = settings.get('displayConversation')
-        confirm      = settings.get('messageConfirmDelete')
-        if confirm
-            if conversation
-                confirmMessage = t 'list delete conv confirm',
-                    smart_count: 1
-            else
-                confirmMessage = t 'list delete confirm',
-                    smart_count: 1
-        if (not confirm)
+
+        deleteMessage = (isModal) ->
+            # Get next message information
+            # before delete (context changes)
+            next = MessageStore.getPreviousConversation()
+            next = MessageStore.getNextConversation() unless next.size
+
             MessageActionCreator.delete {messageID}
+            LayoutActionCreator.hideModal() if isModal
+
+            # Goto next message
+            Utils.messageSetCurrent next
+
+        settings = SettingsStore.get()
+
+        # Delete Message without modal
+        unless (confirm = settings.get 'messageConfirmDelete')
+            deleteMessage false
+            return
+
+        # Display 'delete' modal
+        if (conversation = settings.get 'displayConversation')
+            confirmMessage = t 'list delete conv confirm',
+                smart_count: 1
         else
-            modal =
-                title       : t 'app confirm delete'
-                subtitle    : confirmMessage
-                closeLabel  : t 'app cancel'
-                actionLabel : t 'app confirm'
-                action      : ->
-                    MessageActionCreator.delete {messageID}
-                    LayoutActionCreator.hideModal()
-            LayoutActionCreator.displayModal modal
+            confirmMessage = t 'list delete confirm',
+                smart_count: 1
+        modal =
+            title       : t 'app confirm delete'
+            subtitle    : confirmMessage
+            closeLabel  : t 'app cancel'
+            actionLabel : t 'app confirm'
+            action      : deleteMessage
+        LayoutActionCreator.displayModal modal
 
 
     messageUndo: ->
@@ -276,7 +288,7 @@ module.exports =
         xhr.open 'POST', 'activity', true
         xhr.setRequestHeader "Content-Type", "application/json;charset=UTF-8"
         xhr.send JSON.stringify(data)
-        console.log message
+        console.info message
 
 
     # Log every Flux action (only in development environment)
@@ -341,4 +353,3 @@ module.exports =
     # clear action logs
     clearLogs: ->
         window.cozyMails.debugLogs = []
-

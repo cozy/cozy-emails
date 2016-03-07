@@ -8,6 +8,8 @@ MessageFooter  = require "./message_footer"
 ToolbarMessage = require './toolbar_message'
 MessageContent = require './message-content'
 
+MessageStore = require '../stores/message_store'
+
 {MessageFlags} = require '../constants/app_constants'
 
 LayoutActionCreator       = require '../actions/layout_action_creator'
@@ -277,23 +279,42 @@ module.exports = React.createClass
     onDelete: (event) ->
         event.preventDefault()
         event.stopPropagation()
+
+        success = =>
+            # Get next focus conversation
+            nextConversation = MessageStore.getPreviousConversation()
+            nextConversation = MessageStore.getNextConversation() unless nextConversation.size
+
+            # Then remove message
+            MessageActionCreator.delete messageID: @state.currentMessageID
+
+            unless nextConversation.size
+                # Close 2nd panel : no next conversation found
+                @redirect (url = @buildClosePanelUrl 'second')
+            else
+                # Goto to next conversation
+                @redirect
+                    direction: 'second',
+                    action: 'conversation',
+                    parameters:
+                        messageID: nextConversation.get('id')
+                        conversationID: nextConversation.get('conversationID')
+
         needConfirmation = @props.settings.get('messageConfirmDelete')
-        messageID = @props.message.get('id')
+        unless needConfirmation
+            success()
+            return
+
         confirmMessage = t 'mail confirm delete',
             subject: @props.message.get('subject')
-
-        if not needConfirmation
-            MessageActionCreator.delete {messageID}
-        else
-            LayoutActionCreator.displayModal
-                title       : t 'app confirm delete'
-                subtitle    : confirmMessage
-                closeLabel  : t 'app cancel'
-                actionLabel : t 'app confirm'
-                action      : ->
-                    MessageActionCreator.delete {messageID}
-                    LayoutActionCreator.hideModal()
-
+        LayoutActionCreator.displayModal
+            title       : t 'app confirm delete'
+            subtitle    : confirmMessage
+            closeLabel  : t 'app cancel'
+            actionLabel : t 'app confirm'
+            action      : ->
+                LayoutActionCreator.hideModal()
+                success()
 
     onConversationDelete: ->
         conversationID = @props.message.get('conversationID')

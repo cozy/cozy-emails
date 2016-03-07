@@ -300,7 +300,7 @@ Spinner = React.createClass
         img
             src: "images/spinner#{suffix}.svg"
             alt: 'spinner'
-            className: 'button-spinner'
+            className: 'button-spinner spin-animate'
 
 
 # Module to display a loading progress bar. It takes a current value and a
@@ -331,6 +331,7 @@ Icon = React.createClass
         type: React.PropTypes.string.isRequired
 
     render: ->
+
         className = "#{@props.className or ''} fa fa-#{@props.type}"
         i
             className: className

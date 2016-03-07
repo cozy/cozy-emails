@@ -42,13 +42,13 @@ module.exports = React.createClass
 
                 LinkButton
                     icon: if @props.prevMessageID then 'fa-chevron-left'
-                    onClick: @onPrevClicked
+                    onClick: @gotoPreviousConversation
                     'aria-describedby': Tooltips.PREVIOUS_CONVERSATION
                     'data-tooltip-direction': 'left'
 
                 LinkButton
                     icon: if @props.nextMessageID then 'fa-chevron-right'
-                    onClick: @onNextClicked
+                    onClick: @gotoNextConversation
                     'aria-describedby': Tooltips.NEXT_CONVERSATION
                     'data-tooltip-direction': 'left'
 
@@ -58,27 +58,42 @@ module.exports = React.createClass
                 onClick: LayoutActionCreator.toggleFullscreen
                 className: "clickable fullscreen"
 
-    onPrevClicked: ->
-        return null unless @props.prevMessageID
-        @redirect
-            direction: 'second',
-            action: 'conversation',
-            parameters:
-                messageID: @props.prevMessageID
-                conversationID: @props.prevConversationID
+    gotoPreviousConversation: ->
+        if (messageID = @props.prevMessageID)
+            conversationID = @props.prevConversationID
+        else
+            # Current Message is the last of the list
+            messageID = @props.nextMessageID
+            conversationID = @props.nextConversationID
+        @goto messageID, conversationID
+        return
 
-    onNextClicked: ->
-        return null unless @props.nextMessageID
-        @redirect
-            direction: 'second',
-            action: 'conversation',
-            parameters:
-                messageID: @props.nextMessageID
-                conversationID: @props.nextConversationID
+    gotoNextConversation: ->
+        if (messageID = @props.nextMessageID)
+            conversationID = @props.nextConversationID
+        else
+            # Current Message is the first of the list
+            messageID = @props.prevMessageID
+            conversationID = @props.prevConversationID
+        @goto messageID, conversationID
+        return
+
+    goto: (messageID, conversationID) ->
+        if not messageID or not conversationID
+            @redirect @buildClosePanelUrl 'second'
+            return
+
+        parameters = @getUrlParams messageID, conversationID
+        @redirect parameters
 
     onDelete: ->
+        # Remove conversation
         conversationID = @props.conversationID
+
         MessageActionCreator.delete {conversationID}
+
+        # Select previous conversation
+        @gotoPreviousConversation()
 
     onMark: (flag) ->
         conversationID = @props.conversationID
@@ -92,6 +107,6 @@ module.exports = React.createClass
     getUrlParams: (messageID, conversationID) ->
         direction: 'second'
         action: 'conversation'
-        parameters: parameters
+        parameters:
             messageID: messageID
             conversationID: conversationID

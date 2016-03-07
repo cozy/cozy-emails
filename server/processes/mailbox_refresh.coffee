@@ -23,7 +23,8 @@ module.exports = class MailboxRefresh extends Process
         return callback null if "\\Noselect" in mailbox.attribs
 
         log.debug "refreshing box"
-        if account.supportRFC4551 and mailbox.lastHighestModSeq
+        fastSupport = account.supportRFC4551 and mailbox.lastHighestModSeq
+        if fastSupport and not options.deep
             @refreshFast (err) =>
                 if err and err is MailboxRefreshFast.algorithmFailure or
                 err is MailboxRefreshFast.tooManyMessages
@@ -36,7 +37,9 @@ module.exports = class MailboxRefresh extends Process
                     callback null
 
         else
-            if not account.supportRFC4551
+            if options.deep
+                log.debug "force deep refresh"
+            else if not account.supportRFC4551
                 log.debug "account doesnt support RFC4551"
             else if not mailbox.lastHighestModSeq
                 log.debug "no highestmodseq, first refresh ?"

@@ -17,15 +17,15 @@ module.exports = ToolbarMessagesList = React.createClass
     ]
 
     propTypes:
-        settings:             React.PropTypes.object.isRequired
-        accountID:            React.PropTypes.string.isRequired
-        mailboxID:            React.PropTypes.string.isRequired
+        settings:             React.PropTypes.object
+        accountID:            React.PropTypes.string
+        mailboxID:            React.PropTypes.string
         mailboxes:            React.PropTypes.object.isRequired
         messages:             React.PropTypes.object.isRequired
         edited:               React.PropTypes.bool.isRequired
         selected:             React.PropTypes.object.isRequired
         allSelected:          React.PropTypes.bool.isRequired
-        displayConversations: React.PropTypes.bool.isRequired
+        displayConversations: React.PropTypes.bool
         toggleAll:            React.PropTypes.func.isRequired
         afterAction:          React.PropTypes.func
 
@@ -33,13 +33,8 @@ module.exports = ToolbarMessagesList = React.createClass
 
         # change here if we add an UI for sorting
         # @props.queryParams is the current value
-        sortOrder = '-'
-        sortField = 'date'
-        before = '-'
-        after = '-'
-        flag = '-'
+
         type = params.type
-        sort = sortOrder + sortField
 
         switch type
             when 'from', 'dest'
@@ -49,19 +44,23 @@ module.exports = ToolbarMessagesList = React.createClass
 
             when 'date'
                 if params.range
+                    # Filter by date
                     [before, after] = params.range
+                else
+                    # Reset date filter
+                    type = null
 
             when 'flag'
                 if params.value
                     flag = params.value
 
-        window.cozyMails.messageClose()
         @redirect
             direction: 'first'
+            fullWidth: true # remove 2nd panel
             action: 'account.mailbox.messages'
             parameters: [
                 @props.accountID, @props.mailboxID,
-                sort, type, flag, before, after
+                '-date', type, flag, before, after
             ]
 
 

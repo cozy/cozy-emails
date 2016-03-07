@@ -18,7 +18,7 @@ class SearchStore extends Store
     _currentSearchPage = 0
     _currentSearchMore = false
     _currentSearchAccountID = 'all'
-    _currentSearchResults = Immutable.Set().clear()
+    _currentSearchResults = Immutable.Set()
     _currentSearchAccounts = Immutable.Map()
 
     resetSearch = ->
@@ -80,11 +80,12 @@ class SearchStore extends Store
         return _currentSearchAccountID
 
     getCurrentSearchResults: ->
-        _currentSearchResults.mapEntries ([id]) ->
+        _currentSearchResults
+        .toOrderedMap()
+        .mapEntries ([id]) ->
             [id, MessageStore.getByID id]
         .filter (message) ->
             message isnt null
-        .toOrderedMap()
 
     hasMoreSearch: ->
         _currentSearchMore
@@ -101,4 +102,3 @@ class SearchStore extends Store
 
 
 module.exports = self = new SearchStore()
-
