@@ -16,10 +16,6 @@ module.exports = ComposeEditor = React.createClass
             target: false     # true when hovering with a file
         }
 
-    componentWillReceiveProps: (nextProps) ->
-        if nextProps.messageID isnt @props.messageID
-            @setState html: nextProps.html, text: nextProps.text
-
     shouldComponentUpdate: (nextProps, nextState) ->
         return not(_.isEqual(nextState, @state)) or
             not (_.isEqual(nextProps, @props))
@@ -406,4 +402,3 @@ module.exports = ComposeEditor = React.createClass
                             editor.appendChild img
                 # force update of React component
                 @onHTMLChange()
-

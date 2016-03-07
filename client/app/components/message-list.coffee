@@ -35,7 +35,6 @@ module.exports = MessageList = React.createClass
 
     mixins: [
         SelectionManager
-        ShouldUpdate.UnderscoreEqualitySlow
         RouterMixin,
         TooltipRefresherMixin
         StoreWatchMixin [LayoutStore, AccountStore, MessageStore]
@@ -52,9 +51,8 @@ module.exports = MessageList = React.createClass
         account   = AccountStore.getByID accountID
         role = AccountStore.getMailboxRole account, mailboxID
         settings = SettingsStore.get()
-        displayConvs = settings.get('displayConversations') and
-                                        role not in CONVERSATION_DISABLED
-
+        displayConvs = !!(settings.get('displayConversations') and
+        role not in CONVERSATION_DISABLED)
         mailbox   = account.get('mailboxes').get mailboxID
         messages  = MessageStore.getMessagesToDisplay mailboxID, displayConvs
 
@@ -80,17 +78,16 @@ module.exports = MessageList = React.createClass
             refresh              : refresh
             isTrash              : role is 'trashMailbox'
             conversationLengths  : conversationLengths
-            queryParams          : MessageStore.getQueryParams()
             fullscreen           : LayoutStore.isPreviewFullscreen()
             displayConversations : displayConvs
 
     # for SelectionManagerMixin
     getSelectables: (props = @props, state = @state) ->
-        state.messages.keySeq()
+        state.messages.map (message) -> message.get('id')
 
     getEmptyListMessage: ->
         return @props.emptyListMessage if @props.emptyListMessage
-        switch @state.queryParams.filter
+        switch @props.queryParams.filter
             when MessageFilter.FLAGGED
                 t 'no flagged message'
             when MessageFilter.UNSEEN
@@ -117,22 +114,22 @@ module.exports = MessageList = React.createClass
                 mailboxes:            @state.mailboxes
                 messages:             @state.messages
                 edited:               @hasSelected()
-                selected:             @getSelected().toObject()
+                selected:             @getSelected()
                 allSelected:          @allSelected()
                 displayConversations: @state.displayConversations
                 toggleAll:            @toggleAll
                 afterAction:          @afterMessageAction
-                queryParams:          @state.queryParams
+                queryParams:          @props.queryParams
                 noFilters:            @props.noFilters
 
             if @state.refresh and not mailbox.get('lastSync')
                 Progress value: 0, max: 1
                 MessageListLoader()
             else
-                Progress value: @state.refresh, max: 1
+                Progress value: @state.refresh or 0, max: 1
 
             # Message List
-            if @state.messages.count() is 0
+            if @state.messages.size is 0
                 if @state.fetching
                     p className: 'listFetching list-loading', t 'list fetching'
                 else
@@ -156,7 +153,7 @@ module.exports = MessageList = React.createClass
                         mailboxes: @state.mailboxes
                         login: @state.login
                         edited: @hasSelected()
-                        selected: @getSelected().toObject()
+                        selected: @getSelected()
                         allSelected: @allSelected()
                         displayConversations: @state.displayConversations
                         isTrash: @state.isTrash
@@ -166,7 +163,7 @@ module.exports = MessageList = React.createClass
                     @renderFooter()
 
     renderFooter: ->
-        if @state.queryParams.hasNextPage
+        if @props.queryParams.hasNextPage
             p className: 'text-center list-footer',
                 if @state.fetching
                     Spinner()
@@ -227,9 +224,11 @@ module.exports = MessageList = React.createClass
                     @_checkNextInterval = window.setInterval @_loadNext, 10000
             , 0
 
+    componentWillMount: ->
+        setTimeout @loadMoreMessage, 1
+
     componentDidMount: ->
         @_initScroll()
-        setTimeout MessageActionCreator.fetchMoreOfCurrentQuery, 1
 
     componentDidUpdate: ->
         @_initScroll()

@@ -35,7 +35,7 @@ module.exports = React.createClass
                 @renderAddress 'to' if @props.active
                 @renderAddress 'cc' if @props.active
                 div className: 'metas indicators',
-                    if @props.message.get('attachments').length
+                    if @props.message.get('attachments').size
                         PopupMessageAttachments
                             message: @props.message
                     if @props.active
@@ -66,4 +66,3 @@ module.exports = React.createClass
                     span className: 'field',
                         t "mail #{field}"
                 @formatUsers(users)...
-

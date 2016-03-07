@@ -121,6 +121,7 @@ module.exports =
         'REPLY'         : 'REPLY'
         'REPLY_ALL'     : 'REPLY_ALL'
         'FORWARD'       : 'FORWARD'
+        'EDIT'          : 'EDIT'
 
     AlertLevel:
         'SUCCESS'      : 'SUCCESS'

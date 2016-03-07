@@ -671,6 +671,3 @@ log = require('../utils/logging')(prefix: 'models:message')
 htmlToText  = require 'html-to-text'
 require('./model-events').wrapModel Message
 ramStore = require './store_account_and_boxes'
-
-
-
