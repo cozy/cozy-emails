@@ -73,7 +73,6 @@ module.exports = Panel = React.createClass
                 @props.action is 'compose.reply' or
                 @props.action is 'compose.reply-all' or
                 @props.action is 'compose.forward'
-
             @renderCompose()
 
         # -- Display the settings form
@@ -131,15 +130,14 @@ module.exports = Panel = React.createClass
             message = null
             component = Compose options
 
+
         # Generates the edit draft composition form.
         else if @props.action is 'edit' or
                 @props.action is 'compose.edit'
-            messageID = @props.messageID
-            if (message = MessageStore.getByID messageID)
-                options.key += '-' + messageID
-                component = Compose _.extend options,
-                    key: options.key + '-' + messageID
-                    message: message
+
+            component = Compose _.extend options,
+                key: options.key + '-' + @props.messageID
+                messageID: @props.messageID
 
         # Generates the reply composition form.
         else if @props.action is 'compose.reply'
