@@ -18,6 +18,8 @@ module.exports = StoreWatchMixin = (stores) ->
 
     # Update state with store values.
     _setStateFromStores: ->
+        return unless @isMounted()
+
         _difference = (obj0, obj1) ->
             result = {}
             _.filter obj0, (value, key) ->
