@@ -590,9 +590,6 @@ class MessageStore extends Store
         messageID = param.messageID or @getCurrentID()
         conversationID = param.conversationID
 
-        # FIXME : FIX de la Inbox :
-        # lorsque l'on change de vues
-        # la sélection doit être supprimée
         messages = _messagesWithInFlights()
 
         # Remove selected messages
