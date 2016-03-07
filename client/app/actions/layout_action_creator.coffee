@@ -55,6 +55,11 @@ module.exports = LayoutActionCreator =
         AppDispatcher.handleViewAction
             type: type
 
+    focus: (path) ->
+        AppDispatcher.handleViewAction
+            type: ActionTypes.FOCUS
+            value: path
+
     refresh: ->
         AppDispatcher.handleViewAction
             type: ActionTypes.REFRESH

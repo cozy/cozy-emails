@@ -80,6 +80,7 @@ module.exports =
         'DISPLAY_MODAL'             : 'DISPLAY_MODAL'
         'HIDE_MODAL'                : 'HIDE_MODAL'
         'REFRESH'                   : 'REFRESH'
+        'FOCUS'                     : 'FOCUS'
         'INTENT_AVAILABLE'          : 'INTENT_AVAILABLE'
 
         # Settings
