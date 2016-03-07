@@ -145,6 +145,7 @@ module.exports = Utils =
             direction: 'second'
             action: action
             parameters: params
+
         url = window.router.buildUrl urlOptions
         window.router.navigate url, {trigger: true}
 
@@ -153,8 +154,8 @@ module.exports = Utils =
         href = window.location.href
         href = href.replace /\/message\/[\w-]+/gi, ''
         href = href.replace /\/conversation\/[\w-]+\/[\w-]+/gi, ''
+        href = href.replace /\/edit\/[\w-]+/gi, ''
         window.location.href = href
-
 
     messageDeleteCurrent: ->
         messageID = MessageStore.getCurrentID()
@@ -170,8 +171,12 @@ module.exports = Utils =
             MessageActionCreator.delete {messageID}
             LayoutActionCreator.hideModal() if isModal
 
-            # Goto next message
-            Utils.messageSetCurrent next
+            if next?.size
+                # Goto next message
+                Utils.messageSetCurrent next
+            else
+                # Close 2nd panel
+                Utils.messageClose()
 
         settings = SettingsStore.get()
 

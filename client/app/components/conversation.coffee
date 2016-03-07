@@ -123,14 +123,14 @@ module.exports = React.createClass
 
 
     render: ->
-        unless @state.conversation
+        if not @state.conversation or not (message = @state.conversation.get 0)
             return section
                 key: 'conversation'
                 className: 'conversation panel'
                 'aria-expanded': true,
                 p null, t "app loading"
 
-        message = @state.conversation.get 0
+
         # Sort messages in conversation to find seen messages and group them
         messages = []
         lastMessageIndex = @state.conversation.size - 1

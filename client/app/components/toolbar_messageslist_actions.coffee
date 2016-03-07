@@ -87,8 +87,9 @@ module.exports = ActionsToolbarMessagesList = React.createClass
 
         doDelete = =>
             # Get next focus conversation
-            nextConversation = MessageStore.getPreviousConversation()
-            nextConversation = MessageStore.getNextConversation() unless nextConversation.size
+            conversationIDs = options.conversationIDs
+            nextConversation = MessageStore.getPreviousConversation {conversationIDs}
+            nextConversation = MessageStore.getNextConversation {conversationIDs} unless nextConversation.size
 
             MessageActionCreator.delete options
 
@@ -105,7 +106,6 @@ module.exports = ActionsToolbarMessagesList = React.createClass
                     parameters:
                         messageID: nextConversation.get('id')
                         conversationID: nextConversation.get('conversationID')
-
 
         unless @props.settings.get 'messageConfirmDelete'
             doDelete()
