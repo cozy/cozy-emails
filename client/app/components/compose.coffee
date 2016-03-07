@@ -442,6 +442,7 @@ module.exports = Compose = React.createClass
                 success(error, message) if _.isFunction success
                 return
 
+            @state.mailboxIDs = message.mailboxIDs
             @props.lastUpdate = message.date
 
             # Refresh URL
