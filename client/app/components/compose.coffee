@@ -76,8 +76,9 @@ module.exports = Compose = React.createClass
                 nextState.html = MessageUtils.wrapReplyHtml nextState.html
 
     # Update state with store values.
-    _setStateFromStores: ->
-        return unless @isMounted()
+    _setStateFromStores: (message) ->
+        if not @isMounted() or message._id isnt @state.id
+            return
 
         _difference = (obj0, obj1) ->
             result = {}

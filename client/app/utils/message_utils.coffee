@@ -124,6 +124,7 @@ module.exports = MessageUtils =
             signature: account.get 'signature'
 
         message =
+            id              : props.messageID
             composeInHTML   : props.settings.get 'composeInHTML'
             attachments     : Immutable.List()
             accountID       : account.id
