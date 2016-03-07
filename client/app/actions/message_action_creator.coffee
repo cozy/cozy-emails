@@ -163,7 +163,7 @@ module.exports = MessageActionCreator =
                 # in doubt, recover the changed to messages to sync with
                 # server
                 @recover target, ref
-            else
+            else if updated?.length
                 msg.updated = ts for msg in updated
                 AppDispatcher.handleViewAction
                     type: ActionTypes.MESSAGE_TRASH_SUCCESS
