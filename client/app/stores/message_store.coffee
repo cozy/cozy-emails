@@ -541,7 +541,7 @@ class MessageStore extends Store
     * @return {List}
     ###
     getPreviousConversation: (param={}) ->
-        @getConversation transform: (index) -> ++index
+        @getConversation _.extend param, transform: (index) -> ++index
 
     ###*
     * Get earlier conversation displayed after current
@@ -551,7 +551,7 @@ class MessageStore extends Store
     * @return {List}
     ###
     getNextConversation: (param={}) ->
-        @getConversation transform: (index) -> --index
+        @getConversation _.extend param, transform: (index) -> --index
 
     getCurrentConversation: ->
         conversationID = @getCurrentConversationID()
@@ -581,26 +581,45 @@ class MessageStore extends Store
     * @return {List}
     ###
     getConversation: (param={}) ->
-        @setConversation param.conversationID if param.conversationID?
-        return _conversationMemoize unless _.isFunction param.transform
+        if param.conversationID?
+            @setConversation param.conversationID
 
-        messageID = @getCurrentID()
+        unless _.isFunction param.transform
+            return _conversationMemoize
 
-        getMessage = (array) ->
-            index0 = array.toArray().findIndex (message) ->
-                messageID is message.get 'id'
+        messageID = param.messageID or @getCurrentID()
+        conversationID = param.conversationID
+
+        # FIXME : FIX de la Inbox :
+        # lorsque l'on change de vues
+        # la sélection doit être supprimée
+        messages = _messagesWithInFlights()
+
+        # Remove selected messages
+        if param.conversationIDs
+            conversationID = param.conversationIDs[0]
+            messages = messages
+                .filter (message) ->
+                    id = message.get 'conversationID'
+                    index = param.conversationIDs.indexOf id
+                    return index is -1
+                .toList()
+
+        # If Last message of conversation
+        # Get next conversation
+        if param.type is 'message' and not _conversationMemoize.size
+            messages = _currentMessages
+
+        getMessage = ->
+            index0 = messages.toArray().findIndex (message) ->
+                if param.conversationID isnt 'undefined'
+                    return param.conversationID is message.get 'conversationID'
+                return messageID is message.get 'id'
             index = param.transform index0
-            array.toJS()[index]
-
-        # Next message of same conversation
-        if param.type is 'message' and _conversationMemoize.size > 1
-            message = getMessage _conversationMemoize
+            messages.get index
 
         # Change Conversation
-        unless message
-            message = getMessage _currentMessages
-
-        return Immutable.Map message
+        return Immutable.Map getMessage()
 
 
     # Retrieve a batch of message with various criteria
