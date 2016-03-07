@@ -9,8 +9,10 @@ FilePicker     = require './file_picker'
 MailsInput     = require './mails_input'
 
 AccountPicker = require './account_picker'
+
 AccountStore = require '../stores/account_store'
 MessageStore = require '../stores/message_store'
+LayoutStore = require '../stores/layout_store'
 
 {ComposeActions, Tooltips} = require '../constants/app_constants'
 
@@ -80,18 +82,19 @@ module.exports = Compose = React.createClass
         # scroll compose window into view
         @getDOMNode().scrollIntoView()
 
-        # Focus
-        if not Array.isArray(@state.to) or @state.to.length is 0
-            setTimeout ->
-                document.getElementById('compose-to')?.focus()
-            , 10
-        else if @props.inReplyTo?
-            document.getElementById('compose-editor')?.focus()
+        # Save focus
+        @addFocusListener()
+
+        # Focus Element
+        @handleFocus()
 
     componentDidUpdate: ->
         # Initialize @state
         # with values from server
         @saveDraft() if @isNew()
+
+        # Focus Element
+        @handleFocus()
 
         # Each state:change do not send data to server
         # update date for client modifications
@@ -100,20 +103,6 @@ module.exports = Compose = React.createClass
         else
             @state.date = new Date().toISOString()
 
-        # focus
-        switch @state.focus
-            when 'cc'
-                setTimeout ->
-                    document.getElementById('compose-cc').focus()
-                , 0
-                @setState focus: ''
-
-            when 'bcc'
-                setTimeout ->
-                    document.getElementById('compose-bcc').focus()
-                , 0
-                @setState focus: ''
-
     hasChanged: (props, state) ->
         (props.lastUpdate and props.lastUpdate isnt state.date) or false
 
@@ -121,9 +110,55 @@ module.exports = Compose = React.createClass
         delete @props.lastUpdate
 
     componentWillUnmount: ->
+        # Stop listening to focus
+        @removeFocusListener()
+
+        # Save Message into Draft
         @closeSaveDraft @state,
             hasChanged: @hasChanged(@props, @state)
             silent: true
+
+    handleFocus: ->
+        return unless (path = LayoutStore.getFocus())
+
+        if -1 < path.indexOf 'ref='
+            # Element Focusable are not always
+            # DOM form element :
+            # It can be React Component
+            ref = path.split('ref=')[1]
+            element = @refs[ref].getDOMNode()
+
+        else if (elements = @getDOMNode().querySelectorAll(path))
+            element = elements[0]
+
+        element.focus() if (element)
+
+
+    saveFocus: (event) =>
+        if event.refsPath
+            path = 'ref=' + event.refsPath
+        else if (name = event.currentTarget.name)
+            path = '[name="' + event.currentTarget.name + '"]'
+        LayoutActionCreator.focus path
+
+    addFocusListener: ->
+        _.each ['input[type="text"]', 'textarea'], (path) =>
+            _.each @getDOMNode().querySelectorAll(path), (element) =>
+                element.addEventListener 'focus', @saveFocus
+
+        # Editor is a specific case
+        if (editor = @refs.editor.getDOMNode())
+            editor.addEventListener 'click', (event) =>
+                @saveFocus refsPath: 'editor'
+
+    removeFocusListener: ->
+        _.each ['input[type="text"]', 'textarea'], (path) =>
+            _.each @getDOMNode().querySelectorAll(path), (element) =>
+                element.removeEventListener 'focus', @saveFocus
+
+        # Editor is a specific case
+        if (editor = @refs.editor.getDOMNode())
+            editor.removeEventListener 'click', @saveFocus
 
     closeSaveDraft: (state, options={}) ->
         fetch = (error, message) =>
@@ -172,10 +207,6 @@ module.exports = Compose = React.createClass
 
         classLabel = 'compose-label'
         classInput = 'compose-input'
-
-        focusEditor = Array.isArray(@state.to) and
-            @state.to.length > 0 and
-            @state.subject isnt ''
 
         section
             className: classer

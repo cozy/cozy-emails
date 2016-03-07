@@ -24,6 +24,8 @@ class LayoutStore extends Store
 
     _previewFullscreen = false
 
+    _focus = null
+
     _tasks = Immutable.OrderedMap()
 
     _shown = true
@@ -75,6 +77,9 @@ class LayoutStore extends Store
         handle ActionTypes.HIDE_MODAL, (value) ->
             _modal = null
             @emit 'change'
+
+        handle ActionTypes.FOCUS, (path) ->
+            _focus = path
 
         handle ActionTypes.REFRESH, ->
             @emit 'change'
@@ -269,6 +274,10 @@ class LayoutStore extends Store
 
     isPreviewFullscreen: ->
         return _previewFullscreen
+
+
+    getFocus: ->
+        return _focus
 
 
     getModal: ->
