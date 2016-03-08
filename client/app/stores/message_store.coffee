@@ -179,16 +179,6 @@ class MessageStore extends Store
     isntAccount = (accountID) -> (message) ->
         accountID isnt message.get 'accountID'
 
-    dedupConversation = ->
-        conversationIDs = []
-        return filter = (message) ->
-            conversationID = message.get 'conversationID'
-            if conversationID and conversationID in conversationIDs
-                return false
-            else
-                conversationIDs.push conversationID
-                return true
-
 
     computeMailboxDiff = (oldmsg, newmsg) ->
         return {} unless oldmsg
@@ -510,6 +500,7 @@ class MessageStore extends Store
 
         if useConversations
             sequence = sequence.filter dedupConversation()
+
 
         sequence = sequence.sort getSortFunction filter.field, filter.order
         _currentMessages = sequence.toOrderedMap()
