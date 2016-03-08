@@ -94,8 +94,8 @@ module.exports = MessageUtils =
 
     # Extract a reply address from a `message` object.
     getReplyToAddress: (message) ->
-        reply = message.get 'replyTo'
-        from = message.get 'from'
+        reply = message?.get 'replyTo'
+        from = message?.get 'from'
         if (reply? and reply.length isnt 0)
             return reply
         else
@@ -129,6 +129,7 @@ module.exports = MessageUtils =
             attachments     : Immutable.List()
             accountID       : account.id
             isDraft         : true
+            textOnly        : ''
             from            : [
                     name: account.name
                     address: account.address
@@ -154,9 +155,13 @@ module.exports = MessageUtils =
         if html? and not text? and not message.composeInHTML
             text = toMarkdown html
 
-        if (inReplyTo = props.inReplyTo)
+        inReplyTo = props.inReplyTo
+        inReplyTo = null if inReplyTo and _.isString inReplyTo
+        if inReplyTo
+            replyID = inReplyTo.get 'id'
+            html = inReplyTo?.get 'html'
             _.extend message,
-                inReplyTo: [replyID = inReplyTo.get 'id']
+                inReplyTo: inReplyTo
                 references: (inReplyTo.get('references') or []).concat replyID
 
         isSignature = !!!_.isEmpty(signature = account.signature)
@@ -172,7 +177,6 @@ module.exports = MessageUtils =
             signature
             isSignature
         }
-
         switch props.action
             when ComposeActions.REPLY
                 @setMessageAsReply options
@@ -213,7 +217,7 @@ module.exports = MessageUtils =
         message.cc = []
         message.bcc = []
         message.subject = @getReplySubject inReplyTo
-        message.text = separator + @generateReplyText(text) + "\n"
+        message.text = separator + @generateReplyText(inReplyTo) + "\n"
         message.html = """
         #{COMPOSE_STYLE}
         <p><br></p>
@@ -221,6 +225,7 @@ module.exports = MessageUtils =
 
         if isSignature
             @addSignature message, signature
+
         message.html += """
             <p>#{separator}<span class="originalToggle"> … </span></p>
             <blockquote style="#{QUOTE_STYLE}">#{html}</blockquote>
@@ -259,7 +264,7 @@ module.exports = MessageUtils =
         message.bcc = []
 
         message.subject = @getReplySubject inReplyTo
-        message.text = separator + @generateReplyText(text) + "\n"
+        message.text = separator + @generateReplyText(inReplyTo) + "\n"
         message.html = """
             #{COMPOSE_STYLE}
             <p><br></p>
@@ -370,7 +375,9 @@ module.exports = MessageUtils =
 
 
     # Generate reply text by adding `>` before each line of the given text.
-    generateReplyText: (text) ->
+    generateReplyText: (message) ->
+        unless (text = message?.get('text'))
+            return ''
         text = text.split '\n'
         res  = []
         text.forEach (line) ->
@@ -534,11 +541,11 @@ module.exports = MessageUtils =
 
     # Add a reply prefix to the current subject. Do not add it again if it's
     # already there.
-    getReplySubject: (inReplyTo) ->
-        subject =  inReplyTo.get('subject') or ''
-        replyPrefix = t 'compose reply prefix'
-        if subject.indexOf(replyPrefix) isnt 0
-            subject = "#{replyPrefix}#{subject}"
+    getReplySubject: (message) ->
+        subject =  message?.get('subject') or ''
+        prefix = t 'compose reply prefix'
+        if subject.indexOf(prefix) isnt 0
+            subject = "#{prefix}#{subject}"
         subject
 
     # To keep HTML markup light, create the contact tooltip dynamicaly
