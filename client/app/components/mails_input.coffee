@@ -31,11 +31,11 @@ module.exports = MailsInput = React.createClass
 
     getInitialState: ->
         state = @getStateFromStores()
-        state.known    = @props.valueLink.value
+        state.known    = @props.valueLink.value or []
         state.unknown  = ''
         state.selected = 0
         state.open     = false
-        state.focus    = !!state.known.length
+        state.focus    = !!state.known?.length
         state
 
     # Code from the StoreWatch Mixin. We don't use the mixin

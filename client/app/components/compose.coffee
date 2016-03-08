@@ -56,7 +56,17 @@ module.exports = Compose = React.createClass
 
     getStateFromStores: ->
         props = _.clone @props
-        props.message = MessageStore.getByID props.messageID
+
+        # Get Message
+        unless props.message
+            props.message = MessageStore.getByID props.messageID
+
+        # Get Reply message
+        if _.isString props.inReplyTo
+            id = props.inReplyTo
+            if (message = MessageStore.getByID id) and message.size
+                message.set 'id', id
+                props.inReplyTo = message
         MessageUtils.createBasicMessage props
 
     isNew: ->
@@ -77,20 +87,22 @@ module.exports = Compose = React.createClass
 
     # Update state with store values.
     _setStateFromStores: (message) ->
-        if not @isMounted() or message?._id isnt @state.id
+        isMessage = message?._id is @state.id
+        isReplyTo = message?._id is @props.inReplyTo
+        if not @isMounted() or (not isMessage and not isReplyTo)
             return
 
         _difference = (obj0, obj1) ->
             result = {}
             _.filter obj0, (value, key) ->
-                unless value is obj1[key]
+                unless _.isEqual value, obj1[key]
                     result[key] = value
             result
 
         nextState = @getStateFromStores()
         changes = _difference nextState, @state
         unless _.isEmpty changes
-            @setState nextState
+            @setState changes
 
     componentDidMount: ->
         # Listen to Stores changes
@@ -338,7 +350,7 @@ module.exports = Compose = React.createClass
     # conversation ID and message ID. These infor are collected via current
     # selection and message information.
     finalRedirect: ->
-        if @props.inReplyTo?
+        if @props.inReplyTo? and not _.isString @props.inReplyTo
             conversationID = @state.conversationID
             accountID = @props.selectedAccountID
             messageID = @state.id
@@ -454,8 +466,7 @@ module.exports = Compose = React.createClass
                     action: 'compose.edit'
                     direction: 'first'
                     fullWidth: true
-                    parameters:
-                        messageID: @state.id
+                    parameters: @state.id
                 return
 
             success(error, message) if _.isFunction success
