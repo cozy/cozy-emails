@@ -199,7 +199,7 @@ module.exports = AccountConfigMain = React.createClass
 
     _renderGMAILSecurity: ->
         url = "https://www.google.com/settings/security/lesssecureapps"
-        login = @props.editedAccount.get('login')
+        login = @props.editedAccount.get('login') or t 'the account to connect'
         FieldSet text: t('gmail security tile'),
             p null, t 'gmail security body'
             ul null,
