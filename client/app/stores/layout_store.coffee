@@ -1,8 +1,9 @@
+AppDispatcher = require '../app_dispatcher'
+
 Store = require '../libs/flux/store/store'
+AccountStore = require './account_store'
 
 {ActionTypes, Dispositions} = require '../constants/app_constants'
-AppDispatcher = require '../app_dispatcher'
-AccountStore = require './account_store'
 
 MessageActionCreator = null
 getMessageActionCreator = ->
@@ -22,6 +23,8 @@ class LayoutStore extends Store
     _previewSize = 60
 
     _previewFullscreen = false
+
+    _focus = null
 
     _tasks = Immutable.OrderedMap()
 
@@ -74,6 +77,9 @@ class LayoutStore extends Store
         handle ActionTypes.HIDE_MODAL, (value) ->
             _modal = null
             @emit 'change'
+
+        handle ActionTypes.FOCUS, (path) ->
+            _focus = path
 
         handle ActionTypes.REFRESH, ->
             @emit 'change'
@@ -201,7 +207,7 @@ class LayoutStore extends Store
                 key = "account creation ok configuration needed"
 
             @_showNotification
-                message: t(key)
+                message: t key
                 autoclose: true
 
         handle ActionTypes.EDIT_ACCOUNT_FAILURE, ({error}) ->
@@ -213,7 +219,7 @@ class LayoutStore extends Store
 
         handle ActionTypes.EDIT_ACCOUNT_SUCCESS, ->
             @_showNotification
-                message: t('account updated')
+                message: t 'account updated'
                 autoclose: true
 
         handle ActionTypes.CHECK_ACCOUNT_FAILURE, ({error}) ->
@@ -225,7 +231,7 @@ class LayoutStore extends Store
 
         handle ActionTypes.CHECK_ACCOUNT_SUCCESS, ->
             @_showNotification
-                message: t('account checked')
+                message: t 'account checked'
                 autoclose: true
 
         handle ActionTypes.REFRESH_FAILURE, ({error}) ->
@@ -268,6 +274,10 @@ class LayoutStore extends Store
 
     isPreviewFullscreen: ->
         return _previewFullscreen
+
+
+    getFocus: ->
+        return _focus
 
 
     getModal: ->

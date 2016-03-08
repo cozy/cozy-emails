@@ -54,10 +54,7 @@
     [role=toolbar]
         display    flex
         min-height (36/16)em
-
-
-    [role=toolbar]
-        padding          .1875em .35em (1/16)em
+        padding          .1875em .7em (1/16)em
         background-color grey-01
         font-size        .90em
 
@@ -74,6 +71,9 @@
         .dropdown
         .menu-action
             display flex
+
+        [role=group]
+            margin-left 2em
 
         .dropdown-toggle
             white-space nowrap
@@ -170,11 +170,12 @@
 
 
     .message
+        position relative
         display          table
         table-layout     fixed
         width            100%
-        padding          .5em .35em
-        background-color lighten(grey-01, 66%)
+        padding          .5em .4em .75em
+        background-color lighten(lightcolor,60%)
         border-bottom    1px solid grey-02
 
         main:not(.full) &.active
@@ -184,12 +185,19 @@
             .preview
                 color darkcolor
 
+        .fa-new-icon
+            position absolute
+            border-left solid 0.25em blue
+            height 100%
+            top 0
+            left 0
 
     .unseen
         background-color white
 
-        .subject
-            font-weight bold
+        .participants
+            .address-list
+                font-weight bold
 
 
     .wrapper
@@ -200,19 +208,23 @@
         [class*=wrapper]
             display        table-cell
             vertical-align middle
-            padding        0 .5em
 
         p
             margin 0
 
 
     .markers-wrapper
-        marker-width = .85em
+        marker-width = 1em
 
-        width 1em + marker-width
+        width 2em + marker-width
+        padding 0em 0.3em 0
 
         i
             font-size marker-width
+            padding 0 0 0 0.2em
+
+        .hidden
+            display: inline-block!important
 
         .fa-circle
             color basecolor
@@ -242,9 +254,6 @@
         justify-content space-between
 
 
-    .participants
-        font-weight bold
-
     .subject
         font-size (15/16)em
 
@@ -252,16 +261,14 @@
         color     grey-06
         font-size .875em
 
-    .mailboxes
-        font-size .875em
-
-        span
-            display          inline-block
-            margin-right     .5em
-            background-color rgba(grey-02, .67)
-            border-radius    .1em
-            padding          .1em .35em
-            color            darkcolor
+    .mailbox-tag
+        font-size        .8em
+        display          inline-block
+        margin-right     .5em
+        background-color rgba(grey-02, .67)
+        border-radius    .1em
+        padding          .1em .35em
+        color            darkcolor
 
 
     .date
@@ -300,17 +307,12 @@
     .message
         .select
             cursor  pointer
-            display none
 
+        .fa-square-o
+            color grey-03
 
-        &:hover
-        &.edited
-            .markers-wrapper
-                .select
-                    display block
-                i
-                    display none
-
+        .fa-check-square-o
+            color grey-07
 
 
     // LAYOUT SPECIFIC RULES
@@ -318,7 +320,6 @@
     .layout-column &
         .avatar-wrapper
             width 3.5em
-            padding 0 .25em
 
         .avatar
             width  2em
@@ -327,12 +328,6 @@
         .participants
         .subject
             flex 1 0 50%
-
-        .participants
-        .subject
-        .mailboxes
-        .preview
-            margin .125em 0
 
         .mailboxes
         .preview
@@ -378,9 +373,6 @@
     .layout-row &
         .metas-wrapper
             flex-wrap nowrap
-
-        .message
-            padding 0.25em 0.35em
 
         .metas
             flex-wrap nowrap

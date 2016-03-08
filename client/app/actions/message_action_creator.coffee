@@ -125,7 +125,10 @@ module.exports = MessageActionCreator =
                 type: ActionTypes.REFRESH_REQUEST
                 value: {mailboxID}
 
-            XHRUtils.refreshMailbox mailboxID, (error, updated) ->
+            account = AccountStore.getSelected()
+            options = deep: account.get('draftMailbox') is mailboxID
+
+            XHRUtils.refreshMailbox mailboxID, options, (error, updated) ->
                 if error?
                     AppDispatcher.handleViewAction
                         type: ActionTypes.REFRESH_FAILURE
@@ -148,8 +151,8 @@ module.exports = MessageActionCreator =
             type: ActionTypes.MESSAGE_TRASH_REQUEST
             value: {target, ref}
 
-        ts = Date.now()
         # send request
+        ts = Date.now()
         XHRUtils.batchDelete target, (error, updated) =>
             if error
                 AppDispatcher.handleViewAction
@@ -160,11 +163,13 @@ module.exports = MessageActionCreator =
                 # in doubt, recover the changed to messages to sync with
                 # server
                 @recover target, ref
-            else
+            else if updated?.length
                 msg.updated = ts for msg in updated
                 AppDispatcher.handleViewAction
                     type: ActionTypes.MESSAGE_TRASH_SUCCESS
                     value: {target, ref, updated}
+
+            callback? error, updated
 
 
     move: (target, from, to, callback) ->
@@ -284,4 +289,3 @@ _loopSeries = (obj, iterator, done) ->
             return done err if err
             return done null if ++i is keys.length
             step()
-

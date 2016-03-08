@@ -1,8 +1,8 @@
 /*
-  MENU
-
-  -- Menu internal layout and styles
-*/
+ *  MENU
+ *
+ *  -- Menu internal layout and styles
+ */
 
 // Helpers mixins
 subaction()
@@ -91,9 +91,9 @@ subaction()
         align-items center
 
     .badge
-            order       2
-            margin-left auto
-            background-color grey-05
+        order       2
+        margin-left auto
+        background-color grey-05
 
 
     [role=group]
@@ -145,20 +145,22 @@ subaction()
         .account
             flex 1
 
-        .mailbox-config
-            color #aaa
-
-            subaction()
-
         .badge
             margin-right 1em
 
-        &:hover
-            .mailbox-config
-                opacity 1
 
-                &:hover
-                    color basecolor
+    .menu-subaction
+        color #aaa
+        subaction()
+
+        &:hover
+          color basecolor
+
+
+    .account-title:hover
+    .mailbox-list li:hover
+        .menu-subaction
+            opacity 1
 
 
     .mailbox-list
@@ -175,12 +177,11 @@ subaction()
                 a
                     span,
                     i
-                        color            #111
+                        color #111
 
                     span
                         font-weight bold
                         font-size 0.875em
-
 
             a
                 flex 1
@@ -193,19 +194,15 @@ subaction()
             .badge
                 margin-right .5em
 
-            button
-                subaction()
-                color      basecolor
+            &:hover
+                a
+                    color basecolor
 
-            &:hover a
-                color basecolor
-
-                button
-                    opacity 1
 
         .toggle-favorites
             background-color transparent !important
             cursor           pointer
+
 
     /*
     Menu drawer in expanded mode
@@ -213,6 +210,7 @@ subaction()
     */
     &[aria-expanded=true]
         min-width 15em
+
 
     /*
     Styles for Menu drawer in compact mode
@@ -251,7 +249,7 @@ subaction()
             .mailbox-list li
                 padding-left 0
 
-            .mailbox-config
+            .menu-subaction
                 display none !important
 
 

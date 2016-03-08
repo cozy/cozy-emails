@@ -26,11 +26,12 @@ module.exports = MessageListBody = React.createClass
 
     render: ->
         ul className: 'list-unstyled', ref: 'messageList',
-            @props.messages.map((message, key) =>
+            @props.messages
+            .mapEntries ([key, message]) =>
                 id = message.get('id')
                 cid = message.get('conversationID')
 
-                MessageItem
+                ["msg-#{key}", MessageItem
                     message: message,
                     accountID: @props.accountID,
                     mailboxID: @props.mailboxID,
@@ -48,7 +49,8 @@ module.exports = MessageListBody = React.createClass
                     ref: 'messageItem'
                     onSelect: (val) =>
                         @props.onSelect id, val
-            ).toJS()
+                ]
+            .toJS()
 
     componentDidMount: ->
         @_onMount()

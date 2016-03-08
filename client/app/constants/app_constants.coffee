@@ -80,6 +80,7 @@ module.exports =
         'DISPLAY_MODAL'             : 'DISPLAY_MODAL'
         'HIDE_MODAL'                : 'HIDE_MODAL'
         'REFRESH'                   : 'REFRESH'
+        'FOCUS'                     : 'FOCUS'
         'INTENT_AVAILABLE'          : 'INTENT_AVAILABLE'
 
         # Settings
@@ -121,6 +122,7 @@ module.exports =
         'REPLY'         : 'REPLY'
         'REPLY_ALL'     : 'REPLY_ALL'
         'FORWARD'       : 'FORWARD'
+        'EDIT'          : 'EDIT'
 
     AlertLevel:
         'SUCCESS'      : 'SUCCESS'

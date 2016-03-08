@@ -19,16 +19,24 @@ module.exports = MailsInput = React.createClass
     componentWillMount: ->
         @setState contacts: null, open: false
 
+    componentWillReceiveProps: (nextProps) ->
+        # Update from parent
+        @setState known: nextProps.valueLink.value
+
+    shouldComponentUpdate: (nextProps, nextState) ->
+        # Update parent from child
+        unless _.isEqual nextProps.valueLink.value, nextState.known
+            @props.valueLink.requestChange nextState.known
+        not _.isEqual nextState, @state
+
     getInitialState: ->
         state = @getStateFromStores()
-        state.known    = @props.valueLink.value
+        state.known    = @props.valueLink.value or []
         state.unknown  = ''
         state.selected = 0
         state.open     = false
-        return state
-
-    componentWillReceiveProps: (nextProps) ->
-        @setState known: nextProps.valueLink.value
+        state.focus    = !!state.known?.length
+        state
 
     # Code from the StoreWatch Mixin. We don't use the mixin
     # because we store other things into the state
@@ -40,17 +48,11 @@ module.exports = MailsInput = React.createClass
 
     _setStateFromStores: -> @setState @getStateFromStores()
 
-    shouldComponentUpdate: (nextProps, nextState) ->
-        return not(_.isEqual(nextState, @state)) or
-            not (_.isEqual(nextProps, @props))
-
     render: ->
-
         renderTag = (address, idx) =>
             remove = =>
-                known = @state.known.filter (a) ->
-                    return a.address isnt address.address
-                @props.valueLink.requestChange known
+                @setState known: @state.known.filter (a) ->
+                    a.address isnt address.address
 
             onDragStart = (event) =>
                 event.stopPropagation()
@@ -64,8 +66,7 @@ module.exports = MailsInput = React.createClass
                     event.dataTransfer.setData @props.id, true
 
             onDragEnd = (event) ->
-                if event.dataTransfer.dropEffect is 'move'
-                    remove()
+                remove() if event.dataTransfer.dropEffect is 'move'
 
             if address.name? and address.name.trim() isnt ''
                 display = address.name
@@ -93,12 +94,12 @@ module.exports = MailsInput = React.createClass
         onChange = (event) =>
             value = event.target.value.split ','
             if value.length is 2
-                known = _.clone @state.known
-                known.push(MessageUtils.parseAddress value[0])
-                @props.valueLink.requestChange known
-                @setState unknown: value[1].trim()
+                @setState
+                    known: MessageUtils.parseAddress value[0]
+                    unknown: value[1].trim()
             else
-                @setState unknown: event.target.value
+                @setState
+                    unknown: event.target.value
 
         onInput = (event) =>
             input = @refs.contactInput.getDOMNode()
@@ -111,7 +112,7 @@ module.exports = MailsInput = React.createClass
         classLabel = 'compose-label control-label'
         listClass  = classer
             'contact-form': true
-            open: @state.open and @state.contacts?.length > 0
+            open: @state.open and @state.contacts?.size > 0
         current    = 0
 
         # in Chrome, we need to cancel some events for drop to work
@@ -127,11 +128,12 @@ module.exports = MailsInput = React.createClass
             else
                 event.dataTransfer.dropEffect = 'none'
 
+        # Show field if results
+        className += ' shown' if @state.focus
+
         # don't display placeholder if there are dests
-        if knownContacts.length > 0
-            placeholder = ''
-        else
-            placeholder = @props.placeholder
+        hasNoContact = knownContacts.size > 0
+        placeholder = if hasNoContact then @props.placeholder else ''
 
         div
             className: className,
@@ -206,7 +208,7 @@ module.exports = MailsInput = React.createClass
             return false
 
     onKeyDown: (evt) ->
-        count    = @state.contacts?.count()
+        count    = @state.contacts?.size
         selected = @state.selected
         switch evt.key
             when "Enter"
@@ -214,7 +216,7 @@ module.exports = MailsInput = React.createClass
                 # adding a contact to the current list
                 @addContactFromInput() if 13 in [evt.keyCode, evt.which]
 
-                if @state.contacts?.count() > 0
+                if @state.contacts?.size > 0
                     contact = @state.contacts.slice(selected).first()
                     @onContact contact
                 else
@@ -253,65 +255,60 @@ module.exports = MailsInput = React.createClass
         # if user cancel compose, component may be unmounted when the timeout
         # is fired
         if @isMounted()
-            state = {}
-            # close suggestion list
-            state.open = false
             # Add current value to list of addresses
             value = @refs.contactInput.getDOMNode().value
-
-            if value.trim() isnt ''
+            unless _.isEmpty value.trim()
                 address = MessageUtils.parseAddress value
-
                 if address.isValid
-                    @state.known.push address
-                    state.known   = @state.known
-                    state.unknown = ''
-                    @props.valueLink.requestChange state.known
-                    @setState state
-
+                    @update address
                 else
                     # Trick to make sure that the alert error is not pop up
                     # twiced due to multiple blur and key down.
                     # Do not display anything when the field is blurred.
-                    isContacts = @state.contacts?.length is 0
+                    isContacts = @state.contacts?.size is 0
                     if not isBlur and isContacts
 
                         msg = t 'compose wrong email format',
                             address: address.address
                         LayoutActionCreator.alertError msg
-
             else
-                @setState state
+                @setState open: false
 
 
     onContact: (contact) ->
-        address =
-            name    : contact.get 'fn'
-            address : contact.get 'address'
-        known = _.clone @state.known
-        known.push address
-        @props.valueLink.requestChange known
-        @setState unknown: '', contacts: null, open: false
+        @update
+            name : contact.get 'fn'
+            address: contact.get 'address'
 
         # try to put back the focus at the end of the field
         setTimeout =>
             query = @refs.contactInput.getDOMNode().focus()
         , 200
 
+    update: (known, unknown) ->
+        state =
+            unknown: unknown or ''
+            contacts: null
+            # close suggestion list
+            open: false
+        if known
+            state.known = _.clone @state.known
+            state.known.push known
+
+        @setState state
+
     onDrop: (event) ->
         event.preventDefault()
         event.stopPropagation()
-        {name, address} = JSON.parse(event.dataTransfer.getData 'address')
+
+        data = event.dataTransfer.getData 'address'
+        {name, address} = JSON.parse data
+
         exists = @state.known.some (item) ->
             return item.name is name and item.address is address
+
         if address? and not exists
-            address =
-                name    : name
-                address : address
-            known = _.clone @state.known
-            known.push address
-            @props.valueLink.requestChange known
-            @setState unknown: '', contacts: null, open: false
+            @update name : name, address: address
             event.dataTransfer.dropEffect = 'move'
         else
             event.dataTransfer.dropEffect = 'none'

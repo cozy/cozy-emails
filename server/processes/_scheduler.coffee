@@ -85,7 +85,7 @@ Scheduler.onIdle = ->
         log.debug "nothing to do, waiting 10 MIN"
         setTimeout Scheduler.doNext, 10 * MIN
 
-Scheduler.refreshNow = (mailbox, callback) ->
+Scheduler.refreshNow = (mailbox, deep, callback) ->
 
     isSameBoxRefresh = (processus) ->
         processus instanceof MailboxRefresh and processus.mailbox is mailbox
@@ -98,7 +98,7 @@ Scheduler.refreshNow = (mailbox, callback) ->
         if alreadyScheduled
             queued = _.without queued, alreadyScheduled
 
-        refresh = new MailboxRefresh {mailbox}
+        refresh = new MailboxRefresh {mailbox, deep}
         Scheduler.schedule refresh, Scheduler.ASAP, callback
 
 
