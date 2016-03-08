@@ -251,7 +251,7 @@ module.exports = AccountConfigMain = React.createClass
     # Attempt to discover default values depending on target server.
     # The target server is guessed by the email given by the user.
     doDiscovery: (domain) ->
-        if domain?.size > 3 and domain isnt @_lastDiscovered
+        if domain?.length > 3 and domain isnt @_lastDiscovered
             if @discoverTimeout
                 @nextDiscover = domain
             else
