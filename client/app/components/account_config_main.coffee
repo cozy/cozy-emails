@@ -48,7 +48,6 @@ module.exports = AccountConfigMain = React.createClass
         return state =
             imapAdvanced: false
             smtpAdvanced: false
-            displayGMAILSecurity: false
 
     makeLinkState: (field) ->
         cached = (@__cacheLS ?= {})[field]
@@ -139,7 +138,8 @@ module.exports = AccountConfigMain = React.createClass
 
             @buildInput 'accountType', className: 'hidden'
 
-            if @state.displayGMAILSecurity
+            # Display gmail warning if IMAP server is Gmail.
+            if @props.editedAccount.get('imapServer') in GOOGLE_IMAP
                 @_renderGMAILSecurity()
             unless isOauth
                 @_renderReceivingServer()
@@ -201,14 +201,15 @@ module.exports = AccountConfigMain = React.createClass
         url = "https://www.google.com/settings/security/lesssecureapps"
         login = @props.editedAccount.get('login')
         FieldSet text: t('gmail security tile'),
-            p null, t('gmail security body', {login})
-            p null,
-                a
-                    target: '_blank',
-                    href: url
+            p null, t 'gmail security body'
+            ul null,
+                li null,
                     t 'gmail security link'
-            p null, t('gmail security body 2')
+                    a target: '_blank', href: url, url
+                li null, t 'gmail security ensure account', {login}
+                li null, t 'gmail security allow less secure'
             p null,
+                t('gmail security body 2'),
                 a
                     target: '_blank'
                     href: 'https://accounts.google.com/DisplayUnlockCaptcha'
@@ -262,9 +263,6 @@ module.exports = AccountConfigMain = React.createClass
         AccountActionCreator.discover domain, (err, provider) =>
             unless err
                 infos = discovery2Fields provider
-                # Display gmail warning if selected provider is Gmail.
-                isGmail = infos.imapServer in GOOGLE_IMAP
-                @setState displayGMAILSecurity: isGmail
 
                 @props.requestChange infos
 
