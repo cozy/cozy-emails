@@ -77,7 +77,7 @@ module.exports = Compose = React.createClass
 
     # Update state with store values.
     _setStateFromStores: (message) ->
-        if not @isMounted() or message._id isnt @state.id
+        if not @isMounted() or message?._id isnt @state.id
             return
 
         _difference = (obj0, obj1) ->
@@ -94,7 +94,7 @@ module.exports = Compose = React.createClass
 
     componentDidMount: ->
         # Listen to Stores changes
-        MessageStore.addListener 'fetch:success', @_setStateFromStores
+        MessageStore.addListener 'change', @_setStateFromStores
 
         # scroll compose window into view
         @getDOMNode().scrollIntoView()
@@ -127,14 +127,14 @@ module.exports = Compose = React.createClass
         delete @props.lastUpdate
 
     componentWillUnmount: ->
-        MessageStore.removeListener 'fetch:success', @_setStateFromStores
+        MessageStore.removeListener 'change', @_setStateFromStores
 
         # Stop listening to focus
         @removeFocusListener()
 
         # Save Message into Draft
         @closeSaveDraft @state,
-            hasChanged: @hasChanged(@props, @state)
+            hasChanged: @hasChanged(@props,  @state)
             silent: true
 
     handleFocus: ->

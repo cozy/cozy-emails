@@ -284,7 +284,7 @@ class MessageStore extends Store
 
         handle ActionTypes.RECEIVE_RAW_MESSAGE, (message) ->
             onReceiveRawMessage message
-            @emit 'fetch:success', message
+            @emit 'change', message
 
         handle ActionTypes.RECEIVE_RAW_MESSAGE_REALTIME, (message) ->
             onReceiveRawMessage message
