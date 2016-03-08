@@ -588,7 +588,7 @@ class MessageStore extends Store
             return _conversationMemoize
 
         messageID = param.messageID or @getCurrentID()
-        conversationID = param.conversationID
+        conversationID = param.conversationID or @getByID(messageID)?.get 'conversationID'
         messages = _messagesWithInFlights()
 
         # Remove selected messages
@@ -606,13 +606,18 @@ class MessageStore extends Store
         if param.type is 'message' and not _conversationMemoize.size
             messages = _currentMessages
 
-        getMessage = ->
-            index0 = messages.toArray().findIndex (message) ->
-                if param.conversationID isnt 'undefined'
-                    return param.conversationID is message.get 'conversationID'
-                return messageID is message.get 'id'
-            index = param.transform index0
-            messages.get index
+        getMessage = =>
+            _newMessage = (index) ->
+                index0 = param.transform index
+                messages?.get(index0)
+
+            index0 = messages.toArray().findIndex (message, index) ->
+                if conversationID is message?.get 'conversationID'
+                    if _newMessage(index)?.get('conversationID') isnt conversationID
+                        return true
+
+            _newMessage index0
+
 
         # Change Conversation
         return Immutable.Map getMessage()
