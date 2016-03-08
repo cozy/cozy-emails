@@ -7,7 +7,6 @@ ComposeEditor  = require './compose_editor'
 ComposeToolbox = require './compose_toolbox'
 FilePicker     = require './file_picker'
 MailsInput     = require './mails_input'
-
 AccountPicker = require './account_picker'
 
 AccountStore = require '../stores/account_store'
@@ -51,22 +50,30 @@ module.exports = Compose = React.createClass
 
     getDefaultProps: ->
         layout: 'full'
-        prefixKey: 'new'
 
     getInitialState: ->
-        state = MessageUtils.createBasicMessage @props
+        @getStateFromStores()
 
-        # TODO : prefixKey should be replaced by state.id
-        # when new message would have a default id
-        @props.prefixKey = state.id if state.id
+    getStateFromStores: ->
+        props = _.clone @props
 
-        state
+        # Get Message
+        unless props.message
+            props.message = MessageStore.getByID props.messageID
+
+        # Get Reply message
+        if _.isString props.inReplyTo
+            id = props.inReplyTo
+            if (message = MessageStore.getByID id) and message.size
+                message.set 'id', id
+                props.inReplyTo = message
+        MessageUtils.createBasicMessage props
 
     isNew: ->
         not @state.conversationID
 
     getChildKey: (name) ->
-        name + '-' + @props.prefixKey
+        'message-' + (@state.id or 'new') + '-' + name
 
     shouldComponentUpdate: (nextProps, nextState) ->
         not _.isEqual nextState, @state
@@ -78,7 +85,29 @@ module.exports = Compose = React.createClass
                 nextState.text = MessageUtils.cleanReplyText nextState.html
                 nextState.html = MessageUtils.wrapReplyHtml nextState.html
 
+    # Update state with store values.
+    _setStateFromStores: (message) ->
+        isMessage = message?._id is @state.id
+        isReplyTo = message?._id is @props.inReplyTo
+        if not @isMounted() or (not isMessage and not isReplyTo)
+            return
+
+        _difference = (obj0, obj1) ->
+            result = {}
+            _.filter obj0, (value, key) ->
+                unless _.isEqual value, obj1[key]
+                    result[key] = value
+            result
+
+        nextState = @getStateFromStores()
+        changes = _difference nextState, @state
+        unless _.isEmpty changes
+            @setState changes
+
     componentDidMount: ->
+        # Listen to Stores changes
+        MessageStore.addListener 'change', @_setStateFromStores
+
         # scroll compose window into view
         @getDOMNode().scrollIntoView()
 
@@ -110,12 +139,14 @@ module.exports = Compose = React.createClass
         delete @props.lastUpdate
 
     componentWillUnmount: ->
+        MessageStore.removeListener 'change', @_setStateFromStores
+
         # Stop listening to focus
         @removeFocusListener()
 
         # Save Message into Draft
         @closeSaveDraft @state,
-            hasChanged: @hasChanged(@props, @state)
+            hasChanged: @hasChanged(@props,  @state)
             silent: true
 
     handleFocus: ->
@@ -319,7 +350,7 @@ module.exports = Compose = React.createClass
     # conversation ID and message ID. These infor are collected via current
     # selection and message information.
     finalRedirect: ->
-        if @props.inReplyTo?
+        if @props.inReplyTo? and not _.isString @props.inReplyTo
             conversationID = @state.conversationID
             accountID = @props.selectedAccountID
             messageID = @state.id
@@ -424,6 +455,7 @@ module.exports = Compose = React.createClass
                 success(error, message) if _.isFunction success
                 return
 
+            @state.mailboxIDs = message.mailboxIDs
             @props.lastUpdate = message.date
 
             # Refresh URL

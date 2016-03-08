@@ -193,6 +193,9 @@ module.exports.send = (req, res, next) ->
     isDraft = req.body.isDraft
     delete req.body.isDraft
 
+    message = req.body
+    message.html = message.html.trim() if message.composeInHTML
+
     proc = new SaveOrSendMessage
         account: ramStore.getAccount req.body.accountID
         previousState: req.message # can be null

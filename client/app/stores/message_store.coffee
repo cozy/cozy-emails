@@ -284,7 +284,7 @@ class MessageStore extends Store
 
         handle ActionTypes.RECEIVE_RAW_MESSAGE, (message) ->
             onReceiveRawMessage message
-            @emit 'change'
+            @emit 'change', message
 
         handle ActionTypes.RECEIVE_RAW_MESSAGE_REALTIME, (message) ->
             onReceiveRawMessage message
@@ -589,7 +589,6 @@ class MessageStore extends Store
 
         messageID = param.messageID or @getCurrentID()
         conversationID = param.conversationID
-
         messages = _messagesWithInFlights()
 
         # Remove selected messages
