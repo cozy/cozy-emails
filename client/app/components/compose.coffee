@@ -466,7 +466,8 @@ module.exports = Compose = React.createClass
                     action: 'compose.edit'
                     direction: 'first'
                     fullWidth: true
-                    parameters: @state.id
+                    parameters:
+                        messageID: @state.id
                 return
 
             success(error, message) if _.isFunction success
