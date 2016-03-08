@@ -222,10 +222,14 @@ module.exports.parseSendForm = function(req, res, next) {
 };
 
 module.exports.send = function(req, res, next) {
-  var isDraft, proc;
+  var isDraft, message, proc;
   log.debug("send");
   isDraft = req.body.isDraft;
   delete req.body.isDraft;
+  message = req.body;
+  if (message.composeInHTML) {
+    message.html = message.html.trim();
+  }
   proc = new SaveOrSendMessage({
     account: ramStore.getAccount(req.body.accountID),
     previousState: req.message,
