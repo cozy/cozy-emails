@@ -129,7 +129,6 @@ module.exports = MessageUtils =
             attachments     : Immutable.List()
             accountID       : account.id
             isDraft         : true
-            textOnly        : ''
             from            : [
                     name: account.name
                     address: account.address
