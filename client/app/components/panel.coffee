@@ -9,7 +9,6 @@ SearchResult   = require './search_result'
 
 # React Mixins
 RouterMixin          = require '../mixins/router_mixin'
-StoreWatchMixin      = require '../mixins/store_watch_mixin'
 TooltipRefesherMixin = require '../mixins/tooltip_refresher_mixin'
 
 # Flux stores
@@ -34,6 +33,12 @@ module.exports = Panel = React.createClass
     # Build initial state from store values.
     getInitialState: ->
         @getStateFromStores()
+
+    componentDidMount: ->
+        MessageStore.addListener 'change', @fetchMessageComplete
+
+    componentWillUnmount: ->
+        MessageStore.removeListener 'change', @fetchMessageComplete
 
     render: ->
         # -- Generates a list of messages for a given account and mailbox
@@ -134,7 +139,6 @@ module.exports = Panel = React.createClass
         # Generates the edit draft composition form.
         else if @props.action is 'edit' or
                 @props.action is 'compose.edit'
-
             component = Compose _.extend options,
                 key: options.key + '-' + @props.messageID
                 messageID: @props.messageID
@@ -162,18 +166,15 @@ module.exports = Panel = React.createClass
     # Configure the component depending on the given action.
     # Returns a spinner if the message is not available.
     getReplyComponent: (options) ->
-        message = MessageStore.getByID @props.messageID
-
-        if not(@state.isLoadingReply) or message?
-            message = MessageStore.getByID @props.messageID
-            message.set 'id', @props.messageID
-            options.inReplyTo = message
-            component = Compose options
-        else
-            component = Spinner()
-
+        options.id = @props.messageID
+        options.inReplyTo = @props.messageID
+        component = Compose options
         return component
 
+    # Update state with store values.
+    fetchMessageComplete: (message) ->
+        return unless @isMounted()
+        @setState isLoadingReply: false
 
     getStateFromStores: ->
         return {
