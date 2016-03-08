@@ -7,7 +7,6 @@ ComposeEditor  = require './compose_editor'
 ComposeToolbox = require './compose_toolbox'
 FilePicker     = require './file_picker'
 MailsInput     = require './mails_input'
-
 AccountPicker = require './account_picker'
 
 AccountStore = require '../stores/account_store'
@@ -51,22 +50,20 @@ module.exports = Compose = React.createClass
 
     getDefaultProps: ->
         layout: 'full'
-        prefixKey: 'new'
 
     getInitialState: ->
-        state = MessageUtils.createBasicMessage @props
+        @getStateFromStores()
 
-        # TODO : prefixKey should be replaced by state.id
-        # when new message would have a default id
-        @props.prefixKey = state.id if state.id
-
-        state
+    getStateFromStores: ->
+        props = _.clone @props
+        props.message = MessageStore.getByID props.messageID
+        MessageUtils.createBasicMessage props
 
     isNew: ->
         not @state.conversationID
 
     getChildKey: (name) ->
-        name + '-' + @props.prefixKey
+        'message-' + (@state.id or 'new') + '-' + name
 
     shouldComponentUpdate: (nextProps, nextState) ->
         not _.isEqual nextState, @state
@@ -78,7 +75,27 @@ module.exports = Compose = React.createClass
                 nextState.text = MessageUtils.cleanReplyText nextState.html
                 nextState.html = MessageUtils.wrapReplyHtml nextState.html
 
+    # Update state with store values.
+    _setStateFromStores: (message) ->
+        if not @isMounted() or message?._id isnt @state.id
+            return
+
+        _difference = (obj0, obj1) ->
+            result = {}
+            _.filter obj0, (value, key) ->
+                unless value is obj1[key]
+                    result[key] = value
+            result
+
+        nextState = @getStateFromStores()
+        changes = _difference nextState, @state
+        unless _.isEmpty changes
+            @setState nextState
+
     componentDidMount: ->
+        # Listen to Stores changes
+        MessageStore.addListener 'change', @_setStateFromStores
+
         # scroll compose window into view
         @getDOMNode().scrollIntoView()
 
@@ -110,12 +127,14 @@ module.exports = Compose = React.createClass
         delete @props.lastUpdate
 
     componentWillUnmount: ->
+        MessageStore.removeListener 'change', @_setStateFromStores
+
         # Stop listening to focus
         @removeFocusListener()
 
         # Save Message into Draft
         @closeSaveDraft @state,
-            hasChanged: @hasChanged(@props, @state)
+            hasChanged: @hasChanged(@props,  @state)
             silent: true
 
     handleFocus: ->
@@ -424,6 +443,7 @@ module.exports = Compose = React.createClass
                 success(error, message) if _.isFunction success
                 return
 
+            @state.mailboxIDs = message.mailboxIDs
             @props.lastUpdate = message.date
 
             # Refresh URL
