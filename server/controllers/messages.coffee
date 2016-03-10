@@ -7,6 +7,8 @@ _ = require 'lodash'
 async = require 'async'
 querystring = require 'querystring'
 multiparty = require 'multiparty'
+crlf = require 'crlf-helper'
+minify = require('html-minifier').minify
 stream_to_buffer = require '../utils/stream_to_array'
 log = require('../utils/logging')(prefix: 'controllers:mesage')
 {normalizeMessageID} = require('../utils/jwz_tools')
@@ -194,12 +196,30 @@ module.exports.send = (req, res, next) ->
     delete req.body.isDraft
 
     message = req.body
-    message.html = message.html.trim() if message.composeInHTML
+    if message.html
+        minifierOpts =
+            removeComments: true
+            removeCommentsFromCDATA: true
+            collapseWhitespace: true
+            collapseBooleanAttributes: true
+            removeRedundantAttributes: true
+            removeEmptyAttributes: true
+            removeScriptTypeAttributes: true
+            removeStyleLinkTypeAttributes: true
+            removeOptionalTags: true
+            removeEmptyElements: true
+            keepClosingSlash: true
+            minifyJS: true
+            minifyCSS: true
+        message.html = minify message.html, minifierOpts
+
+    if message.text
+        message.text = crlf.setLineEnding message.text.trim(), 'CRLF'
 
     proc = new SaveOrSendMessage
         account: ramStore.getAccount req.body.accountID
         previousState: req.message # can be null
-        message: req.body
+        message: message
         newAttachments: req.files
         isDraft: isDraft
 
