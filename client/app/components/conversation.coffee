@@ -46,8 +46,6 @@ module.exports = React.createClass
             length = MessageStore.getConversationsLength().get conversationID
             selectedMailboxID ?= Object.keys(message.get('mailboxIDs'))[0]
 
-        displayConvs = AccountStore.hasConversationEnabled selectedMailboxID
-
         nextState =
             accounts             : AccountStore.getAll()
             mailboxes            : AccountStore.getSelectedMailboxes()
