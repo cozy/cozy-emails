@@ -34,7 +34,7 @@ module.exports = ActionsToolbarMessagesList = React.createClass
         Object.keys(@props.selected).length > 0
 
 
-    _getSelectedAndMode: ->
+    _getSelectedAndMode: (applyToConversation) ->
         selected = Object.keys @props.selected
         count = selected.length
         if selected.length is 0
@@ -47,7 +47,7 @@ module.exports = ActionsToolbarMessagesList = React.createClass
                 if (message = @props.messages.find isMessage)
                     return message.get('conversationID')
 
-            return {count, conversationIDs}
+            return {count, conversationIDs, applyToConversation}
 
 
     render: ->
@@ -71,8 +71,8 @@ module.exports = ActionsToolbarMessagesList = React.createClass
                 onConversationMove:   @onConversationMove
 
 
-    onDelete: ->
-        return unless options = @_getSelectedAndMode()
+    onDelete: (applyToConversation) ->
+        return unless options = @_getSelectedAndMode applyToConversation
 
         doDelete = =>
             # Get next focus conversation
@@ -99,7 +99,10 @@ module.exports = ActionsToolbarMessagesList = React.createClass
         unless @props.settings.get 'messageConfirmDelete'
             doDelete()
         else
-            msg = 'list delete conv confirm'
+            if options.applyToConversation
+                msg = 'list delete conv confirm'
+            else
+                msg = 'list delete confirm'
             modal =
                 title       : t 'app confirm delete'
                 subtitle    : t msg, smart_count: options.count
@@ -110,8 +113,8 @@ module.exports = ActionsToolbarMessagesList = React.createClass
                     LayoutActionCreator.hideModal()
             LayoutActionCreator.displayModal modal
 
-    onMove: (to) ->
-        return unless options = @_getSelectedAndMode()
+    onMove: (to, applyToConversation) ->
+        return unless options = @_getSelectedAndMode applyToConversation
 
         from = @props.mailboxID
 
@@ -123,8 +126,8 @@ module.exports = ActionsToolbarMessagesList = React.createClass
             @props.afterAction()
 
 
-    onMark: (flag) ->
-        return unless options = @_getSelectedAndMode()
+    onMark: (flag, applyToConversation) ->
+        return unless options = @_getSelectedAndMode applyToConversation
         MessageActionCreator.mark options, flag
 
 
