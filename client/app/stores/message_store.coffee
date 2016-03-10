@@ -581,18 +581,22 @@ class MessageStore extends Store
     * @return {List}
     ###
     getConversation: (param={}) ->
+        # Update global context
         if param.conversationID?
             @setConversation param.conversationID
 
+        # If no specific action is precized
+        # return all contextual conversations
         unless _.isFunction param.transform
             return _conversationMemoize
 
         messageID = param.messageID or @getCurrentID()
         conversationID = param.conversationID or @getByID(messageID)?.get 'conversationID'
-
         messages = _messagesWithInFlights()
 
-        # Remove selected messages
+        # In this case, we just want
+        # next/previous message from a selection
+        # then remove selected messages from the list
         if param.conversationIDs
             conversationID = param.conversationIDs[0]
             messages = messages
