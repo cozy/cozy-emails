@@ -37,6 +37,8 @@ module.exports = ActionsToolbarMessagesList = React.createClass
     _getSelectedAndMode: (applyToConversation) ->
         selected = Object.keys @props.selected
         count = selected.length
+        applyToConversation = Boolean applyToConversation
+
         if selected.length is 0
             LayoutActionCreator.alertError t 'list mass no message'
             return false
