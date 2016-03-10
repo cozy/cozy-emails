@@ -450,10 +450,7 @@ class MessageStore extends Store
     dedupConversation = ->
         conversationIDs = []
         return filter = (message) ->
-            conversationID = message.get 'conversationID'
-            if conversationID and conversationID in conversationIDs
-                false
-            else
+            unless (conversationID = message.get 'conversationID') in conversationIDs
                 conversationIDs.push conversationID
                 return true
 
@@ -483,31 +480,29 @@ class MessageStore extends Store
     *
     * @return {Array}
     ###
-    getMessagesToDisplay: (mailboxID, useConversations) ->
-        conversationIDs = []
-
-        sequence = _messagesWithInFlights()
-        sequence = sequence.filter inMailbox mailboxID
-
-        filter = _getFilter()
-        if filter.type is 'flag'
-            sequence = sequence.filter _matchFlag
-
-        else if filter.type is 'date'
-            sequence = sequence.filter _matchRangeDate
-
+    getMessagesToDisplay: (mailboxID) ->
+        return _currentMessages unless mailboxID
 
         # We dont filter for type from and dest because it is
         # complicated by collation and name vs address.
         # Instead we clear the message, see QUERY_PARAMETER_CHANGED handler.
 
-        if useConversations
-            sequence = sequence.filter dedupConversation()
+        # Get Messages from Mailbox
+        sequence = _messagesWithInFlights()
+        sequence = sequence.filter inMailbox mailboxID
 
-
+        # Apply List.Filters
+        filter = _getFilter()
+        if filter.type is 'flag'
+            sequence = sequence.filter _matchFlag
+        else if filter.type is 'date'
+            sequence = sequence.filter _matchRangeDate
         sequence = sequence.sort getSortFunction filter.field, filter.order
-        _currentMessages = sequence.toOrderedMap()
 
+        # Get uniq conversations
+        sequence = sequence.filter dedupConversation()
+
+        _currentMessages = sequence.toOrderedMap()
         return _currentMessages
 
 
@@ -586,7 +581,7 @@ class MessageStore extends Store
 
         messageID = param.messageID or @getCurrentID()
         conversationID = param.conversationID or @getByID(messageID)?.get 'conversationID'
-        messages = _messagesWithInFlights()
+        messages = @getMessagesToDisplay()
 
         # In this case, we just want
         # next/previous message from a selection
@@ -600,11 +595,6 @@ class MessageStore extends Store
                     return index is -1
                 .toList()
 
-        # If Last message of conversation
-        # Get next conversation
-        if param.type is 'message' and not _conversationMemoize.size
-            messages = _currentMessages
-
         getMessage = =>
             _getMessage = (index) ->
                 index0 = param.transform index
@@ -615,7 +605,7 @@ class MessageStore extends Store
             # TODO : regroup message by its conversationID
             # and use messages.find instead with a simple test
             # FIXME : inconsistency between the 2 results, see why?
-            index0 = messages.findIndex (message, index) ->
+            index0 = messages.toArray().findIndex (message, index) ->
                 isSameMessage = conversationID is message?.get 'conversationID'
                 isNextSameConversation = _getMessage(index)?.get('conversationID') isnt conversationID
                 return isSameMessage and isNextSameConversation
