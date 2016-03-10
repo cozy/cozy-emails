@@ -108,8 +108,7 @@ module.exports = MessageItem = React.createClass
                         div className: 'extras',
                             if message.get 'hasAttachments'
                                 i className: 'attachments fa fa-paperclip'
-                            if @props.displayConversations and
-                               @props.conversationLengths > 1
+                            if @props.conversationLengths > 1
                                 span className: 'conversation-length',
                                     "#{@props.conversationLengths}"
                         div className: 'preview ellipsable',
@@ -158,7 +157,7 @@ module.exports = MessageItem = React.createClass
             action = 'edit'
         else
             conversationID = @props.message.get 'conversationID'
-            if conversationID? and @props.displayConversations
+            if conversationID?
                 action = 'conversation'
                 params.conversationID = conversationID
             else
@@ -197,11 +196,7 @@ module.exports = MessageItem = React.createClass
     onDragStart: (event) ->
         event.stopPropagation()
         data = mailboxID: @props.mailboxID
-
-        if @props.displayConversations
-            data.conversationID = event.currentTarget.dataset.conversationId
-        else
-            data.messageID = event.currentTarget.dataset.messageId
+        data.conversationID = event.currentTarget.dataset.conversationId
 
         event.dataTransfer.setData 'text', JSON.stringify(data)
         event.dataTransfer.effectAllowed = 'move'

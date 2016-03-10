@@ -54,10 +54,8 @@ module.exports = MessageList = React.createClass
         account   = AccountStore.getByID accountID
         role = AccountStore.getMailboxRole account, mailboxID
         settings = SettingsStore.get()
-        displayConvs = !!(settings.get('displayConversation') and
-        role not in CONVERSATION_DISABLED)
         mailbox   = account.get('mailboxes').get mailboxID
-        messages  = MessageStore.getMessagesToDisplay mailboxID, displayConvs
+        messages  = MessageStore.getMessagesToDisplay mailboxID
 
         # select first conversation to allow navigation to start
         conversationLengths = MessageStore.getConversationsLength()
@@ -82,7 +80,6 @@ module.exports = MessageList = React.createClass
             isTrash              : role is 'trashMailbox'
             conversationLengths  : conversationLengths
             fullscreen           : LayoutStore.isPreviewFullscreen()
-            displayConversations : displayConvs
 
     # for SelectionManagerMixin
     getSelectables: (nil, state = {}) ->
@@ -120,7 +117,6 @@ module.exports = MessageList = React.createClass
                 edited:               @hasSelected()
                 selected:             @getSelected()
                 allSelected:          @allSelected()
-                displayConversations: @state.displayConversations
                 toggleAll:            @toggleAll
                 afterAction:          @afterMessageAction
                 queryParams:          @props.queryParams
@@ -159,7 +155,6 @@ module.exports = MessageList = React.createClass
                         edited: @hasSelected()
                         selected: @getSelected()
                         allSelected: @allSelected()
-                        displayConversations: @state.displayConversations
                         isTrash: @state.isTrash
                         ref: 'listBody'
                         onSelect: @onMessageSelectionChange

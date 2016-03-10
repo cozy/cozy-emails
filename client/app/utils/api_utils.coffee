@@ -100,9 +100,6 @@ module.exports = Utils =
     messageNavigate: (direction, inConv) ->
         return unless onMessageList()
 
-        conv = inConv and SettingsStore.get('displayConversation') and
-            SettingsStore.get('displayPreview')
-
         # when key top is pressed, direction=prev
         # when key bottom is pressed, direction=next
         # strange (?!)
@@ -135,8 +132,8 @@ module.exports = Utils =
         # return if second panel isn't already open
         if force is false and not window.router.current.secondPanel?
             return
-        conversationID = message.get 'conversationID'
-        if SettingsStore.get('displayConversation') and conversationID?
+
+        if (conversationID = message.get 'conversationID')?
             action = 'conversation'
             params =
                 messageID: message.get 'id'
@@ -191,12 +188,8 @@ module.exports = Utils =
             return
 
         # Display 'delete' modal
-        if (conversation = settings.get 'displayConversation')
-            confirmMessage = t 'list delete conv confirm',
-                smart_count: 1
-        else
-            confirmMessage = t 'list delete confirm',
-                smart_count: 1
+        confirmMessage = t 'list delete conv confirm',
+            smart_count: 1
         modal =
             title       : t 'app confirm delete'
             subtitle    : confirmMessage

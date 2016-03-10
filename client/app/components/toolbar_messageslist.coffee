@@ -27,7 +27,6 @@ module.exports = ToolbarMessagesList = React.createClass
         edited:               React.PropTypes.bool.isRequired
         selected:             React.PropTypes.object.isRequired
         allSelected:          React.PropTypes.bool.isRequired
-        displayConversations: React.PropTypes.bool
         toggleAll:            React.PropTypes.func.isRequired
         afterAction:          React.PropTypes.func
 
@@ -96,7 +95,6 @@ module.exports = ToolbarMessagesList = React.createClass
                     mailboxes:            @props.mailboxes
                     messages:             @props.messages
                     selected:             @props.selected
-                    displayConversations: @props.displayConversations
                     afterAction:          @props.afterAction
             else unless @props.noFilters
                 FiltersToolbarMessagesList

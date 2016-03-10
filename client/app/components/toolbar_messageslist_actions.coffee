@@ -27,7 +27,6 @@ module.exports = ActionsToolbarMessagesList = React.createClass
         mailboxes:            React.PropTypes.object.isRequired
         messages:             React.PropTypes.object.isRequired
         selected:             React.PropTypes.object.isRequired
-        displayConversations: React.PropTypes.bool.isRequired
         afterAction:          React.PropTypes.func
 
 
@@ -35,17 +34,12 @@ module.exports = ActionsToolbarMessagesList = React.createClass
         Object.keys(@props.selected).length > 0
 
 
-    _getSelectedAndMode: (applyToConversation) ->
+    _getSelectedAndMode: ->
         selected = Object.keys @props.selected
         count = selected.length
-        applyToConversation = Boolean applyToConversation
-        applyToConversation ?= @props.displayConversations
         if selected.length is 0
             LayoutActionCreator.alertError t 'list mass no message'
             return false
-
-        else if not applyToConversation
-            return {count, messageIDs: selected, applyToConversation}
 
         else
             conversationIDs = selected.map (id) =>
@@ -53,7 +47,7 @@ module.exports = ActionsToolbarMessagesList = React.createClass
                 if (message = @props.messages.find isMessage)
                     return message.get('conversationID')
 
-            return {count, conversationIDs, applyToConversation}
+            return {count, conversationIDs}
 
 
     render: ->
@@ -67,17 +61,9 @@ module.exports = ActionsToolbarMessagesList = React.createClass
 
                 i className: 'fa fa-trash-o'
 
-            unless @props.displayConversations
-                ToolboxMove
-                    ref:       'listToolboxMove'
-                    mailboxes: @props.mailboxes
-                    onMove:    @onMove
-                    direction: 'left'
-
             ToolboxActions
                 direction:            'left'
-                mode: if @props.displayConversations then 'conversation' \
-                else 'message'
+                mode: 'conversation'
                 mailboxes:            @props.mailboxes
                 onMark:               @onMark
                 onConversationDelete: @onConversationDelete
@@ -85,8 +71,8 @@ module.exports = ActionsToolbarMessagesList = React.createClass
                 onConversationMove:   @onConversationMove
 
 
-    onDelete: (applyToConversation) ->
-        return unless options = @_getSelectedAndMode applyToConversation
+    onDelete: ->
+        return unless options = @_getSelectedAndMode()
 
         doDelete = =>
             # Get next focus conversation
@@ -113,11 +99,7 @@ module.exports = ActionsToolbarMessagesList = React.createClass
         unless @props.settings.get 'messageConfirmDelete'
             doDelete()
         else
-            if options.applyToConversation
-                msg = 'list delete conv confirm'
-            else
-                msg = 'list delete confirm'
-
+            msg = 'list delete conv confirm'
             modal =
                 title       : t 'app confirm delete'
                 subtitle    : t msg, smart_count: options.count
@@ -128,8 +110,8 @@ module.exports = ActionsToolbarMessagesList = React.createClass
                     LayoutActionCreator.hideModal()
             LayoutActionCreator.displayModal modal
 
-    onMove: (to, applyToConversation) ->
-        return unless options = @_getSelectedAndMode(applyToConversation)
+    onMove: (to) ->
+        return unless options = @_getSelectedAndMode()
 
         from = @props.mailboxID
 
@@ -141,8 +123,8 @@ module.exports = ActionsToolbarMessagesList = React.createClass
             @props.afterAction()
 
 
-    onMark: (flag, applyToConversation) ->
-        return unless options = @_getSelectedAndMode(applyToConversation)
+    onMark: (flag) ->
+        return unless options = @_getSelectedAndMode()
         MessageActionCreator.mark options, flag
 
 

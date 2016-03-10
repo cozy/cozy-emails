@@ -26,8 +26,7 @@ module.exports = MessageListBody = React.createClass
         return should
 
     _isActive: (id, cid) ->
-        @props.messageID is id or
-        @props.displayConversations and cid? and @props.conversationID is cid
+        @props.messageID is id or cid? and @props.conversationID is cid
 
     render: ->
         ul className: 'list-unstyled', ref: 'messageList',
@@ -36,26 +35,25 @@ module.exports = MessageListBody = React.createClass
                     id = message.get('id')
                     cid = message.get('conversationID')
 
-                    ["msg-#{key}", MessageItem
-                        message: message,
-                        accountID: @props.accountID,
-                        mailboxID: @props.mailboxID,
-                        accountLabel: @props.accountLabel,
-                        mailboxes: @props.mailboxes,
-                        conversationLengths: @props.conversationLengths?.get(cid),
-                        key: key,
-                        isActive: @_isActive(id, cid),
-                        edited: @props.edited,
-                        settings: @props.settings,
-                        selected: @props.selected[id]?,
-                        login: @props.login
-                        displayConversations: @props.displayConversations
-                        isTrash: @props.isTrash
-                        ref: 'messageItem'
-                        onSelect: (val) =>
-                            @props.onSelect id, val
-                    ]
-                .toArray()
+                ["msg-#{key}", MessageItem
+                    message: message,
+                    accountID: @props.accountID,
+                    mailboxID: @props.mailboxID,
+                    accountLabel: @props.accountLabel,
+                    mailboxes: @props.mailboxes,
+                    conversationLengths: @props.conversationLengths?.get(cid),
+                    key: key,
+                    isActive: @_isActive(id, cid),
+                    edited: @props.edited,
+                    settings: @props.settings,
+                    selected: @props.selected[id]?,
+                    login: @props.login
+                    isTrash: @props.isTrash
+                    ref: 'messageItem'
+                    onSelect: (val) =>
+                        @props.onSelect id, val
+                ]
+            .toJS()
 
     componentDidMount: ->
         @_onMount()
