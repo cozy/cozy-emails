@@ -51,7 +51,7 @@ module.exports = MessageList = React.createClass
         account   = AccountStore.getByID accountID
         role = AccountStore.getMailboxRole account, mailboxID
         settings = SettingsStore.get()
-        displayConvs = !!(settings.get('displayConversations') and
+        displayConvs = !!(settings.get('displayConversation') and
         role not in CONVERSATION_DISABLED)
         mailbox   = account.get('mailboxes').get mailboxID
         messages  = MessageStore.getMessagesToDisplay mailboxID, displayConvs
