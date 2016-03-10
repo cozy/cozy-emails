@@ -41,18 +41,24 @@ module.exports = LayoutActionCreator =
             type: ActionTypes.RESIZE_PREVIEW_PANE
             value: null
 
-    toggleFullscreen: ->
-        type = if LayoutStore.isPreviewFullscreen()
-            ActionTypes.MINIMIZE_PREVIEW_PANE
-        else
+    toggleFullscreen: (value) ->
+        # Get contextual value if
+        # no value is in arguments
+        unless typeof value is 'boolean'
+            value = not LayoutStore.isPreviewFullscreen()
+
+        type = if value
             ActionTypes.MAXIMIZE_PREVIEW_PANE
+        else
+            ActionTypes.MINIMIZE_PREVIEW_PANE
 
         AppDispatcher.handleViewAction
             type: type
 
-    minimizePreview: ->
+    focus: (path) ->
         AppDispatcher.handleViewAction
-            type: ActionTypes.MINIMIZE_PREVIEW_PANE
+            type: ActionTypes.FOCUS
+            value: path
 
     refresh: ->
         AppDispatcher.handleViewAction
@@ -107,15 +113,15 @@ module.exports = LayoutActionCreator =
 
     getDefaultRoute: ->
         # if there is no account, we display the configAccount
-        if AccountStore.getAll().length is 0 then 'account.new'
+        if AccountStore.getAll().size is 0 then 'account.new'
         # else go directly to first account
         else 'account.mailbox.messages'
 
     showMessageList: (panelInfo) ->
         params = panelInfo.parameters
-        {accountID, mailboxID, filter, sort, before, after} = params
 
         # ensure the proper account is selected
+        {accountID, mailboxID} = params
         AccountActionCreator.ensureSelected accountID, mailboxID
 
         AppDispatcher.handleViewAction
@@ -137,8 +143,9 @@ module.exports = LayoutActionCreator =
         if search isnt '-'
             MessageActionCreator.fetchSearchResults accountID, search
 
-    showMessage: (panelInfo, direction) ->
+    showMessage: (panelInfo) ->
         {messageID} = panelInfo.parameters
+        return unless messageID
 
         message = MessageStore.getByID messageID
         if message?
@@ -163,26 +170,11 @@ module.exports = LayoutActionCreator =
         if not length? or length > 1
             MessageActionCreator.fetchConversation conversationID
 
-
-    showComposeNewMessage: (panelInfo, direction) ->
-        AccountActionCreator.selectDefaultIfNoneSelected()
-
     # Display compose widget but this time it's aimed to be pre-filled:
     # either with reply/forward or with draft information.
     showComposeMessage: (panelInfo, direction) ->
         AccountActionCreator.selectDefaultIfNoneSelected()
-
-        # If message is not there, it fetches it from server.
-        messageID = panelInfo.parameters.messageID
-        message = MessageStore.getByID messageID
-        unless message?
-            XHRUtils.fetchMessage messageID, (err, rawMessage) ->
-                if err?
-                    LayoutActionCreator.alertError err
-                else
-                    MessageActionCreator.receiveRawMessage rawMessage
-                    AccountActionCreator.selectAccountForMessage rawMessage
-
+        LayoutActionCreator.showMessage panelInfo
 
     showCreateAccount: (panelInfo, direction) ->
         AccountActionCreator.selectAccount null

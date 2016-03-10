@@ -36,7 +36,7 @@ module.exports = MailboxRefresh = (function(superClass) {
   };
 
   MailboxRefresh.prototype.initialize = function(options, callback) {
-    var account, mailbox;
+    var account, fastSupport, mailbox;
     this.mailbox = mailbox = options.mailbox;
     account = ramStore.getAccount(mailbox.accountID);
     this.shouldNotif = false;
@@ -47,7 +47,8 @@ module.exports = MailboxRefresh = (function(superClass) {
       return callback(null);
     }
     log.debug("refreshing box");
-    if (account.supportRFC4551 && mailbox.lastHighestModSeq) {
+    fastSupport = account.supportRFC4551 && mailbox.lastHighestModSeq;
+    if (fastSupport && !options.deep) {
       return this.refreshFast((function(_this) {
         return function(err) {
           if (err && err === MailboxRefreshFast.algorithmFailure || err === MailboxRefreshFast.tooManyMessages) {
@@ -62,7 +63,9 @@ module.exports = MailboxRefresh = (function(superClass) {
         };
       })(this));
     } else {
-      if (!account.supportRFC4551) {
+      if (options.deep) {
+        log.debug("force deep refresh");
+      } else if (!account.supportRFC4551) {
         log.debug("account doesnt support RFC4551");
       } else if (!mailbox.lastHighestModSeq) {
         log.debug("no highestmodseq, first refresh ?");

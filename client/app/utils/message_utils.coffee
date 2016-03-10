@@ -94,8 +94,8 @@ module.exports = MessageUtils =
 
     # Extract a reply address from a `message` object.
     getReplyToAddress: (message) ->
-        reply = message.get 'replyTo'
-        from = message.get 'from'
+        reply = message?.get 'replyTo'
+        from = message?.get 'from'
         if (reply? and reply.length isnt 0)
             return reply
         else
@@ -115,41 +115,57 @@ module.exports = MessageUtils =
     # It add appropriate headers to the message. It adds style tags when
     # required too.
     # It adds signature at the end of the zone where the user will type.
-    makeReplyMessage: (myAddress, inReplyTo, action, inHTML, signature) ->
+    createBasicMessage: (props) ->
+        account = props.accounts.get props.selectedAccountID
+        account =
+            id: props.selectedAccountID
+            name: account.get 'name'
+            address: account.get 'login'
+            signature: account.get 'signature'
+
         message =
-            composeInHTML: inHTML
-            attachments: Immutable.Vector.empty()
+            id              : props.messageID
+            composeInHTML   : props.settings.get 'composeInHTML'
+            attachments     : Immutable.List()
+            accountID       : account.id
+            isDraft         : true
+            from            : [
+                    name: account.name
+                    address: account.address
+                ]
 
+        # edition of an existing draft
+        if (_message = props.message)
+            props.action = ComposeActions.EDIT unless props.action
+            _.extend message, _message.toJS()
+            message.attachments = _message.get 'attachments'
+            delete props.message
+
+        # Format text
+        text = message.text or ''
+        html = message.html
+        if text? and not html? and message.composeInHTML
+            try
+                html = markdown.toHTML text
+            catch e
+                console.error "Error converting message to Markdown: #{e}"
+                html = "<div class='text'>#{text}</div>"
+
+        if html? and not text? and not message.composeInHTML
+            text = toMarkdown html
+
+        inReplyTo = props.inReplyTo
+        inReplyTo = null if inReplyTo and _.isString inReplyTo
         if inReplyTo
-            message.accountID = inReplyTo.get 'accountID'
-            message.conversationID = inReplyTo.get 'conversationID'
-            dateHuman = @formatReplyDate inReplyTo.get 'createdAt'
-            sender = @displayAddresses inReplyTo.get 'from'
+            replyID = inReplyTo.get 'id'
+            html = inReplyTo?.get 'html'
+            _.extend message,
+                inReplyTo: inReplyTo
+                references: (inReplyTo.get('references') or []).concat replyID
 
-            text = inReplyTo.get 'text'
-            html = inReplyTo.get 'html'
-
-            text = '' unless text? # Some message have no content, only attachements
-
-            if text? and not html? and inHTML
-                try
-                    html = markdown.toHTML text
-                catch e
-                    console.error "Error converting message to Markdown: #{e}"
-                    html = "<div class='text'>#{text}</div>"
-
-            if html? and not text? and not inHTML
-                text = toMarkdown html
-
-            message.inReplyTo  = [inReplyTo.get 'id']
-            message.references = inReplyTo.get('references') or []
-            message.references = message.references.concat message.inReplyTo
-
-        if signature? and signature.length > 0
-            isSignature = true
-        else
-            isSignature = false
-
+        isSignature = !!!_.isEmpty(signature = account.signature)
+        dateHuman = @formatReplyDate message.createdAt
+        sender = @displayAddresses message.from
         options = {
             message
             inReplyTo
@@ -160,9 +176,7 @@ module.exports = MessageUtils =
             signature
             isSignature
         }
-
-        switch action
-
+        switch props.action
             when ComposeActions.REPLY
                 @setMessageAsReply options
 
@@ -175,11 +189,7 @@ module.exports = MessageUtils =
             when null
                 @setMessageAsDefault options
 
-        # remove my address from dests
-        notMe = (dest) -> return dest.address isnt myAddress
-        message.to = message.to.filter notMe
-        message.cc = message.cc.filter notMe
-        return message
+        message
 
 
     # Build message to display in composer in case of a reply to a message:
@@ -206,7 +216,7 @@ module.exports = MessageUtils =
         message.cc = []
         message.bcc = []
         message.subject = @getReplySubject inReplyTo
-        message.text = separator + @generateReplyText(text) + "\n"
+        message.text = separator + @generateReplyText(inReplyTo) + "\n"
         message.html = """
         #{COMPOSE_STYLE}
         <p><br></p>
@@ -214,6 +224,7 @@ module.exports = MessageUtils =
 
         if isSignature
             @addSignature message, signature
+
         message.html += """
             <p>#{separator}<span class="originalToggle"> … </span></p>
             <blockquote style="#{QUOTE_STYLE}">#{html}</blockquote>
@@ -252,7 +263,7 @@ module.exports = MessageUtils =
         message.bcc = []
 
         message.subject = @getReplySubject inReplyTo
-        message.text = separator + @generateReplyText(text) + "\n"
+        message.text = separator + @generateReplyText(inReplyTo) + "\n"
         message.html = """
             #{COMPOSE_STYLE}
             <p><br></p>
@@ -363,7 +374,9 @@ module.exports = MessageUtils =
 
 
     # Generate reply text by adding `>` before each line of the given text.
-    generateReplyText: (text) ->
+    generateReplyText: (message) ->
+        unless (text = message?.get('text'))
+            return ''
         text = text.split '\n'
         res  = []
         text.forEach (line) ->
@@ -461,6 +474,25 @@ module.exports = MessageUtils =
 
         return text.substr 0, 1024
 
+    # set source of attached images
+    cleanHTML: (html) ->
+        parser = new DOMParser()
+        unless (doc = parser.parseFromString html, "text/html")
+            doc = document.implementation.createHTMLDocument("")
+            doc.documentElement.innerHTML = html
+            unless doc
+                console.error "Unable to parse HTML content of message"
+                return html
+
+        # the contentID of attached images will be in the data-src attribute
+        # override image source with this attribute
+        imageSrc = (image) ->
+            image.setAttribute 'src', "cid:#{image.dataset.src}"
+        images = doc.querySelectorAll 'IMG[data-src]'
+        imageSrc image for image in images
+
+        doc.documentElement.innerHTML
+
     # Remove from given string:
     # * html tags
     # * extra spaces between reply markers and text
@@ -508,11 +540,11 @@ module.exports = MessageUtils =
 
     # Add a reply prefix to the current subject. Do not add it again if it's
     # already there.
-    getReplySubject: (inReplyTo) ->
-        subject =  inReplyTo.get('subject') or ''
-        replyPrefix = t 'compose reply prefix'
-        if subject.indexOf(replyPrefix) isnt 0
-            subject = "#{replyPrefix}#{subject}"
+    getReplySubject: (message) ->
+        subject =  message?.get('subject') or ''
+        prefix = t 'compose reply prefix'
+        if subject.indexOf(prefix) isnt 0
+            subject = "#{prefix}#{subject}"
         subject
 
     # To keep HTML markup light, create the contact tooltip dynamicaly

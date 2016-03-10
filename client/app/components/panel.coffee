@@ -9,7 +9,6 @@ SearchResult   = require './search_result'
 
 # React Mixins
 RouterMixin          = require '../mixins/router_mixin'
-StoreWatchMixin      = require '../mixins/store_watch_mixin'
 TooltipRefesherMixin = require '../mixins/tooltip_refresher_mixin'
 
 # Flux stores
@@ -27,16 +26,19 @@ module.exports = Panel = React.createClass
     displayName: 'Panel'
 
     mixins: [
-        StoreWatchMixin [AccountStore, MessageStore, SettingsStore, SearchStore]
         TooltipRefesherMixin
         RouterMixin
     ]
 
-    shouldComponentUpdate: (nextProps, nextState) ->
-        should = not(_.isEqual(nextState, @state)) or
-                 not (_.isEqual(nextProps, @props))
+    # Build initial state from store values.
+    getInitialState: ->
+        @getStateFromStores()
 
-        return should
+    componentDidMount: ->
+        MessageStore.addListener 'change', @fetchMessageComplete
+
+    componentWillUnmount: ->
+        MessageStore.removeListener 'change', @fetchMessageComplete
 
     render: ->
         # -- Generates a list of messages for a given account and mailbox
@@ -71,11 +73,11 @@ module.exports = Panel = React.createClass
 
         # -- Generates the new message composition form
         else if @props.action is 'compose' or
+                @props.action is 'compose.edit' or
                 @props.action is 'edit' or
                 @props.action is 'compose.reply' or
                 @props.action is 'compose.reply-all' or
                 @props.action is 'compose.forward'
-
             @renderCompose()
 
         # -- Display the settings form
@@ -94,19 +96,20 @@ module.exports = Panel = React.createClass
 
 
     renderList: ->
-
         unless @state.accounts.get @props.accountID
             setTimeout =>
                 @redirect
-                    direction: "first"
-                    action: "default"
+                    direction   : 'first'
+                    action      : 'default'
             , 1
             return React.DOM.div null, 'redirecting'
 
+        prefix = 'messageList-' + @props.mailboxID
         MessageList
-            key: 'messageList-' + @props.mailboxID
-            accountID: @props.accountID
-            mailboxID: @props.mailboxID
+            key         : MessageStore.getQueryKey prefix
+            accountID   : @props.accountID
+            mailboxID   : @props.mailboxID
+            queryParams : MessageStore.getQueryParams()
 
     # Rendering the compose component requires several parameters. The main one
     # are related to the selected account, the selected mailbox and the compose
@@ -123,6 +126,7 @@ module.exports = Panel = React.createClass
             selectedMailboxID    : @props.selectedMailboxID
             useIntents           : @props.useIntents
             ref                  : 'compose'
+            key                  : @props.action or 'compose'
 
         component = null
 
@@ -131,10 +135,13 @@ module.exports = Panel = React.createClass
             message = null
             component = Compose options
 
+
         # Generates the edit draft composition form.
-        else if @props.action is 'edit'
-            options.message = MessageStore.getByID @props.messageID
-            component = Compose options
+        else if @props.action is 'edit' or
+                @props.action is 'compose.edit'
+            component = Compose _.extend options,
+                key: options.key + '-' + @props.messageID
+                messageID: @props.messageID
 
         # Generates the reply composition form.
         else if @props.action is 'compose.reply'
@@ -159,18 +166,15 @@ module.exports = Panel = React.createClass
     # Configure the component depending on the given action.
     # Returns a spinner if the message is not available.
     getReplyComponent: (options) ->
-        message = MessageStore.getByID @props.messageID
-
-        if not(@state.isLoadingReply) or message?
-            message = MessageStore.getByID @props.messageID
-            message.set 'id', @props.messageID
-            options.inReplyTo = message
-            component = Compose options
-        else
-            component = Spinner()
-
+        options.id = @props.messageID
+        options.inReplyTo = @props.messageID
+        component = Compose options
         return component
 
+    # Update state with store values.
+    fetchMessageComplete: (message) ->
+        return unless @isMounted()
+        @setState isLoadingReply: false
 
     getStateFromStores: ->
         return {
