@@ -572,17 +572,22 @@ class MessageStore extends Store
     * @return {List}
     ###
     getConversation: (param={}) ->
+        # Update global context
         if param.conversationID?
             @setConversation param.conversationID
 
+        # If no specific action is precized
+        # return all contextual conversations
         unless _.isFunction param.transform
             return _conversationMemoize
 
         messageID = param.messageID or @getCurrentID()
-        conversationID = param.conversationID
+        conversationID = param.conversationID or @getByID(messageID)?.get 'conversationID'
         messages = _messagesWithInFlights()
 
-        # Remove selected messages
+        # In this case, we just want
+        # next/previous message from a selection
+        # then remove selected messages from the list
         if param.conversationIDs
             conversationID = param.conversationIDs[0]
             messages = messages
@@ -597,13 +602,22 @@ class MessageStore extends Store
         if param.type is 'message' and not _conversationMemoize.size
             messages = _currentMessages
 
-        getMessage = ->
-            index0 = messages.toArray().findIndex (message) ->
-                if param.conversationID isnt 'undefined'
-                    return param.conversationID is message.get 'conversationID'
-                return messageID is message.get 'id'
-            index = param.transform index0
-            messages.get index
+        getMessage = =>
+            _getMessage = (index) ->
+                index0 = param.transform index
+                messages?.get(index0)
+
+            # Get next Conversation not next message
+            # `messages` is the list of all messages not conversations
+            # TODO : regroup message by its conversationID
+            # and use messages.find instead with a simple test
+            # FIXME : inconsistency between the 2 results, see why?
+            index0 = messages.findIndex (message, index) ->
+                isSameMessage = conversationID is message?.get 'conversationID'
+                isNextSameConversation = _getMessage(index)?.get('conversationID') isnt conversationID
+                return isSameMessage and isNextSameConversation
+
+            _getMessage(index0)
 
         # Change Conversation
         return Immutable.Map getMessage()

@@ -36,8 +36,8 @@ module.exports = React.createClass
             trashMailboxID = selectedAccount?.get('trashMailbox')
 
             conversation = MessageStore.getConversation {conversationID}
-            prevMessage = MessageStore.getPreviousConversation()
-            nextMessage = MessageStore.getNextConversation()
+            prevMessage = MessageStore.getPreviousConversation {conversationID}
+            nextMessage = MessageStore.getNextConversation {conversationID}
 
             length = MessageStore.getConversationsLength().get conversationID
             selectedMailboxID ?= Object.keys(message.get('mailboxIDs'))[0]
