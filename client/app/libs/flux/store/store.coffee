@@ -1,3 +1,5 @@
+EventEmitter = require 'node-event-emitter'
+
 AppDispatcher = require '../../../app_dispatcher'
 
 
@@ -36,4 +38,3 @@ module.exports = class Store extends EventEmitter
             message = "The store #{@constructor.name} must define a " + \
                       "`__bindHandlers` method"
             throw new Error message
-

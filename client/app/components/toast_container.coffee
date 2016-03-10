@@ -1,15 +1,18 @@
-{div} = React.DOM
-Toast           = require './toast'
-StoreWatchMixin = require '../mixins/store_watch_mixin'
-LayoutStore      = require '../stores/layout_store'
-LayoutActionCreator = require '../actions/layout_action_creator'
-{CSSTransitionGroup} = React.addons
+_          = require 'underscore'
+classNames = require 'classnames'
+React      = require 'react'
 
-classer = React.addons.classSet
+{div} = React.DOM
+
+Animate             = React.createFactory require 'rc-animate'
+Toast               = React.createFactory require './toast'
+StoreWatchMixin     = require '../mixins/store_watch_mixin'
+LayoutStore         = require '../stores/layout_store'
+LayoutActionCreator = require '../actions/layout_action_creator'
 
 
 # Main container in wich toasts are displayed.
-module.exports = ToastContainer =  React.createClass
+module.exports = ToastContainer = React.createClass
     displayName: 'ToastContainer'
 
     mixins: [
@@ -31,18 +34,18 @@ module.exports = ToastContainer =  React.createClass
 
 
     render: ->
-        toasts = @state.toasts.mapEntries ([id, toast]) ->
-            ["toast-#{id}", Toast {toast}]
-        .toJS()
+        toasts = @state.toasts
+        .mapEntries ([id, toast]) ->
+            ["toast-#{id}", Toast {key: id, toast}]
+        .toArray()
 
-        classes = classer
+        classes = classNames
             'toasts-container': true
             'action-hidden': @state.hidden
             'has-toasts': toasts.size isnt 0
 
         div className: classes,
-            CSSTransitionGroup transitionName: "toast",
-                toasts
+            Animate transitionName: 'toast', toasts
 
 
     toggleHidden: ->

@@ -1,3 +1,13 @@
+jQuery = require 'jquery'
+# *Plugins* system try to find an `init.js` entry point in each dir in the
+# `plugins` folder. Use the webpack `glob-loader` to glob-search the `init.js`es
+# files, as defined by the pattern in the `plugins.loader` file
+#
+# As log as plugins are exported to the global `window` object, we don't map
+# them locally
+require 'glob!../../plugins/plugins.loader'
+
+
 helpers =
     # Display a Bootstrap modal window
     #
@@ -42,14 +52,13 @@ helpers =
             win.querySelector('.modal-dialog').classList.add 'modal-lg'
         if options.show isnt false
             document.body.appendChild win
-            window.jQuery(win).modal 'show'
+            jQuery(win).modal 'show'
         return win
 
 module.exports =
 
     init: ->
-        if not window.plugins?
-            window.plugins = {}
+        window.plugins ?= {}
 
         # Observe addition and deletion of plugins
         #if Object.observe?
@@ -176,6 +185,8 @@ module.exports =
             console.log "Unable to deactivate plugin #{key}: #{e}"
 
     merge: (remote) ->
+        window.plugins ?= {}
+
         for own pluginName, pluginConf of remote
             local = window.plugins[pluginName]
             if local?

@@ -1,11 +1,15 @@
+React = require 'react'
+
 {section, header, ul, li, span, i, p, h3, a, button} = React.DOM
+
+_ = require 'underscore'
 
 {Tooltips} = require '../constants/app_constants'
 MessageUtils = require '../utils/message_utils'
 ContactStore = require '../stores/contact_store'
 ContactActionCreator = require '../actions/contact_action_creator'
 LayoutActionCreator  =  require '../actions/layout_action_creator'
-{AddressLabel} = require './basic_components'
+{AddressLabel} = require('./basic_components').factories
 
 
 # Small component used to display contact label in message headers.

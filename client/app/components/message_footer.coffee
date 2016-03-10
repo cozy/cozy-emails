@@ -1,7 +1,11 @@
+_     = require 'underscore'
+React = require 'react'
+
 {div, span, ul, li, a, i} = React.DOM
+
 MessageUtils = require '../utils/message_utils'
 
-AttachmentPreview = require './attachement_preview'
+AttachmentPreview = React.createFactory require './attachement_preview'
 
 
 module.exports = React.createClass

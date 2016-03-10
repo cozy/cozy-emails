@@ -1,11 +1,11 @@
+React = require 'react'
+
 {div, i, button, input, form} = React.DOM
-{Dropdown} = require './basic_components'
+
+{Dropdown}  = require('./basic_components').factories
+SearchInput = React.createFactory require './search_input'
+
 {MessageFilter, Tooltips} = require '../constants/app_constants'
-SearchInput = require './search_input'
-
-RouterMixin           = require '../mixins/router_mixin'
-
-LayoutActionCreator = require '../actions/layout_action_creator'
 
 filters =
     from: t "list filter from"

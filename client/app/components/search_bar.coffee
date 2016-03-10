@@ -1,12 +1,18 @@
+React = require 'react'
+
 {div, button, i} = React.DOM
-SearchInput = require './search_input'
-AccountPicker = require './account_picker'
-RouterMixin           = require '../mixins/router_mixin'
-LayoutActionCreator = require '../actions/layout_action_creator'
-StoreWatchMixin      = require '../mixins/store_watch_mixin'
-AccountStore = require '../stores/account_store'
-SearchStore = require '../stores/search_store'
+
+SearchInput   = React.createFactory require './search_input'
+AccountPicker = React.createFactory require './account_picker'
+
+RouterMixin     = require '../mixins/router_mixin'
+StoreWatchMixin = require '../mixins/store_watch_mixin'
+
+LayoutActionCreator  = require '../actions/layout_action_creator'
 AccountActionCreator = require '../actions/account_action_creator'
+
+AccountStore = require '../stores/account_store'
+SearchStore  = require '../stores/search_store'
 
 
 module.exports = GlobalSearchBar = React.createClass

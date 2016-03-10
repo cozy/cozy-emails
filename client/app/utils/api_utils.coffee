@@ -1,3 +1,8 @@
+React    = require 'react'
+_        = require 'underscore'
+Polyglot = require 'node-polyglot'
+moment   = require 'moment'
+
 AccountStore  = require '../stores/account_store'
 MessageStore  = require '../stores/message_store'
 SettingsStore = require '../stores/settings_store'
@@ -57,7 +62,7 @@ module.exports = Utils =
 
     # update locate (without saving it into settings)
     setLocale: (lang) ->
-        window.moment.locale lang
+        moment.locale lang
         locales = {}
         try
             locales = require "../locales/#{lang}"
@@ -256,31 +261,6 @@ module.exports = Utils =
         url = error.stack.split('\n')[0].split('@')[1]
             .split(/:\d/)[0].split('/').slice(0, -2).join('/')
         window.onerror error.name, url, error.lineNumber, error.colNumber, error
-
-
-    # Debug: allow to dump component tree
-    dump: ->
-        _dump = (root) ->
-            res =
-                children: {}
-                state: {}
-                props: {}
-            for key, value of root.state
-                if (typeof value is 'object')
-                    res.state[key] = _.clone value
-                else
-                    res.state[key] = value
-            for key, value of root.props
-                if (typeof value is 'object')
-                    res.props[key] = _.clone value
-                else
-                    res.props[key] = value
-            for key, value of root.refs
-                res.children[key] = _dump root.refs[key]
-
-            return res
-
-        _dump window.rootComponent
 
 
     # Log message into server logs

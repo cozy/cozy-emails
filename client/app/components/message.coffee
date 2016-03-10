@@ -1,28 +1,33 @@
+React      = require 'react'
+classNames = require 'classnames'
+
+{markdown} = require 'markdown'
+toMarkdown = require 'to-markdown'
+
 {
     div, article, header, footer, ul, li, span, i, p, a, button, pre,
     iframe, textarea
 } = React.DOM
 
-MessageHeader  = require "./message_header"
-MessageFooter  = require "./message_footer"
-ToolbarMessage = require './toolbar_message'
-MessageContent = require './message-content'
+MessageHeader  = React.createFactory require './message_header'
+MessageFooter  = React.createFactory require './message_footer'
+ToolbarMessage = React.createFactory require './toolbar_message'
+MessageContent = React.createFactory require './message-content'
 
 MessageStore = require '../stores/message_store'
 
 {MessageFlags} = require '../constants/app_constants'
 
-LayoutActionCreator       = require '../actions/layout_action_creator'
-MessageActionCreator      = require '../actions/message_action_creator'
-ContactActionCreator      = require '../actions/contact_action_creator'
+LayoutActionCreator  = require '../actions/layout_action_creator'
+MessageActionCreator = require '../actions/message_action_creator'
+ContactActionCreator = require '../actions/contact_action_creator'
 
-RouterMixin = require '../mixins/router_mixin'
+RouterMixin           = require '../mixins/router_mixin'
 ShouldComponentUpdate = require '../mixins/should_update_mixin'
 TooltipRefresherMixin = require '../mixins/tooltip_refresher_mixin'
 
-classer = React.addons.classSet
-
 RGXP_PROTOCOL = /:\/\//
+
 
 module.exports = React.createClass
     displayName: 'Message'
@@ -38,7 +43,7 @@ module.exports = React.createClass
         active                 : React.PropTypes.bool
         inConversation         : React.PropTypes.bool
         displayConversations   : React.PropTypes.bool
-        key                    : React.PropTypes.string.isRequired
+        key                    : React.PropTypes.string
         mailboxes              : React.PropTypes.object.isRequired
         message                : React.PropTypes.object.isRequired
         selectedAccountID      : React.PropTypes.string.isRequired
@@ -209,7 +214,7 @@ module.exports = React.createClass
             messageDisplayHTML = false
             imagesWarning      = false
 
-        classes = classer
+        classes = classNames
             message: true
             active: @props.active
             isDraft: prepared.isDraft

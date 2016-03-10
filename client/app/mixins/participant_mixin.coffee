@@ -1,10 +1,14 @@
 ###
     Participant mixin.
 ###
+_     = require 'underscore'
+React = require 'react'
+
 {span, a, i} = React.DOM
 
+ContactLabel = React.createFactory require '../components/contact_label'
+
 ContactStore = require '../stores/contact_store'
-ContactLabel = require '../components/contact_label'
 
 
 module.exports =

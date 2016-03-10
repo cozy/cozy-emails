@@ -1,4 +1,13 @@
+React      = require 'react'
+Immutable  = require 'immutable'
+moment     = require 'moment'
+{markdown} = require 'markdown'
+toMarkdown = require 'to-markdown'
+
 {span} = React.DOM
+
+_      = require 'underscore'
+jQuery = require 'jquery'
 
 {ComposeActions} = require '../constants/app_constants'
 ContactStore     = require '../stores/contact_store'

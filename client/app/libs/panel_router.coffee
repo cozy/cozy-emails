@@ -18,6 +18,9 @@
         another pattern.
 ###
 
+Backbone = require 'backbone'
+_ = require 'underscore'
+
 LayoutActionCreator = require '../actions/layout_action_creator'
 
 module.exports = class Router extends Backbone.Router

@@ -1,14 +1,16 @@
+React = require 'react'
+
 {div, ul, i} = React.DOM
 {Tooltips} = require '../constants/app_constants'
 
-AttachmentPreview = require './attachement_preview'
+AttachmentPreview = React.createFactory require './attachement_preview'
 
 
 module.exports = React.createClass
     displayName: 'MessageAttachmentsPopup'
 
     mixins: [
-        OnClickOutside
+        require 'react-onclickoutside'
     ]
 
 

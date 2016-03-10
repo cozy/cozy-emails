@@ -1,13 +1,15 @@
-{div, section, h3, a, i, textarea, form, label} = React.DOM
-{span, ul, li, input} = React.DOM
+_          = require 'underscore'
+classNames = require 'classnames'
+React      = require 'react'
+ReactDOM   = require 'react-dom'
 
-classer = React.addons.classSet
+{div, section, a, form, label, input} = React.DOM
 
-ComposeEditor  = require './compose_editor'
-ComposeToolbox = require './compose_toolbox'
-FilePicker     = require './file_picker'
-MailsInput     = require './mails_input'
-AccountPicker = require './account_picker'
+ComposeEditor  = React.createFactory require './compose_editor'
+ComposeToolbox = React.createFactory require './compose_toolbox'
+FilePicker     = React.createFactory require './file_picker'
+MailsInput     = React.createFactory require './mails_input'
+AccountPicker  = React.createFactory require './account_picker'
 
 AccountStore = require '../stores/account_store'
 MessageStore = require '../stores/message_store'
@@ -17,11 +19,11 @@ LayoutStore = require '../stores/layout_store'
 
 MessageUtils = require '../utils/message_utils'
 
-
 LayoutActionCreator  = require '../actions/layout_action_creator'
 MessageActionCreator = require '../actions/message_action_creator'
 
-RouterMixin = require '../mixins/router_mixin'
+RouterMixin      = require '../mixins/router_mixin'
+LinkedStateMixin = require 'react-addons-linked-state-mixin'
 
 
 # Component that allows the user to write emails.
@@ -30,8 +32,8 @@ module.exports = Compose = React.createClass
 
 
     mixins: [
-        RouterMixin,
-        React.addons.LinkedStateMixin # two-way data binding
+        RouterMixin
+        LinkedStateMixin
     ]
 
 
@@ -109,7 +111,7 @@ module.exports = Compose = React.createClass
         MessageStore.addListener 'change', @_setStateFromStores
 
         # scroll compose window into view
-        @getDOMNode().scrollIntoView()
+        @refs.compose.scrollIntoView()
 
         # Save focus
         @addFocusListener()
@@ -240,7 +242,8 @@ module.exports = Compose = React.createClass
         classInput = 'compose-input'
 
         section
-            className: classer
+            ref: 'compose'
+            className: classNames
                 compose: true
                 panel:   @props.layout is 'full'
             'aria-expanded': true,

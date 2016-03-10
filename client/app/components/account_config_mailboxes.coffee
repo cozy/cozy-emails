@@ -1,14 +1,20 @@
+Immutable      = require 'immutable'
+React          = require 'react'
+
 {div, h4, ul, li, span, p, form, i, input, label} = React.DOM
-classer = React.addons.classSet
+
+{SubTitle, Form} = require('./basic_components').factories
+MailboxItem      = React.createFactory require './account_config_item'
+MailboxPicker    = React.createFactory require './mailbox_picker'
+AccountDelete    = React.createFactory require './account_config_delete'
 
 AccountActionCreator = require '../actions/account_action_creator'
 LayoutActionCreator  = require '../actions/layout_action_creator'
-RouterMixin = require '../mixins/router_mixin'
+
+RouterMixin           = require '../mixins/router_mixin'
 ShouldComponentUpdate = require '../mixins/should_update_mixin'
-MailboxItem = require './account_config_item'
-MailboxPicker = require './mailbox_picker'
-{SubTitle, Form} = require './basic_components'
-AccountDelete = require './account_config_delete'
+LinkedStateMixin      = require 'react-addons-linked-state-mixin'
+
 cachedTransform = require '../libs/cached_transform'
 
 
@@ -16,8 +22,8 @@ module.exports = AccountConfigMailboxes = React.createClass
     displayName: 'AccountConfigMailboxes'
 
     mixins: [
-        RouterMixin,
-        React.addons.LinkedStateMixin
+        RouterMixin
+        LinkedStateMixin
         ShouldComponentUpdate.UnderscoreEqualitySlow
     ]
 
@@ -58,13 +64,14 @@ module.exports = AccountConfigMailboxes = React.createClass
                 if @props.editedAccount.get('mailboxes').size
                     @renderTableHeader()
 
-                @props.editedAccount.get('mailboxes').map (mailbox, key) =>
-                    MailboxItem
-                        key: key
-                        accountID: @props.editedAccount.get('id')
-                        favorite: key in @props.editedAccount.get('favorites')
-                        mailbox: mailbox
-                .toJS()
+                @props.editedAccount.get('mailboxes')
+                    .map (mailbox, key) =>
+                        MailboxItem
+                            key: key
+                            accountID: @props.editedAccount.get('id')
+                            favorite: key in @props.editedAccount.get('favorites')
+                            mailbox: mailbox
+                    .toArray()
 
                 @renderTableFooter()
 
@@ -167,7 +174,7 @@ module.exports = AccountConfigMailboxes = React.createClass
     resetMailboxClicked: (event) ->
         event.preventDefault()
 
-        @refs.newmailbox.getDOMNode().value = ''
+        @refs.newmailbox.value = ''
         @setState newMailboxParent: null
 
 

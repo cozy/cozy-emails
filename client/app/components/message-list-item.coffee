@@ -1,12 +1,18 @@
+_          = require 'underscore'
+React      = require 'react'
+classNames = require 'classnames'
+
 {div, section, p, ul, li, a, span, i, button, input, img} = React.DOM
+
 {MessageFlags, MailboxFlags} = require '../constants/app_constants'
-{Icon}               = require './basic_components'
+colorhash                    = require '../utils/colorhash'
+MessageUtils                 = require '../utils/message_utils'
+
 RouterMixin          = require '../mixins/router_mixin'
-classer              = React.addons.classSet
-MessageUtils         = require '../utils/message_utils'
-colorhash            = require '../utils/colorhash'
-Participants         = require './participant'
 MessageActionCreator = require '../actions/message_action_creator'
+
+{Icon}       = require('./basic_components').factories
+Participants = React.createFactory require './participants'
 
 
 module.exports = MessageItem = React.createClass
@@ -29,7 +35,7 @@ module.exports = MessageItem = React.createClass
         message = @props.message
         flags = message.get('flags')
 
-        classes = classer
+        classes = classNames
             message: true
             unseen:  MessageFlags.SEEN not in flags
             active:  @props.isActive
@@ -85,7 +91,7 @@ module.exports = MessageItem = React.createClass
                         i
                             className: 'avatar placeholder'
                             style:
-                                'background-color': colorhash(cHash)
+                                backgroundColor: colorhash(cHash)
                             if from?.name then from?.name[0] else from?.address[0]
 
                 div className: 'metas-wrapper',
@@ -164,7 +170,7 @@ module.exports = MessageItem = React.createClass
             parameters: params
 
     onMessageClick: (event) ->
-        node = @refs.target.getDOMNode()
+        node = @refs.target
         if @props.edited and event.target.classList.contains 'select-target'
             @props.onSelect(not @props.selected)
             event.preventDefault()

@@ -1,12 +1,14 @@
-{aside, i, button} = React.DOM
-classer = React.addons.classSet
+React = require 'react'
 
-FiltersToolbarMessagesList = require './toolbar_messageslist_filters'
-ActionsToolbarMessagesList = require './toolbar_messageslist_actions'
-SearchBar                  = require './search_bar'
+{aside, i, button} = React.DOM
+
+FiltersToolbarMessagesList = React.createFactory require './toolbar_messageslist_filters'
+ActionsToolbarMessagesList = React.createFactory require './toolbar_messageslist_actions'
+SearchBar                  = React.createFactory require './search_bar'
 
 LayoutActionCreator  = require '../actions/layout_action_creator'
-RouterMixin           = require '../mixins/router_mixin'
+
+RouterMixin = require '../mixins/router_mixin'
 
 
 module.exports = ToolbarMessagesList = React.createClass

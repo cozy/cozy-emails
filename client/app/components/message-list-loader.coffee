@@ -1,5 +1,7 @@
+React = require 'react'
+
 {div, p, strong} = React.DOM
-{Spinner} = require './basic_components'
+{Spinner} = require('./basic_components').factories
 
 
 module.exports = MessageListLoader = React.createClass

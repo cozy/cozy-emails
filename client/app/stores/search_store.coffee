@@ -1,3 +1,5 @@
+Immutable = require 'immutable'
+
 Store = require '../libs/flux/store/store'
 MessageStore = require './message_store'
 

@@ -1,3 +1,6 @@
+React     = require 'react'
+Immutable = require 'immutable'
+
 AccountStore = require '../stores/account_store'
 
 AccountActionCreator = require '../actions/account_action_creator'
@@ -7,11 +10,11 @@ RouterMixin = require '../mixins/router_mixin'
 StoreWatchMixin      = require '../mixins/store_watch_mixin'
 ShouldComponentUpdate = require '../mixins/should_update_mixin'
 
-{Container, Title, Tabs} = require './basic_components'
-AccountDelete = require './account_config_delete'
-AccountConfigMain = require './account_config_main'
-AccountConfigMailboxes = require './account_config_mailboxes'
-AccountConfigSignature = require './account_config_signature'
+{Container, Title, Tabs} = require('./basic_components').factories
+AccountDelete = React.createFactory require './account_config_delete'
+AccountConfigMain = React.createFactory require './account_config_main'
+AccountConfigMailboxes = React.createFactory require './account_config_mailboxes'
+AccountConfigSignature = React.createFactory require './account_config_signature'
 {div} = React.DOM
 
 REQUIRED_FIELDS_NEW = [

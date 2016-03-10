@@ -1,8 +1,12 @@
+_ = require 'underscore'
+React = require 'react'
+
 {section, header, ul, li, span, i, p, h3, a, button} = React.DOM
-Message = require './message'
-ToolbarConversation = require './toolbar_conversation'
-classer = React.addons.classSet
+
 {MessageFlags} = require '../constants/app_constants'
+
+Message = React.createFactory require './message'
+ToolbarConversation = React.createFactory require './toolbar_conversation'
 
 RouterMixin = require '../mixins/router_mixin'
 StoreWatchMixin = require '../mixins/store_watch_mixin'

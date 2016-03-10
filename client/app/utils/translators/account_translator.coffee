@@ -1,3 +1,5 @@
+Immutable = require 'immutable'
+
 {MailboxFlags} = require '../../constants/app_constants'
 
 module.exports = AccountTranslator =

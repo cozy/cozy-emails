@@ -1,3 +1,5 @@
+React = require 'react'
+
 {li, img, a, i} = React.DOM
 MessageUtils = require '../utils/message_utils'
 {Tooltips} = require '../constants/app_constants'
@@ -63,4 +65,3 @@ module.exports = React.createClass
             "#{0 | length / 1024} #{t 'length kbytes'}"
         else
             "#{0 | length / (1024*1024)} #{t 'length mbytes'}"
-

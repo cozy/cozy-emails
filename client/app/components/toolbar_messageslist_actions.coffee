@@ -1,8 +1,10 @@
+React = require 'react'
+
 {div, i, button} = React.DOM
 {Tooltips}       = require '../constants/app_constants'
 
-ToolboxActions = require './toolbox_actions'
-ToolboxMove    = require './toolbox_move'
+ToolboxActions = React.createFactory require './toolbox_actions'
+ToolboxMove    = React.createFactory require './toolbox_move'
 
 MessageStore = require '../stores/message_store'
 
@@ -10,6 +12,7 @@ LayoutActionCreator  = require '../actions/layout_action_creator'
 MessageActionCreator = require '../actions/message_action_creator'
 
 RouterMixin = require '../mixins/router_mixin'
+
 
 module.exports = ActionsToolbarMessagesList = React.createClass
     displayName: 'ActionsToolbarMessagesList'

@@ -5,11 +5,13 @@ They can't be then referenced from the other components.
 See https://github.com/m4dz/aria-tips#use
 ###
 
-{Tooltips} = require '../constants/app_constants'
+React = require 'react'
+
 {div, p} = React.DOM
+{Tooltips} = require '../constants/app_constants'
 
 
-module.exports = React.createClass
+module.exports = React.createFactory  React.createClass
     displayName: 'TooltipManager'
 
     # The tooltip's content should not change so we prevent any refresh.

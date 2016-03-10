@@ -1,6 +1,10 @@
+React = require 'react'
+
 {div, ul, li, span, a, button} = React.DOM
 
-{Dropdown} = require './basic_components'
+Immutable = require 'immutable'
+
+{Dropdown} = require('./basic_components').factories
 PropTypes = require '../libs/prop_types'
 RouterMixin = require '../mixins/router_mixin'
 cachedTransform = require '../libs/cached_transform'
@@ -14,17 +18,18 @@ module.exports = React.createClass
 
     propTypes:
         allowUndefined: React.PropTypes.bool
-        mailboxes: PropTypes.immutableMapStringTo PropTypes.Mailbox
+        mailboxes: PropTypes.mapOfMailbox
         valueLink: PropTypes.valueLink(PropTypes.string).isRequired
 
     getDefaultOptions: -> allowUndefined: true
 
     makeOptions: ->
         cachedTransform @, 'mailboxesOptions', @props.mailboxes, =>
-            @props.mailboxes.map (box) ->
-                pusher = new Array(box.get('depth') + 1).join '--'
-                "#{pusher}#{box.get 'label'}"
-            .toJS()
+            @props.mailboxes
+                .map (box) ->
+                    pusher = new Array(box.get('depth') + 1).join '--'
+                    "#{pusher}#{box.get 'label'}"
+                .toJS()
 
     render: ->
         return div null unless @props.mailboxes?.size
