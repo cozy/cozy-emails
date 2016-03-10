@@ -26,7 +26,7 @@ module.exports = MessageListBody = React.createClass
         return should
 
     _isActive: (id, cid) ->
-        @props.messageID is id or cid? and @props.conversationID is cid
+        @props.messageID is id or @props.conversationID is cid
 
     render: ->
         ul className: 'list-unstyled', ref: 'messageList',
