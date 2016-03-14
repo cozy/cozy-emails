@@ -46,9 +46,11 @@ class LayoutStore extends Store
     ###
     __bindHandlers: (handle) ->
 
-        handle ActionTypes.SET_DISPOSITION, (disposition) ->
-            _disposition = disposition
-            @emit 'change'
+        handle ActionTypes.SET_ROUTE, (value) ->
+            _route = value
+
+        handle ActionTypes.SET_DISPOSITION, (type) ->
+            _disposition = type
 
         handle ActionTypes.TOGGLE_LIST_MODE, ->
             _listModeCompact = not _listModeCompact
