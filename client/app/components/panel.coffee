@@ -119,40 +119,39 @@ module.exports = Panel = React.createClass
             selectedAccountLogin : @state.selectedAccount.get 'login'
             selectedMailboxID    : @props.selectedMailboxID
             useIntents           : @props.useIntents
-            ref                  : 'compose'
-            key                  : @props.action or 'compose'
+            ref                  : 'message'
+            key                  : @props.action or 'message'
 
         component = null
 
         # Generates an empty compose form
-        if @props.action is 'compose'
+        if @props.action is 'message.new'
             message = null
             component = Compose options
 
-
         # Generates the edit draft composition form.
-        else if @props.action is 'edit' or
-                @props.action is 'compose.edit'
+        else if @props.action is 'message.edit' or
+                @props.action is 'message.show'
             component = Compose _.extend options,
                 key: options.key + '-' + @props.messageID
                 messageID: @props.messageID
 
         # Generates the reply composition form.
-        else if @props.action is 'compose.reply'
+        else if @props.action is 'message.reply'
             options.action = ComposeActions.REPLY
             component = @getReplyComponent options
 
         # Generates the reply all composition form.
-        else if @props.action is 'compose.reply-all'
+        else if @props.action is 'message.reply.all'
             options.action = ComposeActions.REPLY_ALL
             component = @getReplyComponent options
 
         # Generates the forward composition form.
-        else if @props.action is 'compose.forward'
+        else if @props.action is 'message.forward'
             options.action = ComposeActions.FORWARD
             component = @getReplyComponent options
         else
-            throw new Error "unknown compose type : #{@prop.action}"
+            throw new Error "unknown message type : #{@prop.action}"
 
         return component
 

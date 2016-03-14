@@ -360,7 +360,8 @@ class MessageStore extends Store
         handle ActionTypes.MESSAGE_UNDO_TIMEOUT, ({ref}) ->
             delete _undoable[ref]
 
-        handle ActionTypes.MESSAGE_FETCH_REQUEST, ({mailboxID}) ->
+        handle ActionTypes.MESSAGE_FETCH_REQUEST, ->
+            return if not (url = @getNextUrl()) or @isFetching()
             # There may be more than one concurrent fetching request
             # so we use a counter instead of a boolean
             _fetching++
