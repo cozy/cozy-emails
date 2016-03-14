@@ -11,15 +11,11 @@ MessageStore = require '../stores/message_store'
 LayoutActionCreator  = require '../actions/layout_action_creator'
 MessageActionCreator = require '../actions/message_action_creator'
 
-RouterMixin = require '../mixins/router_mixin'
+Router = require '../mixins/router_mixin'
 
 
 module.exports = ActionsToolbarMessagesList = React.createClass
     displayName: 'ActionsToolbarMessagesList'
-
-    mixins: [
-        RouterMixin
-    ]
 
     propTypes:
         settings:             React.PropTypes.object.isRequired
@@ -86,17 +82,12 @@ module.exports = ActionsToolbarMessagesList = React.createClass
 
             @props.afterAction() if @props.afterAction?
 
-            unless nextConversation.size
-                # Close 2nd panel : no next conversation found
-                @redirect @buildClosePanelUrl 'second'
-            else
-                # Goto to next conversation
-                @redirect
-                    direction: 'second',
-                    action: 'conversation',
-                    parameters:
-                        messageID: nextConversation.get('id')
-                        conversationID: nextConversation.get('conversationID')
+            # FIXME : move this into MessageActionCreator
+            # after deleting complete
+            # Goto to next conversation
+            Router.redirect
+                action: 'message.show',
+                message: nextConversation
 
         unless @props.settings.get 'messageConfirmDelete'
             doDelete()

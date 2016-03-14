@@ -4,7 +4,7 @@ classNames = require 'classnames'
 
 {div, aside, nav, ul, li, span, a, i, button} = React.DOM
 
-RouterMixin     = require '../mixins/router_mixin'
+Router = require '../mixins/router_mixin'
 StoreWatchMixin = require '../mixins/store_watch_mixin'
 
 AccountActionCreator = require '../actions/account_action_creator'
@@ -39,7 +39,6 @@ module.exports = Menu = React.createClass
     displayName: 'Menu'
 
     mixins: [
-        RouterMixin
         StoreWatchMixin [AccountStore, LayoutStore, RefreshesStore, SearchStore]
     ]
 
@@ -128,31 +127,17 @@ module.exports = Menu = React.createClass
                     onClick: LayoutActionCreator.drawerToggle
 
     renderNewMailboxButton: () ->
-        if @state.accounts.size
-            selectedAccountUrl = @buildUrl
-                direction: 'first'
-                action: 'account.mailbox.messages'
-                parameters: [@state.selectedAccount?.get 'id']
-                fullWidth: true
-        else
-            selectedAccountUrl = @buildUrl
-                direction: 'first'
-                action: 'account.new'
-                fullWidth: true
+        selectedAccountUrl = Router.buildUrl
+            action: 'account.new'
 
         # the button toggle the "new account" screen
         if @props.layout.firstPanel.action is 'account.new'
             newMailboxClass = 'active'
-            newMailboxUrl = selectedAccountUrl
         else
             newMailboxClass = ''
-            newMailboxUrl = @buildUrl
-                direction: 'first'
-                action: 'account.new'
-                fullWidth: true
 
         a
-            href: newMailboxUrl
+            href: selectedAccountUrl
             role: 'menuitem'
             className: "btn new-account-action #{newMailboxClass}",
                 i className: 'fa fa-plus'
@@ -168,20 +153,15 @@ module.exports = Menu = React.createClass
         refreshes      = @state.refreshes
 
         if defaultMailbox?
-            url = @buildUrl
-                direction: 'first'
-                action: 'account.mailbox.messages'
-                parameters: [accountID, defaultMailbox?.get 'id']
-                fullWidth: true # /!\ Hide second panel when switching account
+            # FIXME : create a method getMailboxURL
+            url = Router.buildUrl
+                action: 'message.list'
         else
             # Go to account settings to add mailboxes
-            url = @buildUrl
-                direction: 'first'
-                action: 'account.config'
-                parameters: [accountID, 'account']
-                fullWidth: true # /!\ Hide second panel when switching account
-
-
+            # FIXME : create a method getAccountURL
+            url = Router.buildUrl
+                action: 'account.edit'
+                accountID: accountID
 
         accountClasses = classNames active: isSelected
 
@@ -197,11 +177,9 @@ module.exports = Menu = React.createClass
 
         allBoxesAreFavorite = @state.mailboxes.size is @state.favorites.size
 
-        configMailboxUrl = @buildUrl
-            direction: 'first'
-            action: 'account.config'
-            parameters: [accountID, 'account']
-            fullWidth: true
+        configMailboxUrl = Router.buildUrl
+            action: 'account.edit'
+            accountID: accountID
 
         specialMboxes = specialMailboxes.map (mbox) -> account.get mbox
         accountColor  = colorhash(account.get 'label')

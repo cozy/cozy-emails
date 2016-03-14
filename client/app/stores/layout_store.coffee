@@ -45,6 +45,16 @@ class LayoutStore extends Store
         Defines here the action handlers.
     ###
     __bindHandlers: (handle) ->
+        handle ActionTypes.SET_APPLICATION, ->
+            unless window.rootComponent
+                # Create Application
+                Application = React.createFactory require '../components/application'
+                application = Application()
+                rootNode    = document.querySelector '[role=application]'
+                ReactDOM.render application, rootNode
+            else
+                # Update Application
+                @emit 'change'
 
         handle ActionTypes.SET_ROUTE, (value) ->
             _route = value

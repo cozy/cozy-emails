@@ -10,13 +10,13 @@ ToolboxActions       = React.createFactory require './toolbox_actions'
 LayoutActionCreator  = require '../actions/layout_action_creator'
 MessageActionCreator = require '../actions/message_action_creator'
 
-RouterMixin = require '../mixins/router_mixin'
+Router = require '../mixins/router_mixin'
 
+ToolboxActions = require './toolbox_actions'
+{Button, LinkButton}  = require './basic_components'
 
 module.exports = React.createClass
     displayName: 'ToolbarConversation'
-
-    mixins: [RouterMixin]
 
     propTypes:
         conversation        : PropTypes.object.isRequired
@@ -61,33 +61,17 @@ module.exports = React.createClass
                 onClick: LayoutActionCreator.toggleFullscreen
                 className: "clickable fullscreen"
 
+    # FIXME : this should be in layout_action_creator
     gotoPreviousConversation: ->
-        if (messageID = @props.prevMessageID)
-            conversationID = @props.prevConversationID
-        else
-            # Current Message is the last of the list
-            messageID = @props.nextMessageID
-            conversationID = @props.nextConversationID
-        @goto messageID, conversationID
+        messageID = @props.prevMessageID or @props.nextMessageID
+        Router.redirect {messageID}
         return
 
+    # FIXME : this should be in layout_action_creator
     gotoNextConversation: ->
-        if (messageID = @props.nextMessageID)
-            conversationID = @props.nextConversationID
-        else
-            # Current Message is the first of the list
-            messageID = @props.prevMessageID
-            conversationID = @props.prevConversationID
-        @goto messageID, conversationID
+        messageID = @props.nextMessageID or @props.prevMessageID
+        Router.redirect {messageID}
         return
-
-    goto: (messageID, conversationID) ->
-        if not messageID or not conversationID
-            @redirect @buildClosePanelUrl 'second'
-            return
-
-        parameters = @getUrlParams messageID, conversationID
-        @redirect parameters
 
     onDelete: ->
         # Remove conversation
@@ -98,6 +82,7 @@ module.exports = React.createClass
         # Select previous conversation
         @gotoPreviousConversation()
 
+    # FIXME : this should be in message_action_creator
     onMark: (flag) ->
         conversationID = @props.conversationID
         MessageActionCreator.mark {conversationID}, flag
@@ -106,10 +91,3 @@ module.exports = React.createClass
         conversationID = @props.conversationID
         from = @propos.moveFromMailbox
         MessageActionCreator.move {conversationID}, from, to
-
-    getUrlParams: (messageID, conversationID) ->
-        direction: 'second'
-        action: 'conversation'
-        parameters:
-            messageID: messageID
-            conversationID: conversationID

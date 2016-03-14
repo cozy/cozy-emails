@@ -129,8 +129,7 @@ document.addEventListener 'DOMContentLoaded', ->
 
         # Routing management
         Router = require './router'
-        @router = new Router()
-        window.router = @router
+        window.router = new Router()
 
         # Binds the router and flux to the React application
         Application = React.createFactory require './components/application'

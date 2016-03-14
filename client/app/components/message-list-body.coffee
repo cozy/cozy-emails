@@ -7,6 +7,7 @@ MessageItem = React.createFactory require './message-list-item'
 
 DomUtils = require '../utils/dom_utils'
 
+Router = require '../mixins/router_mixin'
 
 module.exports = MessageListBody = React.createClass
     displayName: 'MessageListBody'

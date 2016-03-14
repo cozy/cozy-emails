@@ -22,7 +22,8 @@ LayoutActionCreator  = require '../actions/layout_action_creator'
 MessageActionCreator = require '../actions/message_action_creator'
 ContactActionCreator = require '../actions/contact_action_creator'
 
-RouterMixin           = require '../mixins/router_mixin'
+Router= require '../mixins/router_mixin'
+
 ShouldComponentUpdate = require '../mixins/should_update_mixin'
 TooltipRefresherMixin = require '../mixins/tooltip_refresher_mixin'
 
@@ -33,7 +34,6 @@ module.exports = React.createClass
     displayName: 'Message'
 
     mixins: [
-        RouterMixin
         TooltipRefresherMixin
         ShouldComponentUpdate.UnderscoreEqualitySlow
     ]
@@ -291,17 +291,9 @@ module.exports = React.createClass
             # Then remove message
             MessageActionCreator.delete messageID: @state.currentMessageID
 
-            unless nextConversation.size
-                # Close 2nd panel : no next conversation found
-                @redirect (url = @buildClosePanelUrl 'second')
-            else
-                # Goto to next conversation
-                @redirect
-                    direction: 'second',
-                    action: 'conversation',
-                    parameters:
-                        messageID: nextConversation.get('id')
-                        conversationID: nextConversation.get('conversationID')
+            # Goto to next conversation
+            Router.redirect
+                message: nextConversation
 
         needConfirmation = @props.settings.get('messageConfirmDelete')
         unless needConfirmation

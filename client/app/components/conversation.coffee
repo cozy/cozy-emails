@@ -8,7 +8,8 @@ React = require 'react'
 Message = React.createFactory require './message'
 ToolbarConversation = React.createFactory require './toolbar_conversation'
 
-RouterMixin = require '../mixins/router_mixin'
+Router = require '../mixins/router_mixin'
+
 StoreWatchMixin = require '../mixins/store_watch_mixin'
 ShouldComponentUpdate = require '../mixins/should_update_mixin'
 
@@ -22,7 +23,6 @@ module.exports = React.createClass
     displayName: 'Conversation'
 
     mixins: [
-        RouterMixin,
         StoreWatchMixin [SettingsStore, AccountStore, MessageStore, LayoutStore]
         ShouldComponentUpdate.UnderscoreEqualitySlow
     ]
@@ -141,6 +141,9 @@ module.exports = React.createClass
                 messages.push(last = []) unless _.isArray(last)
                 last.push key
 
+        closeURL = Router.buildURL
+            action: 'message.list'
+
         # Starts components rendering
         section
             ref: 'conversation'
@@ -163,7 +166,7 @@ module.exports = React.createClass
                     fullscreen          : @state.fullscreen
                 a
                     className: 'clickable btn btn-default fa fa-close'
-                    href: @buildClosePanelUrl 'second'
+                    href: closeURL
 
             for glob, index in messages
                 if _.isArray glob

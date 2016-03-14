@@ -5,10 +5,12 @@ classNames = require 'classnames'
 {div, section, p, ul, li, a, span, i, button, input, img} = React.DOM
 
 {MessageFlags, MailboxFlags} = require '../constants/app_constants'
+
 colorhash                    = require '../utils/colorhash'
 MessageUtils                 = require '../utils/message_utils'
 
-RouterMixin          = require '../mixins/router_mixin'
+Router          = require '../mixins/router_mixin'
+
 MessageActionCreator = require '../actions/message_action_creator'
 
 {Icon}       = require('./basic_components').factories
@@ -17,8 +19,6 @@ Participants = React.createFactory require './participants'
 
 module.exports = MessageItem = React.createClass
     displayName: 'MessagesItem'
-
-    mixins: [RouterMixin]
 
     shouldComponentUpdate: (nextProps, nextState) ->
         # we must do the comparison manually because the property "onSelect" is
@@ -59,7 +59,7 @@ module.exports = MessageItem = React.createClass
             onDragStart:            @onDragStart,
 
             tagType
-                href:              @getUrl()
+                href:              @props.messageURL
                 className:         'wrapper'
                 'data-message-id': message.get('id')
                 onClick:           @onMessageClick
@@ -148,6 +148,7 @@ module.exports = MessageItem = React.createClass
         e.preventDefault()
         e.stopPropagation()
 
+<<<<<<< 0b56443d1321028d80a8d740e3ccfc1afc84be60
     getUrl: ->
         params =
             messageID: @props.message.get 'id'
@@ -160,6 +161,8 @@ module.exports = MessageItem = React.createClass
             action: action
             parameters: params
 
+=======
+>>>>>>> Use Stattic Router.buildURL and remove mixin
     onMessageClick: (event) ->
         node = @refs.target
         if @props.edited and event.target.classList.contains 'select-target'
@@ -178,12 +181,12 @@ module.exports = MessageItem = React.createClass
             MessageActionCreator.setCurrent node.dataset.messageId, true
             if @props.settings.get('displayPreview')
                 href = '#' + node.getAttribute('href').split('#')[1]
-                @redirect href
+                Router.redirect href
 
     onMessageDblClick: (event) ->
-        if not @props.edited
-            url = event.currentTarget.href.split('#')[1]
-            window.router.navigate url, {trigger: true}
+        return if @props.edited
+        url = event.currentTarget.href.split('#')[1]
+        Router.redirect url, {trigger: true}
 
     onDragStart: (event) ->
         event.stopPropagation()

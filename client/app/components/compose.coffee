@@ -22,7 +22,7 @@ MessageUtils = require '../utils/message_utils'
 LayoutActionCreator  = require '../actions/layout_action_creator'
 MessageActionCreator = require '../actions/message_action_creator'
 
-RouterMixin      = require '../mixins/router_mixin'
+Router      = require '../mixins/router_mixin'
 LinkedStateMixin = require 'react-addons-linked-state-mixin'
 
 # Component that allows the user to write emails.
@@ -31,7 +31,6 @@ module.exports = Compose = React.createClass
 
 
     mixins: [
-        RouterMixin
         LinkedStateMixin
     ]
 
@@ -137,8 +136,6 @@ module.exports = Compose = React.createClass
             MessageActionCreator.send 'UNMOUNT', _.clone(@state)
 
     render: ->
-        closeUrl = @buildClosePanelUrl @props.layout
-
         classLabel = 'compose-label'
         classInput = 'compose-input'
 
@@ -248,39 +245,17 @@ module.exports = Compose = React.createClass
                 div className: 'clearfix', null
 
 
+    # FIXME : it should be into message_action_creator
+
     # If we are answering to a message, canceling should bring back to
     # this message.
     # The message URL requires many information: account ID, mailbox ID,
     # conversation ID and message ID. These infor are collected via current
     # selection and message information.
     finalRedirect: ->
-
-        if @props.inReplyTo? and not _.isString @props.inReplyTo
-            conversationID = @state.conversationID
-            accountID = @props.selectedAccountID
-            messageID = @state.id
-            mailboxes = Object.keys @props.inReplyTo.get 'mailboxIDs'
-            mailboxID = AccountStore.pickBestBox accountID, mailboxes
-
-            @redirect
-                firstPanel:
-                    action: 'account.mailbox.messages'
-                    parameters: {accountID, mailboxID}
-
-                secondPanel:
-                    action: 'conversation'
-                    parameters: {conversationID, messageID}
-            return
-
-        # Else it should bring to the default view
-        @redirect
-            direction: 'first'
-            action: 'account.mailbox.messages'
-            fullWidth: true
-            parameters: [
-                @props.selectedAccountID
-                @props.selectedMailboxID
-            ]
+        Router.redirect
+            action: 'message.show'
+            messageID: @state.id
 
     # Cancel brings back to default view.
     # If it's while replying to a message,
@@ -350,14 +325,15 @@ module.exports = Compose = React.createClass
             # Check for Updates
             @resetChange message
 
-            # Update Component
-            if (redirect = not @state.id)
-                @redirect
-                    action: 'compose.edit'
-                    direction: 'first'
-                    fullWidth: true
-                    parameters:
-                        messageID: @state.id
+            # Refresh URL
+            # to save temporary info
+            unless @state.id
+                @state.id = message.id
+                @state.conversationID = message.conversationID
+                Router.redirect
+                    action: 'message.edit'
+                    messageID: @state.id
+                return
 
             else if _.isFunction success
                 success error, message

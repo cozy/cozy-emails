@@ -180,10 +180,7 @@ module.exports = Application = React.createClass
 
         if account? and noSpecialFolder and needSpecialFolder
             @redirect
-                direction: 'first'
-                action: 'account.config'
-                parameters: [ account.get('id'), 'mailboxes']
-                fullWidth: true
+                action: 'account.edit'
             LayoutActionCreator.alertError t 'account no special mailboxes'
 
 

@@ -32,10 +32,9 @@ module.exports = MenuMailboxItem = React.createClass
     render: ->
         mailboxID = @props.mailbox.get 'id'
         mailboxUrl = @buildUrl
-            direction: 'first'
-            fullWidth: true  # remove 2nd panel
-            action: 'account.mailbox.messages'
-            parameters: [@props.account.get('id'), mailboxID]
+            action: 'message.list'
+            accountID: @props.account.get 'id'
+            mailboxID: mailboxID
 
         nbTotal  = @props.mailbox.get('nbTotal') or 0
         nbUnread = @props.mailbox.get('nbUnread') or 0

@@ -108,8 +108,7 @@ module.exports = React.createClass
                     class: if activeTab is name then 'active' else ''
                     text: t "account tab #{name}"
                     url: @buildUrl
-                        direction: 'first'
-                        action: 'account.config'
+                        action: 'account.edit'
                         parameters: [@state.editedAccount.get('id'), name]
 
             switch activeTab

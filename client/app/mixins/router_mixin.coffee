@@ -3,22 +3,20 @@
     Aliases `buildUrl` and `buildClosePanelUrl`
 ###
 
-router = window.router
+Router = require '../router'
 
-module.exports =
-
-
+Getter =
+    # FIXME : router n'existe pas, pkoi ?!
     buildUrl: (options) ->
-        router.buildUrl.call router, options
+        Router.prototype.buildUrl options
 
 
-    buildClosePanelUrl: (direction) ->
-        router.buildClosePanelUrl.call router, direction
-
-
+    #FIXME : supprimer cette méthode
     # Builds the URL (based on options) and redirect to it.
     # If `options` is a string, it will be considered as the target URL.
     redirect: (options) ->
-        url = if typeof options is "string" then options else @buildUrl options
-        router.navigate url, true
+        console.log 'redirect', options
+        # url = if typeof options is "string" then options else @buildUrl options
+        # Router.prototype.buildUrl url, true
 
+module.exports = Getter

@@ -56,13 +56,7 @@ module.exports = ToolbarMessagesList = React.createClass
                     flag = params.value
 
         @redirect
-            direction: 'first'
-            fullWidth: true # remove 2nd panel
-            action: 'account.mailbox.messages'
-            parameters: [
-                @props.accountID, @props.mailboxID,
-                '-date', type, flag, before, after
-            ]
+            filters: ['-date', type, flag, before, after]
 
 
     render: ->
