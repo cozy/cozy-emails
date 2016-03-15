@@ -441,15 +441,16 @@ module.exports = Compose = React.createClass
         getGroupedError error, @state, _.isEmpty
 
     sendActionMessage: (success) ->
-        return if @props.isSaving
+        return if @state.isSaving
         if (validate = @validateMessage())
             LayoutActionCreator.alertError t 'compose error no ' + validate[1]
             success(null, @state) if _.isFunction success
             return
 
-        @props.isSaving = true
-        MessageActionCreator.send _.clone(@state), (error, message) =>
-            @props.isSaving = false
+        _message = _.clone @state
+        @state.isSaving = true
+        MessageActionCreator.send _message, (error, message) =>
+            delete @state.isSaving
             if error? or not message?
                 if @state.isDraft
                     msgKo = t "message action draft ko"
