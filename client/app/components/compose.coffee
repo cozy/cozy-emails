@@ -159,9 +159,9 @@ module.exports = Compose = React.createClass
             # DOM form element :
             # It can be React Component
             ref = path.split('ref=')[1]
-            element = @refs[ref]?.getDOMNode()
+            element = ReactDOM.findDOMNode @refs[ref]
 
-        else if (elements = @getDOMNode().querySelectorAll(path))
+        else if (elements = ReactDOM.findDOMNode(@).querySelectorAll(path))
             element = elements[0]
 
         element.focus() if (element)
@@ -176,21 +176,21 @@ module.exports = Compose = React.createClass
 
     addFocusListener: ->
         _.each ['input[type="text"]', 'textarea'], (path) =>
-            _.each @getDOMNode().querySelectorAll(path), (element) =>
+            _.each ReactDOM.findDOMNode(@).querySelectorAll(path), (element) =>
                 element.addEventListener 'focus', @saveFocus
 
         # Editor is a specific case
-        if (editor = @refs.editor.getDOMNode())
+        if (editor = ReactDOM.findDOMNode @refs.editor)
             editor.addEventListener 'click', (event) =>
                 @saveFocus refsPath: 'editor'
 
     removeFocusListener: ->
         _.each ['input[type="text"]', 'textarea'], (path) =>
-            _.each @getDOMNode().querySelectorAll(path), (element) =>
+            _.each ReactDOM.findDOMNode(@).querySelectorAll(path), (element) =>
                 element.removeEventListener 'focus', @saveFocus
 
         # Editor is a specific case
-        if (editor = @refs.editor.getDOMNode())
+        if (editor = ReactDOM.findDOMNode @refs.editor)
             editor.removeEventListener 'click', @saveFocus
 
     closeSaveDraft: (state, options={}) ->
@@ -441,15 +441,16 @@ module.exports = Compose = React.createClass
         getGroupedError error, @state, _.isEmpty
 
     sendActionMessage: (success) ->
-        return if @props.isSaving
+        return if @state.isSaving
         if (validate = @validateMessage())
             LayoutActionCreator.alertError t 'compose error no ' + validate[1]
             success(null, @state) if _.isFunction success
             return
 
-        @props.isSaving = true
-        MessageActionCreator.send _.clone(@state), (error, message) =>
-            @props.isSaving = false
+        _message = _.clone @state
+        @state.isSaving = true
+        MessageActionCreator.send _message, (error, message) =>
+            delete @state.isSaving
             if error? or not message?
                 if @state.isDraft
                     msgKo = t "message action draft ko"
