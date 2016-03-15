@@ -12,8 +12,8 @@
 
 client/public
 
-locales
-!locales/en.json
+client/app/locales
+!client/app/locales/en.json
 
 doc
 last.html
