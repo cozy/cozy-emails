@@ -163,9 +163,9 @@ module.exports = React.createClass
         id = @state.editedAccount?.get('id')
         accountValue = @state.editedAccount.toJS()
 
-        if errors.length > 0
+        if Object.keys(errors).length > 0
             LayoutActions.alertError t 'account errors'
-            @setState submitted: true, errors: errors
+            @setState submitted: true, errors: Immutable.Map(errors)
 
         else if check is true
             AccountActionCreator.check accountValue, id
