@@ -1,18 +1,19 @@
 _         = require 'underscore'
 Immutable = require 'immutable'
 
-Store = require '../libs/flux/store/store'
-ContactStore  = require './contact_store'
 AppDispatcher = require '../app_dispatcher'
 
+Store = require '../libs/flux/store/store'
+ContactStore  = require './contact_store'
 AccountStore = require './account_store'
 
+XHRUtils = require '../utils/xhr_utils'
 SocketUtils = require '../utils/socketio_utils'
+{reverseDateSort, getSortFunction} = require '../utils/misc'
 
 {ActionTypes, MessageFlags, MessageFilter, FlagsConstants} =
         require '../constants/app_constants'
 
-{reverseDateSort, getSortFunction} = require '../utils/misc'
 
 EPOCH = (new Date(0)).toISOString()
 
@@ -62,7 +63,7 @@ class MessageStore extends Store
     _getFilter = (getDefault) ->
         return if not _currentFilter or getDefault
             field: 'date'
-            order: '+'
+            order: '-'
             type: '-'
             value: 'nofilter'
             before: '-'
@@ -362,17 +363,29 @@ class MessageStore extends Store
 
         handle ActionTypes.MESSAGE_FETCH_REQUEST, ->
             return if not (url = @getNextUrl()) or @isFetching()
+
             # There may be more than one concurrent fetching request
             # so we use a counter instead of a boolean
-            _fetching++
-            @emit 'change'
+            mailboxID = AccountStore.getSelectedMailbox()?.get 'id'
+            ts = Date.now()
+            XHRUtils.fetchMessagesByFolder url, (err, rawMsg) ->
+                _fetching--
+                if err?
+                    AppDispatcher.handleViewAction
+                        type: ActionTypes.MESSAGE_FETCH_FAILURE
+                        value: {mailboxID}
+                else
+                    # This prevent to override local updates with older ones
+                    # from server
+                    rawMsg.messages.forEach (msg) -> msg.updated = ts
+                    AppDispatcher.handleViewAction
+                        type: ActionTypes.MESSAGE_FETCH_SUCCESS
+                        value: {mailboxID, fetchResult: rawMsg}
 
         handle ActionTypes.MESSAGE_FETCH_FAILURE, ->
-            _fetching--
             @emit 'change'
 
         handle ActionTypes.MESSAGE_FETCH_SUCCESS, ({fetchResult}) ->
-            _fetching--
             if fetchResult.links?.next?
                 _nextUrl = decodeURIComponent(fetchResult.links.next)
             else if fetchResult.links?
@@ -419,7 +432,7 @@ class MessageStore extends Store
 
 
         handle ActionTypes.MESSAGE_CURRENT, (value) ->
-            @setCurrentID value.messageID, value.conv
+            @setCurrentID value.messageID
             @emit 'change'
 
         handle ActionTypes.SELECT_ACCOUNT, (value) ->
@@ -511,12 +524,9 @@ class MessageStore extends Store
         return _currentID
 
 
-    setCurrentID: (messageID, conv) ->
-        if conv?
-            # this will set current conversation and conversationID
-            conversationID = @getByID(messageID)?.get 'conversationID'
+    setCurrentID: (messageID) ->
         _currentID = messageID
-        _currentCID = conversationID
+        _currentCID = @getByID(messageID)?.get('id')
         _conversationMemoize = null
 
 
@@ -543,12 +553,15 @@ class MessageStore extends Store
     getNextConversation: (param={}) ->
         @getConversation _.extend param, transform: (index) -> --index
 
-    getCurrentConversation: ->
-        conversationID = @getCurrentConversationID()
-        if conversationID
-            return @getConversation(conversationID)
-        else
-            return null
+    getCurrentConversation: (isRecursice) ->
+        if (conversationID = @getCurrentConversationID())
+            return @getConversation conversationID
+
+        # Maybe message wasnt fetch
+        # when messageID was saved
+        if (messageID = @getCurrentID()) and not isRecursice
+             @setCurrentID messageID
+             return @getCurrentConversation true
 
     setConversation: (conversationID) ->
         _conversationMemoizeID = conversationID
@@ -663,9 +676,11 @@ class MessageStore extends Store
         keys.unshift str unless _.isEmpty str
         keys.join('-')
 
+    # FIXME : ça devrait etre dans le store du layout
+    #  et utiliser le routing
     getCurrentURL: ->
         filter = _getFilter()
-        mailboxID = AccountStore.getSelectedMailbox().get 'id'
+        mailboxID = AccountStore.getSelectedMailbox()?.get 'id'
         sort = if filter.type in ['from', 'dest']
             encodeURIComponent "+#{filter.type}"
         else
@@ -682,6 +697,7 @@ class MessageStore extends Store
             url += "&after=#{encodeURIComponent filter.after}"
         return url
 
+    # FIXME : la génération de l'url devrait être dans le routing
     getNextUrl: ->
         if _nextUrl
             return _nextUrl
@@ -689,6 +705,5 @@ class MessageStore extends Store
             return null
         else
             _currentUrl = url
-            return url
 
-module.exports = self = new MessageStore()
+module.exports = new MessageStore()

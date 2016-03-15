@@ -5,18 +5,16 @@ moment   = require 'moment'
 
 AccountStore  = require '../stores/account_store'
 MessageStore  = require '../stores/message_store'
+LayoutStore  = require '../stores/message_store'
+
 SettingsStore = require '../stores/settings_store'
 LayoutActionCreator  = require '../actions/layout_action_creator'
 MessageActionCreator = require '../actions/message_action_creator'
 
 
+
 onMessageList = ->
-    actions = [
-        "account.mailbox.messages",
-        "account.mailbox.messages.filter",
-        "account.mailbox.messages.date"
-    ]
-    return router.current.firstPanel?.action in actions
+    return LayoutStore.getRoute() is 'message.list'
 
 
 module.exports = Utils =
@@ -123,31 +121,18 @@ module.exports = Utils =
     ##
     # Display a message
     # @params {Immutable} message the message (current one if null)
-    # @params {Boolean}   force   if false do nothing if right panel is not open
-    messageDisplay: (message, force) ->
-        if not message?
-            message = MessageStore.getByID(MessageStore.getCurrentID())
-        if not message?
+    messageDisplay: (message) ->
+        message ?= MessageStore.getByID MessageStore.getCurrentID()
+        unless message
             return
-        # return if second panel isn't already open
-        if force is false and not window.router.current.secondPanel?
-            return
-
-        if (conversationID = message.get 'conversationID')?
-            action = 'conversation'
-            params =
-                messageID: message.get 'id'
-                conversationID: conversationID
-        else
-            action = 'message'
-            params =
-                messageID: message.get 'id'
 
         urlOptions =
-            direction: 'second'
-            action: action
-            parameters: params
+            action: 'message'
+            parameters:
+                messageID: message.get 'id'
+                conversationID: message.get 'conversationID'
 
+        # FIXME : use router.redirect instead
         url = window.router.buildUrl urlOptions
         window.router.navigate url, {trigger: true}
 

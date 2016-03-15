@@ -8,15 +8,11 @@ SearchBar                  = React.createFactory require './search_bar'
 
 LayoutActionCreator  = require '../actions/layout_action_creator'
 
-RouterMixin = require '../mixins/router_mixin'
+Router = require '../mixins/router_mixin'
 
 
 module.exports = ToolbarMessagesList = React.createClass
     displayName: 'ToolbarMessagesList'
-
-    mixins: [
-        RouterMixin,
-    ]
 
     propTypes:
         settings:             React.PropTypes.object
@@ -55,7 +51,7 @@ module.exports = ToolbarMessagesList = React.createClass
                 if params.value
                     flag = params.value
 
-        @redirect
+        Router.redirect
             filters: ['-date', type, flag, before, after]
 
 

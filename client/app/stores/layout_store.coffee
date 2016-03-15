@@ -3,6 +3,7 @@ Immutable = require 'immutable'
 AppDispatcher = require '../app_dispatcher'
 
 Store = require '../libs/flux/store/store'
+
 AccountStore = require './account_store'
 
 {ActionTypes, Dispositions} = require '../constants/app_constants'
@@ -20,6 +21,8 @@ class LayoutStore extends Store
         Defines private variables here.
     ###
     _disposition = Dispositions.COL
+
+    _route = null
 
     # TODO: Use a constant for default value?
     _previewSize = 60
@@ -45,16 +48,6 @@ class LayoutStore extends Store
         Defines here the action handlers.
     ###
     __bindHandlers: (handle) ->
-        handle ActionTypes.SET_APPLICATION, ->
-            unless window.rootComponent
-                # Create Application
-                Application = React.createFactory require '../components/application'
-                application = Application()
-                rootNode    = document.querySelector '[role=application]'
-                ReactDOM.render application, rootNode
-            else
-                # Update Application
-                @emit 'change'
 
         handle ActionTypes.SET_ROUTE, (value) ->
             _route = value
@@ -274,9 +267,11 @@ class LayoutStore extends Store
     ###
         Public API
     ###
+    getRoute: ->
+        return _route
+
     getDisposition: ->
         return _disposition
-
 
     getListModeCompact: ->
         return _listModeCompact
@@ -314,4 +309,4 @@ class LayoutStore extends Store
         return _drawer
 
 
-module.exports = LayoutStoreInstance = new LayoutStore()
+module.exports = new LayoutStore()

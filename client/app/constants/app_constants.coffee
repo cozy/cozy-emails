@@ -72,6 +72,8 @@ module.exports =
         'CONTACT_LOCAL_SEARCH'       : 'CONTACT_LOCAL_SEARCH'
 
         # Layout
+        'SET_ROUTE'                 : 'SET_ROUTE'
+        'SET_APPLICATION'           : 'SET_APPLICATION'
         'SET_DISPOSITION'           : 'SET_DISPOSITION'
         'TOGGLE_LIST_MODE'          : 'TOGGLE_LIST_MODE'
         'RESIZE_PREVIEW_PANE'       : 'RESIZE_PREVIEW_PANE'

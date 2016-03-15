@@ -8,7 +8,6 @@ React      = require 'react'
 AccountActionCreator = require '../actions/account_action_creator'
 LayoutActionCreator  = require '../actions/layout_action_creator'
 
-RouterMixin      = require '../mixins/router_mixin'
 LinkedStateMixin = require 'react-addons-linked-state-mixin'
 
 # Line for the mailbox list.
@@ -16,7 +15,6 @@ module.exports = MailboxItem = React.createClass
     displayName: 'MailboxItem'
 
     mixins: [
-        RouterMixin
         LinkedStateMixin
     ]
 

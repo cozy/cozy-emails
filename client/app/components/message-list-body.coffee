@@ -38,6 +38,7 @@ module.exports = MessageListBody = React.createClass
 
                     ["msg-#{key}", MessageItem
                         message: message,
+                        messageURL: Router.buildUrl {message}
                         accountID: @props.accountID,
                         mailboxID: @props.mailboxID,
                         accountLabel: @props.accountLabel,
@@ -49,6 +50,7 @@ module.exports = MessageListBody = React.createClass
                         settings: @props.settings,
                         selected: @props.selected[id]?,
                         login: @props.login
+                        displayConversations: @props.displayConversations
                         isTrash: @props.isTrash
                         ref: 'messageItem'
                         onSelect: (val) =>

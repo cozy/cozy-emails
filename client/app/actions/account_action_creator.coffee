@@ -186,19 +186,20 @@ module.exports = AccountActionCreator =
             value: mailboxID
 
         XHRUtils.mailboxExpunge options, (error, account) ->
+            # FIXME : handle redirect
 
-            if error?
-                getLAC().alertError """
-                    #{t("mailbox expunge ko")} #{error.message or error}
-                """
-
-                # if user hasn't switched to another box, refresh display
-                unless AccountStore.selectedIsDifferentThan accountID, mailboxID
-                    parameters = MessageStore.getQueryParams()
-                    parameters.accountID = accountID
-                    parameters.mailboxID = mailboxID
-                    getLAC().showMessageList {parameters}
-
-            else
-                getLAC().notify t("mailbox expunge ok"),
-                    autoclose: true
+            # if error?
+            #     getLAC().alertError """
+            #         #{t("mailbox expunge ko")} #{error.message or error}
+            #     """
+            #
+            #     # if user hasn't switched to another box, refresh display
+            #     unless AccountStore.selectedIsDifferentThan accountID, mailboxID
+            #         parameters = MessageStore.getQueryParams()
+            #         parameters.accountID = accountID
+            #         parameters.mailboxID = mailboxID
+            #         getLAC().showMessageList {parameters}
+            #
+            # else
+            #     getLAC().notify t("mailbox expunge ok"),
+            #         autoclose: true

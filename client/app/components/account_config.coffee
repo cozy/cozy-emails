@@ -6,7 +6,8 @@ AccountStore = require '../stores/account_store'
 AccountActionCreator = require '../actions/account_action_creator'
 LayoutActions = require '../actions/layout_action_creator'
 
-RouterMixin = require '../mixins/router_mixin'
+Router = require '../mixins/router_mixin'
+
 StoreWatchMixin      = require '../mixins/store_watch_mixin'
 ShouldComponentUpdate = require '../mixins/should_update_mixin'
 
@@ -32,7 +33,6 @@ module.exports = React.createClass
     _lastDiscovered: ''
 
     mixins: [
-        RouterMixin
         ShouldComponentUpdate.UnderscoreEqualitySlow
         StoreWatchMixin [AccountStore]
     ]
@@ -107,7 +107,7 @@ module.exports = React.createClass
                 Tabs tabs: TABS.map (name) =>
                     class: if activeTab is name then 'active' else ''
                     text: t "account tab #{name}"
-                    url: @buildUrl
+                    url: Router.buildUrl
                         action: 'account.edit'
                         parameters: [@state.editedAccount.get('id'), name]
 

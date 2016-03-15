@@ -1,9 +1,11 @@
 
-LayoutActionCreator = require '../actions/layout_action_creator'
+LayoutActionCreator = require './actions/layout_action_creator'
 
-AccountStore = require './stores/account_store'
+RouteGetter = require './getters/route'
 
-{ActionTypes} = require '../constants/app_constants'
+{ActionTypes} = require './constants/app_constants'
+
+_ = require 'lodash'
 
 PREFIX_ACCOUNT = 'account/:accountID/mailbox/:mailboxID'
 
@@ -48,7 +50,7 @@ class Router extends Backbone.Router
 
     accountEdit: (accountID, tab) ->
         unless accountID
-            accountID = AccountStore.getDefault()?.get 'id'
+            accountID = RouteGetter.get('accountID')
             tab = 'account'
 
         LayoutActionCreator.setRoute 'account.edit'
@@ -63,7 +65,7 @@ class Router extends Backbone.Router
 
     messageList: (accountID, mailboxID, query) ->
         params = _getURLparams query
-        LayoutActionCreator.setRoute 'message.list'
+        LayoutActionCreator.setRoute 'message.list', {accountID, mailboxID, params}
         LayoutActionCreator.showMessageList {accountID, mailboxID, params}
 
     # TODO : récupérer les noms des actions dans les constantes
@@ -111,11 +113,13 @@ class Router extends Backbone.Router
 
         if -1 < (index = _.values(__routes).indexOf(name))
             route = _.keys(__routes)[index]
-            return route.replace /\:\w*/gi, (match) ->
+            url = route.replace /\:\w*/gi, (match) ->
                 # Get Route pattern of action
                 # Replace param name by its value
                 param = match.substring 1, match.length
-                params[param] or ''
+                params[param] or RouteGetter.getProps(param)
+            console.log 'buildUrl', params.action, url.replace(/\/\*$/, '')
+            return '#' + url.replace(/\/\*$/, '')
         return '/'
 
 _toCamelCase = (value) ->

@@ -4,11 +4,9 @@ React     = require 'react'
 {div, section, p, ul, li, a, span, i, button, input, img} = React.DOM
 {MessageFlags, Tooltips} = require '../constants/app_constants'
 
-RouterMixin           = require '../mixins/router_mixin'
 TooltipRefresherMixin = require '../mixins/tooltip_refresher_mixin'
 StoreWatchMixin       = require '../mixins/store_watch_mixin'
 SelectionManager      = require '../mixins/selection_manager_mixin'
-ShouldUpdate          = require '../mixins/should_update_mixin'
 
 LayoutStore   = require '../stores/layout_store'
 AccountStore  = require '../stores/account_store'
@@ -38,7 +36,6 @@ module.exports = MessageList = React.createClass
 
     mixins: [
         SelectionManager
-        RouterMixin,
         TooltipRefresherMixin
         StoreWatchMixin [LayoutStore, AccountStore, MessageStore]
     ]

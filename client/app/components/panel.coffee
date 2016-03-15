@@ -11,7 +11,6 @@ Settings       = React.createFactory require './settings'
 SearchResult   = React.createFactory require './search_result'
 
 # React Mixins
-RouterMixin          = require '../mixins/router_mixin'
 TooltipRefesherMixin = require '../mixins/tooltip_refresher_mixin'
 
 # Flux stores
@@ -30,7 +29,6 @@ module.exports = Panel = React.createClass
 
     mixins: [
         TooltipRefesherMixin
-        RouterMixin
     ]
 
     # Build initial state from store values.
@@ -45,30 +43,23 @@ module.exports = Panel = React.createClass
 
     render: ->
         # -- Generates a list of messages for a given account and mailbox
-        if @props.action is 'account.mailbox.messages'
+        if @props.action is 'message.list'
             @renderList()
 
         else if @props.action is 'search'
-
             key = encodeURIComponent SearchStore.getCurrentSearch()
-
             SearchResult
                 key: "search-#{key}"
 
         # -- Generates a configuration window for a given account
-        else if @props.action is 'account.config' or
-                @props.action is 'account.new'
-
+        else if -1 < @props.action.indexOf 'account'
             id = @props.accountID or 'new'
-
             AccountConfig
                 key: "account-config-#{id}"
                 tab: @props.tab
 
         # -- Generates a conversation
-        else if @props.action is 'message' or
-                @props.action is 'conversation'
-
+        else if @props.action is 'message.show'
             Conversation
                 messageID: @props.messageID
                 key: 'conversation-' + @props.messageID
@@ -117,7 +108,7 @@ module.exports = Panel = React.createClass
             accounts             : @state.accounts
             selectedAccountID    : @state.selectedAccount.get 'id'
             selectedAccountLogin : @state.selectedAccount.get 'login'
-            selectedMailboxID    : @props.selectedMailboxID
+            selectedMailboxID    : @props.mailboxID
             useIntents           : @props.useIntents
             ref                  : 'message'
             key                  : @props.action or 'message'

@@ -11,7 +11,6 @@ AccountDelete    = React.createFactory require './account_config_delete'
 AccountActionCreator = require '../actions/account_action_creator'
 LayoutActionCreator  = require '../actions/layout_action_creator'
 
-RouterMixin           = require '../mixins/router_mixin'
 ShouldComponentUpdate = require '../mixins/should_update_mixin'
 LinkedStateMixin      = require 'react-addons-linked-state-mixin'
 
@@ -22,7 +21,6 @@ module.exports = AccountConfigMailboxes = React.createClass
     displayName: 'AccountConfigMailboxes'
 
     mixins: [
-        RouterMixin
         LinkedStateMixin
         ShouldComponentUpdate.UnderscoreEqualitySlow
     ]

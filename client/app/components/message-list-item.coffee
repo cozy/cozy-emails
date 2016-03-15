@@ -4,14 +4,14 @@ classNames = require 'classnames'
 
 {div, section, p, ul, li, a, span, i, button, input, img} = React.DOM
 
-{MessageFlags, MailboxFlags} = require '../constants/app_constants'
+{MessageFlags} = require '../constants/app_constants'
 
 colorhash                    = require '../utils/colorhash'
 MessageUtils                 = require '../utils/message_utils'
 
-Router          = require '../mixins/router_mixin'
-
-MessageActionCreator = require '../actions/message_action_creator'
+RouterGetter = require '../getters/router'
+RouterActionCreator = require '../actions/router_action_creator'
+LayoutActionCreator = require '../actions/layout_action_creator'
 
 {Icon}       = require('./basic_components').factories
 Participants = React.createFactory require './participants'
@@ -20,50 +20,29 @@ Participants = React.createFactory require './participants'
 module.exports = MessageItem = React.createClass
     displayName: 'MessagesItem'
 
-    shouldComponentUpdate: (nextProps, nextState) ->
-        # we must do the comparison manually because the property "onSelect" is
-        # a function (therefore it should not be compared)
-        updatedProps = Object.keys(nextProps).filter (prop) =>
-            return typeof nextProps[prop] isnt 'function' and
-                not (_.isEqual(nextProps[prop], @props[prop]))
-        shouldUpdate = not _.isEqual(nextState, @state) or
-            updatedProps.length > 0
-
-        return shouldUpdate
-
     render: ->
         message = @props.message
-        flags = message.get('flags')
+        flags = message.get 'flags'
 
         classes = classNames
-            message: true
-            unseen:  MessageFlags.SEEN not in flags
-            active:  @props.isActive
-            edited:  @props.edited
+            message:    true
+            unseen:     MessageFlags.SEEN not in flags
+            active:     @props.isActive
 
-        compact = @props.settings.get('listStyle') is 'compact'
+        compact = @props.isCompact
         date    = MessageUtils.formatDate message.get('createdAt'), compact
         avatar  = MessageUtils.getAvatar message
-
-        # Change tag type if current message is in edited mode
-        tagType  = if @props.edited then span else a
 
 
         li
             className:              classes
             key:                    @props.key
-            'data-message-id':      message.get('id')
-            'data-conversation-id': message.get('conversationID')
-            draggable:              not @props.edited
+            'data-message-active':  @props.isActive
+            draggable:              false
             onClick:                @onMessageClick
-            onDragStart:            @onDragStart,
 
-            tagType
-                href:              @props.messageURL
+            a
                 className:         'wrapper'
-                'data-message-id': message.get('id')
-                onClick:           @onMessageClick
-                onDoubleClick:     @onMessageDblClick
                 ref:               'target'
 
                 div className: 'markers-wrapper',
@@ -74,8 +53,7 @@ module.exports = MessageItem = React.createClass
                     Icon
                         className: 'select'
                         onClick:   @onSelect
-                        type: (if @props.selected then 'check-square-o'
-                        else 'square-o')
+                        type: if @props.isSelected then 'check-square-o' else 'square-o'
 
                     Icon
                         type: 'star'
@@ -118,84 +96,18 @@ module.exports = MessageItem = React.createClass
         return p opts, MessageUtils.highlightSearch(text)...
 
     getMailboxTags: ->
+        tags = RouterGetter.getTags @props.message
+        tags.map (tag) -> span className: 'mailbox-tag', tag
 
-        accountID = @props.message.get('accountID')
-
-        Object.keys @props.message.get('mailboxIDs')
-        .filter (boxID) =>
-            box = @props.mailboxes.get boxID
-            unless box # box was just deleted
-                return false
-
-            if @props.mailboxID and MailboxFlags.ALL in box.get 'attribs'
-                return false # dont display "all messages" labels
-
-            if @props.mailboxID is boxID
-                return false # dont display same box labels
-
-            return true
-
-        .map (boxID) =>
-            box = @props.mailboxes.get boxID
-            label = box.get 'label'
-            unless @props.accountID
-                label = "#{@props.accountLabel}:#{label}"
-
-            span className: 'mailbox-tag', label
-
-    onSelect: (e) ->
-        @props.onSelect(not @props.selected)
-        e.preventDefault()
-        e.stopPropagation()
-
-<<<<<<< 0b56443d1321028d80a8d740e3ccfc1afc84be60
-    getUrl: ->
-        params =
-            messageID: @props.message.get 'id'
-
-        action = 'conversation'
-        params.conversationID = @props.message.get 'conversationID'
-
-        return @buildUrl
-            direction: 'second'
-            action: action
-            parameters: params
-
-=======
->>>>>>> Use Stattic Router.buildURL and remove mixin
-    onMessageClick: (event) ->
-        node = @refs.target
-        if @props.edited and event.target.classList.contains 'select-target'
-            @props.onSelect(not @props.selected)
-            event.preventDefault()
-            event.stopPropagation()
-        # When hitting `enter` in deletion confirmation dialog, this
-        # event is fired on last active link. We must cancel it to prevent
-        # navigating to the last message the user clicked
-        else if event.target.classList.contains 'wrapper'
-            event.preventDefault()
-            event.stopPropagation()
-        else if not (event.target.getAttribute('type') is 'checkbox')
-            event.preventDefault()
-            event.stopPropagation()
-            MessageActionCreator.setCurrent node.dataset.messageId, true
-            if @props.settings.get('displayPreview')
-                href = '#' + node.getAttribute('href').split('#')[1]
-                Router.redirect href
-
-    onMessageDblClick: (event) ->
-        return if @props.edited
-        url = event.currentTarget.href.split('#')[1]
-        Router.redirect url, {trigger: true}
-
-    onDragStart: (event) ->
+    onSelect: (event) ->
         event.stopPropagation()
-        data = mailboxID: @props.mailboxID
-        data.conversationID = event.currentTarget.dataset.conversationId
+        id = @props.message.get 'id'
+        value = not @props.isSelected
+        LayoutActionCreator.updateSelection {id, value}
 
-        event.dataTransfer.setData 'text', JSON.stringify(data)
-        event.dataTransfer.effectAllowed = 'move'
-        event.dataTransfer.dropEffect = 'move'
+    onMessageClick: (event) ->
+        RouterActionCreator.navigate
+            messageID: @props.message.get 'id'
 
     getParticipants: (message) ->
         from = message.get 'from'

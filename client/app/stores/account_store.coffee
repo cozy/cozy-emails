@@ -295,7 +295,8 @@ class AccountStore extends Store
         mailboxes = account.get('mailboxes')
         mailbox = mailboxes.filter (mailbox) ->
             return mailbox.get('label').toLowerCase() is 'inbox'
-        if mailbox.size isnt 0
+
+        if mailbox.size
             return mailbox.first()
         else
             favorites = account.get('favorites')
@@ -339,20 +340,12 @@ class AccountStore extends Store
 
 
     getSelectedMailbox: (selectedID) ->
-        mailboxes = @getSelectedMailboxes()
-
-        if selectedID?
-            return mailboxes.get selectedID
-
-        else if _selectedMailbox?
+        if (mailboxes = @getSelectedMailboxes()).size
+            return mailboxes.get(selectedID) if selectedID
             return _selectedMailbox
-
-        else
-            return mailboxes.first()
-
+        return @getDefaultMailbox()
 
     getSelectedFavorites: (sorted) ->
-
         mailboxes = @getSelectedMailboxes()
         ids = _selectedAccount?.get 'favorites'
 

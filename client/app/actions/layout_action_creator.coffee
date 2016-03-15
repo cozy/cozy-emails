@@ -1,9 +1,13 @@
 XHRUtils = require '../utils/xhr_utils'
 SocketUtils = require '../utils/socketio_utils'
 
+React     = require 'react'
+ReactDOM  = require 'react-dom'
+
 LayoutStore  = require '../stores/layout_store'
 AccountStore = require '../stores/account_store'
 MessageStore = require '../stores/message_store'
+ApplicationGetters = require '../getters/application'
 
 AppDispatcher = require '../app_dispatcher'
 
@@ -15,6 +19,11 @@ MessageActionCreator = require './message_action_creator'
 uniqID = 0
 
 module.exports = LayoutActionCreator =
+
+    setRoute: (value) ->
+        AppDispatcher.handleViewAction
+            type: ActionTypes.SET_ROUTE
+            value: value
 
     setDisposition: (type) ->
         AppDispatcher.handleViewAction
@@ -115,18 +124,52 @@ module.exports = LayoutActionCreator =
         # if there is no account, we display the configAccount
         if AccountStore.getAll().size is 0 then 'account.new'
         # else go directly to first account
-        else 'account.mailbox.messages'
+        else 'message.list'
 
-    showMessageList: (panelInfo) ->
-        params = panelInfo.parameters
+    showMessageList: (data) ->
+        {accountID, mailboxID, messageID, params} = data
+        accountID ?= AccountStore.getSelectedOrDefault()?.get 'id'
+        mailboxID ?= AccountStore.getSelectedMailbox()?.get 'id'
+        unless accountID
+            # TODO : si pas accountID
+            # alors aller à la page de config
+            console.log 'NO ACCOUNT FOUND'
+            return
 
-        # ensure the proper account is selected
-        {accountID, mailboxID} = params
-        AccountActionCreator.ensureSelected accountID, mailboxID
-
+        # Select Mailbox
         AppDispatcher.handleViewAction
-            type: ActionTypes.QUERY_PARAMETER_CHANGED
-            value: params
+            type: ActionTypes.SELECT_ACCOUNT
+            value: {accountID, mailboxID}
+
+        # Set message as current
+        if messageID
+            AppDispatcher.handleViewAction
+                type: ActionTypes.MESSAGE_CURRENT
+                value: {messageID}
+
+        # FIXME : normalement,
+        # ça devrait sauvegarder les filtres
+        # Vérifier
+        # FIXME : faire fonctionner
+        # avec 'params' en argument
+        params =
+            pageAfter: '-'
+            sort: '-date'
+            after: '-'
+            before: '-'
+            type: 'nofilter'
+            flag: '-'
+        # Get Messages first
+        unless MessageStore.getCurrentConversation()
+            AppDispatcher.handleViewAction
+                type: ActionTypes.MESSAGE_FETCH_REQUEST
+            AppDispatcher.waitFor[MessageStore.dispatchToken]
+
+        # Display Application
+        Application = React.createFactory require '../components/application'
+        props = ApplicationGetters.getProps 'application'
+        ReactDOM.render Application(props), document.querySelector '[role=application]'
+
 
     showSearchResult: (panelInfo) ->
         {accountID, search} = panelInfo.parameters

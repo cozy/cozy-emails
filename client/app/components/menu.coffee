@@ -131,7 +131,7 @@ module.exports = Menu = React.createClass
             action: 'account.new'
 
         # the button toggle the "new account" screen
-        if @props.layout.firstPanel.action is 'account.new'
+        if @props.action is 'account.new'
             newMailboxClass = 'active'
         else
             newMailboxClass = ''

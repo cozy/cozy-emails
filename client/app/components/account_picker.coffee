@@ -3,8 +3,6 @@ React = require 'react'
 
 {div, ul, li, p, span, a, button, input} = React.DOM
 
-RouterMixin = require '../mixins/router_mixin'
-
 
 module.exports = React.createClass
 
