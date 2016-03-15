@@ -3,9 +3,12 @@ var americano, application;
 
 americano = require('americano');
 
-application = module.exports = function(options, callback) {
+module.exports = application = function(options, callback) {
   if (options == null) {
     options = {};
+  }
+  if (callback == null) {
+    callback = function() {};
   }
   options.name = 'cozy-emails';
   if (options.root == null) {
@@ -16,9 +19,6 @@ application = module.exports = function(options, callback) {
   }
   if (options.host == null) {
     options.host = process.env.HOST || '127.0.0.1';
-  }
-  if (callback == null) {
-    callback = function() {};
   }
   return americano.start(options, callback);
 };
