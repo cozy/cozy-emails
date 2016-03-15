@@ -1,5 +1,9 @@
+_     = require 'underscore'
+React = require 'react'
+
 {div, ul, li, span, i, p, a, button} = React.DOM
-{MenuHeader, MenuItem} = require './basic_components'
+
+{MenuHeader, MenuItem} = require('./basic_components').factories
 
 
 module.exports = ToolboxMove = React.createClass
@@ -37,4 +41,4 @@ module.exports = ToolboxMove = React.createClass
                 onClick: @props.onMove
                 onClickValue: id
                 mbox.get('label')
-        .toJS()
+        .toArray()

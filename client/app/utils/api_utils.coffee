@@ -1,3 +1,8 @@
+React    = require 'react'
+_        = require 'underscore'
+Polyglot = require 'node-polyglot'
+moment   = require 'moment'
+
 AccountStore  = require '../stores/account_store'
 MessageStore  = require '../stores/message_store'
 SettingsStore = require '../stores/settings_store'
@@ -57,7 +62,7 @@ module.exports = Utils =
 
     # update locate (without saving it into settings)
     setLocale: (lang) ->
-        window.moment.locale lang
+        moment.locale lang
         locales = {}
         try
             locales = require "../locales/#{lang}"
@@ -95,9 +100,6 @@ module.exports = Utils =
     messageNavigate: (direction, inConv) ->
         return unless onMessageList()
 
-        conv = inConv and SettingsStore.get('displayConversation') and
-            SettingsStore.get('displayPreview')
-
         # when key top is pressed, direction=prev
         # when key bottom is pressed, direction=next
         # strange (?!)
@@ -130,8 +132,8 @@ module.exports = Utils =
         # return if second panel isn't already open
         if force is false and not window.router.current.secondPanel?
             return
-        conversationID = message.get 'conversationID'
-        if SettingsStore.get('displayConversation') and conversationID?
+
+        if (conversationID = message.get 'conversationID')?
             action = 'conversation'
             params =
                 messageID: message.get 'id'
@@ -186,12 +188,8 @@ module.exports = Utils =
             return
 
         # Display 'delete' modal
-        if (conversation = settings.get 'displayConversation')
-            confirmMessage = t 'list delete conv confirm',
-                smart_count: 1
-        else
-            confirmMessage = t 'list delete confirm',
-                smart_count: 1
+        confirmMessage = t 'list delete conv confirm',
+            smart_count: 1
         modal =
             title       : t 'app confirm delete'
             subtitle    : confirmMessage
@@ -256,31 +254,6 @@ module.exports = Utils =
         url = error.stack.split('\n')[0].split('@')[1]
             .split(/:\d/)[0].split('/').slice(0, -2).join('/')
         window.onerror error.name, url, error.lineNumber, error.colNumber, error
-
-
-    # Debug: allow to dump component tree
-    dump: ->
-        _dump = (root) ->
-            res =
-                children: {}
-                state: {}
-                props: {}
-            for key, value of root.state
-                if (typeof value is 'object')
-                    res.state[key] = _.clone value
-                else
-                    res.state[key] = value
-            for key, value of root.props
-                if (typeof value is 'object')
-                    res.props[key] = _.clone value
-                else
-                    res.props[key] = value
-            for key, value of root.refs
-                res.children[key] = _dump root.refs[key]
-
-            return res
-
-        _dump window.rootComponent
 
 
     # Log message into server logs

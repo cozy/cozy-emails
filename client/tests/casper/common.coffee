@@ -148,7 +148,6 @@ exports.init = (casper) ->
                 #    composeInHTML        : true
                 #    composeOnTop         : false
                 #    desktopNotifications : false
-                #    displayConversation  : true
                 #    displayPreview       : true
                 #    layoutStyle          : 'vertical'
                 #    listStyle            : 'default'

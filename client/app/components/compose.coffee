@@ -1,13 +1,15 @@
-{div, section, h3, a, i, textarea, form, label} = React.DOM
-{span, ul, li, input} = React.DOM
+_          = require 'underscore'
+classNames = require 'classnames'
+React      = require 'react'
+ReactDOM   = require 'react-dom'
 
-classer = React.addons.classSet
+{div, section, a, form, label, input} = React.DOM
 
-ComposeEditor  = require './compose_editor'
-ComposeToolbox = require './compose_toolbox'
-FilePicker     = require './file_picker'
-MailsInput     = require './mails_input'
-AccountPicker = require './account_picker'
+ComposeEditor  = React.createFactory require './compose_editor'
+ComposeToolbox = React.createFactory require './compose_toolbox'
+FilePicker     = React.createFactory require './file_picker'
+MailsInput     = React.createFactory require './mails_input'
+AccountPicker  = React.createFactory require './account_picker'
 
 AccountStore = require '../stores/account_store'
 MessageStore = require '../stores/message_store'
@@ -17,11 +19,11 @@ LayoutStore = require '../stores/layout_store'
 
 MessageUtils = require '../utils/message_utils'
 
-
 LayoutActionCreator  = require '../actions/layout_action_creator'
 MessageActionCreator = require '../actions/message_action_creator'
 
-RouterMixin = require '../mixins/router_mixin'
+RouterMixin      = require '../mixins/router_mixin'
+LinkedStateMixin = require 'react-addons-linked-state-mixin'
 
 
 # Component that allows the user to write emails.
@@ -30,8 +32,8 @@ module.exports = Compose = React.createClass
 
 
     mixins: [
-        RouterMixin,
-        React.addons.LinkedStateMixin # two-way data binding
+        RouterMixin
+        LinkedStateMixin
     ]
 
 
@@ -109,7 +111,7 @@ module.exports = Compose = React.createClass
         MessageStore.addListener 'change', @_setStateFromStores
 
         # scroll compose window into view
-        @getDOMNode().scrollIntoView()
+        @refs.compose.scrollIntoView()
 
         # Save focus
         @addFocusListener()
@@ -125,18 +127,14 @@ module.exports = Compose = React.createClass
         # Focus Element
         @handleFocus()
 
-        # Each state:change do not send data to server
-        # update date for client modifications
-        unless @props.lastUpdate
-            @props.lastUpdate = @state.date
-        else
-            @state.date = new Date().toISOString()
+        # Save client changes
+        @state.lastUpdate = new Date().toISOString()
 
     hasChanged: (props, state) ->
-        (props.lastUpdate and props.lastUpdate isnt state.date) or false
+        @state.lastUpdate isnt @state.date
 
     resetChange: ->
-        delete @props.lastUpdate
+        @state.lastUpdate isnt @state.date
 
     componentWillUnmount: ->
         MessageStore.removeListener 'change', @_setStateFromStores
@@ -145,9 +143,7 @@ module.exports = Compose = React.createClass
         @removeFocusListener()
 
         # Save Message into Draft
-        @closeSaveDraft @state,
-            hasChanged: @hasChanged(@props,  @state)
-            silent: true
+        @closeSaveDraft()
 
     handleFocus: ->
         return unless (path = LayoutStore.getFocus())
@@ -157,9 +153,9 @@ module.exports = Compose = React.createClass
             # DOM form element :
             # It can be React Component
             ref = path.split('ref=')[1]
-            element = @refs[ref]?.getDOMNode()
+            element = ReactDOM.findDOMNode @refs[ref]
 
-        else if (elements = @getDOMNode().querySelectorAll(path))
+        else if (elements = ReactDOM.findDOMNode(@).querySelectorAll(path))
             element = elements[0]
 
         element.focus() if (element)
@@ -174,64 +170,46 @@ module.exports = Compose = React.createClass
 
     addFocusListener: ->
         _.each ['input[type="text"]', 'textarea'], (path) =>
-            _.each @getDOMNode().querySelectorAll(path), (element) =>
+            _.each ReactDOM.findDOMNode(@).querySelectorAll(path), (element) =>
                 element.addEventListener 'focus', @saveFocus
 
         # Editor is a specific case
-        if (editor = @refs.editor.getDOMNode())
+        if (editor = ReactDOM.findDOMNode @refs.editor)
             editor.addEventListener 'click', (event) =>
                 @saveFocus refsPath: 'editor'
 
     removeFocusListener: ->
         _.each ['input[type="text"]', 'textarea'], (path) =>
-            _.each @getDOMNode().querySelectorAll(path), (element) =>
+            _.each ReactDOM.findDOMNode(@).querySelectorAll(path), (element) =>
                 element.removeEventListener 'focus', @saveFocus
 
         # Editor is a specific case
-        if (editor = @refs.editor.getDOMNode())
+        if (editor = ReactDOM.findDOMNode @refs.editor)
             editor.removeEventListener 'click', @saveFocus
 
-    closeSaveDraft: (state, options={}) ->
-        fetch = (error, message) =>
-            return if error or not message
-
-            unless options.silent
-                msg = "#{t "message action draft ok"}"
-                LayoutActionCreator.notify msg, autoclose: true
-
+    closeSaveDraft: ->
+        fetch = (message) =>
             # reload conversation to update its length
-            cid = message.conversationID
-            MessageActionCreator.fetchConversation cid
+            if (cid = message.conversationID)
+                MessageActionCreator.fetchConversation cid
 
         save = =>
-            MessageActionCreator.send _.clone(state), (error, message) ->
+            MessageActionCreator.send _.clone(@state), (error, message) ->
                 if error? or not message?
                     msg = "#{t "message action draft ko"} #{error}"
                     LayoutActionCreator.alertError msg
                     return
 
-                fetch error, message
+                fetch message
 
         # Fetch
-        unless options.hasChanged
+        unless @hasChanged()
+            fetch @state
             return
 
         # Do not ask for save
-        if options.silent
-            save()
-            return
-
-        # Ask for changes
-        init = =>
-            @showModal
-                title       : t 'app confirm delete'
-                subtitle    : t 'compose confirm keep draft'
-                closeLabel  : t 'compose confirm draft keep'
-                actionLabel : t 'compose confirm draft delete'
-                closeModal  : ->
-                    LayoutActionCreator.hideModal()
-                    save()
-        setTimeout init, 0
+        save()
+        return
 
     render: ->
         closeUrl = @buildClosePanelUrl @props.layout
@@ -240,7 +218,8 @@ module.exports = Compose = React.createClass
         classInput = 'compose-input'
 
         section
-            className: classer
+            ref: 'compose'
+            className: classNames
                 compose: true
                 panel:   @props.layout is 'full'
             'aria-expanded': true,
@@ -438,15 +417,16 @@ module.exports = Compose = React.createClass
         getGroupedError error, @state, _.isEmpty
 
     sendActionMessage: (success) ->
-        return if @props.isSaving
+        return if @state.isSaving
         if (validate = @validateMessage())
             LayoutActionCreator.alertError t 'compose error no ' + validate[1]
             success(null, @state) if _.isFunction success
             return
 
-        @props.isSaving = true
-        MessageActionCreator.send _.clone(@state), (error, message) =>
-            @props.isSaving = false
+        _message = _.clone @state
+        @state.isSaving = true
+        MessageActionCreator.send _message, (error, message) =>
+            delete @state.isSaving
             if error? or not message?
                 if @state.isDraft
                     msgKo = t "message action draft ko"
@@ -455,6 +435,7 @@ module.exports = Compose = React.createClass
                 success(error, message) if _.isFunction success
                 return
 
+            # Check for Updates
             @state.mailboxIDs = message.mailboxIDs
             @props.lastUpdate = message.date
 
@@ -462,6 +443,7 @@ module.exports = Compose = React.createClass
             # to save temporary info
             unless @state.id
                 @state.id = message.id
+                @state.conversationID = message.conversationID
                 @redirect
                     action: 'compose.edit'
                     direction: 'first'

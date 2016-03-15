@@ -1,8 +1,12 @@
+_ = require 'underscore'
+React = require 'react'
+
 {section, header, ul, li, span, i, p, h3, a, button} = React.DOM
-Message = require './message'
-ToolbarConversation = require './toolbar_conversation'
-classer = React.addons.classSet
+
 {MessageFlags} = require '../constants/app_constants'
+
+Message = React.createFactory require './message'
+ToolbarConversation = React.createFactory require './toolbar_conversation'
 
 RouterMixin = require '../mixins/router_mixin'
 StoreWatchMixin = require '../mixins/store_watch_mixin'
@@ -42,9 +46,6 @@ module.exports = React.createClass
             length = MessageStore.getConversationsLength().get conversationID
             selectedMailboxID ?= Object.keys(message.get('mailboxIDs'))[0]
 
-        displayConvs = AccountStore.hasConversationEnabled selectedMailboxID
-        displayConvs and= SettingsStore.get 'displayConversation'
-
         nextState =
             accounts             : AccountStore.getAll()
             mailboxes            : AccountStore.getSelectedMailboxes()
@@ -57,7 +58,6 @@ module.exports = React.createClass
             conversationLength   : length
             prevMessage          : prevMessage
             nextMessage          : nextMessage
-            displayConversations : displayConvs
             fullscreen           : LayoutStore.isPreviewFullscreen()
 
         nextState.compact = true if @state?.compact isnt false
@@ -97,7 +97,6 @@ module.exports = React.createClass
             selectedAccountLogin: @state.selectedAccount.get 'login'
             selectedMailboxID   : @state.selectedMailboxID
             settings            : @state.settings
-            displayConversations: @state.displayConversation
             useIntents          : @state.useIntents
             toggleActive        : toggleActive
 

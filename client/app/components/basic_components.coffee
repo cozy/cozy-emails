@@ -1,3 +1,6 @@
+{createClass, createFactory, PropTypes, DOM} = require 'react'
+classNames                                   = require 'classnames'
+
 {
     div
     section
@@ -11,16 +14,17 @@
     span
     fieldset
     legend
-    label
     img
     form
-} = React.DOM
+} = DOM
 
-classer = React.addons.classSet
 PropTypes = require '../libs/prop_types'
 
+registry = {}
+factories = {}
 
-Container = React.createClass
+
+registry.Container = createClass
 
     render: ->
         section
@@ -32,7 +36,7 @@ Container = React.createClass
             @props.children
 
 
-Title = React.createClass
+registry.Title = createClass
 
     render: ->
         h3
@@ -42,13 +46,13 @@ Title = React.createClass
             @props.text
 
 
-SubTitle = React.createClass
+registry.SubTitle = createClass
 
     render: ->
         h4 className: 'subtitle ' + @props.className, @props.children
 
 
-Tabs = React.createClass
+registry.Tabs = createClass
 
     render: ->
         ul className: "nav nav-tabs", role: "tablist",
@@ -66,7 +70,7 @@ Tabs = React.createClass
                         tab.text
 
 
-ErrorLine = React.createClass
+registry.ErrorLine = createClass
 
     render: ->
         div
@@ -74,7 +78,7 @@ ErrorLine = React.createClass
             @props.text
 
 
-Form = React.createClass
+registry.Form = createClass
 
     render: ->
         form
@@ -85,7 +89,7 @@ Form = React.createClass
             @props.children
 
 
-FieldSet = React.createClass
+registry.FieldSet = createClass
 
     render: ->
         fieldset null,
@@ -93,7 +97,7 @@ FieldSet = React.createClass
             @props.children
 
 
-FormButton = React.createClass
+registry.FormButton = createClass
 
     render: ->
         className = 'btn '
@@ -115,18 +119,19 @@ FormButton = React.createClass
             onClick: @props.onClick
         ,
             if @props.spinner
-                span null, Spinner(color: 'white')
+                span null, factories.Spinner(color: 'white')
             else
                 span className: "fa fa-#{@props.icon}"
             span null, @props.text
 
 
-FormButtons = React.createClass
+registry.FormButtons = createClass
 
     render: ->
         div className: 'col-sm-offset-4', @props.children
 
-Menu = React.createClass
+
+registry.Menu = createClass
 
     render: ->
         div className: 'menu-action btn-group btn-group-sm',
@@ -140,7 +145,8 @@ Menu = React.createClass
                 role: 'menu',
                 @props.children
 
-LinkButton = React.createClass
+
+registry.LinkButton = createClass
     render: ->
         a
             className: "btn btn-default fa #{@props.icon}"
@@ -148,7 +154,8 @@ LinkButton = React.createClass
             'aria-describedby': @props['aria-describedby']
             'data-tooltip-direction': @props['data-tooltip-direction']
 
-Button = React.createClass
+
+registry.Button = createClass
 
     render: ->
         className = "btn btn-default"
@@ -158,7 +165,8 @@ Button = React.createClass
             className: className
             onClick: @props.onClick
 
-MenuItem = React.createClass
+
+registry.MenuItem = createClass
 
     onClick: ->
         @props.onClick @props.onClickValue
@@ -180,7 +188,8 @@ MenuItem = React.createClass
             a aOptions,
                 @props.children
 
-MenuHeader = React.createClass
+
+registry.MenuHeader = createClass
 
     render: ->
         liOptions = role: 'presentation', className: 'dropdown-header'
@@ -188,14 +197,27 @@ MenuHeader = React.createClass
         li liOptions, @props.children
 
 
-MenuDivider = React.createClass
+registry.MenuDivider = createClass
 
     render: ->
         liOptions = role: 'presentation', className: 'divider'
         liOptions.key = @props.key if @props.key
         li liOptions
 
-Dropdown = React.createClass
+
+# @TODO : merge me with FormDropdown and Dropdown
+registry.DropdownItem = createClass
+    onClick: -> @props.requestChange @props.key
+    render: ->
+        li
+            role: 'presentation'
+            key: @props.key,
+            onClick: @onClick
+        ,
+            a role: 'menuitem', @props.value
+
+
+registry.Dropdown = createClass
 
     getDefaultProps: ->
         className: ''
@@ -204,13 +226,13 @@ Dropdown = React.createClass
 
     propTypes:
         valueLink: PropTypes.valueLink(PropTypes.string).isRequired
-        allowUndefined: React.PropTypes.bool.isRequired
-        options: React.PropTypes.object.isRequired
-        className: React.PropTypes.string
-        id: React.PropTypes.string
-        btnClassName: React.PropTypes.string
-        defaultLabel: React.PropTypes.string
-        undefinedValue: React.PropTypes.string
+        allowUndefined: PropTypes.bool.isRequired
+        options: PropTypes.object.isRequired
+        className: PropTypes.string
+        id: PropTypes.string
+        btnClassName: PropTypes.string
+        defaultLabel: PropTypes.string
+        undefinedValue: PropTypes.string
 
     render: ->
         valueLink = @props.valueLink or
@@ -229,34 +251,23 @@ Dropdown = React.createClass
                 span className: 'caret', ''
             ul className: 'dropdown-menu', role: 'menu',
                 if @props.allowUndefined and selected?
-                    DropdownItem
+                    factories.DropdownItem
                         key: null,
                         value: @props.undefinedValue
                         requestChange: valueLink.requestChange
 
                 for key, value of @props.options
                     if key isnt valueLink.value
-                        DropdownItem
+                        factories.DropdownItem
                             key: key,
                             value: value,
                             requestChange: valueLink.requestChange
-
-# @TODO : merge me with FormDropdown and Dropdown
-DropdownItem = React.createClass
-    onClick: -> @props.requestChange @props.key
-    render: ->
-        li
-            role: 'presentation'
-            key: @props.key,
-            onClick: @onClick
-        ,
-            a role: 'menuitem', @props.value
 
 
 # Widget to display contact following these rules:
 # If a name is provided => Contact Name <address@contact.com>
 # If no name is provided => address@contact.com
-AddressLabel = React.createClass
+registry.AddressLabel = createClass
 
     render: ->
         meaninglessKey = 0
@@ -288,34 +299,34 @@ AddressLabel = React.createClass
 
 # Widget to display a spinner.
 # If property `white` is set to true, it will use the white version.
-Spinner = React.createClass
+registry.Spinner = createClass
     displayName: 'Spinner'
 
     protoTypes:
-        color: React.PropTypes.string
+        color: PropTypes.string
 
     render: ->
         suffix = if @props.color then "-#{@props.color}" else ''
 
         img
-            src: "images/spinner#{suffix}.svg"
-            alt: 'spinner'
+            src:       require "../assets/images/spinner#{suffix}.svg"
+            alt:       'spinner'
             className: 'button-spinner spin-animate'
 
 
 # Module to display a loading progress bar. It takes a current value and a
 # max value as paremeter.
-Progress = React.createClass
+registry.Progress = createClass
     displayName: 'Progress'
 
     propTypes:
-        value: React.PropTypes.number.isRequired
-        max: React.PropTypes.number.isRequired
+        value: PropTypes.number.isRequired
+        max: PropTypes.number.isRequired
 
     render: ->
         div className: 'progress',
             div
-                className: classer
+                className: classNames
                     'progress-bar': true
                     'actived': @props.value > 0
                 style: width: 0
@@ -324,11 +335,12 @@ Progress = React.createClass
                 "aria-valuemin": '0'
                 "aria-valuemax": @props.max
 
-Icon = React.createClass
+
+registry.Icon = createClass
     displayName: 'Icon'
 
     propTypes:
-        type: React.PropTypes.string.isRequired
+        type: PropTypes.string.isRequired
 
     render: ->
 
@@ -338,25 +350,5 @@ Icon = React.createClass
             onClick: @props.onClick
 
 
-module.exports = {
-    AddressLabel
-    Button
-    Container
-    Dropdown
-    ErrorLine
-    Form
-    FieldSet
-    FormButton
-    FormButtons
-    Icon
-    LinkButton
-    Menu
-    MenuItem
-    MenuHeader
-    MenuDivider
-    Progress
-    Spinner
-    SubTitle
-    Title
-    Tabs
-}
+factories[name] = createFactory component for name, component of registry
+module.exports = factories: factories

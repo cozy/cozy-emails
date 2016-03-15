@@ -1,3 +1,5 @@
+_ = require 'underscore'
+
 module.exports = StoreWatchMixin = (stores) ->
 
     # Update state when linked store emit changes.

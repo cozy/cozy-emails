@@ -1,3 +1,4 @@
+_ = require 'underscore'
 
 shallowEqual = (A, B, log) ->
     return true if A is B

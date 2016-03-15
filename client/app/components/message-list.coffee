@@ -1,3 +1,6 @@
+Immutable = require 'immutable'
+React     = require 'react'
+
 {div, section, p, ul, li, a, span, i, button, input, img} = React.DOM
 {MessageFlags, Tooltips} = require '../constants/app_constants'
 
@@ -7,12 +10,11 @@ StoreWatchMixin       = require '../mixins/store_watch_mixin'
 SelectionManager      = require '../mixins/selection_manager_mixin'
 ShouldUpdate          = require '../mixins/should_update_mixin'
 
-LayoutStore = require '../stores/layout_store'
-AccountStore = require '../stores/account_store'
-MessageStore = require '../stores/message_store'
+LayoutStore   = require '../stores/layout_store'
+AccountStore  = require '../stores/account_store'
+MessageStore  = require '../stores/message_store'
 SettingsStore = require '../stores/settings_store'
 
-classer      = React.addons.classSet
 DomUtils     = require '../utils/dom_utils'
 MessageUtils = require '../utils/message_utils'
 SocketUtils  = require '../utils/socketio_utils'
@@ -22,13 +24,14 @@ ContactActionCreator = require '../actions/contact_action_creator'
 LayoutActionCreator  = require '../actions/layout_action_creator'
 MessageActionCreator = require '../actions/message_action_creator'
 
-MessageListLoader   = require './message-list-loader'
-{Spinner, Progress} = require './basic_components'
-ToolbarMessagesList = require './toolbar_messageslist'
-MessageListBody = require './message-list-body'
+{Spinner, Progress} = require('./basic_components').factories
+MessageListLoader   = React.createFactory require './message-list-loader'
+ToolbarMessagesList = React.createFactory require './toolbar_messageslist'
+MessageListBody     = React.createFactory require './message-list-body'
 
 CONVERSATION_DISABLED = ['trashMailbox','draftMailbox','junkMailbox']
 {MessageFilter} = require '../constants/app_constants'
+
 
 module.exports = MessageList = React.createClass
     displayName: 'MessageList'
@@ -51,10 +54,8 @@ module.exports = MessageList = React.createClass
         account   = AccountStore.getByID accountID
         role = AccountStore.getMailboxRole account, mailboxID
         settings = SettingsStore.get()
-        displayConvs = !!(settings.get('displayConversation') and
-        role not in CONVERSATION_DISABLED)
         mailbox   = account.get('mailboxes').get mailboxID
-        messages  = MessageStore.getMessagesToDisplay mailboxID, displayConvs
+        messages  = MessageStore.getMessagesToDisplay mailboxID
 
         # select first conversation to allow navigation to start
         conversationLengths = MessageStore.getConversationsLength()
@@ -79,10 +80,10 @@ module.exports = MessageList = React.createClass
             isTrash              : role is 'trashMailbox'
             conversationLengths  : conversationLengths
             fullscreen           : LayoutStore.isPreviewFullscreen()
-            displayConversations : displayConvs
 
     # for SelectionManagerMixin
-    getSelectables: (props = @props, state = @state) ->
+    getSelectables: (nil, state = {}) ->
+        state = if Object.keys(state).length then state else @state
         state.messages.map (message) -> message.get('id')
 
     getEmptyListMessage: ->
@@ -116,7 +117,6 @@ module.exports = MessageList = React.createClass
                 edited:               @hasSelected()
                 selected:             @getSelected()
                 allSelected:          @allSelected()
-                displayConversations: @state.displayConversations
                 toggleAll:            @toggleAll
                 afterAction:          @afterMessageAction
                 queryParams:          @props.queryParams
@@ -155,7 +155,6 @@ module.exports = MessageList = React.createClass
                         edited: @hasSelected()
                         selected: @getSelected()
                         allSelected: @allSelected()
-                        displayConversations: @state.displayConversations
                         isTrash: @state.isTrash
                         ref: 'listBody'
                         onSelect: @onMessageSelectionChange
@@ -191,19 +190,19 @@ module.exports = MessageList = React.createClass
         # ugly setTimeout to wait until localDelete occured
         setTimeout =>
             listEnd = @refs.nextPage or @refs.listEnd or @refs.listEmpty
-            if listEnd? and DomUtils.isVisible(listEnd.getDOMNode())
+            if listEnd? and DomUtils.isVisible(listEnd)
                 @loadMoreMessage()
         , 100
 
     _loadNext: ->
         # load next message if last one is displayed (useful when navigating
         # with keyboard)
-        lastMessage = @refs.listBody?.getDOMNode().lastElementChild
+        lastMessage = @refs.listBody?.lastElementChild
         if @refs.nextPage? and lastMessage? and DomUtils.isVisible(lastMessage)
             @loadMoreMessage()
 
     _handleRealtimeGrowth: ->
-        if @refs.listEnd? and not DomUtils.isVisible(@refs.listEnd.getDOMNode())
+        if @refs.listEnd? and not DomUtils.isVisible(@refs.listEnd)
             lastdate = @state.messages.last().get('date')
             SocketUtils.changeRealtimeScope @props.mailboxID, lastdate
 
@@ -213,7 +212,7 @@ module.exports = MessageList = React.createClass
 
         # listen to scroll events
         if @refs.scrollable?
-            scrollable = @refs.scrollable.getDOMNode()
+            scrollable = @refs.scrollable
             setTimeout =>
                 scrollable.removeEventListener 'scroll', @_loadNext
                 scrollable.addEventListener 'scroll', @_loadNext
@@ -236,7 +235,7 @@ module.exports = MessageList = React.createClass
 
     componentWillUnmount: ->
         if @refs.scrollable?
-            scrollable = @refs.scrollable.getDOMNode()
+            scrollable = @refs.scrollable
             scrollable.removeEventListener 'scroll', @_loadNext
             if @_checkNextInterval?
                 window.clearInterval @_checkNextInterval

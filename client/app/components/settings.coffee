@@ -1,5 +1,6 @@
+React = require 'react'
+
 {div, h3, form, label, input, button, fieldset, legend, ul, li, a, span, i} = React.DOM
-classer = React.addons.classSet
 
 LayoutActionCreator   = require '../actions/layout_action_creator'
 SettingsActionCreator = require '../actions/settings_action_creator'
@@ -18,7 +19,7 @@ module.exports = React.createClass
         listStyle   = @state.settings.listStyle   or 'default'
 
         div id: 'settings',
-            h3 className: null, t "settings title"
+            h3 null, t "settings title"
 
             if @props.error
                 div className: 'error', @props.error
@@ -133,7 +134,6 @@ module.exports = React.createClass
                                             t "settings label listStyle compact"
 
             # SETTINGS
-            @_renderOption 'displayConversation'
             @_renderOption 'composeInHTML'
             @_renderOption 'composeOnTop'
             @_renderOption 'messageDisplayHTML'
@@ -231,7 +231,6 @@ module.exports = React.createClass
             ,    'composeInHTML'
             ,    'composeOnTop'
             ,    'desktopNotifications'
-            ,    'displayConversation'
             ,    'displayPreview'
             ,    'messageConfirmDelete'
             ,    'messageDisplayHTML'
@@ -270,8 +269,8 @@ module.exports = React.createClass
                 SettingsActionCreator.edit settings
 
     pluginAdd: ->
-        name = @refs.newpluginName.getDOMNode().value.trim()
-        url  = @refs.newpluginUrl.getDOMNode().value.trim()
+        name = @refs.newpluginName.value.trim()
+        url  = @refs.newpluginUrl.value.trim()
         PluginUtils.loadJS url, =>
             PluginUtils.activate name
             settings = @state.settings

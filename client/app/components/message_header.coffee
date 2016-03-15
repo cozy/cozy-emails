@@ -1,7 +1,11 @@
+_     = require 'underscore'
+React = require 'react'
+
 {div, span, i, img, a} = React.DOM
 {MessageFlags} = require '../constants/app_constants'
 
-PopupMessageAttachments = require './popup_message_attachments'
+
+PopupMessageAttachments = React.createFactory require './popup_message_attachments'
 ParticipantMixin        = require '../mixins/participant_mixin'
 messageUtils            = require '../utils/message_utils'
 

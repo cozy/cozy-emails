@@ -1,13 +1,16 @@
-{div, h4, ul, li, span, form, i, input, label} = React.DOM
-classer = React.addons.classSet
+Immutable = require 'immutable'
+React = require 'react'
 
-AccountActionCreator = require '../actions/account_action_creator'
-LayoutActionCreator  = require '../actions/layout_action_creator'
-RouterMixin = require '../mixins/router_mixin'
-AccountInput = require './account_config_input'
+{   Form
+    FieldSet
+    FormButtons
+    FormButton} = require('./basic_components').factories
+AccountInput = React.createFactory require './account_config_input'
+
 ShouldComponentUpdate = require '../mixins/should_update_mixin'
+LinkedStateMixin      = require 'react-addons-linked-state-mixin'
+
 cachedTransform = require '../libs/cached_transform'
-{Form, FieldSet, FormButtons, FormButton} = require './basic_components'
 
 
 # Component to handle account signature modification.
@@ -16,7 +19,7 @@ module.exports = React.createClass
     displayName: 'AccountConfigSignature'
 
     mixins: [
-        React.addons.LinkedStateMixin # two-way data binding
+        LinkedStateMixin
         ShouldComponentUpdate.UnderscoreEqualitySlow
     ]
 
@@ -54,4 +57,3 @@ module.exports = React.createClass
                         icon: 'save'
                         onClick: @props.onSubmit
                         text: t 'account signature save'
-

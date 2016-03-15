@@ -1,8 +1,10 @@
+React = require 'react'
+
 {div, i, button} = React.DOM
 {Tooltips}       = require '../constants/app_constants'
 
-ToolboxActions = require './toolbox_actions'
-ToolboxMove    = require './toolbox_move'
+ToolboxActions = React.createFactory require './toolbox_actions'
+ToolboxMove    = React.createFactory require './toolbox_move'
 
 MessageStore = require '../stores/message_store'
 
@@ -10,6 +12,7 @@ LayoutActionCreator  = require '../actions/layout_action_creator'
 MessageActionCreator = require '../actions/message_action_creator'
 
 RouterMixin = require '../mixins/router_mixin'
+
 
 module.exports = ActionsToolbarMessagesList = React.createClass
     displayName: 'ActionsToolbarMessagesList'
@@ -24,7 +27,6 @@ module.exports = ActionsToolbarMessagesList = React.createClass
         mailboxes:            React.PropTypes.object.isRequired
         messages:             React.PropTypes.object.isRequired
         selected:             React.PropTypes.object.isRequired
-        displayConversations: React.PropTypes.bool.isRequired
         afterAction:          React.PropTypes.func
 
 
@@ -36,13 +38,10 @@ module.exports = ActionsToolbarMessagesList = React.createClass
         selected = Object.keys @props.selected
         count = selected.length
         applyToConversation = Boolean applyToConversation
-        applyToConversation ?= @props.displayConversations
+
         if selected.length is 0
             LayoutActionCreator.alertError t 'list mass no message'
             return false
-
-        else if not applyToConversation
-            return {count, messageIDs: selected, applyToConversation}
 
         else
             conversationIDs = selected.map (id) =>
@@ -64,17 +63,9 @@ module.exports = ActionsToolbarMessagesList = React.createClass
 
                 i className: 'fa fa-trash-o'
 
-            unless @props.displayConversations
-                ToolboxMove
-                    ref:       'listToolboxMove'
-                    mailboxes: @props.mailboxes
-                    onMove:    @onMove
-                    direction: 'left'
-
             ToolboxActions
                 direction:            'left'
-                mode: if @props.displayConversations then 'conversation' \
-                else 'message'
+                mode: 'conversation'
                 mailboxes:            @props.mailboxes
                 onMark:               @onMark
                 onConversationDelete: @onConversationDelete
@@ -114,7 +105,6 @@ module.exports = ActionsToolbarMessagesList = React.createClass
                 msg = 'list delete conv confirm'
             else
                 msg = 'list delete confirm'
-
             modal =
                 title       : t 'app confirm delete'
                 subtitle    : t msg, smart_count: options.count
@@ -126,7 +116,7 @@ module.exports = ActionsToolbarMessagesList = React.createClass
             LayoutActionCreator.displayModal modal
 
     onMove: (to, applyToConversation) ->
-        return unless options = @_getSelectedAndMode(applyToConversation)
+        return unless options = @_getSelectedAndMode applyToConversation
 
         from = @props.mailboxID
 
@@ -139,7 +129,7 @@ module.exports = ActionsToolbarMessagesList = React.createClass
 
 
     onMark: (flag, applyToConversation) ->
-        return unless options = @_getSelectedAndMode(applyToConversation)
+        return unless options = @_getSelectedAndMode applyToConversation
         MessageActionCreator.mark options, flag
 
 

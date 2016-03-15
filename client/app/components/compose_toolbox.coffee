@@ -1,6 +1,8 @@
+React = require 'react'
+
 {div, button, span} = React.DOM
 
-{Spinner} = require './basic_components'
+{Spinner} = require('./basic_components').factories
 
 module.exports = ComposeToolbox = React.createClass
     displayName: 'ComposeToolbox'

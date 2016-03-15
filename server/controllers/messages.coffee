@@ -17,6 +17,21 @@ ramStore = require '../models/store_account_and_boxes'
 SaveOrSendMessage = require '../processes/message_save_or_send'
 MessageMove = require '../processes/message_move'
 
+minifierOpts =
+    removeComments: true
+    removeCommentsFromCDATA: true
+    collapseWhitespace: true
+    collapseBooleanAttributes: true
+    removeRedundantAttributes: true
+    removeEmptyAttributes: true
+    removeScriptTypeAttributes: true
+    removeStyleLinkTypeAttributes: true
+    removeOptionalTags: true
+    removeEmptyElements: true
+    keepClosingSlash: true
+    minifyJS: true
+    minifyCSS: true
+
 # get a message and attach it to req.message
 module.exports.fetch = (req, res, next) ->
 
@@ -197,22 +212,7 @@ module.exports.send = (req, res, next) ->
 
     message = req.body
     if message.html
-        minifierOpts =
-            removeComments: true
-            removeCommentsFromCDATA: true
-            collapseWhitespace: true
-            collapseBooleanAttributes: true
-            removeRedundantAttributes: true
-            removeEmptyAttributes: true
-            removeScriptTypeAttributes: true
-            removeStyleLinkTypeAttributes: true
-            removeOptionalTags: true
-            removeEmptyElements: true
-            keepClosingSlash: true
-            minifyJS: true
-            minifyCSS: true
         message.html = minify message.html, minifierOpts
-
     if message.text
         message.text = crlf.setLineEnding message.text.trim(), 'CRLF'
 

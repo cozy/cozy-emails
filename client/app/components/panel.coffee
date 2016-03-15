@@ -1,11 +1,14 @@
+React = require 'react'
+_     = require 'underscore'
+
 # Components
-AccountConfig  = require './account_config'
-Compose        = require './compose'
-Conversation   = require './conversation'
-MessageList    = require './message-list'
-Settings       = require './settings'
-SearchResult   = require './search_result'
-{Spinner}       = require './basic_components'
+{Spinner}      = require('./basic_components').factories
+AccountConfig  = React.createFactory require './account_config'
+Compose        = React.createFactory require './compose'
+Conversation   = React.createFactory require './conversation'
+MessageList    = React.createFactory require './message-list'
+Settings       = React.createFactory require './settings'
+SearchResult   = React.createFactory require './search_result'
 
 # React Mixins
 RouterMixin          = require '../mixins/router_mixin'

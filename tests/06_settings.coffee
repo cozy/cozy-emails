@@ -7,7 +7,6 @@ describe "settings changes", ->
             res.statusCode.should.equal 200
 
             #body.should.have.property 'messagesPerPage'      , 25
-            body.should.have.property 'displayConversation'  , true
             body.should.have.property 'displayPreview'       , true
             body.should.have.property 'composeInHTML'        , true
             body.should.have.property 'composeOnTop'         , false
@@ -29,7 +28,6 @@ describe "settings changes", ->
             res.statusCode.should.equal 200
 
             #body.should.have.property 'messagesPerPage'      , 20
-            body.should.have.property 'displayConversation'  , true
             body.should.have.property 'displayPreview'       , true
             body.should.have.property 'composeInHTML'        , true
             body.should.have.property 'composeOnTop'         , false
@@ -46,7 +44,6 @@ describe "settings changes", ->
             res.statusCode.should.equal 200
 
             #body.should.have.property 'messagesPerPage'      , 20
-            body.should.have.property 'displayConversation'  , true
             body.should.have.property 'displayPreview'       , true
             body.should.have.property 'composeInHTML'        , true
             body.should.have.property 'composeOnTop'         , false

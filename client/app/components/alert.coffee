@@ -1,3 +1,5 @@
+React = require 'react'
+
 {div, button, span, strong} = React.DOM
 {AlertLevel}     = require '../constants/app_constants'
 LayoutActionCreator = require '../actions/layout_action_creator'
@@ -43,7 +45,7 @@ module.exports = React.createClass
     autohide: ->
         if false and @props.alert.level is AlertLevel.SUCCESS
             setTimeout =>
-                @refs.alert.getDOMNode().classList.add 'autoclose'
+                @refs.alert.classList.add 'autoclose'
             , 1000
             setTimeout @hide, 10000
 
@@ -54,4 +56,3 @@ module.exports = React.createClass
 
     componentDidUpdate: ->
         @autohide()
-
