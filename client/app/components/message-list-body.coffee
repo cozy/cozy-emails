@@ -35,25 +35,25 @@ module.exports = MessageListBody = React.createClass
                     id = message.get('id')
                     cid = message.get('conversationID')
 
-                ["msg-#{key}", MessageItem
-                    message: message,
-                    accountID: @props.accountID,
-                    mailboxID: @props.mailboxID,
-                    accountLabel: @props.accountLabel,
-                    mailboxes: @props.mailboxes,
-                    conversationLengths: @props.conversationLengths?.get(cid),
-                    key: key,
-                    isActive: @_isActive(id, cid),
-                    edited: @props.edited,
-                    settings: @props.settings,
-                    selected: @props.selected[id]?,
-                    login: @props.login
-                    isTrash: @props.isTrash
-                    ref: 'messageItem'
-                    onSelect: (val) =>
-                        @props.onSelect id, val
-                ]
-            .toJS()
+                    ["msg-#{key}", MessageItem
+                        message: message,
+                        accountID: @props.accountID,
+                        mailboxID: @props.mailboxID,
+                        accountLabel: @props.accountLabel,
+                        mailboxes: @props.mailboxes,
+                        conversationLengths: @props.conversationLengths?.get(cid),
+                        key: key,
+                        isActive: @_isActive(id, cid),
+                        edited: @props.edited,
+                        settings: @props.settings,
+                        selected: @props.selected[id]?,
+                        login: @props.login
+                        isTrash: @props.isTrash
+                        ref: 'messageItem'
+                        onSelect: (val) =>
+                            @props.onSelect id, val
+                    ]
+                .toArray()
 
     componentDidMount: ->
         @_onMount()
