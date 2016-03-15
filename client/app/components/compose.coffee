@@ -159,9 +159,9 @@ module.exports = Compose = React.createClass
             # DOM form element :
             # It can be React Component
             ref = path.split('ref=')[1]
-            element = @refs[ref]?.getDOMNode()
+            element = ReactDOM.findDOMNode @refs[ref]
 
-        else if (elements = @getDOMNode().querySelectorAll(path))
+        else if (elements = ReactDOM.findDOMNode(@).querySelectorAll(path))
             element = elements[0]
 
         element.focus() if (element)
@@ -176,21 +176,21 @@ module.exports = Compose = React.createClass
 
     addFocusListener: ->
         _.each ['input[type="text"]', 'textarea'], (path) =>
-            _.each @getDOMNode().querySelectorAll(path), (element) =>
+            _.each ReactDOM.findDOMNode(@).querySelectorAll(path), (element) =>
                 element.addEventListener 'focus', @saveFocus
 
         # Editor is a specific case
-        if (editor = @refs.editor.getDOMNode())
+        if (editor = ReactDOM.findDOMNode @refs.editor)
             editor.addEventListener 'click', (event) =>
                 @saveFocus refsPath: 'editor'
 
     removeFocusListener: ->
         _.each ['input[type="text"]', 'textarea'], (path) =>
-            _.each @getDOMNode().querySelectorAll(path), (element) =>
+            _.each ReactDOM.findDOMNode(@).querySelectorAll(path), (element) =>
                 element.removeEventListener 'focus', @saveFocus
 
         # Editor is a specific case
-        if (editor = @refs.editor.getDOMNode())
+        if (editor = ReactDOM.findDOMNode @refs.editor)
             editor.removeEventListener 'click', @saveFocus
 
     closeSaveDraft: (state, options={}) ->
