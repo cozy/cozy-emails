@@ -159,17 +159,6 @@ module.exports = LayoutActionCreator =
                     MessageActionCreator.receiveRawMessage rawMessage
                     AccountActionCreator.selectAccountForMessage rawMessage
 
-    showConversation: (panelInfo, direction) ->
-        messageID      = panelInfo.parameters.messageID
-        conversationID = panelInfo.parameters.conversationID
-        message        = MessageStore.getByID messageID
-        if message?
-            AccountActionCreator.selectAccountForMessage message
-
-        length = MessageStore.getConversationsLength().get(conversationID)
-        if not length? or length > 1
-            MessageActionCreator.fetchConversation conversationID
-
     # Display compose widget but this time it's aimed to be pre-filled:
     # either with reply/forward or with draft information.
     showComposeMessage: (panelInfo, direction) ->
