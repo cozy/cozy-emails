@@ -127,18 +127,14 @@ module.exports = Compose = React.createClass
         # Focus Element
         @handleFocus()
 
-        # Each state:change do not send data to server
-        # update date for client modifications
-        unless @props.lastUpdate
-            @props.lastUpdate = @state.date
-        else
-            @state.date = new Date().toISOString()
+        # Save client changes
+        @state.lastUpdate = new Date().toISOString()
 
     hasChanged: (props, state) ->
-        (props.lastUpdate and props.lastUpdate isnt state.date) or false
+        @state.lastUpdate isnt @state.date
 
     resetChange: ->
-        delete @props.lastUpdate
+        @state.lastUpdate isnt @state.date
 
     componentWillUnmount: ->
         MessageStore.removeListener 'change', @_setStateFromStores
@@ -147,9 +143,7 @@ module.exports = Compose = React.createClass
         @removeFocusListener()
 
         # Save Message into Draft
-        @closeSaveDraft @state,
-            hasChanged: @hasChanged(@props,  @state)
-            silent: true
+        @closeSaveDraft()
 
     handleFocus: ->
         return unless (path = LayoutStore.getFocus())
@@ -193,47 +187,29 @@ module.exports = Compose = React.createClass
         if (editor = ReactDOM.findDOMNode @refs.editor)
             editor.removeEventListener 'click', @saveFocus
 
-    closeSaveDraft: (state, options={}) ->
-        fetch = (error, message) =>
-            return if error or not message
-
-            unless options.silent
-                msg = "#{t "message action draft ok"}"
-                LayoutActionCreator.notify msg, autoclose: true
-
+    closeSaveDraft: ->
+        fetch = (message) =>
             # reload conversation to update its length
-            cid = message.conversationID
-            MessageActionCreator.fetchConversation cid
+            if (cid = message.conversationID)
+                MessageActionCreator.fetchConversation cid
 
         save = =>
-            MessageActionCreator.send _.clone(state), (error, message) ->
+            MessageActionCreator.send _.clone(@state), (error, message) ->
                 if error? or not message?
                     msg = "#{t "message action draft ko"} #{error}"
                     LayoutActionCreator.alertError msg
                     return
 
-                fetch error, message
+                fetch message
 
         # Fetch
-        unless options.hasChanged
+        unless @hasChanged()
+            fetch @state
             return
 
         # Do not ask for save
-        if options.silent
-            save()
-            return
-
-        # Ask for changes
-        init = =>
-            @showModal
-                title       : t 'app confirm delete'
-                subtitle    : t 'compose confirm keep draft'
-                closeLabel  : t 'compose confirm draft keep'
-                actionLabel : t 'compose confirm draft delete'
-                closeModal  : ->
-                    LayoutActionCreator.hideModal()
-                    save()
-        setTimeout init, 0
+        save()
+        return
 
     render: ->
         closeUrl = @buildClosePanelUrl @props.layout
@@ -459,6 +435,7 @@ module.exports = Compose = React.createClass
                 success(error, message) if _.isFunction success
                 return
 
+            # Check for Updates
             @state.mailboxIDs = message.mailboxIDs
             @props.lastUpdate = message.date
 
@@ -466,6 +443,7 @@ module.exports = Compose = React.createClass
             # to save temporary info
             unless @state.id
                 @state.id = message.id
+                @state.conversationID = message.conversationID
                 @redirect
                     action: 'compose.edit'
                     direction: 'first'
