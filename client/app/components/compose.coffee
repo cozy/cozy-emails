@@ -442,6 +442,7 @@ module.exports = Compose = React.createClass
             # to save temporary info
             unless @state.id
                 @state.id = message.id
+                @state.conversationID = message.conversationID
                 @redirect
                     action: 'compose.edit'
                     direction: 'first'
