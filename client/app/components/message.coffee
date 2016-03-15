@@ -42,8 +42,7 @@ module.exports = React.createClass
         accounts               : React.PropTypes.object.isRequired
         active                 : React.PropTypes.bool
         inConversation         : React.PropTypes.bool
-        displayConversations   : React.PropTypes.bool
-        key                    : React.PropTypes.string
+        key                    : React.PropTypes.string.isRequired
         mailboxes              : React.PropTypes.object.isRequired
         message                : React.PropTypes.object.isRequired
         selectedAccountID      : React.PropTypes.string.isRequired

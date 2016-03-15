@@ -11,7 +11,6 @@ initSettings = ->
         settings =
             "composeInHTML": true
             "composeOnTop": false
-            "displayConversation": true
             "displayPreview":true
             "layoutStyle":"three"
             "messageConfirmDelete":false

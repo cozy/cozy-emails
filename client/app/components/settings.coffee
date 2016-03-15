@@ -134,7 +134,6 @@ module.exports = React.createClass
                                             t "settings label listStyle compact"
 
             # SETTINGS
-            @_renderOption 'displayConversation'
             @_renderOption 'composeInHTML'
             @_renderOption 'composeOnTop'
             @_renderOption 'messageDisplayHTML'
@@ -232,7 +231,6 @@ module.exports = React.createClass
             ,    'composeInHTML'
             ,    'composeOnTop'
             ,    'desktopNotifications'
-            ,    'displayConversation'
             ,    'displayPreview'
             ,    'messageConfirmDelete'
             ,    'messageDisplayHTML'

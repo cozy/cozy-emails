@@ -35,7 +35,6 @@ module.exports = React.createClass
             currentConversationID : MessageStore.getCurrentConversationID()
             accounts              : AccountStore.getAll()
             mailboxes             : AccountStore.getAllMailboxes()
-            displayConversations  : true
             canLoadMore           : SearchStore.hasMoreSearch()
             emptyListMessage      : t 'search deactivated', query: search
 
@@ -52,7 +51,6 @@ module.exports = React.createClass
             settings             : @state.settings
             conversationLengths  : @state.conversationLengths
             emptyListMessage     : @state.emptyListMessage
-            displayConversations : @state.displayConversations
             queryParams          : null
             canLoadMore          : @state.canLoadMore
             loadMoreMessage      : ->

@@ -83,7 +83,6 @@ module.exports = React.createClass
             onConversationMove: @props.onConversationMove
             onConversationDelete: @props.onConversationMove
             direction:      'right'
-            displayConversations: false # to display messages actions
 
 
     renderToolboxMove: ->

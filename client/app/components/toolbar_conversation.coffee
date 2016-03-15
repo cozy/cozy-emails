@@ -36,7 +36,6 @@ module.exports = React.createClass
                 mode                 : 'conversation'
                 direction            : 'right'
                 inConversation       : true
-                displayConversations : true
                 mailboxes            : @props.moveToMailboxes
                 onConversationDelete : @onDelete
                 onConversationMark   : @onMark

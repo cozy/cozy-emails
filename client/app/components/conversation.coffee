@@ -46,9 +46,6 @@ module.exports = React.createClass
             length = MessageStore.getConversationsLength().get conversationID
             selectedMailboxID ?= Object.keys(message.get('mailboxIDs'))[0]
 
-        displayConvs = AccountStore.hasConversationEnabled selectedMailboxID
-        displayConvs and= SettingsStore.get 'displayConversation'
-
         nextState =
             accounts             : AccountStore.getAll()
             mailboxes            : AccountStore.getSelectedMailboxes()
@@ -61,7 +58,6 @@ module.exports = React.createClass
             conversationLength   : length
             prevMessage          : prevMessage
             nextMessage          : nextMessage
-            displayConversations : displayConvs
             fullscreen           : LayoutStore.isPreviewFullscreen()
 
         nextState.compact = true if @state?.compact isnt false
@@ -101,7 +97,6 @@ module.exports = React.createClass
             selectedAccountLogin: @state.selectedAccount.get 'login'
             selectedMailboxID   : @state.selectedMailboxID
             settings            : @state.settings
-            displayConversations: @state.displayConversation
             useIntents          : @state.useIntents
             toggleActive        : toggleActive
 

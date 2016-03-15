@@ -26,8 +26,7 @@ module.exports = MessageListBody = React.createClass
         return should
 
     _isActive: (id, cid) ->
-        @props.messageID is id or
-        @props.displayConversations and cid? and @props.conversationID is cid
+        @props.messageID is id or @props.conversationID is cid
 
     render: ->
         ul className: 'list-unstyled', ref: 'messageList',
@@ -49,7 +48,6 @@ module.exports = MessageListBody = React.createClass
                         settings: @props.settings,
                         selected: @props.selected[id]?,
                         login: @props.login
-                        displayConversations: @props.displayConversations
                         isTrash: @props.isTrash
                         ref: 'messageItem'
                         onSelect: (val) =>
