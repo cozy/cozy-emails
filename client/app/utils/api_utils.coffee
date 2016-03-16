@@ -132,9 +132,10 @@ module.exports = Utils =
                 messageID: message.get 'id'
                 conversationID: message.get 'conversationID'
 
-        # FIXME : use router.redirect instead
-        url = window.router.buildUrl urlOptions
-        window.router.navigate url, {trigger: true}
+        console.log 'messageDisplay', urlOptions
+        # # FIXME : use router.redirect instead
+        # url = window.router.buildUrl urlOptions
+        # window.router.navigate url, {trigger: true}
 
 
     messageClose: ->

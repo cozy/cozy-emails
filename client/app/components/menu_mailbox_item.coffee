@@ -4,7 +4,7 @@ classNames = require 'classnames'
 
 {div, aside, nav, ul, li, span, a, i, button} = React.DOM
 
-Router               = require '../mixins/router_mixin'
+RouterGetter = require '../getters/router'
 
 MessageActionCreator = require '../actions/message_action_creator'
 LayoutActionCreator  = require '../actions/layout_action_creator'
@@ -16,10 +16,6 @@ AccountActionCreator = require '../actions/account_action_creator'
 module.exports = MenuMailboxItem = React.createClass
     displayName: 'MenuMailboxItem'
 
-    shouldComponentUpdate: (nextProps, nextState) ->
-        return not(_.isEqual(nextState, @state)) or
-               not(_.isEqual(nextProps, @props))
-
     getInitialState: ->
         return target: false
 
@@ -30,9 +26,7 @@ module.exports = MenuMailboxItem = React.createClass
 
     render: ->
         mailboxID = @props.mailbox.get 'id'
-        mailboxUrl = Router.buildUrl
-            action: 'message.list'
-            accountID: @props.account.get 'id'
+        mailboxUrl = RouterGetter.getURL
             mailboxID: mailboxID
 
         nbTotal  = @props.mailbox.get('nbTotal') or 0

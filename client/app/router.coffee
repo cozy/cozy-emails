@@ -1,13 +1,12 @@
 
 LayoutActionCreator = require './actions/layout_action_creator'
 
-RouteGetter = require './getters/route'
+RouteGetter = require './getters/router'
 
 {ActionTypes} = require './constants/app_constants'
 
 _ = require 'lodash'
 
-PREFIX_ACCOUNT = 'account/:accountID/mailbox/:mailboxID'
 
 # MessageList :
 # ?sort=asc&filters=&status=unseen&start=2016-02-27T23:00:00.000Z&end=2016-03-05T22:59:59.999Z
@@ -15,37 +14,25 @@ PREFIX_ACCOUNT = 'account/:accountID/mailbox/:mailboxID'
 # Search :
 # #account/3510d24990c596125ecc9e1fc800616a/mailbox/3510d24990c596125ecc9e1fc80064d3/search/?q=plop
 
-__routes = {}
+
+PREFIX_ACCOUNT = 'account/:accountID/mailbox/:mailboxID'
+ROUTES =
+    '/*'                                    : 'messageList'
+    'account/new'                           : 'accountEdit'
+    'account/:accountID/config/:tab'        : 'accountNew'
+    'search/?q=:search'                     : 'search'
+    ':messageID'                            : 'messageShow'
+    ':messageID/edit'                       : 'messageEdit'
+    'new'                                   : 'messageNew'
+    ':messageID/forward'                    : 'messageForward'
+    ':messageID/reply'                      : 'messageReply'
+    ':messageID/reply-all'                  : 'messageReplyAll'
 
 class Router extends Backbone.Router
 
-    routes:
-        '/*'                                    : 'messageList'
-        'account/new'                           : 'accountEdit'
-        'account/:accountID/config/:tab'        : 'accountNew'
-        'search/?q=:search'                     : 'search'
-        ':messageID'                            : 'messageShow'
-        ':messageID/edit'                       : 'messageEdit'
-        'new'                                   : 'messageNew'
-        ':messageID/forward'                    : 'messageForward'
-        ':messageID/reply'                      : 'messageReply'
-        ':messageID/reply-all'                  : 'messageReplyAll'
+    routes: RouteGetter.getPrefixedRoute ROUTES, PREFIX_ACCOUNT
 
-    initialize: (args...) ->
-
-        @routes = _getContextualRoutes.call @
-        __routes = @routes
-        # AccountID && mailboxID routes
-        # TODO : test this
-        # FIXME : récupérer accountID et mailboxID Default
-        # lorsque les params ne sont pas précisés dans l'url
-        # _.extend @routes, _getContextualRoutes.call @
-        # console.log @routes
-        # TODO : add all routes here
-        # should be soon removed
-
-        @_bindRoutes()
-
+    initialize: ->
         Backbone.history.start()
 
     accountEdit: (accountID, tab) ->
@@ -64,7 +51,7 @@ class Router extends Backbone.Router
         console.log 'GOTO account new'
 
     messageList: (accountID, mailboxID, query) ->
-        params = _getURLparams query
+        params = RouteGetter.getURLparams query
         LayoutActionCreator.setRoute 'message.list', {accountID, mailboxID, params}
         LayoutActionCreator.showMessageList {accountID, mailboxID, params}
 
@@ -105,52 +92,5 @@ class Router extends Backbone.Router
     search: (accountID, mailboxID, value) ->
         LayoutActionCreator.setRoute 'search'
         console.log 'Search', accountID, mailboxID, value
-
-    # Static call
-    buildUrl: (params) =>
-        action = params.action or 'message.list'
-        name = _toCamelCase action
-
-        if -1 < (index = _.values(__routes).indexOf(name))
-            route = _.keys(__routes)[index]
-            url = route.replace /\:\w*/gi, (match) ->
-                # Get Route pattern of action
-                # Replace param name by its value
-                param = match.substring 1, match.length
-                params[param] or RouteGetter.getProps(param)
-            console.log 'buildUrl', params.action, url.replace(/\/\*$/, '')
-            return '#' + url.replace(/\/\*$/, '')
-        return '/'
-
-_toCamelCase = (value) ->
-    return value.replace /\.(\w)*/gi, (match) ->
-        part1 = match.substring 1, 2
-        part2 = match.substring 2, match.length
-        return part1.toUpperCase() + part2
-
-_getURLparams = (query = '') ->
-    params = query.match /([\w]+=[\w,]+)+/gi
-    return unless params?.length
-
-    result = {}
-    _.each params, (param) ->
-        param = param.split '='
-        if -1 < (value = param[1]).indexOf ','
-            value = value.split ','
-        result[param[0]] = value
-    result
-
-_getContextualRoutes = ->
-    _transform = (route) ->
-        unless -1 < route.indexOf 'account'
-            route = '/' + route unless route.indexOf('/') is 0
-            return PREFIX_ACCOUNT + route
-        return route
-
-    result = {}
-    _.forEach @routes, (callback, route) ->
-        route = _transform route
-        result[route] = callback
-    result
 
 module.exports = Router

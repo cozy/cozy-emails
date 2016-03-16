@@ -8,7 +8,7 @@ React = require 'react'
 Message = React.createFactory require './message'
 ToolbarConversation = React.createFactory require './toolbar_conversation'
 
-Router = require '../mixins/router_mixin'
+RouterGetter = require '../getters/router'
 
 StoreWatchMixin = require '../mixins/store_watch_mixin'
 ShouldComponentUpdate = require '../mixins/should_update_mixin'
@@ -141,7 +141,7 @@ module.exports = React.createClass
                 messages.push(last = []) unless _.isArray(last)
                 last.push key
 
-        closeURL = Router.buildURL
+        closeURL = RouterGetter.getURL
             action: 'message.list'
 
         # Starts components rendering

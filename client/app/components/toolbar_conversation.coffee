@@ -10,7 +10,7 @@ ToolboxActions       = React.createFactory require './toolbox_actions'
 LayoutActionCreator  = require '../actions/layout_action_creator'
 MessageActionCreator = require '../actions/message_action_creator'
 
-Router = require '../mixins/router_mixin'
+RouterGetter = require '../getters/router'
 
 ToolboxActions = require './toolbox_actions'
 {Button, LinkButton}  = require './basic_components'
@@ -64,13 +64,13 @@ module.exports = React.createClass
     # FIXME : this should be in layout_action_creator
     gotoPreviousConversation: ->
         messageID = @props.prevMessageID or @props.nextMessageID
-        Router.redirect {messageID}
+        window.location.href = RouterGetter.getURL {messageID}
         return
 
     # FIXME : this should be in layout_action_creator
     gotoNextConversation: ->
         messageID = @props.nextMessageID or @props.prevMessageID
-        Router.redirect {messageID}
+        window.location.href = RouterGetter.getURL {messageID}
         return
 
     onDelete: ->

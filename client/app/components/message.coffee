@@ -22,7 +22,7 @@ LayoutActionCreator  = require '../actions/layout_action_creator'
 MessageActionCreator = require '../actions/message_action_creator'
 ContactActionCreator = require '../actions/contact_action_creator'
 
-Router= require '../mixins/router_mixin'
+RouterGetter = require '../getters/router'
 
 ShouldComponentUpdate = require '../mixins/should_update_mixin'
 TooltipRefresherMixin = require '../mixins/tooltip_refresher_mixin'
@@ -292,8 +292,7 @@ module.exports = React.createClass
             MessageActionCreator.delete messageID: @state.currentMessageID
 
             # Goto to next conversation
-            Router.redirect
-                message: nextConversation
+            window.location.href = RouterGetter.getURL message: nextConversation
 
         needConfirmation = @props.settings.get('messageConfirmDelete')
         unless needConfirmation

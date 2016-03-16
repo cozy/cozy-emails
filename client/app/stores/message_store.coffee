@@ -362,7 +362,10 @@ class MessageStore extends Store
             delete _undoable[ref]
 
         handle ActionTypes.MESSAGE_FETCH_REQUEST, ->
+            # console.log 'FETCH', @getNextUrl()
             return if not (url = @getNextUrl()) or @isFetching()
+
+            console.log 'MESSAGE_FETCH_REQUEST', url
 
             # There may be more than one concurrent fetching request
             # so we use a counter instead of a boolean

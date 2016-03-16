@@ -13,7 +13,6 @@ Tooltips       = React.createFactory require './tooltips-manager'
 # React Mixins
 TooltipRefesherMixin = require '../mixins/tooltip_refresher_mixin'
 
-Router = require '../mixins/router_mixin'
 ApplicationGetters = require '../getters/application'
 
 {MessageFilter} = require '../constants/app_constants'
@@ -25,10 +24,6 @@ ApplicationGetters = require '../getters/application'
         - building the layout based on the router
         - listening for changes in  the model (Flux stores)
           and re-render accordingly
-
-    About routing: it uses Backbone.Router as a source of truth for the layout.
-    (based on:
-        https://medium.com/react-tutorials/react-backbone-router-c00be0cf1592)
 ###
 
 Application = React.createClass
@@ -45,7 +40,9 @@ Application = React.createClass
         @setState ApplicationGetters.getState()
 
     componentWillReceiveProps: (nextProps={}) ->
-        @setState ApplicationGetters.getState()
+        nextState = ApplicationGetters.getState()
+        console.log 'componentWillReceiveProps', nextState is @state
+        @setState nextState
         return nextProps
 
     render: ->
@@ -71,7 +68,7 @@ Application = React.createClass
                                 'aria-expanded': false
 
             # Display feedback
-            Modal(modal) if @state.modal?
+            Modal @state.modal if @state.modal?
 
             ToastContainer()
 

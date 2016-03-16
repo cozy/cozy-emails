@@ -8,7 +8,7 @@ SearchBar                  = React.createFactory require './search_bar'
 
 LayoutActionCreator  = require '../actions/layout_action_creator'
 
-Router = require '../mixins/router_mixin'
+RouterGetter = require '../getters/router'
 
 
 module.exports = ToolbarMessagesList = React.createClass
@@ -51,9 +51,9 @@ module.exports = ToolbarMessagesList = React.createClass
                 if params.value
                     flag = params.value
 
-        Router.redirect
+        url = RouterGetter.getUrl
             filters: ['-date', type, flag, before, after]
-
+        window.location.href = url
 
     render: ->
 

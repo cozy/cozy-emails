@@ -7,7 +7,7 @@ MessageItem = React.createFactory require './message-list-item'
 
 DomUtils = require '../utils/dom_utils'
 
-Router = require '../mixins/router_mixin'
+RouterGetter = require '../getters/router'
 
 module.exports = MessageListBody = React.createClass
     displayName: 'MessageListBody'
@@ -38,7 +38,7 @@ module.exports = MessageListBody = React.createClass
 
                     ["msg-#{key}", MessageItem
                         message: message,
-                        messageURL: Router.buildUrl {message}
+                        messageURL: RouterGetter.getURL messageID: message.get('id')
                         accountID: @props.accountID,
                         mailboxID: @props.mailboxID,
                         accountLabel: @props.accountLabel,

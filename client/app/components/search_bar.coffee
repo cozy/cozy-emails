@@ -5,7 +5,7 @@ React = require 'react'
 SearchInput = React.createFactory require './search_input'
 AccountPicker = React.createFactory require './account_picker'
 
-Router = require '../mixins/router_mixin'
+RouterGetter = require '../getters/router'
 
 StoreWatchMixin  = require '../mixins/store_watch_mixin'
 
@@ -36,18 +36,18 @@ module.exports = GlobalSearchBar = React.createClass
                 onSubmit: @onSearchTriggered
 
     onSearchTriggered: (newvalue) ->
-        if newvalue isnt ''
-            Router.redirect
+        unless _.isEmpty newvalue
+            window.location.href = RouterGetter.getURL
                 action: 'search'
                 value: newvalue
-        else
-            @setState search: ''
-            accountID = @state.accountID
-            accountID = null if @state.accountID is 'all'
+            return
 
-            Router.redirect
-                action: 'message.list'
-                accountID: accountID
+        @setState search: ''
+
+        accountID = null if @state.accountID is 'all'
+        window.location.href = RouterGetter.getURL
+            action: 'message.list'
+            accountID: accountID
 
     onAccountChanged: (accountID) ->
         currentAccountId = AccountStore.getSelected()?.get('id')

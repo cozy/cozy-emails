@@ -11,7 +11,7 @@ MessageStore = require '../stores/message_store'
 LayoutActionCreator  = require '../actions/layout_action_creator'
 MessageActionCreator = require '../actions/message_action_creator'
 
-Router = require '../mixins/router_mixin'
+RouterGetter = require '../getters/router'
 
 
 module.exports = ActionsToolbarMessagesList = React.createClass
@@ -85,7 +85,7 @@ module.exports = ActionsToolbarMessagesList = React.createClass
             # FIXME : move this into MessageActionCreator
             # after deleting complete
             # Goto to next conversation
-            Router.redirect
+            window.location.href = RouterGetter.getURL
                 action: 'message.show',
                 message: nextConversation
 

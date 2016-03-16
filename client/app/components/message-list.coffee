@@ -1,5 +1,6 @@
 Immutable = require 'immutable'
 React     = require 'react'
+ReactDOM  = require 'react-dom'
 
 {div, section, p, ul, li, a, span, i, button, input, img} = React.DOM
 {MessageFlags, Tooltips} = require '../constants/app_constants'
@@ -115,7 +116,6 @@ module.exports = MessageList = React.createClass
                 selected:             @getSelected()
                 allSelected:          @allSelected()
                 toggleAll:            @toggleAll
-                afterAction:          @afterMessageAction
                 queryParams:          @props.queryParams
                 noFilters:            @props.noFilters
 
@@ -183,18 +183,10 @@ module.exports = MessageList = React.createClass
         if val then @addToSelected id
         else @removeFromSelected id
 
-    afterMessageAction: ->
-        # ugly setTimeout to wait until localDelete occured
-        setTimeout =>
-            listEnd = @refs.nextPage or @refs.listEnd or @refs.listEmpty
-            if listEnd? and DomUtils.isVisible(listEnd)
-                @loadMoreMessage()
-        , 100
-
     _loadNext: ->
         # load next message if last one is displayed (useful when navigating
         # with keyboard)
-        lastMessage = @refs.listBody?.lastElementChild
+        lastMessage = ReactDOM.findDOMNode(@refs.listBody)?.lastElementChild
         if @refs.nextPage? and lastMessage? and DomUtils.isVisible(lastMessage)
             @loadMoreMessage()
 
@@ -204,24 +196,9 @@ module.exports = MessageList = React.createClass
             SocketUtils.changeRealtimeScope @props.mailboxID, lastdate
 
     _initScroll: ->
-        if not @refs.nextPage?
-            return
-
         # listen to scroll events
-        if @refs.scrollable?
-            scrollable = @refs.scrollable
-            setTimeout =>
-                scrollable.removeEventListener 'scroll', @_loadNext
-                scrollable.addEventListener 'scroll', @_loadNext
-                @_loadNext()
-                # a lot of event can make the "more messages" label visible,
-                # so we check every few seconds
-                if not @_checkNextInterval?
-                    @_checkNextInterval = window.setInterval @_loadNext, 10000
-            , 0
-
-    componentWillMount: ->
-        setTimeout @loadMoreMessage, 1
+        @refs.scrollable?.removeEventListener 'scroll', @_loadNext
+        @refs.scrollable?.addEventListener 'scroll', @_loadNext
 
     componentDidMount: ->
         @_initScroll()
