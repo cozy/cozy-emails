@@ -31,8 +31,6 @@ class LayoutStore extends Store
 
     _focus = null
 
-    _tasks = Immutable.OrderedMap()
-
     _shown = true
 
     _intentAvailable = false
@@ -91,16 +89,6 @@ class LayoutStore extends Store
         handle ActionTypes.REFRESH, ->
             @emit 'change'
 
-        handle ActionTypes.CLEAR_TOASTS, ->
-            _tasks = Immutable.OrderedMap()
-            @emit 'change'
-
-        handle ActionTypes.RECEIVE_TASK_UPDATE, (task) =>
-            @_showNotification task
-
-        handle ActionTypes.RECEIVE_TASK_DELETE, (taskid) ->
-            @_removeNotification taskid
-
         handle ActionTypes.TOASTS_SHOW, ->
             _shown = true
             @emit 'change'
@@ -127,148 +115,10 @@ class LayoutStore extends Store
             _drawer = not _drawer
             @emit 'change'
 
-        makeMessage = (target, ref, actionAndOK, errMsg)->
-            subject = target?.subject
-
-            if target.messageID and target.isDraft
-                type = 'draft'
-            else if target.messageID
-                type = 'message'
-            else if target.conversationID
-                type = 'conversation'
-            else if target.conversationIDs
-                type = 'conversations'
-                smart_count = target.conversationIDs.length
-            else if target.messageIDs
-                type = 'messages'
-                smart_count = target.messageIDs.length
-            else
-                throw new Error 'Wrong Usage : unrecognized target'
-
-            return t "#{type} #{actionAndOK}",
-                error: errMsg
-                subject: subject or ''
-                smart_count: smart_count
-
-        makeUndoAction = (ref) ->
-            label: t 'action undo'
-            onClick: -> getMessageActionCreator().undo ref
-
-        handle ActionTypes.MESSAGE_TRASH_SUCCESS, ({target, ref, updated}) ->
-            @_showNotification
-                message: makeMessage target, ref, 'delete ok'
-                actions: [makeUndoAction ref]
-                autoclose: true
-
-        handle ActionTypes.MESSAGE_TRASH_FAILURE, ({target, ref, error}) ->
-            @_showNotification
-                message: makeMessage target, ref, 'delete ko', error
-                errors: [error]
-                autoclose: true
-
-        handle ActionTypes.MESSAGE_MOVE_SUCCESS, ({target, ref, updated}) ->
-            unless target.silent
-                @_showNotification
-                    message: makeMessage target, ref, 'move ok'
-                    actions: [makeUndoAction ref]
-                    autoclose: true
-
-        handle ActionTypes.MESSAGE_MOVE_FAILURE, ({target, ref, error}) ->
-            @_showNotification
-                message: makeMessage target, ref, 'move ko', error
-                errors: [error]
-                autoclose: true
-
-        # dont display a notification for MESSAGE_FLAG_SUCCESS
-        handle ActionTypes.MESSAGE_FLAGS_FAILURE, ({target, ref, error}) ->
-            @_showNotification
-                message: makeMessage target, ref, 'flag ko', error
-                errors: [error]
-                autoclose: true
-
-        # dont display a notification for MESSAGE_RECOVER_SUCCESS
-        handle ActionTypes.MESSAGE_RECOVER_FAILURE, ({target, ref, error}) ->
-            @_showNotification
-                message: 'lost server connection'
-                errors: [error]
-                autoclose: true
-
-        handle ActionTypes.MESSAGE_FETCH_FAILURE, ({error}) ->
-            @_showNotification
-                message: 'message fetch failure'
-                errors: [error]
-                autoclose: true
-
-        handle ActionTypes.ADD_ACCOUNT_FAILURE, ({error}) ->
-            AppDispatcher.waitFor [AccountStore.dispatchToken]
-            @_showNotification
-               message: AccountStore.getAlertErrorMessage()
-               errors: AccountStore.getRawErrors()
-               autoclose: true
-
-        handle ActionTypes.ADD_ACCOUNT_SUCCESS, ({areMailboxesConfigured}) ->
-
-            if areMailboxesConfigured
-                key = "account creation ok"
-            else
-                key = "account creation ok configuration needed"
-
-            @_showNotification
-                message: t key
-                autoclose: true
-
-        handle ActionTypes.EDIT_ACCOUNT_FAILURE, ({error}) ->
-            AppDispatcher.waitFor [AccountStore.dispatchToken]
-            @_showNotification
-               message: AccountStore.getAlertErrorMessage()
-               errors: AccountStore.getRawErrors()
-               autoclose: true
-
-        handle ActionTypes.EDIT_ACCOUNT_SUCCESS, ->
-            @_showNotification
-                message: t 'account updated'
-                autoclose: true
-
-        handle ActionTypes.CHECK_ACCOUNT_FAILURE, ({error}) ->
-            AppDispatcher.waitFor [AccountStore.dispatchToken]
-            @_showNotification
-               message: AccountStore.getAlertErrorMessage()
-               errors: AccountStore.getRawErrors()
-               autoclose: true
-
-        handle ActionTypes.CHECK_ACCOUNT_SUCCESS, ->
-            @_showNotification
-                message: t 'account checked'
-                autoclose: true
-
-        handle ActionTypes.REFRESH_FAILURE, ({error}) ->
-            AppDispatcher.waitFor [AccountStore.dispatchToken]
-            @_showNotification
-                message: AccountStore.getRefreshLastError()
-                errors: [error]
-                autoclose: true
-
-
-    ###
-        Private API
-    ###
-    _removeNotification: (id) ->
-        _tasks = _tasks.remove id
-        @emit 'change'
-
-    _showNotification: (options) ->
-        id = options.id or +Date.now()
-        options.finished ?= true
-        _tasks = _tasks.set id, Immutable.Map options
-        if options.autoclose
-            setTimeout @_removeNotification.bind(@, id), 5000
-        @emit 'change'
 
     ###
         Public API
     ###
-    getRoute: ->
-        return _route
 
     getDisposition: ->
         return _disposition
@@ -291,10 +141,6 @@ class LayoutStore extends Store
 
     getModal: ->
         return _modal
-
-
-    getToasts: ->
-        return _tasks
 
 
     isShown: ->

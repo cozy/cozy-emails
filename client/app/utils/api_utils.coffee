@@ -5,16 +5,17 @@ moment   = require 'moment'
 
 AccountStore  = require '../stores/account_store'
 MessageStore  = require '../stores/message_store'
-LayoutStore  = require '../stores/message_store'
+RouterStore  = require '../stores/router_store'
 
 SettingsStore = require '../stores/settings_store'
 LayoutActionCreator  = require '../actions/layout_action_creator'
 MessageActionCreator = require '../actions/message_action_creator'
+RouterActionCreator  = require '../actions/layout_action_creator'
 
 
 
 onMessageList = ->
-    return LayoutStore.getRoute() is 'message.list'
+    return RouterStore.getAction() is 'message.list'
 
 
 module.exports = Utils =
@@ -123,19 +124,10 @@ module.exports = Utils =
     # @params {Immutable} message the message (current one if null)
     messageDisplay: (message) ->
         message ?= MessageStore.getByID MessageStore.getCurrentID()
-        unless message
-            return
-
-        urlOptions =
-            action: 'message'
-            parameters:
-                messageID: message.get 'id'
-                conversationID: message.get 'conversationID'
-
-        console.log 'messageDisplay', urlOptions
-        # # FIXME : use router.redirect instead
-        # url = window.router.buildUrl urlOptions
-        # window.router.navigate url, {trigger: true}
+        if message
+            RouterActionCreator.navigate
+                parameters:
+                    messageID: message.get 'id'
 
 
     messageClose: ->

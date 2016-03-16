@@ -5,8 +5,6 @@ ReactDOM  = require 'react-dom'
 {div, section, p, ul, li, a, span, i, button, input, img} = React.DOM
 {MessageFlags, Tooltips} = require '../constants/app_constants'
 
-TooltipRefresherMixin = require '../mixins/tooltip_refresher_mixin'
-StoreWatchMixin       = require '../mixins/store_watch_mixin'
 SelectionManager      = require '../mixins/selection_manager_mixin'
 
 LayoutStore   = require '../stores/layout_store'
@@ -19,8 +17,6 @@ MessageUtils = require '../utils/message_utils'
 SocketUtils  = require '../utils/socketio_utils'
 colorhash    = require '../utils/colorhash'
 
-ContactActionCreator = require '../actions/contact_action_creator'
-LayoutActionCreator  = require '../actions/layout_action_creator'
 MessageActionCreator = require '../actions/message_action_creator'
 
 {Spinner, Progress} = require('./basic_components').factories
@@ -37,9 +33,18 @@ module.exports = MessageList = React.createClass
 
     mixins: [
         SelectionManager
-        TooltipRefresherMixin
-        StoreWatchMixin [LayoutStore, AccountStore, MessageStore]
     ]
+
+    # FIXME : use getters instead
+    # such as : MessagesListGetter.getState()
+    getInitialState: ->
+        @getStateFromStores()
+
+    # FIXME : use getters instead
+    # such as : MessagesListGetter.getState()
+    componentWillReceiveProps: (nextProps={}) ->
+        @setState @getStateFromStores()
+        nextProps
 
     getStateFromStores: ->
         accountID = @props.accountID

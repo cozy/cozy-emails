@@ -1,9 +1,9 @@
 require '../styles/application.styl'
 
 React = require 'react'
+{div, section, main, p, span, a, i, strong, form, input, button} = React.DOM
 
 # React components
-{div, section, main, p, span, a, i, strong, form, input, button} = React.DOM
 Menu           = React.createFactory require './menu'
 Modal          = React.createFactory require './modal'
 Panel          = React.createFactory require './panel'
@@ -11,6 +11,11 @@ ToastContainer = React.createFactory require './toast_container'
 Tooltips       = React.createFactory require './tooltips-manager'
 
 # React Mixins
+SettingsStore       = require '../stores/settings_store'
+AccountStore        = require '../stores/account_store'
+MessageStore        = require '../stores/message_store'
+LayoutStore         = require '../stores/layout_store'
+StoreWatchMixin         = require '../mixins/store_watch_mixin'
 TooltipRefesherMixin = require '../mixins/tooltip_refresher_mixin'
 
 ApplicationGetters = require '../getters/application'
@@ -31,21 +36,23 @@ Application = React.createClass
 
     mixins: [
         TooltipRefesherMixin
+        StoreWatchMixin [SettingsStore, AccountStore, MessageStore, LayoutStore]
     ]
 
     getDefaultProps: ->
         ApplicationGetters.getProps 'application'
 
-    componentWillMount: ->
-        @setState ApplicationGetters.getState()
+    getInitialState: ->
+        ApplicationGetters.getState()
 
     componentWillReceiveProps: (nextProps={}) ->
-        nextState = ApplicationGetters.getState()
-        console.log 'componentWillReceiveProps', nextState is @state
-        @setState nextState
-        return nextProps
+        @setState ApplicationGetters.getState()
+        nextProps
 
     render: ->
+        # FIXME : n'est pas reloadé après chargement du contenu
+        # le state est mal calculé
+        # Il manque la liste des messages
         div className: @props.className,
             # Actual layout
             div className: 'app',
@@ -60,7 +67,7 @@ Application = React.createClass
                         className: 'panels'
 
                         @getPanel 'message.list'
-                        if @props.isMessage
+                        if @state.messageID?
                             @getPanel 'message.show'
                         else
                             section

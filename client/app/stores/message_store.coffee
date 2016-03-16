@@ -1,5 +1,6 @@
 _         = require 'underscore'
 Immutable = require 'immutable'
+XHRUtils = require '../utils/xhr_utils'
 
 AppDispatcher = require '../app_dispatcher'
 
@@ -7,13 +8,13 @@ Store = require '../libs/flux/store/store'
 ContactStore  = require './contact_store'
 AccountStore = require './account_store'
 
-XHRUtils = require '../utils/xhr_utils'
+RouterStore = require '../stores/router_store'
+
 SocketUtils = require '../utils/socketio_utils'
 {reverseDateSort, getSortFunction} = require '../utils/misc'
 
 {ActionTypes, MessageFlags, MessageFilter, FlagsConstants} =
         require '../constants/app_constants'
-
 
 EPOCH = (new Date(0)).toISOString()
 
@@ -26,14 +27,7 @@ class MessageStore extends Store
 
     _messages = Immutable.OrderedMap()
 
-    _currentFilter = null
-
     _fetching     = 0
-
-    _queryRef = 0
-    _nextUrl = null
-    _currentUrl = null
-    _noMore = false
 
     _currentMessages = Immutable.OrderedMap()
     _conversationLengths = Immutable.Map()
@@ -45,53 +39,6 @@ class MessageStore extends Store
     _inFlightByRef = {}
     _inFlightByMessageID = {}
     _undoable = {}
-
-    _difference = (obj0, obj1) ->
-        result = {}
-        _.filter obj0, (value, key) ->
-            unless value is obj1[key]
-                result[key] = value
-        result
-
-    _isFilter = (value) ->
-        value and value isnt '-'
-
-    _getURISort = (filter) ->
-        filter = _getFilter() unless filter
-        "#{filter.order}#{filter.field}"
-
-    _getFilter = (getDefault) ->
-        return if not _currentFilter or getDefault
-            field: 'date'
-            order: '-'
-            type: '-'
-            value: 'nofilter'
-            before: '-'
-            after: '-'
-        return _currentFilter
-
-    _setFilter = (params) ->
-        _defaultValue = _getFilter()
-
-        # Update Filter
-        _currentFilter =
-            field: if params.sort then params.sort.substr(1) else _defaultValue.field
-            order: if params.sort then params.sort.substr(0, 1) else _defaultValue.order
-            type: params.type or _defaultValue.type
-            value: params.flag or _defaultValue.value
-            before: params.before or _defaultValue.before
-            after: params.after or _defaultValue.after
-
-        # Update context
-        _queryRef++
-        _noMore = false
-        _nextUrl = null
-
-        return _currentFilter
-
-    _resetFilter = ->
-        value = _getFilter true
-        _setFilter value
 
     _addInFlight = (request) ->
         _inFlightByRef[request.ref] = request
@@ -361,18 +308,13 @@ class MessageStore extends Store
         handle ActionTypes.MESSAGE_UNDO_TIMEOUT, ({ref}) ->
             delete _undoable[ref]
 
-        handle ActionTypes.MESSAGE_FETCH_REQUEST, ->
-            # console.log 'FETCH', @getNextUrl()
-            return if not (url = @getNextUrl()) or @isFetching()
+        handle ActionTypes.MESSAGE_FETCH_REQUEST, (url) ->
+            return unless (url or @isFetching())
 
-            console.log 'MESSAGE_FETCH_REQUEST', url
-
-            # There may be more than one concurrent fetching request
-            # so we use a counter instead of a boolean
-            mailboxID = AccountStore.getSelectedMailbox()?.get 'id'
             ts = Date.now()
-            XHRUtils.fetchMessagesByFolder url, (err, rawMsg) ->
-                _fetching--
+            mailboxID = AccountStore.getSelectedMailbox()?.get 'id'
+            _fetching++
+            callback = (err, rawMsg) ->
                 if err?
                     AppDispatcher.handleViewAction
                         type: ActionTypes.MESSAGE_FETCH_FAILURE
@@ -385,14 +327,18 @@ class MessageStore extends Store
                         type: ActionTypes.MESSAGE_FETCH_SUCCESS
                         value: {mailboxID, fetchResult: rawMsg}
 
+                    AppDispatcher.handleViewAction
+                        type: ActionTypes.SET_NEXT_URL
+                        value: rawMsg.links
+                _fetching--
+
+            XHRUtils.fetchMessagesByFolder url, callback
+
         handle ActionTypes.MESSAGE_FETCH_FAILURE, ->
             @emit 'change'
 
+        # FIXME : gérer ça dans messageActionCreate
         handle ActionTypes.MESSAGE_FETCH_SUCCESS, ({fetchResult}) ->
-            if fetchResult.links?.next?
-                _nextUrl = decodeURIComponent(fetchResult.links.next)
-            else if fetchResult.links?
-                _noMore = true
 
             if lengths = fetchResult.conversationLengths
                 for message in fetchResult.messages
@@ -402,7 +348,7 @@ class MessageStore extends Store
             for message in fetchResult.messages when message?
                 onReceiveRawMessage message
 
-            if fetchResult.messages.length is 0
+            unless fetchResult.messages.length
                 # either end of list or no messages, we stay open
                 SocketUtils.changeRealtimeScope fetchResult.mailboxID, EPOCH
 
@@ -420,17 +366,11 @@ class MessageStore extends Store
             onReceiveRawMessage message
             @emit 'change'
 
-        handle ActionTypes.QUERY_PARAMETER_CHANGED, (parameters) ->
-            return if _.isEmpty (params = _difference parameters, _getFilter())
-
-            filter = _setFilter params
-            if filter.type in ['from', 'dest']
-                # we cant properly filter messages by dest or from in the
-                # client, instead we clear message cache and dont filter
-                # on display
+        handle ActionTypes.QUERY_PARAMETER_CHANGED, ->
+            AppDispatcher.waitFor [RouterStore.dispatchToken]
+            if RouterStore.isResetFilter()?
                 _messages = _messages.clear()
                 _conversationMemoize = null
-
             @emit 'change'
 
 
@@ -440,7 +380,6 @@ class MessageStore extends Store
 
         handle ActionTypes.SELECT_ACCOUNT, (value) ->
             @setCurrentID null
-            _resetFilter()
 
         handle ActionTypes.RECEIVE_MESSAGE_DELETE, (id) ->
             _messages = _messages.remove id
@@ -472,7 +411,7 @@ class MessageStore extends Store
                 return true
 
     _matchFlag = (message) ->
-        filter = _getFilter()
+        filter = RouterStore.getFilter()
         switch filter.value
             when MessageFilter.FLAGGED
                 MessageFlags.FLAGGED in message.get('flags')
@@ -485,7 +424,7 @@ class MessageStore extends Store
 
 
     _matchRangeDate = (message) ->
-        filter = _getFilter()
+        filter = RouterStore.getFilter()
         date = message.get filter.type
         moment(date).isBefore(filter.after) and moment(date).isAfter(filter.before)
 
@@ -508,8 +447,7 @@ class MessageStore extends Store
         sequence = _messagesWithInFlights()
         sequence = sequence.filter inMailbox mailboxID
 
-        # Apply List.Filters
-        filter = _getFilter()
+        filter = RouterStore.getFilter()
         if filter.type is 'flag'
             sequence = sequence.filter _matchFlag
         else if filter.type is 'date'
@@ -656,57 +594,5 @@ class MessageStore extends Store
     getUndoableRequest: (ref) ->
         _undoable[ref]
 
-    getQueryParams: ->
-        filter = _getFilter()
-        params =
-            sort: _getURISort()
-            type: filter.type
-            filter: filter.value
-            before: filter.before
-            after: filter.after
-            hasNextPage: not _noMore
-        return params
-
-    # Uniq Key from URL params
-    #
-    # return a {string}
-    getQueryKey: (str = '') ->
-        filter = _getFilter()
-        filterize = (key) ->
-            filter[key] if _isFilter filter[key]
-
-        keys = _.compact ['before', 'after'].map filterize
-        keys.unshift str unless _.isEmpty str
-        keys.join('-')
-
-    # FIXME : ça devrait etre dans le store du layout
-    #  et utiliser le routing
-    getCurrentURL: ->
-        filter = _getFilter()
-        mailboxID = AccountStore.getSelectedMailbox()?.get 'id'
-        sort = if filter.type in ['from', 'dest']
-            encodeURIComponent "+#{filter.type}"
-        else
-            encodeURIComponent _getURISort()
-
-        url = "mailbox/#{mailboxID}/?sort=#{sort}"
-        if filter.type is 'flag' and _isFilter filter.value
-            url += "&flag=#{filter.value}"
-
-        if _isFilter filter.before
-            url += "&before=#{encodeURIComponent filter.before}"
-
-        if _isFilter filter.after
-            url += "&after=#{encodeURIComponent filter.after}"
-        return url
-
-    # FIXME : la génération de l'url devrait être dans le routing
-    getNextUrl: ->
-        if _nextUrl
-            return _nextUrl
-        else if _noMore or _currentUrl is (url = @getCurrentURL())
-            return null
-        else
-            _currentUrl = url
 
 module.exports = new MessageStore()

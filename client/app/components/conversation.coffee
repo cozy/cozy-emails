@@ -1,35 +1,38 @@
 _ = require 'underscore'
-React = require 'react'
-
+React     = require 'react'
 {section, header, ul, li, span, i, p, h3, a, button} = React.DOM
 
 {MessageFlags} = require '../constants/app_constants'
 
-Message = React.createFactory require './message'
+Message             = React.createFactory require './message'
 ToolbarConversation = React.createFactory require './toolbar_conversation'
 
 RouterGetter = require '../getters/router'
 
-StoreWatchMixin = require '../mixins/store_watch_mixin'
-ShouldComponentUpdate = require '../mixins/should_update_mixin'
-
-LayoutActionCreator = require '../actions/layout_action_creator'
-SettingsStore = require '../stores/settings_store'
-AccountStore = require '../stores/account_store'
-MessageStore = require '../stores/message_store'
-LayoutStore = require '../stores/layout_store'
+SettingsStore       = require '../stores/settings_store'
+AccountStore        = require '../stores/account_store'
+MessageStore        = require '../stores/message_store'
+LayoutStore         = require '../stores/layout_store'
 
 module.exports = React.createClass
     displayName: 'Conversation'
 
-    mixins: [
-        StoreWatchMixin [SettingsStore, AccountStore, MessageStore, LayoutStore]
-        ShouldComponentUpdate.UnderscoreEqualitySlow
-    ]
-
     propTypes:
         messageID: React.PropTypes.string
 
+    # FIXME : use getters instead
+    # such as : Conversation.getState()
+    getInitialState: ->
+        @getStateFromStores()
+
+    # FIXME : use getters instead
+    # such as : Conversation.getState()
+    componentWillReceiveProps: (nextProps={}) ->
+        @setState @getStateFromStores()
+        nextProps
+
+    # FIXME : use Getters here
+    # FIXME : use smaller state
     getStateFromStores: ->
         message = MessageStore.getByID @props.messageID
         selectedMailboxID = AccountStore.getSelectedMailbox()?.get 'id'
@@ -90,7 +93,7 @@ module.exports = React.createClass
             accounts            : @state.accounts
             active              : active
             inConversation      : @state.conversation.size > 1
-            key                 : key.toString()
+            key                 : 'message-' + @props.messageID
             mailboxes           : @state.mailboxes
             message             : @state.conversation.get key
             selectedAccountID   : @state.selectedAccount.get 'id'
@@ -155,6 +158,7 @@ module.exports = React.createClass
                     message.get 'subject'
 
                 ToolbarConversation
+                    key                 : 'ToolbarConversation-' + @state.conversationID
                     conversation        : @state.conversation
                     conversationID      : @state.conversationID
                     moveFromMailbox     : @state.selectedMailboxID

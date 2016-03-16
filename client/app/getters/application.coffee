@@ -4,7 +4,7 @@ SearchStore = require '../stores/search_store'
 MessageStore = require '../stores/message_store'
 RefreshesStore = require '../stores/refreshes_store'
 
-RouteGetter = require '../getters/router'
+RouterGetter = require '../getters/router'
 
 classNames = require 'classnames'
 colorhash = require '../utils/colorhash'
@@ -34,11 +34,13 @@ class ApplicationGetter
             }
 
         return {
+            isLoading             : MessageStore.isFetching()
             selectedAccount       : AccountStore.getSelectedOrDefault()
             currentSearch         : SearchStore.getCurrentSearch()
             modal                 : LayoutStore.getModal()
             useIntents            : LayoutStore.intentAvailable()
             selectedMailboxID     : AccountStore.getSelectedMailbox()?.get('id')
+            messageID             : MessageStore.getCurrentID()
         }
 
     getProps: (name, props={}) ->
@@ -54,25 +56,22 @@ class ApplicationGetter
                 "layout-preview-#{previewSize}"].join(' ')
 
             return {
-                 action: (action = LayoutStore.getRoute())
                  className: className
-                 disposition: disposition
-                 isFullScreen: action isnt 'message.show'
             }
 
         if 'menu' is name
             return {
-                composeURL: RouteGetter.getURL action: 'message.new'
-                newAccountURL: RouteGetter.getURL action: 'account.new'
-                action: LayoutStore.getRoute()
+                composeURL: RouterGetter.getURL action: 'message.new'
+                newAccountURL: RouterGetter.getURL action: 'account.new'
+                action: RouterGetter.getAction()
             }
 
         if 'panel' is name
             mailboxID = AccountStore.getSelectedMailbox()?.get 'id'
             prefix = mailboxID + '-' + props.action
             return {
-                ref               : name
-                key               : MessageStore.getQueryKey prefix
+                ref               : props.action
+                key               : RouterGetter.getKey prefix
                 action            : props.action
                 accountID         : AccountStore.getSelectedOrDefault()?.get 'id'
                 mailboxID         : mailboxID
@@ -89,12 +88,12 @@ class ApplicationGetter
             result = {}
             result.key = 'account-' + accountID
             result.isSelected = isSelected
-            result.url = RouteGetter.getURL action: 'account.new'
+            result.url = RouterGetter.getURL action: 'account.new'
             result.nbUnread = account.get 'totalUnread'
             result.className = classNames active: isSelected
             result.allBoxesAreFavorite = state.mailboxes.size is state.favorites.size
             result.accountColor  = colorhash(account.get 'label')
-            result.urlconfig = RouteGetter.getURL
+            result.urlconfig = RouterGetter.getURL
                 action: 'account.edit'
                 accountID: accountID
             result.progress = RefreshesStore.getRefreshing().get accountID

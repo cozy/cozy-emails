@@ -18,8 +18,11 @@ RouterGetter = require '../getters/router'
 module.exports = Menu = React.createClass
     displayName: 'Menu'
 
-    getStateFromStores: ->
+    getInitialState: ->
         ApplicationGetter.getState 'menu', @state
+
+    componentWillReceiveProps: (nextProps={}) ->
+        @setState ApplicationGetter.getState 'menu', @state
 
     _toggleFavorites: ->
         @setState onlyFavorites: not @state.onlyFavorites

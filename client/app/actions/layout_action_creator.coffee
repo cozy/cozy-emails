@@ -1,29 +1,22 @@
 XHRUtils = require '../utils/xhr_utils'
 SocketUtils = require '../utils/socketio_utils'
 
-React     = require 'react'
-ReactDOM  = require 'react-dom'
 
 LayoutStore  = require '../stores/layout_store'
 AccountStore = require '../stores/account_store'
 MessageStore = require '../stores/message_store'
-ApplicationGetters = require '../getters/application'
+
+RouterStore = require '../stores/router_store'
 
 AppDispatcher = require '../app_dispatcher'
 
-{ActionTypes, AlertLevel, MessageFlags} = require '../constants/app_constants'
+{ActionTypes, MessageFlags} = require '../constants/app_constants'
 
 AccountActionCreator = require './account_action_creator'
 MessageActionCreator = require './message_action_creator'
-
-uniqID = 0
+RouterActionCreator = require './router_action_creator'
 
 module.exports = LayoutActionCreator =
-
-    setRoute: (value) ->
-        AppDispatcher.handleViewAction
-            type: ActionTypes.SET_ROUTE
-            value: value
 
     setDisposition: (type) ->
         AppDispatcher.handleViewAction
@@ -74,47 +67,6 @@ module.exports = LayoutActionCreator =
             type: ActionTypes.REFRESH
             value: null
 
-    alert: (message) ->
-        LayoutActionCreator.notify message,
-            level: AlertLevel.INFO
-            autoclose: true
-
-    alertSuccess: (message) ->
-        LayoutActionCreator.notify message,
-            level: AlertLevel.SUCCESS
-            autoclose: true
-
-    alertWarning: (message) ->
-        LayoutActionCreator.notify message,
-            level: AlertLevel.WARNING
-            autoclose: true
-
-    alertError: (message) ->
-        LayoutActionCreator.notify message,
-            level: AlertLevel.ERROR
-            autoclose: true
-
-    notify: (message, options) ->
-        if not message? or message.toString().trim() is ''
-            # Throw an error to get the stack trace in server logs
-            throw new Error 'Empty notification'
-        else
-            task =
-                id: "taskid-#{uniqID++}"
-                finished: true
-                message: message.toString()
-
-            if options?
-                task.autoclose = options.autoclose
-                task.errors = options.errors
-                task.finished = options.finished
-                task.actions = options.actions
-                task.level = options.level
-
-            AppDispatcher.handleViewAction
-                type: ActionTypes.RECEIVE_TASK_UPDATE
-                value: task
-
     clearToasts: ->
         AppDispatcher.handleViewAction
             type: ActionTypes.CLEAR_TOASTS
@@ -126,10 +78,11 @@ module.exports = LayoutActionCreator =
         # else go directly to first account
         else 'message.list'
 
-    showMessageList: (data) ->
-        {accountID, mailboxID, messageID, params} = data
+    updateMessageList: (params) ->
+        {accountID, mailboxID, messageID, query} = params
         accountID ?= AccountStore.getSelectedOrDefault()?.get 'id'
         mailboxID ?= AccountStore.getSelectedMailbox()?.get 'id'
+
         unless accountID
             # TODO : si pas accountID
             # alors aller à la page de config
@@ -147,28 +100,15 @@ module.exports = LayoutActionCreator =
                 type: ActionTypes.MESSAGE_CURRENT
                 value: {messageID}
 
-        # FIXME : normalement,
-        # ça devrait sauvegarder les filtres
-        # Vérifier
-        # FIXME : faire fonctionner
-        # avec 'params' en argument
-        params =
-            pageAfter: '-'
-            sort: '-date'
-            after: '-'
-            before: '-'
-            type: 'nofilter'
-            flag: '-'
-        # Get Messages first
+        if query
+            RouterActionCreator.updateFilter query
+
+        # Always get all messages form the list
         unless MessageStore.getCurrentConversation()
+            params.action = 'message.list'
             AppDispatcher.handleViewAction
                 type: ActionTypes.MESSAGE_FETCH_REQUEST
-            AppDispatcher.waitFor[MessageStore.dispatchToken]
-
-        # Display Application
-        Application = React.createFactory require '../components/application'
-        props = ApplicationGetters.getProps 'application'
-        ReactDOM.render Application(props), document.querySelector '[role=application]'
+                value: RouterStore.getCurrentURL params
 
 
     showSearchResult: (panelInfo) ->

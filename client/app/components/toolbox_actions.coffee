@@ -2,11 +2,7 @@ _     = require 'underscore'
 React = require 'react'
 
 {div, ul, li, span, a, button} = React.DOM
-
-{   Menu
-    MenuHeader
-    MenuItem
-    MenuDivider} = require('./basic_components').factories
+{Menu, MenuHeader, MenuItem, MenuDivider} = require('./basic_components').factories
 {FlagsConstants} = require '../constants/app_constants'
 
 
@@ -15,7 +11,7 @@ React = require 'react'
 #  - for the message
 #  - at the top of the list on selection
 
-module.exports = ToolboxActions = React.createClass
+module.exports = React.createClass
     displayName: 'ToolboxActions'
 
     propTypes:
@@ -38,18 +34,13 @@ module.exports = ToolboxActions = React.createClass
         onHeaders            : React.PropTypes.func
         onMark               : React.PropTypes.func
 
-
-    shouldComponentUpdate: (nextProps, nextState) ->
-        return not(_.isEqual(nextState, @state)) or
-               not(_.isEqual(nextProps, @props))
-
     render: ->
         message = @props.mode is 'message'
         conversation = @props.mode is 'conversation'
+
         Menu
             icon: 'fa-cog'
-            direction: if @props.direction is 'right' then 'right' else 'left'
-        ,
+            direction: if @props.direction is 'right' then 'right' else 'left',
 
             if message
                 MenuHeader key: 'header-mark', t 'mail action mark'

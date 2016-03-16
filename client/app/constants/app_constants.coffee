@@ -20,9 +20,13 @@ module.exports =
         # Mailbox
         'MAILBOX_ADD'               : 'MAILBOX_ADD'
         'MAILBOX_CREATE'            : 'MAILBOX_CREATE'
+        'MAILBOX_CREATE_SUCCESS'    : 'MAILBOX_CREATE_FAILURE'
         'MAILBOX_UPDATE'            : 'MAILBOX_UPDATE'
+        'MAILBOX_UPDATE_ERROR'      : 'MAILBOX_UPDATE_FAILURE'
         'MAILBOX_DELETE'            : 'MAILBOX_DELETE'
+        'MAILBOX_DELETE_ERROR'      : 'MAILBOX_DELETE_FAILURE'
         'MAILBOX_EXPUNGE'           : 'MAILBOX_EXPUNGE'
+        'MAILBOX_EXPUNGE_ERROR'     : 'MAILBOX_EXPUNGE_FAILURE'
 
         # Message
         'RECEIVE_RAW_MESSAGE'       : 'RECEIVE_RAW_MESSAGE'
@@ -71,8 +75,14 @@ module.exports =
         'CLEAR_CONTACT_RESULTS'      : 'CLEAR_CONTACT_RESULTS'
         'CONTACT_LOCAL_SEARCH'       : 'CONTACT_LOCAL_SEARCH'
 
+        # Router
+        'SAVE_ROUTES'               : 'SAVE_ROUTES'
+        'SET_ROUTE_ACTION'          : 'SET_ROUTE_ACTION'
+        'ROUTER_NAVIGATE'           : 'ROUTER_NAVIGATE'
+        'SET_NEXT_URL'              : 'SET_NEXT_URL'
+        'SET_FILTER'                : 'SET_FILTER'
+
         # Layout
-        'SET_ROUTE'                 : 'SET_ROUTE'
         'SET_APPLICATION'           : 'SET_APPLICATION'
         'SET_DISPOSITION'           : 'SET_DISPOSITION'
         'TOGGLE_LIST_MODE'          : 'TOGGLE_LIST_MODE'

@@ -3,12 +3,11 @@ AppDispatcher = require '../app_dispatcher'
 {ActionTypes} = require '../constants/app_constants'
 
 AccountStore = require '../stores/account_store'
-LayoutActionCreator = null
-MessageActionCreator = require './message_action_creator'
+RouterStore = require '../stores/router_store'
 
-getLAC = ->
-    LayoutActionCreator ?= require '../actions/layout_action_creator'
-    return LayoutActionCreator
+LayoutActionCreator = require '../actions/layout_action_creator'
+MessageActionCreator = require './message_action_creator'
+RouterActionCreator = require './router_action_creator'
 
 module.exports = AccountActionCreator =
 
@@ -46,7 +45,7 @@ module.exports = AccountActionCreator =
                 else
                     url = "account/#{id}/config/mailboxes"
 
-                window.router.navigate url, trigger: true
+                RouterActionCreator.navigate url, trigger: true
 
 
     edit: (inputValues, accountID, callback) ->
@@ -97,8 +96,8 @@ module.exports = AccountActionCreator =
             type: ActionTypes.REMOVE_ACCOUNT
             value: accountID
         XHRUtils.removeAccount accountID, (error) ->
-        getLAC().notify t('account removed'), autoclose: true
-        window.router.navigate '', trigger: true
+        LayoutActionCreator.notify t('account removed'), autoclose: true
+        RouterActionCreator.navigate '', trigger: true
 
     ensureSelected: (accountID, mailboxID) =>
         if AccountStore.selectedIsDifferentThan accountID, mailboxID
@@ -142,11 +141,11 @@ module.exports = AccountActionCreator =
                     type: ActionTypes.MAILBOX_CREATE
                     value: account
 
-                getLAC().alertSuccess t("mailbox create ok")
+                LayoutActionCreator.alertSuccess t("mailbox create ok")
 
             else
                 message = "#{t("mailbox create ko")} #{error.message or error}"
-                getLAC().alertError message
+                LayoutActionCreator.alertError message
 
             callback? error
 
@@ -157,10 +156,10 @@ module.exports = AccountActionCreator =
                     type: ActionTypes.MAILBOX_UPDATE
                     value: account
 
-                getLAC().alertSuccess t("mailbox update ok"),
+                LayoutActionCreator.alertSuccess t("mailbox update ok"),
             else
                 message = "#{t("mailbox update ko")} #{error.message or error}"
-                getLAC().alertError message
+                LayoutActionCreator.alertError message
                     autoclose: true
 
             callback? error
@@ -189,17 +188,17 @@ module.exports = AccountActionCreator =
             # FIXME : handle redirect
 
             # if error?
-            #     getLAC().alertError """
+            #     LayoutActionCreator.alertError """
             #         #{t("mailbox expunge ko")} #{error.message or error}
             #     """
             #
             #     # if user hasn't switched to another box, refresh display
             #     unless AccountStore.selectedIsDifferentThan accountID, mailboxID
-            #         parameters = MessageStore.getQueryParams()
+            #         parameters = RouterStore.getQueryParams()
             #         parameters.accountID = accountID
             #         parameters.mailboxID = mailboxID
-            #         getLAC().showMessageList {parameters}
+            #         LayoutActionCreator.showMessageList {parameters}
             #
             # else
-            #     getLAC().notify t("mailbox expunge ok"),
+            #     LayoutActionCreator.notify t("mailbox expunge ok"),
             #         autoclose: true

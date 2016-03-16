@@ -1,4 +1,6 @@
 React     = require 'react'
+{div} = React.DOM
+
 Immutable = require 'immutable'
 
 AccountStore = require '../stores/account_store'
@@ -8,15 +10,12 @@ LayoutActions = require '../actions/layout_action_creator'
 
 RouterGetter = require '../getters/router'
 
-StoreWatchMixin      = require '../mixins/store_watch_mixin'
-ShouldComponentUpdate = require '../mixins/should_update_mixin'
-
 {Container, Title, Tabs} = require('./basic_components').factories
 AccountDelete = React.createFactory require './account_config_delete'
 AccountConfigMain = React.createFactory require './account_config_main'
 AccountConfigMailboxes = React.createFactory require './account_config_mailboxes'
 AccountConfigSignature = React.createFactory require './account_config_signature'
-{div} = React.DOM
+
 
 REQUIRED_FIELDS_NEW = [
     'label', 'name', 'login', 'password', 'imapServer', 'imapPort',
@@ -32,13 +31,18 @@ module.exports = React.createClass
 
     _lastDiscovered: ''
 
-    mixins: [
-        ShouldComponentUpdate.UnderscoreEqualitySlow
-        StoreWatchMixin [AccountStore]
-    ]
+    # FIXME : use getters instead
+    # such as : AccountConfig.getState()
+    getInitialState: ->
+        @getStateFromStores()
+
+    # FIXME : use getters instead
+    # such as : AccountConfig.getState()
+    componentWillReceiveProps: (nextProps={}) ->
+        @setState @getStateFromStores()
+        nextProps
 
     getStateFromStores: ->
-
         nstate = {}
 
         # dont overwrite editedAccount when stores state changed

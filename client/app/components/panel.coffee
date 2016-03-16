@@ -10,14 +10,13 @@ MessageList    = React.createFactory require './message-list'
 Settings       = React.createFactory require './settings'
 SearchResult   = React.createFactory require './search_result'
 
-# React Mixins
-TooltipRefesherMixin = require '../mixins/tooltip_refresher_mixin'
-
 # Flux stores
 AccountStore  = require '../stores/account_store'
 MessageStore  = require '../stores/message_store'
 SearchStore   = require '../stores/search_store'
 SettingsStore = require '../stores/settings_store'
+
+RouterGetter = require '../getters/router'
 
 MessageActionCreator = require '../actions/message_action_creator'
 
@@ -26,10 +25,6 @@ MessageActionCreator = require '../actions/message_action_creator'
 
 module.exports = Panel = React.createClass
     displayName: 'Panel'
-
-    mixins: [
-        TooltipRefesherMixin
-    ]
 
     # Build initial state from store values.
     getInitialState: ->
@@ -91,10 +86,10 @@ module.exports = Panel = React.createClass
 
         prefix = 'messageList-' + @props.mailboxID
         MessageList
-            key         : MessageStore.getQueryKey prefix
+            key         : RouterGetter.getKey prefix
             accountID   : @props.accountID
             mailboxID   : @props.mailboxID
-            queryParams : MessageStore.getQueryParams()
+            queryParams : RouterGetter.getQueryParams()
 
     # Rendering the compose component requires several parameters. The main one
     # are related to the selected account, the selected mailbox and the compose
@@ -160,6 +155,8 @@ module.exports = Panel = React.createClass
         return unless @isMounted()
         @setState isLoadingReply: false
 
+    # FIXME : use Getters here
+    # FIXME : use smaller state
     getStateFromStores: ->
         return {
             accounts              : AccountStore.getAll()

@@ -63,6 +63,7 @@ module.exports = MessageActionCreator =
     fetchMoreOfCurrentQuery: ->
         AppDispatcher.handleViewAction
             type: ActionTypes.MESSAGE_FETCH_REQUEST
+            value : RouterStore.getNextURL()
 
     fetchSearchResults: (accountID, search) ->
         return null if search is '-'

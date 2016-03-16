@@ -4,6 +4,7 @@ classNames = require 'classnames'
 {markdown} = require 'markdown'
 toMarkdown = require 'to-markdown'
 
+React     = require 'react'
 {
     div, article, header, footer, ul, li, span, i, p, a, button, pre,
     iframe, textarea
@@ -24,19 +25,11 @@ ContactActionCreator = require '../actions/contact_action_creator'
 
 RouterGetter = require '../getters/router'
 
-ShouldComponentUpdate = require '../mixins/should_update_mixin'
-TooltipRefresherMixin = require '../mixins/tooltip_refresher_mixin'
-
 RGXP_PROTOCOL = /:\/\//
 
 
 module.exports = React.createClass
     displayName: 'Message'
-
-    mixins: [
-        TooltipRefresherMixin
-        ShouldComponentUpdate.UnderscoreEqualitySlow
-    ]
 
     propTypes:
         accounts               : React.PropTypes.object.isRequired

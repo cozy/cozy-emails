@@ -12,9 +12,6 @@ MessageActionCreator = require '../actions/message_action_creator'
 
 RouterGetter = require '../getters/router'
 
-ToolboxActions = require './toolbox_actions'
-{Button, LinkButton}  = require './basic_components'
-
 module.exports = React.createClass
     displayName: 'ToolbarConversation'
 
@@ -33,6 +30,7 @@ module.exports = React.createClass
         nav className: 'toolbar toolbar-conversation btn-toolbar',
 
             ToolboxActions
+                key                  : 'ToolboxActions-' + @props.conversationID
                 mode                 : 'conversation'
                 direction            : 'right'
                 inConversation       : true

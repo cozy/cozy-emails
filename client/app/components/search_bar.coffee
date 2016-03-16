@@ -7,17 +7,22 @@ AccountPicker = React.createFactory require './account_picker'
 
 RouterGetter = require '../getters/router'
 
-StoreWatchMixin  = require '../mixins/store_watch_mixin'
-
 AccountStore = require '../stores/account_store'
 SearchStore = require '../stores/search_store'
 
 module.exports = GlobalSearchBar = React.createClass
     displayName: 'GlobalSearchBar'
 
-    mixins: [
-        StoreWatchMixin [AccountStore, SearchStore]
-    ]
+    # FIXME : use getters instead
+    # such as : SearchBar.getState()
+    getInitialState: ->
+        @getStateFromStores()
+
+    # FIXME : use getters instead
+    # such as : SearchBar.getState()
+    componentWillReceiveProps: (nextProps={}) ->
+        @setState @getStateFromStores()
+        nextProps
 
     render: ->
         div className: 'search-bar',

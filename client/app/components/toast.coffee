@@ -3,10 +3,10 @@ classNames = require 'classnames'
 
 {a, h4,  pre, div, button, span, strong, i} = React.DOM
 SocketUtils     = require '../utils/socketio_utils'
+
 AppDispatcher   = require '../app_dispatcher'
-StoreWatchMixin = require '../mixins/store_watch_mixin'
-LayoutStore      = require '../stores/layout_store'
 LayoutActionCreator = require '../actions/layout_action_creator'
+
 {ActionTypes, AlertLevel} = require '../constants/app_constants'
 
 

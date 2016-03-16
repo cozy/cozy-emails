@@ -8,13 +8,10 @@ Immutable = require 'immutable'
 PropTypes = require '../libs/prop_types'
 
 cachedTransform = require '../libs/cached_transform'
-ShouldComponentUpdate = require '../mixins/should_update_mixin'
 
 
 module.exports = React.createClass
     displayName: 'MailboxPicker'
-
-    mixins: [ShouldComponentUpdate.UnderscoreEqualitySlow]
 
     propTypes:
         allowUndefined: React.PropTypes.bool

@@ -6,8 +6,9 @@ React      = require 'react'
 
 Animate             = React.createFactory require 'rc-animate'
 Toast               = React.createFactory require './toast'
-StoreWatchMixin     = require '../mixins/store_watch_mixin'
+
 LayoutStore         = require '../stores/layout_store'
+NotificationStore   = require '../stores/notification_store'
 LayoutActionCreator = require '../actions/layout_action_creator'
 
 
@@ -15,14 +16,20 @@ LayoutActionCreator = require '../actions/layout_action_creator'
 module.exports = ToastContainer = React.createClass
     displayName: 'ToastContainer'
 
-    mixins: [
-        StoreWatchMixin [LayoutStore]
-    ]
+    # FIXME : use getters instead
+    # such as : ToastContainer.getState()
+    getInitialState: ->
+        @getStateFromStores()
 
+    # FIXME : use getters instead
+    # such as : ToastContainer.getState()
+    componentWillReceiveProps: (nextProps={}) ->
+        @setState @getStateFromStores()
+        nextProps
 
     getStateFromStores: ->
         return {
-            toasts: LayoutStore.getToasts()
+            toasts: NotificationStore.getToasts()
             hidden: not LayoutStore.isShown()
         }
 
