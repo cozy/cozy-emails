@@ -1,9 +1,6 @@
-require('coffee-script/register')
-
-var test = require('tape')
-var tapSpec = require('tap-spec')
+var assert = require('chai').assert
 var mockery = require('mockery')
-var sinon = require('sinon');
+var sinon = require('sinon')
 
 var SpecDispatcher = require('./utils/specs_dispatcher')
 
@@ -11,51 +8,53 @@ var Dispositions = require('../app/constants/app_constants').Dispositions
 var ActionTypes = require('../app/constants/app_constants').ActionTypes
 
 
-test.createStream()
-    .pipe(tapSpec())
-    .pipe(process.stdout)
+describe('LayoutStore spec', function() {
 
-var sandbox = sinon.sandbox.create()
+    var sandbox, layoutStore, dispatcher
 
-test.onFinish(function() {
-    sandbox.restore()
+    before(function () {
+        dispatcher = new SpecDispatcher()
+        sandbox = sinon.sandbox.create()
+        mockery.enable({
+            warnOnUnregistered: false,
+            useCleanCache: true
+        })
+
+        mockery.registerMock('../app_dispatcher', dispatcher)
+        mockery.registerMock('../../../app_dispatcher', dispatcher)
+        mockery.registerMock('./account_store', {})
+        mockery.registerAllowables([
+            'node-event-emitter',
+            '../constants/app_constants',
+            '../libs/flux/store/store',
+            '../app/stores/layout_store'
+        ])
+
+        global.window = { innerWidth: 1600 }
+        layoutStore = require('../app/stores/layout_store')
+    })
+
+    after(function () {
+        mockery.disable()
+        sandbox.restore()
+    })
+
+    describe('Disposition', function () {
+
+        it('Default: DISPOSITION is COLUMN', function () {
+            assert.equal(layoutStore.getDisposition(), Dispositions.COL)
+        })
+
+        it('Switch to ROW: DISPOSITION is ROW', function (done) {
+            layoutStore.on('change', function () {
+                assert.equal(layoutStore.getDisposition(), Dispositions.ROW)
+                done()
+            })
+
+            dispatcher.dispatch({
+                type: ActionTypes.SET_DISPOSITION,
+                value: Dispositions.ROW
+            })
+        })
+    })
 })
-
-test('LayoutStore spec', function(t) {
-    global.window = { innerWidth: 1600 }
-
-    var dispatcher = new SpecDispatcher()
-
-    mockery.enable({
-        warnOnUnregistered: false,
-        useCleanCache: true
-    })
-    mockery.registerMock('../app_dispatcher', dispatcher)
-    mockery.registerMock('../../../app_dispatcher', dispatcher)
-    mockery.registerMock('./account_store', {})
-    mockery.registerAllowables([
-        'node-event-emitter',
-        '../constants/app_constants',
-        '../libs/flux/store/store',
-        '../app/stores/layout_store'
-    ])
-
-    var layoutStore = require('../app/stores/layout_store')
-
-    t.test('Disposition', function (t) {
-        t.plan(2)
-
-        t.equal(layoutStore.getDisposition(), Dispositions.COL,
-            'Default: DISPOSITION is COLUMN')
-
-        layoutStore.on('change', function () {
-            t.equal(layoutStore.getDisposition(), Dispositions.ROW,
-                'Switch to ROW: DISPOSITION is ROW')
-        })
-
-        dispatcher.dispatch({
-            type: ActionTypes.SET_DISPOSITION,
-            value: Dispositions.ROW
-        })
-    })
-});
