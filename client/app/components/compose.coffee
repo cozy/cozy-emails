@@ -449,6 +449,8 @@ module.exports = Compose = React.createClass
 
             # Check for Updates
             @state.mailboxIDs = message.mailboxIDs
+            @state.date = message.date
+            @state.lastUpdate = message.date
 
             # Refresh URL
             # to save temporary info
