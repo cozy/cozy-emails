@@ -82,7 +82,7 @@ module.exports = Compose = React.createClass
 
     componentWillUpdate: (nextProps, nextState) ->
         unless _.isEmpty (text = nextState.text.trim())
-            if nextState.composeInHTML
+            if nextProps.settings.get 'composeInHTML'
                 nextState.html = MessageUtils.cleanHTML nextState.html
                 nextState.text = MessageUtils.cleanReplyText nextState.html
                 nextState.html = MessageUtils.wrapReplyHtml nextState.html
