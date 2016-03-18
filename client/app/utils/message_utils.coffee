@@ -132,9 +132,10 @@ module.exports = MessageUtils =
             address: account.get 'login'
             signature: account.get 'signature'
 
+
+        composeInHTML = props.settings.get 'composeInHTML'
         message =
             id              : props.messageID
-            composeInHTML   : props.settings.get 'composeInHTML'
             attachments     : Immutable.List()
             accountID       : account.id
             isDraft         : true
@@ -153,14 +154,14 @@ module.exports = MessageUtils =
         # Format text
         text = message.text or ''
         html = message.html
-        if text? and not html? and message.composeInHTML
+        if text? and not html? and composeInHTML
             try
                 html = markdown.toHTML text
             catch e
                 console.error "Error converting message to Markdown: #{e}"
                 html = "<div class='text'>#{text}</div>"
 
-        if html? and not text? and not message.composeInHTML
+        if html? and not text? and not composeInHTML
             text = toMarkdown html
 
         inReplyTo = props.inReplyTo
