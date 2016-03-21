@@ -21,8 +21,8 @@ MessageUtils = require '../utils/message_utils'
 
 LayoutActionCreator  = require '../actions/layout_action_creator'
 MessageActionCreator = require '../actions/message_action_creator'
+RouterActionCreator = require '../actions/router_action_creator'
 
-RouterGetter = require '../getters/router'
 LinkedStateMixin = require 'react-addons-linked-state-mixin'
 
 # Component that allows the user to write emails.
@@ -253,8 +253,7 @@ module.exports = Compose = React.createClass
     # conversation ID and message ID. These infor are collected via current
     # selection and message information.
     finalRedirect: ->
-        window.location.href = RouterGetter.buildURL
-            action: 'message.show'
+        RouterActionCreator.navigate
             messageID: @state.id
 
     # Cancel brings back to default view.
@@ -330,7 +329,7 @@ module.exports = Compose = React.createClass
             unless @state.id
                 @state.id = message.id
                 @state.conversationID = message.conversationID
-                window.location.href = RouterGetter.getURL
+                RouterActionCreator.navigate
                     action: 'message.edit'
                     messageID: @state.id
                 return

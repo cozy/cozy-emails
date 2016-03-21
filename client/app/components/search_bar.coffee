@@ -5,10 +5,10 @@ React = require 'react'
 SearchInput = React.createFactory require './search_input'
 AccountPicker = React.createFactory require './account_picker'
 
-RouterGetter = require '../getters/router'
-
 AccountStore = require '../stores/account_store'
 SearchStore = require '../stores/search_store'
+
+RouterActionCreator = require '../actions/router_action_creator'
 
 module.exports = GlobalSearchBar = React.createClass
     displayName: 'GlobalSearchBar'
@@ -42,7 +42,7 @@ module.exports = GlobalSearchBar = React.createClass
 
     onSearchTriggered: (newvalue) ->
         unless _.isEmpty newvalue
-            window.location.href = RouterGetter.getURL
+            RouterActionCreator.navigate
                 action: 'search'
                 value: newvalue
             return
@@ -50,7 +50,7 @@ module.exports = GlobalSearchBar = React.createClass
         @setState search: ''
 
         accountID = null if @state.accountID is 'all'
-        window.location.href = RouterGetter.getURL
+        RouterActionCreator.navigate
             action: 'message.list'
             accountID: accountID
 

@@ -6,9 +6,8 @@ FiltersToolbarMessagesList = React.createFactory require './toolbar_messageslist
 ActionsToolbarMessagesList = React.createFactory require './toolbar_messageslist_actions'
 SearchBar                  = React.createFactory require './search_bar'
 
-LayoutActionCreator  = require '../actions/layout_action_creator'
-
-RouterGetter = require '../getters/router'
+LayoutActionCreator = require '../actions/layout_action_creator'
+RouterActionCreator = require '../actions/router_action_creator'
 
 
 module.exports = ToolbarMessagesList = React.createClass
@@ -51,9 +50,8 @@ module.exports = ToolbarMessagesList = React.createClass
                 if params.value
                     flag = params.value
 
-        url = RouterGetter.getUrl
+        RouterActionCreator.navigate
             filters: ['-date', type, flag, before, after]
-        window.location.href = url
 
     render: ->
 

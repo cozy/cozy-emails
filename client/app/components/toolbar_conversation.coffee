@@ -9,8 +9,7 @@ ToolboxActions       = React.createFactory require './toolbox_actions'
 
 LayoutActionCreator  = require '../actions/layout_action_creator'
 MessageActionCreator = require '../actions/message_action_creator'
-
-RouterGetter = require '../getters/router'
+RouterActionCreator = require '../actions/message_action_creator'
 
 module.exports = React.createClass
     displayName: 'ToolbarConversation'
@@ -62,13 +61,13 @@ module.exports = React.createClass
     # FIXME : this should be in layout_action_creator
     gotoPreviousConversation: ->
         messageID = @props.prevMessageID or @props.nextMessageID
-        window.location.href = RouterGetter.getURL {messageID}
+        RouterActionCreator.navigate {messageID}
         return
 
     # FIXME : this should be in layout_action_creator
     gotoNextConversation: ->
         messageID = @props.nextMessageID or @props.prevMessageID
-        window.location.href = RouterGetter.getURL {messageID}
+        RouterActionCreator.navigate {messageID}
         return
 
     onDelete: ->

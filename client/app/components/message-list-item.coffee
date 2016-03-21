@@ -10,6 +10,7 @@ colorhash                    = require '../utils/colorhash'
 MessageUtils                 = require '../utils/message_utils'
 
 RouterGetter = require '../getters/router'
+
 RouterActionCreator = require '../actions/router_action_creator'
 LayoutActionCreator = require '../actions/layout_action_creator'
 

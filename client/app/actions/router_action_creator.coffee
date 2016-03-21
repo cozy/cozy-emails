@@ -2,7 +2,7 @@ _ = require 'lodash'
 
 AppDispatcher = require '../app_dispatcher'
 
-RouterStore = '../stores/router_store'
+RouterStore = require '../stores/router_store'
 
 {ActionTypes} = require '../constants/app_constants'
 

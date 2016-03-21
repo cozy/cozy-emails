@@ -22,8 +22,7 @@ MessageStore = require '../stores/message_store'
 LayoutActionCreator  = require '../actions/layout_action_creator'
 MessageActionCreator = require '../actions/message_action_creator'
 ContactActionCreator = require '../actions/contact_action_creator'
-
-RouterGetter = require '../getters/router'
+RouterActionCreator = require '../actions/router_action_creator'
 
 RGXP_PROTOCOL = /:\/\//
 
@@ -285,7 +284,7 @@ module.exports = React.createClass
             MessageActionCreator.delete messageID: @state.currentMessageID
 
             # Goto to next conversation
-            window.location.href = RouterGetter.getURL message: nextConversation
+            RouterActionCreator.navigate message: nextConversation
 
         needConfirmation = @props.settings.get('messageConfirmDelete')
         unless needConfirmation

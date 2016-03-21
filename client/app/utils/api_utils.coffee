@@ -135,7 +135,7 @@ module.exports = Utils =
         href = href.replace /\/message\/[\w-]+/gi, ''
         href = href.replace /\/conversation\/[\w-]+\/[\w-]+/gi, ''
         href = href.replace /\/edit\/[\w-]+/gi, ''
-        window.location.href = href
+        RouterActionCreator.navigate href
 
     messageDeleteCurrent: ->
         messageID = MessageStore.getCurrentID()
