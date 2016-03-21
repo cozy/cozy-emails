@@ -7,46 +7,42 @@ PropTypes                  = require '../libs/prop_types'
 {Button, LinkButton} = require('./basic_components').factories
 ToolboxActions       = React.createFactory require './toolbox_actions'
 
-LayoutActionCreator  = require '../actions/layout_action_creator'
+LayoutActionCreator = require '../actions/layout_action_creator'
 MessageActionCreator = require '../actions/message_action_creator'
-RouterActionCreator = require '../actions/message_action_creator'
+RouterActionCreator = require '../actions/router_action_creator'
+
+AccountStore = require '../stores/account_store'
 
 module.exports = React.createClass
     displayName: 'ToolbarConversation'
 
     propTypes:
-        conversation        : PropTypes.object.isRequired
         conversationID      : React.PropTypes.string
-        moveFromMailbox     : React.PropTypes.string.isRequired
-        moveToMailboxes     : PropTypes.mapOfMailbox
-        nextMessageID       : React.PropTypes.string
-        nextConversationID  : React.PropTypes.string
-        prevMessageID       : React.PropTypes.string
-        prevConversationID  : React.PropTypes.string
+        mailboxID           : React.PropTypes.string.isRequired
         fullscreen          : React.PropTypes.bool.isRequired
 
     render: ->
+        console.log @props.previousMessageID, @props.nextMessageID
         nav className: 'toolbar toolbar-conversation btn-toolbar',
 
             ToolboxActions
                 key                  : 'ToolboxActions-' + @props.conversationID
                 mode                 : 'conversation'
                 direction            : 'right'
-                inConversation       : true
-                mailboxes            : @props.moveToMailboxes
+                mailboxes            : AccountStore.getSelectedMailboxes()
                 onConversationDelete : @onDelete
                 onConversationMark   : @onMark
                 onConversationMove   : @onMove
 
             div className: 'btn-group',
-                if @props.prevConversationID
+                if @props.previousMessageID?
                     LinkButton
                         icon: 'fa-chevron-left'
                         onClick: @gotoPreviousConversation
                         'aria-describedby': Tooltips.PREVIOUS_CONVERSATION
                         'data-tooltip-direction': 'left'
 
-                if @props.nextConversationID
+                if @props.nextMessageID?
                     LinkButton
                         icon: 'fa-chevron-right'
                         onClick: @gotoNextConversation
@@ -58,17 +54,13 @@ module.exports = React.createClass
                 onClick: LayoutActionCreator.toggleFullscreen
                 className: "clickable fullscreen"
 
-    # FIXME : this should be in layout_action_creator
     gotoPreviousConversation: ->
-        messageID = @props.prevMessageID or @props.nextMessageID
-        RouterActionCreator.navigate {messageID}
-        return
+        if (messageID = @props.previousMessageID)
+            RouterActionCreator.navigate {messageID}
 
-    # FIXME : this should be in layout_action_creator
     gotoNextConversation: ->
-        messageID = @props.nextMessageID or @props.prevMessageID
-        RouterActionCreator.navigate {messageID}
-        return
+        if (messageID = @props.nextMessageID)
+            RouterActionCreator.navigate {messageID}
 
     onDelete: ->
         # Remove conversation
@@ -86,5 +78,5 @@ module.exports = React.createClass
 
     onMove: (to) ->
         conversationID = @props.conversationID
-        from = @propos.moveFromMailbox
+        from = @props.mailboxID
         MessageActionCreator.move {conversationID}, from, to

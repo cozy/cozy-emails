@@ -78,7 +78,6 @@ module.exports =
         # Router
         'SAVE_ROUTES'               : 'SAVE_ROUTES'
         'SET_ROUTE_ACTION'          : 'SET_ROUTE_ACTION'
-        'ROUTER_NAVIGATE'           : 'ROUTER_NAVIGATE'
         'SET_NEXT_URL'              : 'SET_NEXT_URL'
         'SET_FILTER'                : 'SET_FILTER'
 

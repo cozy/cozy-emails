@@ -35,33 +35,15 @@ module.exports = React.createClass
     # FIXME : use smaller state
     getStateFromStores: ->
         message = MessageStore.getByID @props.messageID
-        selectedMailboxID = AccountStore.getSelectedMailbox()?.get 'id'
         selectedAccount = AccountStore.getSelectedOrDefault()
 
         if message?
             conversationID = message?.get('conversationID')
-            trashMailboxID = selectedAccount?.get('trashMailbox')
-
             conversation = MessageStore.getConversation {conversationID}
-            prevMessage = MessageStore.getPreviousConversation {conversationID}
-            nextMessage = MessageStore.getNextConversation {conversationID}
-
-            length = MessageStore.getConversationsLength().get conversationID
-            selectedMailboxID ?= Object.keys(message.get('mailboxIDs'))[0]
 
         nextState =
-            accounts             : AccountStore.getAll()
-            mailboxes            : AccountStore.getSelectedMailboxes()
-            selectedAccount      : AccountStore.getSelectedOrDefault()
-            selectedMailboxID    : selectedMailboxID
-            settings             : SettingsStore.get()
-            useIntents           : LayoutStore.intentAvailable()
             conversationID       : conversationID
             conversation         : conversation
-            conversationLength   : length
-            prevMessage          : prevMessage
-            nextMessage          : nextMessage
-            fullscreen           : LayoutStore.isPreviewFullscreen()
 
         nextState.compact = true if @state?.compact isnt false
 
@@ -88,20 +70,20 @@ module.exports = React.createClass
                 expanded.push key
             @setState expanded: expanded
 
+        accounts = AccountStore.getAll()
+        accountID = AccountStore.getSelectedOrDefault().get 'id'
+
         Message
             ref                 : 'message'
-            accounts            : @state.accounts
             active              : active
-            inConversation      : @state.conversation.size > 1
             key                 : 'message-' + @props.messageID
-            mailboxes           : @state.mailboxes
+            mailboxes           : AccountStore.getSelectedMailboxes()
             message             : @state.conversation.get key
-            selectedAccountID   : @state.selectedAccount.get 'id'
-            selectedAccountLogin: @state.selectedAccount.get 'login'
-            selectedMailboxID   : @state.selectedMailboxID
-            settings            : @state.settings
-            useIntents          : @state.useIntents
+            selectedMailboxID   : AccountStore.getSelectedMailbox()?.get 'id'
+            settings            : SettingsStore.get()
+            useIntents          : LayoutStore.intentAvailable()
             toggleActive        : toggleActive
+            trashMailbox        : accounts[accountID]?.trashMailbox
 
 
     renderGroup: (messages, key) ->
@@ -144,9 +126,6 @@ module.exports = React.createClass
                 messages.push(last = []) unless _.isArray(last)
                 last.push key
 
-        closeURL = RouterGetter.getURL
-            action: 'message.list'
-
         # Starts components rendering
         section
             ref: 'conversation'
@@ -159,18 +138,14 @@ module.exports = React.createClass
 
                 ToolbarConversation
                     key                 : 'ToolbarConversation-' + @state.conversationID
-                    conversation        : @state.conversation
                     conversationID      : @state.conversationID
-                    moveFromMailbox     : @state.selectedMailboxID
-                    moveToMailboxes     : @state.mailboxes
-                    nextMessageID       : @state.nextMessage?.get('id')
-                    nextConversationID  : @state.nextMessage?.get('conversationID')
-                    prevMessageID       : @state.prevMessage?.get('id')
-                    prevConversationID  : @state.prevMessage?.get('conversationID')
-                    fullscreen          : @state.fullscreen
+                    mailboxID           : AccountStore.getSelectedMailbox()?.get 'id'
+                    nextMessageID       : MessageStore.getNextConversation().get 'id'
+                    previousMessageID   : MessageStore.getPreviousConversation().get 'id'
+                    fullscreen          : LayoutStore.isPreviewFullscreen()
                 a
                     className: 'clickable btn btn-default fa fa-close'
-                    href: closeURL
+                    href: RouterGetter.getURL action: 'message.list'
 
             for glob, index in messages
                 if _.isArray glob

@@ -31,14 +31,10 @@ module.exports = React.createClass
     displayName: 'Message'
 
     propTypes:
-        accounts               : React.PropTypes.object.isRequired
         active                 : React.PropTypes.bool
-        inConversation         : React.PropTypes.bool
         key                    : React.PropTypes.string.isRequired
         mailboxes              : React.PropTypes.object.isRequired
         message                : React.PropTypes.object.isRequired
-        selectedAccountID      : React.PropTypes.string.isRequired
-        selectedAccountLogin   : React.PropTypes.string.isRequired
         selectedMailboxID      : React.PropTypes.string.isRequired
         settings               : React.PropTypes.object.isRequired
         useIntents             : React.PropTypes.bool.isRequired
@@ -88,9 +84,6 @@ module.exports = React.createClass
         if html? and not text? and not @state.messageDisplayHTML
             text = toMarkdown html
 
-        mailboxes = message.get 'mailboxIDs'
-        trash = @props.accounts[@props.selectedAccountID]?.trashMailbox
-
         if text?
             rich = text.replace urls, '<a href="$1" target="_blank">$1</a>'
             rich = rich.replace /^>>>>>[^>]?.*$/gim, '<span class="quote5">$&</span>'
@@ -100,6 +93,8 @@ module.exports = React.createClass
             rich = rich.replace /^>[^>]?.*$/gim, '<span class="quote1">$&</span>'
 
         flags = @props.message.get('flags').slice()
+        mailboxes = message.get 'mailboxIDs'
+        trash = @props.trashMailbox
         return {
             attachments: message.get 'attachments'
             fullHeaders: fullHeaders
@@ -259,7 +254,6 @@ module.exports = React.createClass
             message              : @props.message
             mailboxes            : @props.mailboxes
             selectedMailboxID    : @props.selectedMailboxID
-            inConversation       : @props.inConversation
             onDelete             : @onDelete
             onHeaders            : @onHeaders
             onMove               : @onMove
