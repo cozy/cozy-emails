@@ -15,7 +15,6 @@ client/public
 client/app/locales
 !client/app/locales/en.json
 
-doc
 last.html
 last.png
 

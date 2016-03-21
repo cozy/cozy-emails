@@ -82,7 +82,7 @@ module.exports = Compose = React.createClass
 
     componentWillUpdate: (nextProps, nextState) ->
         unless _.isEmpty (text = nextState.text.trim())
-            if nextState.composeInHTML
+            if nextProps.settings.get 'composeInHTML'
                 nextState.html = MessageUtils.cleanHTML nextState.html
                 nextState.text = MessageUtils.cleanReplyText nextState.html
                 nextState.html = MessageUtils.wrapReplyHtml nextState.html
@@ -119,6 +119,11 @@ module.exports = Compose = React.createClass
         # Focus Element
         @handleFocus()
 
+        # Each state:change do not send data to server
+        # update date for client modifications
+        @state.date = new Date().toISOString() unless @state.date
+        @state.lastUpdate = @state.date unless @state.lastUpdate
+
     componentDidUpdate: ->
         # Initialize @state
         # with values from server
@@ -127,14 +132,15 @@ module.exports = Compose = React.createClass
         # Focus Element
         @handleFocus()
 
-        # Save client changes
+        # Each state:change do not send data to server
+        # update date for client modifications
         @state.lastUpdate = new Date().toISOString()
 
     hasChanged: (props, state) ->
         @state.lastUpdate isnt @state.date
 
     resetChange: ->
-        @state.lastUpdate isnt @state.date
+        @state.lastUpdate = @state.date
 
     componentWillUnmount: ->
         MessageStore.removeListener 'change', @_setStateFromStores
@@ -188,9 +194,9 @@ module.exports = Compose = React.createClass
             editor.removeEventListener 'click', @saveFocus
 
     closeSaveDraft: ->
-        fetch = (message) =>
+        fetch = =>
             # reload conversation to update its length
-            if (cid = message.conversationID)
+            if (cid = @state.conversationID)
                 MessageActionCreator.fetchConversation cid
 
         save = =>
@@ -200,11 +206,11 @@ module.exports = Compose = React.createClass
                     LayoutActionCreator.alertError msg
                     return
 
-                fetch message
+                fetch()
 
         # Fetch
         unless @hasChanged()
-            fetch @state
+            fetch()
             return
 
         # Do not ask for save
@@ -329,6 +335,7 @@ module.exports = Compose = React.createClass
     # conversation ID and message ID. These infor are collected via current
     # selection and message information.
     finalRedirect: ->
+
         if @props.inReplyTo? and not _.isString @props.inReplyTo
             conversationID = @state.conversationID
             accountID = @props.selectedAccountID
@@ -372,7 +379,7 @@ module.exports = Compose = React.createClass
 
         doDelete = =>
             # Do not try to save client changes
-            # when componentWillUnmount
+            # After deleting message
             @resetChange()
 
             messageID = @state.id
@@ -398,7 +405,12 @@ module.exports = Compose = React.createClass
     sendMessage: (event) ->
         event.preventDefault() if event?
         @state.isDraft = false
+
         @sendActionMessage (error, message) =>
+            # Do not try to save client changes
+            # after Sending message
+            @resetChange()
+
             if error
                 msgKo = t "message action sent ko"
                 LayoutActionCreator.alertError "#{msgKo} #{error}"
@@ -437,7 +449,8 @@ module.exports = Compose = React.createClass
 
             # Check for Updates
             @state.mailboxIDs = message.mailboxIDs
-            @props.lastUpdate = message.date
+            @state.date = message.date
+            @state.lastUpdate = message.date
 
             # Refresh URL
             # to save temporary info
