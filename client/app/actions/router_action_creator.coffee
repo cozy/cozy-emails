@@ -26,6 +26,7 @@ RouterActionCreator =
             url = RouterStore.getURL params
 
         if url and _.isString url
-            router.navigate url
+            # Update URL && context
+            router.navigate url, update: true
 
 module.exports = RouterActionCreator

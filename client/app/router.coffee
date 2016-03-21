@@ -41,9 +41,24 @@ class Router extends Backbone.Router
         Backbone.history.start()
 
         # Display application
-        # FIXME : la déplacer dans le initialize
-        # FIXME : gérer les stores.changes
         _displayApplication()
+
+
+    navigate: (url, options={}) ->
+        # Get Callback to execute
+        # to force Stores update
+        if options.update
+            parameters = null
+            routeCallback = _.find router.routes, (callback, pattern) =>
+                pattern = @_routeToRegExp '#' + pattern
+                route = new RegExp pattern, 'gi'
+                if url.match route
+                    parameters = @_extractParameters route, url
+                    return true
+
+            @[routeCallback].apply @, parameters
+
+        super url, options
 
     accountEdit: (accountID, tab) ->
         RouterActionCreator.setAction 'account.edit'
