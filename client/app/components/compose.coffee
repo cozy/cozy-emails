@@ -25,7 +25,6 @@ MessageActionCreator = require '../actions/message_action_creator'
 RouterMixin      = require '../mixins/router_mixin'
 LinkedStateMixin = require 'react-addons-linked-state-mixin'
 
-
 # Component that allows the user to write emails.
 module.exports = Compose = React.createClass
     displayName: 'Compose'
@@ -194,28 +193,16 @@ module.exports = Compose = React.createClass
             editor.removeEventListener 'click', @saveFocus
 
     closeSaveDraft: ->
-        fetch = =>
-            # reload conversation to update its length
-            if (cid = @state.conversationID)
-                MessageActionCreator.fetchConversation cid
-
-        save = =>
-            MessageActionCreator.send _.clone(@state), (error, message) ->
-                if error? or not message?
-                    msg = "#{t "message action draft ko"} #{error}"
-                    LayoutActionCreator.alertError msg
-                    return
-
-                fetch()
-
         # Fetch
         unless @hasChanged()
-            fetch()
             return
 
         # Do not ask for save
-        save()
-        return
+        MessageActionCreator.send _.clone(@state), (error, message) ->
+            if error? or not message?
+                msg = "#{t "message action draft ko"} #{error}"
+                LayoutActionCreator.alertError msg
+                return
 
     render: ->
         closeUrl = @buildClosePanelUrl @props.layout
@@ -437,6 +424,7 @@ module.exports = Compose = React.createClass
 
         _message = _.clone @state
         @state.isSaving = true
+        console.log 'SAVE', _message.html
         MessageActionCreator.send _message, (error, message) =>
             delete @state.isSaving
             if error? or not message?
