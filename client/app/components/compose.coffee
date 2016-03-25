@@ -108,12 +108,6 @@ module.exports = Compose = React.createClass
         # scroll compose window into view
         @refs.compose.scrollIntoView()
 
-        # Save focus
-        @addFocusListener()
-
-        # Focus Element
-        @handleFocus()
-
         # Each state:change do not send data to server
         # update date for client modifications
         @state.date = new Date().toISOString() unless @state.date
@@ -123,9 +117,6 @@ module.exports = Compose = React.createClass
         # Initialize @state
         # with values from server
         @saveDraft() if @isNew()
-
-        # Focus Element
-        @handleFocus()
 
         # Each state:change do not send data to server
         # update date for client modifications
@@ -140,53 +131,9 @@ module.exports = Compose = React.createClass
     componentWillUnmount: ->
         MessageStore.removeListener 'change', @_setStateFromStores
 
-        # Stop listening to focus
-        @removeFocusListener()
-
         # Save Message into Draft
         @closeSaveDraft()
 
-    handleFocus: ->
-        return unless (path = LayoutStore.getFocus())
-
-        if -1 < path.indexOf 'ref='
-            # Element Focusable are not always
-            # DOM form element :
-            # It can be React Component
-            ref = path.split('ref=')[1]
-            element = ReactDOM.findDOMNode @refs[ref]
-
-        else if (elements = ReactDOM.findDOMNode(@).querySelectorAll(path))
-            element = elements[0]
-
-        element.focus() if (element)
-
-
-    saveFocus: (event) =>
-        if event.refsPath
-            path = 'ref=' + event.refsPath
-        else if (name = event.currentTarget.name)
-            path = '[name="' + event.currentTarget.name + '"]'
-        LayoutActionCreator.focus path
-
-    addFocusListener: ->
-        _.each ['input[type="text"]', 'textarea'], (path) =>
-            _.each ReactDOM.findDOMNode(@).querySelectorAll(path), (element) =>
-                element.addEventListener 'focus', @saveFocus
-
-        # Editor is a specific case
-        if (editor = ReactDOM.findDOMNode @refs.editor)
-            editor.addEventListener 'click', (event) =>
-                @saveFocus refsPath: 'editor'
-
-    removeFocusListener: ->
-        _.each ['input[type="text"]', 'textarea'], (path) =>
-            _.each ReactDOM.findDOMNode(@).querySelectorAll(path), (element) =>
-                element.removeEventListener 'focus', @saveFocus
-
-        # Editor is a specific case
-        if (editor = ReactDOM.findDOMNode @refs.editor)
-            editor.removeEventListener 'click', @saveFocus
 
     closeSaveDraft: ->
         # Fetch
