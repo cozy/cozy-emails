@@ -420,7 +420,6 @@ module.exports = Compose = React.createClass
 
         _message = _.clone @state
         @state.isSaving = true
-        console.log 'SAVE', _message.html
         MessageActionCreator.send _message, (error, message) =>
             delete @state.isSaving
             if error? or not message?
