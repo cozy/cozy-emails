@@ -108,44 +108,29 @@ module.exports = Compose = React.createClass
         # scroll compose window into view
         @refs.compose.scrollIntoView()
 
-        # Each state:change do not send data to server
-        # update date for client modifications
-        @state.date = new Date().toISOString() unless @state.date
-        @state.lastUpdate = @state.date unless @state.lastUpdate
+        # Compare changes
+        @_oldState = @state
 
     componentDidUpdate: ->
         # Initialize @state
         # with values from server
-        @saveDraft() if @isNew()
+        @saveDraft() if @isNew() and @hasChanged()
 
-        # Each state:change do not send data to server
-        # update date for client modifications
-        @state.lastUpdate = new Date().toISOString()
 
     hasChanged: (props, state) ->
-        @state.lastUpdate isnt @state.date
+        _diff = _.filter @state, (value, key) =>
+            @_oldState[key] isnt value
+        _diff?.length
 
     resetChange: ->
-        @state.lastUpdate = @state.date
+        @_oldState = @state
 
     componentWillUnmount: ->
         MessageStore.removeListener 'change', @_setStateFromStores
 
         # Save Message into Draft
-        @closeSaveDraft()
-
-
-    closeSaveDraft: ->
-        # Fetch
-        unless @hasChanged()
-            return
-
-        # Do not ask for save
-        MessageActionCreator.send _.clone(@state), (error, message) ->
-            if error? or not message?
-                msg = "#{t "message action draft ko"} #{error}"
-                LayoutActionCreator.alertError msg
-                return
+        if @hasChanged()
+            MessageActionCreator.send 'UNMOUNT', _.clone(@state)
 
     render: ->
         closeUrl = @buildClosePanelUrl @props.layout
@@ -365,35 +350,31 @@ module.exports = Compose = React.createClass
             success(null, @state) if _.isFunction success
             return
 
-        _message = _.clone @state
+        # Do not save twice
         @state.isSaving = true
-        MessageActionCreator.send _message, (error, message) =>
+
+        MessageActionCreator.send 'SAVE', _.clone(@state), (error, message) =>
             delete @state.isSaving
-            if error? or not message?
-                if @state.isDraft
-                    msgKo = t "message action draft ko"
-                    LayoutActionCreator.alertError "#{msgKo} #{error}"
 
-                success(error, message) if _.isFunction success
-                return
+            if not error? and message?
+                # Check for Updates
+                @state.mailboxIDs = message.mailboxIDs
 
-            # Check for Updates
-            @state.mailboxIDs = message.mailboxIDs
-            @state.date = message.date
-            @state.lastUpdate = message.date
+                # Keep trace
+                @_oldState = @state
 
-            # Refresh URL
-            # to save temporary info
-            unless @state.id
-                @state.id = message.id
-                @state.conversationID = message.conversationID
-                @redirect
-                    action: 'compose.edit'
-                    direction: 'first'
-                    fullWidth: true
-                    parameters:
-                        messageID: @state.id
-                return
+                # Refresh URL
+                # to save temporary info
+                unless @state.id
+                    @state.id = message.id
+                    @state.conversationID = message.conversationID
+                    @redirect
+                        action: 'compose.edit'
+                        direction: 'first'
+                        fullWidth: true
+                        parameters:
+                            messageID: @state.id
+                    return
 
             success(error, message) if _.isFunction success
 
