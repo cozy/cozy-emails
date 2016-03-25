@@ -132,13 +132,14 @@ module.exports = MessageUtils =
             address: account.get 'login'
             signature: account.get 'signature'
 
-
-        composeInHTML = props.settings.get 'composeInHTML'
+        # FIXME : reset HTML editing
+        # composeInHTML = props.settings.get 'composeInHTML'
         message =
             id              : props.messageID
             attachments     : Immutable.List()
             accountID       : account.id
             isDraft         : true
+            composeInHTML   : false
             from            : [
                     name: account.name
                     address: account.address
@@ -152,17 +153,7 @@ module.exports = MessageUtils =
             delete props.message
 
         # Format text
-        text = message.text or ''
-        html = message.html
-        if text? and not html? and composeInHTML
-            try
-                html = markdown.toHTML text
-            catch e
-                console.error "Error converting message to Markdown: #{e}"
-                html = "<div class='text'>#{text}</div>"
-
-        if html? and not text? and not composeInHTML
-            text = toMarkdown html
+        {text, html} = MessageUtils.cleanContent message
 
         inReplyTo = props.inReplyTo
         inReplyTo = null if inReplyTo and _.isString inReplyTo
@@ -484,9 +475,23 @@ module.exports = MessageUtils =
 
         return text.substr 0, 1024
 
+
+    cleanContent: (message) ->
+        {html, text} = message
+
+        text = toMarkdown html or ''
+        text = @cleanReplyText text or ''
+
+        html = @cleanHTML html
+        # html = @wrapReplyHtml html
+
+        return {html, text}
+
+
     # set source of attached images
     cleanHTML: (html) ->
         parser = new DOMParser()
+
         unless (doc = parser.parseFromString html, "text/html")
             doc = document.implementation.createHTMLDocument("")
             doc.documentElement.innerHTML = html
@@ -534,7 +539,13 @@ module.exports = MessageUtils =
     # * make "pre" without background
     # * remove margins to "p"
     wrapReplyHtml: (html) ->
-        html = html.replace /<p>/g, '<p style="margin: 0">'
+        parser = new DOMParser()
+        doc = parser.parseFromString html, "text/html"
+        content = doc.querySelectorAll '[class=wrappedContent]'
+        if content.length
+            html = content[0].innerHTML
+
+        html = html?.replace /<p>/g, '<p style="margin: 0">'
         return """
             <style type="text/css">
             blockquote {
@@ -545,7 +556,7 @@ module.exports = MessageUtils =
             p {margin: 0;}
             pre {background: transparent; border: 0}
             </style>
-            #{html}
+            <span class="wrappedContent">#{html}</span>
             """
 
     # Add a reply prefix to the current subject. Do not add it again if it's

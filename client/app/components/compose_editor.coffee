@@ -17,14 +17,8 @@ module.exports = ComposeEditor = React.createClass
 
     getInitialState: ->
         return {
-            html: @props.html
-            text: @props.text
             target: false     # true when hovering with a file
         }
-
-    shouldComponentUpdate: (nextProps, nextState) ->
-        return not(_.isEqual(nextState, @state)) or
-            not (_.isEqual(nextProps, @props))
 
     # Update parent component when content has been updated
     onHTMLChange: (event) ->
@@ -35,7 +29,6 @@ module.exports = ComposeEditor = React.createClass
         @props.text.requestChange @refs.content.value
 
     render: ->
-
         if @props.settings.get 'composeOnTop'
             classFolded = 'folded'
         else
@@ -53,6 +46,7 @@ module.exports = ComposeEditor = React.createClass
                                 'aria-describedby': Tooltips.COMPOSE_IMAGE
                                 'data-tooltip-direction': 'top'
             if @props.composeInHTML
+
                 div
                     className: "form-control rt-editor #{classFolded} #{classTarget}",
                     ref: 'html',
@@ -68,20 +62,22 @@ module.exports = ComposeEditor = React.createClass
                     # blur event
                     onBlur: @onHTMLChange,
                     dangerouslySetInnerHTML: {
-                        __html: @state.html.value
+                        __html: @props.html.value
                     }
             else
                 textarea
                     className: "editor #{classTarget}",
-                    ref: 'content',
-                    onKeyDown: @onKeyDown,
-                    onChange: @onTextChange,
-                    onBlur: @onTextChange,
-                    defaultValue: @state.text.value
-                    onDragOver: @allowDrop,
-                    onDragEnter: @onDragEnter,
-                    onDragLeave: @onDragLeave,
-                    onDrop: @handleFiles,
+                    ref: 'content'
+                    onKeyDown: @onKeyDown
+                    onChange: @onTextChange
+                    onBlur: @onTextChange
+                    defaultValue: @state.text
+                    value: @props.text.value
+                    onDragOver: @allowDrop
+                    onDragEnter: @onDragEnter
+                    onDragLeave: @onDragLeave
+                    onDrop: @handleFiles
+
 
     _initCompose: ->
 

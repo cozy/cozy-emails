@@ -65,7 +65,7 @@ module.exports = Compose = React.createClass
         # Get Reply message
         if _.isString props.inReplyTo
             id = props.inReplyTo
-            if (message = MessageStore.getByID id) and message.size
+            if (message = MessageStore.getByID id)?.size
                 message.set 'id', id
                 props.inReplyTo = message
         MessageUtils.createBasicMessage props
@@ -76,15 +76,11 @@ module.exports = Compose = React.createClass
     getChildKey: (name) ->
         'message-' + (@state.id or 'new') + '-' + name
 
-    shouldComponentUpdate: (nextProps, nextState) ->
-        not _.isEqual nextState, @state
-
-    componentWillUpdate: (nextProps, nextState) ->
-        unless _.isEmpty (text = nextState.text.trim())
-            if nextProps.settings.get 'composeInHTML'
-                nextState.html = MessageUtils.cleanHTML nextState.html
-                nextState.text = MessageUtils.cleanReplyText nextState.html
-                nextState.html = MessageUtils.wrapReplyHtml nextState.html
+    componentWillUpdate: (nextProps={}, nextState={}) ->
+        if nextState.composeInHTML
+            {html, text} = MessageUtils.cleanContent nextState
+            nextState.html = html
+            nextState.text = text
 
     # Update state with store values.
     _setStateFromStores: (message) ->
