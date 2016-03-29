@@ -43,7 +43,6 @@ class ApplicationGetter
             className = ['layout'
                 "layout-#{disposition}"
                 if isCompact then "layout-compact"
-                if isFullScreen then "layout-preview-fullscreen"
                 "layout-preview-#{previewSize}"].join(' ')
 
             return {

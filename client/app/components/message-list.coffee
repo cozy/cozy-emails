@@ -69,7 +69,6 @@ module.exports = MessageList = React.createClass
             accountLabel    : account?.get 'label'
             selectedID      : RouterGetter.getCurrentMessageID()
             isLoading       : RouterGetter.isLoading()
-            fullscreen      : LayoutStore.isPreviewFullscreen()
             messagesLength  : @props.messages?.size
         return nextstate
 
@@ -93,7 +92,6 @@ module.exports = MessageList = React.createClass
             ref:               'list'
             'data-mailbox-id': @props.mailboxID
             className:         'messages-list panel'
-            'aria-expanded':   not @state.fullscreen
 
             # Toolbar
             ToolbarMessagesList

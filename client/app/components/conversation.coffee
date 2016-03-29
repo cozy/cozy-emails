@@ -96,7 +96,6 @@ module.exports = React.createClass
                     key                 : 'ToolbarConversation-' + conversationID
                     conversationID      : conversationID
                     mailboxID           : (mailboxID = AccountStore.getSelectedMailbox()?.get 'id')
-                    fullscreen          : LayoutStore.isPreviewFullscreen()
                 a
                     className: 'clickable btn btn-default fa fa-close'
                     href: RouterGetter.getURL

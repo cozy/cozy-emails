@@ -18,7 +18,6 @@ module.exports = React.createClass
     propTypes:
         conversationID      : React.PropTypes.string
         mailboxID           : React.PropTypes.string.isRequired
-        fullscreen          : React.PropTypes.bool.isRequired
 
     render: ->
         nav className: 'toolbar toolbar-conversation btn-toolbar',

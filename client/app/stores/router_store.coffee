@@ -65,7 +65,6 @@ class RouterStore extends Store
         _currentFilter = _.clone _defaultFilter
         _.extend _currentFilter, params
 
-        console.log 'setFilter', _currentFilter
         return _currentFilter
 
     getScrollValue: ->
