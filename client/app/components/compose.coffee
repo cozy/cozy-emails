@@ -122,7 +122,11 @@ module.exports = Compose = React.createClass
             @_oldState[key] isnt value
         _diff?.length
 
-    resetChange: ->
+    resetChange: (message) ->
+        if message
+            @state.mailboxIDs = message.mailboxIDs
+            @state.id = message.id
+            @state.conversationID = message.conversationID
         @_oldState = @state
 
     componentWillUnmount: ->
@@ -314,36 +318,21 @@ module.exports = Compose = React.createClass
     saveDraft: (event) ->
         event.preventDefault() if event?
         @state.isDraft = true
-        @sendActionMessage =>
+        @sendActionMessage 'SAVE_DRAFT', =>
             @refs.toolbox.setState action: null if @refs.toolbox
 
     sendMessage: (event) ->
         event.preventDefault() if event?
         @state.isDraft = false
 
-        @sendActionMessage (error, message) =>
-            # Do not try to save client changes
-            # after Sending message
-            @resetChange()
-
-            if error
-                msgKo = t "message action sent ko"
-                LayoutActionCreator.alertError "#{msgKo} #{error}"
-                return
-
-            # Display confirmation message
-            # for no-draft email
-            msgOk = t "message action sent ok"
-            LayoutActionCreator.notify msgOk, autoclose: true
-
-            @finalRedirect()
+        @sendActionMessage 'MESSAGE_SEND', @finalRedirect
 
     validateMessage: ->
         return if @state.isDraft
         error = 'dest': ['to']
         getGroupedError error, @state, _.isEmpty
 
-    sendActionMessage: (success) ->
+    sendActionMessage: (action, success) ->
         return if @state.isSaving
         if (validate = @validateMessage())
             LayoutActionCreator.alertError t 'compose error no ' + validate[1]
@@ -353,30 +342,26 @@ module.exports = Compose = React.createClass
         # Do not save twice
         @state.isSaving = true
 
-        MessageActionCreator.send 'SAVE', _.clone(@state), (error, message) =>
+        MessageActionCreator.send action, _.clone(@state), (error, message) =>
             delete @state.isSaving
 
-            if not error? and message?
-                # Check for Updates
-                @state.mailboxIDs = message.mailboxIDs
+            return if error? or not message?
 
-                # Keep trace
-                @_oldState = @state
+            # Check for Updates
+            @resetChange message
 
-                # Refresh URL
-                # to save temporary info
-                unless @state.id
-                    @state.id = message.id
-                    @state.conversationID = message.conversationID
-                    @redirect
-                        action: 'compose.edit'
-                        direction: 'first'
-                        fullWidth: true
-                        parameters:
-                            messageID: @state.id
-                    return
+            # Update Component
+            if (redirect = not @state.id)
+                @redirect
+                    action: 'compose.edit'
+                    direction: 'first'
+                    fullWidth: true
+                    parameters:
+                        messageID: @state.id
 
-            success(error, message) if _.isFunction success
+            else if _.isFunction success
+                success error, message
+
 
     deleteDraft: (event) ->
         event.preventDefault() if event

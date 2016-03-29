@@ -24,12 +24,17 @@ module.exports = MessageActionCreator =
 
     send: (action, message, callback) ->
         conversationID = message.conversationID
+
         XHRUtils.messageSend message, (error, message) =>
             if error? or not message?
-                LayoutActionCreator.alertError "#{t "message action draft ko"} #{error}"
+                if 'MESSAGE_SEND' is action
+                    msgKo = t "message action sent ko"
+                else
+                    msgKo = t "message action draft ko"
+                LayoutActionCreator.alertError "#{msgKo} #{error}"
                 return
 
-            if 'UNMOUNT' is action and conversationID
+            if conversationID and action in ['UNMOUNT', 'MESSAGE_SEND']
                 @fetchConversation conversationID
 
             AppDispatcher.handleViewAction
