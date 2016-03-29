@@ -54,14 +54,6 @@ class LayoutStore extends Store
                 _previewSize = 50
             @emit 'change'
 
-        handle ActionTypes.MINIMIZE_PREVIEW_PANE, ->
-            _previewFullscreen = false
-            @emit 'change'
-
-        handle ActionTypes.MAXIMIZE_PREVIEW_PANE, ->
-            _previewFullscreen = true
-            @emit 'change'
-
         handle ActionTypes.DISPLAY_MODAL, (value) ->
             _modal = value
             @emit 'change'

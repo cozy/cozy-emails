@@ -32,11 +32,6 @@ module.exports = React.createClass
                 onConversationMark   : @onMark
                 onConversationMove   : @onMove
 
-            Button
-                icon: if @props.fullscreen then 'fa-compress' else 'fa-expand'
-                onClick: LayoutActionCreator.toggleFullscreen
-                className: "clickable fullscreen"
-
     onDelete: ->
         # Remove conversation
         conversationID = @props.conversationID

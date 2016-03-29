@@ -52,20 +52,6 @@ module.exports = LayoutActionCreator =
             type: ActionTypes.RESIZE_PREVIEW_PANE
             value: null
 
-    toggleFullscreen: (value) ->
-        # Get contextual value if
-        # no value is in arguments
-        unless typeof value is 'boolean'
-            value = not LayoutStore.isPreviewFullscreen()
-
-        type = if value
-            ActionTypes.MAXIMIZE_PREVIEW_PANE
-        else
-            ActionTypes.MINIMIZE_PREVIEW_PANE
-
-        AppDispatcher.handleViewAction
-            type: type
-
     focus: (path) ->
         AppDispatcher.handleViewAction
             type: ActionTypes.FOCUS
