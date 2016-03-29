@@ -25,6 +25,11 @@ module.exports = MessageActionCreator =
     send: (action, message, callback) ->
         conversationID = message.conversationID
 
+        # Message should have a html content
+        # event if it is a simple text
+        unless message.composeInHTML
+            message.html = message.text
+
         XHRUtils.messageSend message, (error, message) =>
             if error? or not message?
                 if 'MESSAGE_SEND' is action
