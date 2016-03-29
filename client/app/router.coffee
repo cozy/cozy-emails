@@ -19,11 +19,11 @@ class Router extends Backbone.Router
 
     routes:
         'mailbox/:mailboxID/*'                      : 'messageList'
-        'account/new'                               : 'accountEdit'
-        'account/:accountID/config/:tab'            : 'accountNew'
+        'account/new'                               : 'accountNew'
+        'account/:accountID/config/:tab'            : 'accountConfig'
         'search/?q=:search'                         : 'search'
         'mailbox/:mailboxID/search/?q=:search'      : 'search'
-        'mailbox/:mailboxID/:messageID'             : 'messageShow'
+        'mailbox/:mailboxID/:messageID/*'           : 'messageShow'
         'mailbox/:mailboxID/:messageID/edit'        : 'messageEdit'
         'mailbox/:mailboxID/new'                    : 'messageNew'
         'mailbox/:mailboxID/:messageID/forward'     : 'messageForward'
@@ -49,30 +49,28 @@ class Router extends Backbone.Router
         # to force Stores update
         if options.update
             parameters = null
-            routeCallback = _.find router.routes, (callback, pattern) =>
+            routeCallback = _.find @routes, (callback, pattern) =>
                 pattern = @_routeToRegExp '#' + pattern
                 route = new RegExp pattern, 'gi'
                 if url.match route
                     parameters = @_extractParameters route, url
                     return true
-
-            @[routeCallback].apply @, parameters
+            if routeCallback
+                @[routeCallback].apply @, parameters
 
         super url, options
 
-    accountEdit: (accountID, tab) ->
-        RouterActionCreator.setAction 'account.edit'
-        console.log 'GOTO account', accountID, tab
-
-    accountNew: ->
+    accountNew: (accountID) ->
         RouterActionCreator.setAction 'account.new'
-        # TODO : mettre ça dans les getters
-        # accountID = AccountStore.getDefault()?.get 'id'
-        # tab = 'account'
-        console.log 'GOTO account new'
+        console.log 'new account', accountID
+
+    accountConfig: (accountID) ->
+        RouterActionCreator.setAction 'account.new'
+        console.log 'GOTO account', accountID
 
     messageList: (mailboxID, query) ->
         RouterActionCreator.setAction 'message.list'
+        console.log 'messageList', mailboxID, query
         LayoutActionCreator.updateMessageList {mailboxID, query}
 
     messageShow: (mailboxID, messageID, query) ->

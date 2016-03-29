@@ -45,7 +45,7 @@ module.exports = AccountActionCreator =
                 else
                     url = "account/#{id}/config/mailboxes"
 
-                RouterActionCreator.navigate url, trigger: true
+                RouterActionCreator.navigate {url}
 
 
     edit: (inputValues, accountID, callback) ->
@@ -97,7 +97,7 @@ module.exports = AccountActionCreator =
             value: accountID
         XHRUtils.removeAccount accountID, (error) ->
         LayoutActionCreator.notify t('account removed'), autoclose: true
-        RouterActionCreator.navigate '', trigger: true
+        RouterActionCreator.navigate url: ''
 
     ensureSelected: (accountID, mailboxID) =>
         if AccountStore.selectedIsDifferentThan accountID, mailboxID
@@ -136,7 +136,7 @@ module.exports = AccountActionCreator =
 
     mailboxCreate: (inputValues, callback) ->
         XHRUtils.mailboxCreate inputValues, (error, account) ->
-            if not error?
+            unless error?
                 AppDispatcher.handleViewAction
                     type: ActionTypes.MAILBOX_CREATE
                     value: account
@@ -151,7 +151,7 @@ module.exports = AccountActionCreator =
 
     mailboxUpdate: (inputValues, callback) ->
         XHRUtils.mailboxUpdate inputValues, (error, account) ->
-            if not error?
+            unless error?
                 AppDispatcher.handleViewAction
                     type: ActionTypes.MAILBOX_UPDATE
                     value: account
@@ -178,8 +178,8 @@ module.exports = AccountActionCreator =
 
         {accountID, mailboxID} = options
 
-        # delete message from local store to refresh display, we'll fetch them
-        # again on error
+        # delete message from local store to refresh display,
+        # we'll fetch them again on error
         AppDispatcher.handleViewAction
             type: ActionTypes.MAILBOX_EXPUNGE
             value: mailboxID
@@ -194,7 +194,7 @@ module.exports = AccountActionCreator =
             #
             #     # if user hasn't switched to another box, refresh display
             #     unless AccountStore.selectedIsDifferentThan accountID, mailboxID
-            #         parameters = RouterStore.getQueryParams()
+            #         parameters = RouterStore.getFilter()
             #         parameters.accountID = accountID
             #         parameters.mailboxID = mailboxID
             #         LayoutActionCreator.showMessageList {parameters}

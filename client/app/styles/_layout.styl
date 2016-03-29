@@ -13,9 +13,6 @@ body
         box-shadow    0 0
         border-radius 0
 
-    .drawer-toggle
-        display none
-
 
     main
         position    relative
@@ -58,9 +55,6 @@ body
             width    100%
             height   100%
 
-        [role=toolbar]
-            .drawer-toggle
-                display block
 
 
     @media(max-width: (1024/16)em)
@@ -75,19 +69,12 @@ body
                 &[aria-expanded=true]
                     left 0
 
-        // set rules for drawer
         [role=menubar][aria-expanded=true]
             min-width 85vw !important
 
             + main
                 .panel
                     width 100vw
-
-
-    @media(min-width: 30.0625em)
-        [role=menubar]
-            .drawer-toggle
-                display block
 
 
     @media(min-width: 48.0625em)

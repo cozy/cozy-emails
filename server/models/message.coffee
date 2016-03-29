@@ -243,7 +243,6 @@ module.exports = class Message extends cozydb.CozyModel
     # Returns (callback) an {Object} with properties
     #           :messages - the result of {.getResults}
     #           :count - the result of {.getCount}
-    #           :conversationLengths - length of conversations in the result
     @getResultsAndCount: (mailboxID, params, callback) ->
         params.flag ?= null
         if params.descending
@@ -258,13 +257,12 @@ module.exports = class Message extends cozydb.CozyModel
 
             conversationIDs = _.uniq _.pluck messages, 'conversationID'
 
-            Message.getConversationLengths conversationIDs, (err, lengths) ->
+            Message.getConversationLengths conversationIDs, (err) ->
                 return callback err if err
 
                 callback null,
                     messages: messages
                     count: count
-                    conversationLengths: lengths
 
     # Public: get messages in a box depending on the query params
     #

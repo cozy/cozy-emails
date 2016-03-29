@@ -18,11 +18,15 @@ RouterGetter = require '../getters/router'
 module.exports = Menu = React.createClass
     displayName: 'Menu'
 
+    getDefaultProps: ->
+        ApplicationGetter.getProps 'menu'
+
     getInitialState: ->
         ApplicationGetter.getState 'menu', @state
 
     componentWillReceiveProps: (nextProps={}) ->
         @setState ApplicationGetter.getState 'menu', @state
+        nextProps
 
     _toggleFavorites: ->
         @setState onlyFavorites: not @state.onlyFavorites
@@ -41,7 +45,7 @@ module.exports = Menu = React.createClass
         LayoutActionCreator.displayModal modal
 
     render: ->
-        # Starts DOM rendering
+
         aside
             role: 'menubar'
             'aria-expanded': true,
@@ -158,12 +162,9 @@ module.exports = Menu = React.createClass
                             MenuMailboxItem
                                 account:           account
                                 mailbox:           mailbox
-                                selectedMailboxID: @state.selectedMailboxID
-                                refreshes:         @state.refreshes
-                                displayErrors:     @displayErrors
-                                account:           account
-                                mailbox:           mailbox
                                 key:               'mailbox-item-' + key
                                 isActive:          @props.mailboxID is mailbox.get 'id'
+                                refreshes:         @state.refreshes
+                                displayErrors:     @displayErrors
                                 progress:          @props.progress
                         .toArray()

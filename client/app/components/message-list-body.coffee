@@ -8,74 +8,34 @@ MessageItem = React.createFactory require './message-list-item'
 
 DomUtils = require '../utils/dom_utils'
 
+SettingsStore = require '../stores/settings_store'
+MessageStore = require '../stores/message_store'
 RouterGetter = require '../getters/router'
 
 module.exports = MessageListBody = React.createClass
     displayName: 'MessageListBody'
 
-    getInitialState: ->
-        state =
-            messageID: null
-
-    shouldComponentUpdate: (nextProps, nextState) ->
-        # we must do the comparison manually because the property "onSelect" is
-        # a function (therefore it should not be compared)
-        updatedProps = Object.keys(nextProps).filter (prop) =>
-            return typeof nextProps[prop] isnt 'function' and
-                not (_.isEqual(nextProps[prop], @props[prop]))
-        should = not(_.isEqual(nextState, @state)) or updatedProps.length > 0
-
-        return should
-
-    _isActive: (id, cid) ->
-        @props.messageID is id or @props.conversationID is cid
-
     render: ->
         ul className: 'list-unstyled', ref: 'messageList',
             @props.messages
                 .mapEntries ([key, message]) =>
-                    id = message.get('id')
-                    cid = message.get('conversationID')
+                    messageID = message.get 'id'
+                    conversationID = message.get 'conversationID'
 
-                    ["msg-#{key}", MessageItem
-                        message: message,
-                        messageURL: RouterGetter.getURL messageID: message.get('id')
-                        accountID: @props.accountID,
-                        mailboxID: @props.mailboxID,
-                        accountLabel: @props.accountLabel,
-                        mailboxes: @props.mailboxes,
-                        conversationLengths: @props.conversationLengths?.get(cid),
-                        key: key,
-                        isActive: @_isActive(id, cid),
-                        edited: @props.edited,
-                        settings: @props.settings,
-                        selected: @props.selected[id]?,
+                    isSelected = -1 < @props.selection?.indexOf messageID
+
+                    ["message-#{key}", MessageItem
+                        key: 'conversation-' + conversationID
+                        message: message
+                        accountID: @props.accountID
+                        mailboxID: @props.mailboxID
+                        accountLabel: @props.accountLabel
+                        conversationLengths: RouterGetter.getConversationLength messageID
+                        settings: SettingsStore.get()
+                        isSelected: isSelected
+                        isActive: RouterGetter.isCurrentMessage messageID
                         login: @props.login
                         displayConversations: @props.displayConversations
-                        isTrash: @props.isTrash
                         ref: 'messageItem'
-                        onSelect: (val) =>
-                            @props.onSelect id, val
                     ]
                 .toArray()
-
-    componentDidMount: ->
-        @_onMount()
-
-    componentDidUpdate: ->
-        @_onMount()
-
-    _onMount: ->
-        # If selected message has changed, scroll the list to put
-        # current message into view
-        if @state.messageID isnt @props.messageID
-            scrollable = @refs.messageList?.parentNode
-            active = document.querySelector("[data-message-id='#{@props.messageID}']")
-            if active? and not DomUtils.isVisible(active)
-                scroll = scrollable?.scrollTop
-                active.scrollIntoView(false)
-                # display half of next message
-                if scroll isnt @refs.scrollable?.scrollTop
-                    scrollable?.scrollTop += active.getBoundingClientRect().height / 2
-
-            @setState messageID: @props.messageID

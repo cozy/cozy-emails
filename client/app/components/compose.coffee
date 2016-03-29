@@ -36,8 +36,6 @@ module.exports = Compose = React.createClass
 
 
     propTypes:
-        selectedAccountID:    React.PropTypes.string.isRequired
-        selectedAccountLogin: React.PropTypes.string.isRequired
         layout:               React.PropTypes.string
         accounts:             React.PropTypes.object.isRequired
         message:              React.PropTypes.object
@@ -73,7 +71,7 @@ module.exports = Compose = React.createClass
         not @state.conversationID
 
     getChildKey: (name) ->
-        'message-' + (@state.id or 'new') + '-' + name
+        'compose-' + (@state.id or 'new') + '-' + name
 
     componentWillUpdate: (nextProps={}, nextState={}) ->
         if nextState.composeInHTML
@@ -133,7 +131,7 @@ module.exports = Compose = React.createClass
 
         # Save Message into Draft
         if @hasChanged()
-            MessageActionCreator.send 'UNMOUNT', _.clone(@state)
+            MessageActionCreator.send 'UNMOUNT', _.clone @state
 
     render: ->
         classLabel = 'compose-label'

@@ -25,4 +25,5 @@ module.exports = StoreWatchMixin = (stores) ->
 
         changes = _difference nextState, @state
         unless _.isEmpty changes
+            console.log 'change', changes
             @setState nextState

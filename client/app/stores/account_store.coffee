@@ -50,7 +50,7 @@ class AccountStore extends Store
 
     _emitTimeout = null
 
-
+    # FIXME : utilisé?
     _refreshSelected = ->
         if selectedAccountID = _selectedAccount?.get 'id'
             _selectedAccount = _accounts.get selectedAccountID
@@ -218,17 +218,16 @@ class AccountStore extends Store
             _setError error
             @emit 'change'
 
-        handle ActionTypes.MAILBOX_CREATE, (rawAccount) ->
-            @_onAccountUpdated rawAccount
-            @emit 'change'
-
-        handle ActionTypes.MAILBOX_UPDATE, (rawAccount) ->
-            @_onAccountUpdated rawAccount
-            @emit 'change'
-
-        handle ActionTypes.MAILBOX_DELETE, (rawAccount) ->
-            @_onAccountUpdated rawAccount
-            @emit 'change'
+        # handle ActionTypes.MAILBOX_CREATE, (rawAccount) ->
+        #     @_onAccountUpdated rawAccount
+        #     @emit 'change'
+        #
+        # handle ActionTypes.MAILBOX_UPDATE, (rawAccount) ->
+        #     @_onAccountUpdated rawAccount
+        #     @emit 'change'
+        # handle ActionTypes.MAILBOX_DELETE, (rawAccount) ->
+        #     @_onAccountUpdated rawAccount
+        #     @emit 'change'
 
         handle ActionTypes.REMOVE_ACCOUNT, (accountID) ->
             _accounts = _accounts.delete accountID
@@ -321,14 +320,9 @@ class AccountStore extends Store
         @getSelected() or @getDefault()
 
     getSelectedMailboxes: (sorted) ->
-
-        return Immutable.OrderedMap() unless _selectedAccount?
-
-        result = _selectedAccount.get('mailboxes')
-
-        if sorted
-            result = result.sort _mailboxSort
-
+        return null unless _selectedAccount?
+        result = _selectedAccount.get 'mailboxes'
+        result = result.sort _mailboxSort if sorted
         return result
 
 
@@ -340,7 +334,7 @@ class AccountStore extends Store
 
 
     getSelectedMailbox: (selectedID) ->
-        if (mailboxes = @getSelectedMailboxes()).size
+        if (mailboxes = @getSelectedMailboxes())?.size
             return mailboxes.get(selectedID) if selectedID
             return _selectedMailbox
         return @getDefaultMailbox()
@@ -381,13 +375,6 @@ class AccountStore extends Store
 
     isWaiting: -> return _newAccountWaiting
     isChecking: -> return _newAccountChecking
-
-    isMailboxRefreshing: (mailboxID)->
-        _mailboxRefreshing[mailboxID] > 0
-
-
-    getMailboxRefresh: (mailboxID) ->
-        if _mailboxRefreshing[mailboxID] > 0 then 0.9 else 0
 
     # Select the "best" mailbox among a list of candidates
     # prefer in order inbox, favorites, or first of list

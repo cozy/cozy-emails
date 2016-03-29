@@ -27,6 +27,8 @@ module.exports =
         'MAILBOX_DELETE_ERROR'      : 'MAILBOX_DELETE_FAILURE'
         'MAILBOX_EXPUNGE'           : 'MAILBOX_EXPUNGE'
         'MAILBOX_EXPUNGE_ERROR'     : 'MAILBOX_EXPUNGE_FAILURE'
+        'MAILBOX_SELECT'            : 'MAILBOX_SELECT'
+        'MAILBOX_SELECT_ALL'        : 'MAILBOX_SELECT_ALL'
 
         # Message
         'RECEIVE_RAW_MESSAGE'       : 'RECEIVE_RAW_MESSAGE'
@@ -43,7 +45,6 @@ module.exports =
         'MESSAGE_MOVE_REQUEST'     : 'MESSAGE_MOVE_REQUEST'
         'MESSAGE_MOVE_SUCCESS'     : 'MESSAGE_MOVE_SUCCESS'
         'MESSAGE_MOVE_FAILURE'     : 'MESSAGE_MOVE_FAILURE'
-        'MESSAGE_FLAGS_REQUEST'     : 'MESSAGE_FLAGS_REQUEST'
         'MESSAGE_FLAGS_SUCCESS'     : 'MESSAGE_FLAGS_SUCCESS'
         'MESSAGE_FLAGS_FAILURE'     : 'MESSAGE_FLAGS_FAILURE'
         'MESSAGE_FETCH_REQUEST'     : 'MESSAGE_FETCH_REQUEST'
@@ -78,7 +79,7 @@ module.exports =
         # Router
         'SAVE_ROUTES'               : 'SAVE_ROUTES'
         'SET_ROUTE_ACTION'          : 'SET_ROUTE_ACTION'
-        'SET_NEXT_URL'              : 'SET_NEXT_URL'
+        'SAVE_NEXT_URL'              : 'SAVE_NEXT_URL'
         'SET_FILTER'                : 'SET_FILTER'
 
         # Layout
@@ -93,6 +94,7 @@ module.exports =
         'REFRESH'                   : 'REFRESH'
         'FOCUS'                     : 'FOCUS'
         'INTENT_AVAILABLE'          : 'INTENT_AVAILABLE'
+        'SAVE_SCROLL'               : 'SAVE_SCROLL'
 
         # Settings
         'SETTINGS_UPDATED'          : 'SETTINGS_UPDATED'
@@ -118,11 +120,6 @@ module.exports =
         # Toasts
         'TOASTS_SHOW'               : 'TOASTS_SHOW'
         'TOASTS_HIDE'               : 'TOASTS_HIDE'
-
-        # Drawer
-        'DRAWER_SHOW':   'DRAWER_SHOW'
-        'DRAWER_HIDE':   'DRAWER_HIDE'
-        'DRAWER_TOGGLE': 'DRAWER_TOGGLE'
 
 
     PayloadSources:

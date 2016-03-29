@@ -1,9 +1,10 @@
-_         = require 'underscore'
+_         = require 'lodash'
 Immutable = require 'immutable'
 
 Store = require '../libs/flux/store/store'
 AccountStore = require '../stores/account_store'
-MessageStore = require '../stores/message_store'
+
+# MessageStore = require '../stores/message_store'
 
 AppDispatcher = require '../app_dispatcher'
 
@@ -16,10 +17,29 @@ class RouterStore extends Store
         Defines private variables here.
     ###
     _router = null
+
+    _oldAction = null
     _action = null
+
+    _oldNextUrl = null
     _nextUrl = null
 
-    _currentFilter = null
+    # FIXME : cette valeur doit etre déduite dans la vue
+    # en fction du messageID
+    _scrollValue = null
+
+    _currentFilter = _defaultFilter =
+        field: 'date'
+        order: '-'
+
+        # FIXME : est-ce que ce filtre est util?!
+        type: null
+
+        flags: null
+
+        value: null
+        before: null
+        after: null
 
     getRouter: ->
         return _router
@@ -27,24 +47,53 @@ class RouterStore extends Store
     getAction: ->
         return _action
 
-    getURL: (params={}) ->
-        action = _getRouteAction params
+    hasRouteChanged: ->
+        _oldAction isnt _action or _oldNextUrl isnt _nextUrl
 
-        # FIXME : adapter les URL
-        # à l'API côté serveur
-        isServer = params.isServer
-        unless isServer
-            filter = _getURIQueryParams()
-        else
-            filter = _getURIServerQueryParams()
+    # If filters are default
+    # Nothing should appear in URL
+    getQueryParams: ->
+         if _currentFilter isnt _defaultFilter then _currentFilter else null
+
+    getFilter: ->
+        _currentFilter
+
+    setFilter: (params={}) ->
+        return if params.query and not (params = _getURLparams params.query)
+
+        # Update Filter
+        _currentFilter = _.clone _defaultFilter
+        _.extend _currentFilter, params
+
+        console.log 'setFilter', _currentFilter
+        return _currentFilter
+
+    getScrollValue: ->
+        _scrollValue
+
+    getURL: (params={}) ->
+        # FIXME : prendre en compte ici le cas
+        # conversation.next
+        # conversation.previous
+        action = _getRouteAction params
+        if action in ['conversationPrevious', 'conversationNext']
+            console.log 'TODO : getNextConversationHERE'
+            return ''
+
+
+        filter = _getURIQueryParams params
+
+        # console.log 'getURL', filter, params.filter
 
         if (route = _getRoute action)
-            prefix = unless isServer then '#' else ''
+            isValid = true
+            prefix = unless params.isServer then '#' else ''
             url = route.replace /\:\w*/gi, (match) =>
                 # Get Route pattern of action
                 # Replace param name by its value
                 param = match.substring 1, match.length
-                params[param] or @getProps(param)
+                params[param]
+
             # console.log 'getURL', action, prefix + url.replace(/\/\*$/, '')
             return prefix + url.replace(/\/\*$/, '') + filter
 
@@ -53,49 +102,16 @@ class RouterStore extends Store
     getNextURL: ->
         return _nextUrl
 
-    getCurrentURL: (params) ->
-        _.extend params,
-            action: params.action or @getAction()
-            isServer: true
+    getCurrentURL: (options={}) ->
+        params = _.extend {}, {isServer: true}, options
+        params.action = @getAction() unless params.action
+        params.mailboxID = AccountStore.getSelectedMailbox()?.get('id')
         return @getURL params
-
-    # FIXME : plante sur l'affichage du message
-    # car doit etre présent plusieurs fois
-    getProps: (name) ->
-        if 'route' is name
-            return @getAction()
-        if 'messageID' is name
-            return MessageStore.getCurrentID()
-        if 'accountID' is name
-            return AccountStore.getSelectedOrDefault()?.get 'id'
-        if 'mailboxID' is name
-            return AccountStore.getSelectedMailbox()?.get 'id'
-        # FIXME : gérer ça
-        # TODO : trouver les cas d'usages
-        # TODO : voir où récupérer la valeur
-        if 'tab' is name
-            return ''
-
-    getFilter: (getDefault) ->
-        # getQueryParams
-        #         sort: _getSort()
-        #         type: filter.type
-        #         filter: filter.value
-        #         before: filter.before
-        #         after: filter.after
-        #         hasNextPage: not _noMore
-        return if not _currentFilter or getDefault
-            field: 'date'
-            order: '-'
-            type: '-'
-            value: 'nofilter'
-            before: '-'
-            after: '-'
-        return _currentFilter
 
     _getRouteAction = (params) ->
         unless (action = params.action)
             return 'message.show' if params.messageID
+            return _action if _action
             return 'message.list'
         action
 
@@ -105,59 +121,87 @@ class RouterStore extends Store
         index = _.values(routes).indexOf(name)
         _.keys(routes)[index]
 
-    _getURLparams: (query = '') ->
-        params = query.match /([\w]+=[\w,]+)+/gi
-        return unless params?.length
+    _getURLparams = (query) ->
+        # Get data from URL
+        if _.isString query
+            params = query.match /([\w]+=[-+\w,]+)+/gi
+            return unless params?.length
 
-        result = {}
-        _.each params, (param) ->
-            param = param.split '='
-            if -1 < (value = param[1]).indexOf ','
-                value = value.split ','
-            result[param[0]] = value
-        result
+            result = {}
+            _.each params, (param) ->
+                param = param.split '='
+                if -1 < (value = param[1]).indexOf ','
+                    value = value.split ','
+                if 'sort' is param[0]
+                    result['order'] = value.substr 0, 1
+                    result['field'] = value.substr 1
+                else
+                    result[param[0]] = value
+            return result
 
-    _getFilterParams = ->
-        'starred,unread'
+        # Get data from Views
+        switch query.type
+            when 'from', 'dest'
+                result = {}
+                result.before = query.value
+                result.after = "#{query.value}\uFFFF"
 
-    _getSortParams = ->
-        'sender:ASC'
+            when 'date'
+                if query.range
+                    result = {}
+                    result.before = query.range[0]
+                    result.after = query.range[1]
 
-    _getStartDateParams = ->
-        '2016-03-01T23:00:00.000Z'
+            when 'flag'
+                # Keep previous filters
+                flags = _currentFilter.flags or []
+                flags = [flags] if _.isString flags
 
-    _getEndDateParams = ->
-        '2016-03-03T22:59:59.999Z'
+                # Toggle value
+                if -1 < flags.indexOf query.value
+                    _.pull flags, query.value
+                else
+                    flags.push query.value
+                (result = {}).flags = flags
+        return result
 
-    _getURIQueryParams = ->
-        params = _self.getFilter()
-        defaultParams = _self.getFilter true
+    # _getFilterParams = ->
+    #     'starred,unread'
+    #
+    # _getSortParams = ->
+    #     'sender:ASC'
+    #
+    # _getStartDateParams = ->
+    #     '2016-03-01T23:00:00.000Z'
+    #
+    # _getEndDateParams = ->
+    #     '2016-03-03T22:59:59.999Z'
+
+    _getURIQueryParams = (params) ->
+        filters = _self.getFilter()
+        params = _.extend {}, filters, params?.filter
         result = ''
-        _.each params, (value, key) ->
-            if defaultParams[key] isnt value and _isFilterEmpty(value)
-                result = '/?' unless result.length
-                result += key + '=' + value + '&'
+
+        # FIXME : adapter les URL
+        # à l'API côté serveur
+        if params.isServer
+            sortField = params.order + '' + params.field
+            params.sort = sortField
+            delete params.order
+            delete params.field
+
+            _.each params, (value, key) ->
+                if value
+                    result = '/?' unless result.length
+                    result += key + '=' + value + '&'
+
+        else
+            _.each params, (value, key) ->
+                if value and _defaultFilter[key] isnt value
+                    result = '/?' unless result.length
+                    result += key + '=' + value + '&'
         result
 
-    _getURIServerQueryParams = ->
-        params = _self.getFilter()
-        defaultParams = _self.getFilter true
-    #     url = "mailbox/#{mailboxID}/?sort=#{sort}"
-    #     if filter.type is 'flag' and _not _isFilterEmpty filter.value
-    #         url += "&flag=#{filter.value}"
-    #
-    #     unless _isFilterEmpty filter.before
-    #         url += "&before=#{encodeURIComponent filter.before}"
-    #
-    #     unless _isFilterEmpty filter.after
-    #         url += "&after=#{encodeURIComponent filter.after}"
-    #     return url
-        '/?sort=-date'
-
-    _isFilterEmpty = (value) ->
-        if value
-            return value is '-' or value is 'nofilter'
-        !!value
 
     _getSort = (filter) ->
         filter = _self.getFilter() unless filter
@@ -166,27 +210,8 @@ class RouterStore extends Store
         value = filter.type if _self.isResetFilter filter
         encodeURIComponent "#{filter.order}#{value}"
 
-    _setFilter = (params) ->
-        _defaultValue = _self.getFilter()
-
-        # Update Filter
-        _currentFilter =
-            field: if params.sort then params.sort.substr(1) else _defaultValue.field
-            order: if params.sort then params.sort.substr(0, 1) else _defaultValue.order
-            type: params.type or _defaultValue.type
-            value: params.flag or _defaultValue.value
-            before: params.before or _defaultValue.before
-            after: params.after or _defaultValue.after
-
-        # Update context
-        _noMore = false
-        _nextUrl = null
-
-        return _currentFilter
-
     _resetFilter = ->
-        value = _self.getFilter true
-        _setFilter value
+        _currentFilter = _defaultFilter
 
     # Useless for MessageStore
     # to clean messages
@@ -200,21 +225,30 @@ class RouterStore extends Store
     ###
     __bindHandlers: (handle) ->
 
-        handle ActionTypes.QUERY_PARAMETER_CHANGED, (query) ->
-            params =_getURLparams query
-            _setFilter params
+        handle ActionTypes.QUERY_PARAMETER_CHANGED, (params) ->
+            _self.setFilter params
             @emit 'change'
 
         handle ActionTypes.SET_ROUTE_ACTION, (value) ->
+            _oldAction = _action
             _action = value
+
+            if _self.hasRouteChanged()
+                _scrollValue = { scrollTop: 0 }
             @emit 'change'
 
         handle ActionTypes.SAVE_ROUTES, (router) ->
             _router = router
             @emit 'change'
 
-        handle ActionTypes.SET_NEXT_URL, (value) ->
+        handle ActionTypes.SAVE_NEXT_URL, (value) ->
+            _oldNextUrl = _nextUrl
             _nextUrl = if value then decodeURIComponent value else null
+            if _oldNextUrl isnt _nextUrl
+                @emit 'change'
+
+        handle ActionTypes.SAVE_SCROLL, (value) ->
+            _scrollValue = value
             @emit 'change'
 
         handle ActionTypes.SELECT_ACCOUNT, (value) ->

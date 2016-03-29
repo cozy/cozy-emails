@@ -4,6 +4,9 @@ _       = require 'underscore'
 AccountTranslator = require './translators/account_translator'
 
 SettingsStore = require '../stores/settings_store'
+RouterStore = require '../stores/router_store'
+AccountStore = require '../stores/account_store'
+MessageStore = require '../stores/message_store'
 
 
 handleResponse = (callback, details...) ->
@@ -38,23 +41,28 @@ module.exports =
         .send settings
         .end handleResponse callback, 'changeSettings', settings
 
-    fetchMessage: (emailID, callback) ->
-        request.get "message/#{emailID}"
+    fetchMessage: (params={}, callback) ->
+        messageID = params.messageID or MessageStore.getCurrentID()
+        request.get "message/#{messageID}"
         .set 'Accept', 'application/json'
         .end handleResponse callback, 'fetchMessage', emailID
 
-    fetchConversation: (conversationID, callback) ->
-        request.get "messages/batchFetch?conversationID=#{conversationID}"
+    fetchConversation: (params={}, callback) ->
+        messageID = params.messageID or MessageStore.getCurrentID()
+        request.get "messages/batchFetch?messageID=#{messageID}"
         .set 'Accept', 'application/json'
         .end (err, res) ->
             _cb = handleResponse(callback, 'fetchConversation', conversationID)
-            if res.ok
-                res.body.conversationLengths = {}
-                res.body.conversationLengths[conversationID] = res.body.length
-            _cb(err, res)
+            _cb err, res
 
 
-    fetchMessagesByFolder: (url, callback) ->
+    fetchMessagesByFolder: (params, callback) ->
+        if params.action is 'page.next'
+            url = RouterStore.getNextURL()
+        else
+            url = RouterStore.getCurrentURL
+                action: 'message.list'
+                mailboxID: AccountStore.getSelectedMailbox()?.get 'id'
         request.get url
         .set 'Accept', 'application/json'
         .end handleResponse callback, "fetchMessagesByFolder", url

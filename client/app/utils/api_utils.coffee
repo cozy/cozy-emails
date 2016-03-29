@@ -3,6 +3,9 @@ _        = require 'underscore'
 Polyglot = require 'node-polyglot'
 moment   = require 'moment'
 
+RouterGetter = require '../getters/router'
+
+# FIXME : remove all this from Stores to  RouterGetter
 AccountStore  = require '../stores/account_store'
 MessageStore  = require '../stores/message_store'
 RouterStore  = require '../stores/router_store'
@@ -41,11 +44,6 @@ module.exports = Utils =
     getMessage: (id) ->
         message = MessageStore.getByID id
         return message?.toJS()
-
-
-    getCurrentConversation: ->
-        MessageStore.getCurrentConversation()?.toJS()
-
 
     getCurrentActions: ->
         res = []
@@ -98,16 +96,7 @@ module.exports = Utils =
 
     messageNavigate: (direction, inConv) ->
         return unless onMessageList()
-
-        # when key top is pressed, direction=prev
-        # when key bottom is pressed, direction=next
-        # strange (?!)
-        if direction is 'prev'
-            next = MessageStore.getNextConversation()
-        else
-            next = MessageStore.getPreviousConversation()
-
-        @messageSetCurrent(next)
+        RouterActionCreator.navigate action: 'conversation.next'
 
 
     messageSetCurrent: (message) ->
@@ -123,19 +112,16 @@ module.exports = Utils =
     # Display a message
     # @params {Immutable} message the message (current one if null)
     messageDisplay: (message) ->
-        message ?= MessageStore.getByID MessageStore.getCurrentID()
-        if message
-            RouterActionCreator.navigate
-                parameters:
-                    messageID: message.get 'id'
+        messageID = message?.get('id') or MessageStore.getCurrentID()
+        RouterActionCreator.navigate {messageID}
 
 
     messageClose: ->
-        href = window.location.href
-        href = href.replace /\/message\/[\w-]+/gi, ''
-        href = href.replace /\/conversation\/[\w-]+\/[\w-]+/gi, ''
-        href = href.replace /\/edit\/[\w-]+/gi, ''
-        RouterActionCreator.navigate href
+        url = window.location.href
+        url = url.replace /\/message\/[\w-]+/gi, ''
+        url = url.replace /\/conversation\/[\w-]+\/[\w-]+/gi, ''
+        url = url.replace /\/edit\/[\w-]+/gi, ''
+        RouterActionCreator.navigate {url}
 
     messageDeleteCurrent: ->
         messageID = MessageStore.getCurrentID()
@@ -143,20 +129,8 @@ module.exports = Utils =
             return
 
         deleteMessage = (isModal) ->
-            # Get next message information
-            # before delete (context changes)
-            next = MessageStore.getPreviousConversation()
-            next = MessageStore.getNextConversation() unless next.size
-
             MessageActionCreator.delete {messageID}
-            LayoutActionCreator.hideModal() if isModal
-
-            if next?.size
-                # Goto next message
-                Utils.messageSetCurrent next
-            else
-                # Close 2nd panel
-                Utils.messageClose()
+            RouterActionCreator.navigate action: 'conversation.next'
 
         settings = SettingsStore.get()
 

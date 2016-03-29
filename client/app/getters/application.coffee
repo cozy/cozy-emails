@@ -3,6 +3,7 @@ LayoutStore = require '../stores/layout_store'
 SearchStore = require '../stores/search_store'
 MessageStore = require '../stores/message_store'
 RefreshesStore = require '../stores/refreshes_store'
+SettingsStore = require '../stores/settings_store'
 
 RouterGetter = require '../getters/router'
 
@@ -12,38 +13,28 @@ colorhash = require '../utils/colorhash'
 class ApplicationGetter
 
     getState: (name, state={}) ->
+        mailboxID = AccountStore.getSelectedMailbox()?.get 'id'
         if 'menu' is name
-            # Filter Accounts
-            # FIXME : it should be into AccountStore
-            accounts = AccountStore.getAll().sort (account1, account2) ->
-                if selectedAccount?.get('id') is account1.get('id')
-                    return -1
-                if selectedAccount?.get('id') is account2.get('id')
-                    return 1
-                return 0
-
             return {
+                mailboxID        : mailboxID
                 onlyFavorites    : not state or state.onlyFavorites is true
-                isDrawerExpanded : LayoutStore.isDrawerExpanded()
                 refreshes        : RefreshesStore.getRefreshing()
-                accounts         : accounts.toArray()
-                selectedAccount  : AccountStore.getSelectedOrDefault()
-                mailboxes        : AccountStore.getSelectedMailboxes true
-                favorites        : AccountStore.getSelectedFavorites true
+                accountID        : AccountStore.getSelectedOrDefault()?.get 'id'
                 search           : SearchStore.getCurrentSearch()
             }
 
         return {
-            isLoading             : MessageStore.isFetching()
-            selectedAccount       : AccountStore.getSelectedOrDefault()
+            mailboxID             : mailboxID
+            hasRouteChanged       : RouterGetter.hasRouteChanged()
+            action                : RouterGetter.getAction()
             currentSearch         : SearchStore.getCurrentSearch()
             modal                 : LayoutStore.getModal()
-            useIntents            : LayoutStore.intentAvailable()
-            selectedMailboxID     : AccountStore.getSelectedMailbox()?.get('id')
-            messageID             : MessageStore.getCurrentID()
+            messages              : RouterGetter.getMessagesToDisplay()
         }
 
     getProps: (name, props={}) ->
+        mailboxID = AccountStore.getSelectedMailbox()?.get 'id'
+
         if 'application' is name
             disposition = LayoutStore.getDisposition()
             isCompact = LayoutStore.getListModeCompact()
@@ -60,38 +51,59 @@ class ApplicationGetter
             }
 
         if 'menu' is name
+            # Filter Accounts
+            # FIXME : it should be into AccountStore
+            accounts = AccountStore.getAll().sort (account1, account2) ->
+                if selectedAccount?.get('id') is account1.get('id')
+                    return -1
+                if selectedAccount?.get('id') is account2.get('id')
+                    return 1
+                return 0
             return {
-                composeURL: RouterGetter.getURL action: 'message.new'
-                newAccountURL: RouterGetter.getURL action: 'account.new'
+                ref: name
+                composeURL: RouterGetter.getURL
+                    action: 'message.new'
+                    mailboxID: mailboxID
+                newAccountURL: RouterGetter.getURL
+                    action: 'account.new'
+                    accountID: AccountStore.getSelectedOrDefault()?.get 'id'
                 action: RouterGetter.getAction()
+                accounts: accounts.toArray()
             }
 
         if 'panel' is name
-            mailboxID = AccountStore.getSelectedMailbox()?.get 'id'
-            prefix = mailboxID + '-' + props.action
+            action = RouterGetter.getAction()
+            prefix = name + '-' + mailboxID + '-' + action
             return {
-                ref               : props.action
-                key               : RouterGetter.getKey prefix
-                action            : props.action
-                accountID         : AccountStore.getSelectedOrDefault()?.get 'id'
+                ref               : 'Panel-' + action
+                key               : prefix
+                action            : action
                 mailboxID         : mailboxID
+                accountID         : AccountStore.getSelectedOrDefault()?.get 'id'
                 messageID         : MessageStore.getCurrentID()
                 # tab               : params.tab
                 useIntents        : LayoutStore.intentAvailable()
                 selectedMailboxID : mailboxID
+                searchValue       : SearchStore.getCurrentSearch()
+                accounts          : AccountStore.getAll()
+                settings          : SettingsStore.get()
             }
 
         if 'account' is name and (account = props.account) and (state = props.state)
             isSelected = account is AccountStore.getSelectedOrDefault()
             accountID = account.get 'id'
+            mailboxes = AccountStore.getSelectedMailboxes true
+            favorites = AccountStore.getSelectedFavorites true
 
             result = {}
             result.key = 'account-' + accountID
             result.isSelected = isSelected
-            result.url = RouterGetter.getURL action: 'account.new'
+            result.url = RouterGetter.getURL
+                action: 'account.new'
+                accountID: accountID
             result.nbUnread = account.get 'totalUnread'
             result.className = classNames active: isSelected
-            result.allBoxesAreFavorite = state.mailboxes.size is state.favorites.size
+            result.allBoxesAreFavorite = mailboxes.size is favorites.size
             result.accountColor  = colorhash(account.get 'label')
             result.urlconfig = RouterGetter.getURL
                 action: 'account.edit'
@@ -100,10 +112,9 @@ class ApplicationGetter
             result.icon = 'fa fa-ellipsis-h'
 
             if state.onlyFavorites
-                mailboxes = state.favorites
+                mailboxes = favorites
                 result.toggleFavoritesLabel = t 'menu favorites off'
             else
-                mailboxes = state.mailboxes
                 result.toggleFavoritesLabel = t 'menu favorites on'
 
             # This is here for a convenient way to fond special mailboxes names.

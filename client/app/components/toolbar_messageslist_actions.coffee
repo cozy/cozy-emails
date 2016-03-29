@@ -6,12 +6,11 @@ React = require 'react'
 ToolboxActions = React.createFactory require './toolbox_actions'
 ToolboxMove    = React.createFactory require './toolbox_move'
 
-MessageStore = require '../stores/message_store'
-
 LayoutActionCreator  = require '../actions/layout_action_creator'
 MessageActionCreator = require '../actions/message_action_creator'
 RouterActionCreator = require '../actions/router_action_creator'
 
+MailboxesGetter = require '../getters/mailboxes'
 
 module.exports = ActionsToolbarMessagesList = React.createClass
     displayName: 'ActionsToolbarMessagesList'
@@ -19,19 +18,13 @@ module.exports = ActionsToolbarMessagesList = React.createClass
     propTypes:
         settings:             React.PropTypes.object.isRequired
         mailboxID:            React.PropTypes.string.isRequired
-        mailboxes:            React.PropTypes.object.isRequired
         messages:             React.PropTypes.object.isRequired
-        selected:             React.PropTypes.object.isRequired
-        afterAction:          React.PropTypes.func
-
-
-    _hasSelection: ->
-        Object.keys(@props.selected).length > 0
+        selection:            React.PropTypes.array.isRequired
 
 
     _getSelectedAndMode: (applyToConversation) ->
-        selected = Object.keys @props.selected
-        count = selected.length
+        selected = @props.selection?.toArray()
+        count = @props.selection.size
         applyToConversation = Boolean applyToConversation
 
         if selected.length is 0
@@ -52,7 +45,7 @@ module.exports = ActionsToolbarMessagesList = React.createClass
             button
                 role:                     'menuitem'
                 onClick:                  @onDelete
-                'aria-disabled':          @_hasSelection()
+                'aria-disabled':          true
                 'aria-describedby':       Tooltips.DELETE_SELECTION
                 'data-tooltip-direction': 'bottom'
 
@@ -60,8 +53,8 @@ module.exports = ActionsToolbarMessagesList = React.createClass
 
             ToolboxActions
                 direction:            'left'
-                mode: 'conversation'
-                mailboxes:            @props.mailboxes
+                mode:                 'conversation'
+                mailboxes:            MailboxesGetter.getSelected()
                 onMark:               @onMark
                 onConversationDelete: @onConversationDelete
                 onConversationMark:   @onConversationMark
@@ -72,21 +65,10 @@ module.exports = ActionsToolbarMessagesList = React.createClass
         return unless options = @_getSelectedAndMode applyToConversation
 
         doDelete = =>
-            # Get next focus conversation
-            conversationIDs = options.conversationIDs
-            nextConversation = MessageStore.getPreviousConversation {conversationIDs}
-            nextConversation = MessageStore.getNextConversation {conversationIDs} unless nextConversation.size
-
             MessageActionCreator.delete options
 
-            @props.afterAction() if @props.afterAction?
-
-            # FIXME : move this into MessageActionCreator
-            # after deleting complete
             # Goto to next conversation
-            RouterActionCreator.navigate
-                action: 'message.show',
-                message: nextConversation
+            RouterActionCreator.navigate action: 'conversation.next'
 
         unless @props.settings.get 'messageConfirmDelete'
             doDelete()
@@ -114,8 +96,6 @@ module.exports = ActionsToolbarMessagesList = React.createClass
             if options.count > 0 and @props.messages.size > 0
                 firstMessageID = @props.messages.first().get('id')
                 MessageActionCreator.setCurrent firstMessageID, true
-        if @props.afterAction?
-            @props.afterAction()
 
 
     onMark: (flag, applyToConversation) ->

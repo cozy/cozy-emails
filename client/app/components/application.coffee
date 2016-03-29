@@ -11,16 +11,13 @@ ToastContainer = React.createFactory require './toast_container'
 Tooltips       = React.createFactory require './tooltips-manager'
 
 # React Mixins
-SettingsStore       = require '../stores/settings_store'
-AccountStore        = require '../stores/account_store'
-MessageStore        = require '../stores/message_store'
-LayoutStore         = require '../stores/layout_store'
-StoreWatchMixin         = require '../mixins/store_watch_mixin'
+MessageStore         = require '../stores/message_store'
+RouterStore          = require '../stores/router_store'
+SettingsStore        = require '../stores/settings_store'
+StoreWatchMixin      = require '../mixins/store_watch_mixin'
 TooltipRefesherMixin = require '../mixins/tooltip_refresher_mixin'
 
 ApplicationGetters = require '../getters/application'
-
-{MessageFilter} = require '../constants/app_constants'
 
 ###
     This component is the root of the React tree.
@@ -36,7 +33,7 @@ Application = React.createClass
 
     mixins: [
         TooltipRefesherMixin
-        StoreWatchMixin [SettingsStore, AccountStore, MessageStore, LayoutStore]
+        StoreWatchMixin [SettingsStore, RouterStore, MessageStore]
     ]
 
     getDefaultProps: ->
@@ -50,15 +47,11 @@ Application = React.createClass
         nextProps
 
     render: ->
-        # FIXME : n'est pas reloadé après chargement du contenu
-        # le state est mal calculé
-        # Il manque la liste des messages
         div className: @props.className,
-            # Actual layout
+
             div className: 'app',
-                # Menu is self-managed because this part of the layout
-                # is always the same.
-                Menu ref: 'menu', ApplicationGetters.getProps('menu')
+
+                Menu()
 
                 main
                     className: @props.layout
@@ -66,9 +59,9 @@ Application = React.createClass
                     div
                         className: 'panels'
 
-                        @getPanel 'message.list'
-                        if @state.messageID?
-                            @getPanel 'message.show'
+                        Panel messages: @state.messages, action: 'message.list'
+                        if @state.action is 'message.show'
+                            Panel messages: @state.messages, action: 'message.show'
                         else
                             section
                                 'key'          : 'placeholder'
@@ -83,9 +76,5 @@ Application = React.createClass
             # It's hidden so it doesn't break the layout. Other components
             # can then reference the tooltips by their ID to trigger them.
             Tooltips key: "tooltips"
-
-    getPanel: (action) ->
-        Panel ApplicationGetters.getProps('panel', {action})
-
 
 module.exports = Application

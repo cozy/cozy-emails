@@ -5,8 +5,6 @@ React = require 'react'
 {Dropdown}  = require('./basic_components').factories
 SearchInput = React.createFactory require './search_input'
 
-{MessageFilter, Tooltips} = require '../constants/app_constants'
-
 filters =
     from: t "list filter from"
     dest: t "list filter dest"

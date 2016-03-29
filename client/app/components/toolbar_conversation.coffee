@@ -1,7 +1,6 @@
 React = require 'react'
 
 {nav, div, button, a} = React.DOM
-{Tooltips, FlagsConstants} = require '../constants/app_constants'
 PropTypes                  = require '../libs/prop_types'
 
 {Button, LinkButton} = require('./basic_components').factories
@@ -22,7 +21,6 @@ module.exports = React.createClass
         fullscreen          : React.PropTypes.bool.isRequired
 
     render: ->
-        console.log @props.previousMessageID, @props.nextMessageID
         nav className: 'toolbar toolbar-conversation btn-toolbar',
 
             ToolboxActions
@@ -34,33 +32,10 @@ module.exports = React.createClass
                 onConversationMark   : @onMark
                 onConversationMove   : @onMove
 
-            div className: 'btn-group',
-                if @props.previousMessageID?
-                    LinkButton
-                        icon: 'fa-chevron-left'
-                        onClick: @gotoPreviousConversation
-                        'aria-describedby': Tooltips.PREVIOUS_CONVERSATION
-                        'data-tooltip-direction': 'left'
-
-                if @props.nextMessageID?
-                    LinkButton
-                        icon: 'fa-chevron-right'
-                        onClick: @gotoNextConversation
-                        'aria-describedby': Tooltips.NEXT_CONVERSATION
-                        'data-tooltip-direction': 'left'
-
             Button
                 icon: if @props.fullscreen then 'fa-compress' else 'fa-expand'
                 onClick: LayoutActionCreator.toggleFullscreen
                 className: "clickable fullscreen"
-
-    gotoPreviousConversation: ->
-        if (messageID = @props.previousMessageID)
-            RouterActionCreator.navigate {messageID}
-
-    gotoNextConversation: ->
-        if (messageID = @props.nextMessageID)
-            RouterActionCreator.navigate {messageID}
 
     onDelete: ->
         # Remove conversation
@@ -69,7 +44,7 @@ module.exports = React.createClass
         MessageActionCreator.delete {conversationID}
 
         # Select previous conversation
-        @gotoPreviousConversation()
+        RouterActionCreator.navigate action: 'conversation.previous'
 
     # FIXME : this should be in message_action_creator
     onMark: (flag) ->

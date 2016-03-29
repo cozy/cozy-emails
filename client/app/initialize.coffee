@@ -118,13 +118,6 @@ document.addEventListener 'DOMContentLoaded', ->
         # Init Web Intents
         initIntent()
 
-        # Flux initialization (must be called at the begining)
-        AccountStore  = require './stores/account_store'
-        ContactStore  = require './stores/contact_store'
-        LayoutStore   = require './stores/layout_store'
-        MessageStore  = require './stores/message_store'
-        SettingsStore = require './stores/settings_store'
-
         # Routing management
         Router = require './router'
         window.router = new Router()

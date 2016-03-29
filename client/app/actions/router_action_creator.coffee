@@ -13,20 +13,47 @@ RouterActionCreator =
             type: ActionTypes.SET_ROUTE_ACTION
             value: value
 
-    updateFilter: (query) ->
+    saveScroll: (scroll) ->
         AppDispatcher.handleViewAction
-            type: ActionTypes.QUERY_PARAMETER_CHANGED
-            parameters: query
+            type: ActionTypes.SAVE_SCROLL
+            value: scroll
 
-    navigate: (url) ->
-        router = RouterStore.getRouter()
+    getNextPage: (scroll) ->
+        action = 'page.next'
+        AppDispatcher.handleViewAction
+            type: ActionTypes.MESSAGE_FETCH_REQUEST
+            value: {action}
 
-        if url and not _.isString url
-            params = url
-            url = RouterStore.getURL params
 
-        if url and _.isString url
+    addFilter: (params) ->
+        filter = {}
+        separator = ','
+        filters = RouterStore.getFilter()
+
+        _.each params, (value, key) ->
+            # Toggle filter value
+            # Add value if it doesnt exist
+            # Remove if from filters otherwhise
+            tmp = filters[key]
+            tmp = tmp.split separator if _.isString filters[key]
+            tmp ?= []
+            if -1 < tmp.indexOf value
+                tmp = _.without tmp, value
+            else
+                tmp.push value
+            filter[key] = tmp?.join separator
+
+        isServer = false
+        @navigate url: RouterStore.getCurrentURL {filter, isServer}
+
+    navigate: (params={}) ->
+        {url} = params
+        url ?= RouterStore.getURL params
+
+        console.log 'navigate', params
+        if url
             # Update URL && context
+            router = RouterStore.getRouter()
             router.navigate url, update: true
 
 module.exports = RouterActionCreator

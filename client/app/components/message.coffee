@@ -15,7 +15,7 @@ MessageFooter  = React.createFactory require './message_footer'
 ToolbarMessage = React.createFactory require './toolbar_message'
 MessageContent = React.createFactory require './message-content'
 
-MessageStore = require '../stores/message_store'
+SettingsStore = require '../stores/settings_store'
 
 {MessageFlags} = require '../constants/app_constants'
 
@@ -36,16 +36,15 @@ module.exports = React.createClass
         mailboxes              : React.PropTypes.object.isRequired
         message                : React.PropTypes.object.isRequired
         selectedMailboxID      : React.PropTypes.string.isRequired
-        settings               : React.PropTypes.object.isRequired
         useIntents             : React.PropTypes.bool.isRequired
-        toggleActive           : React.PropTypes.func.isRequired
 
 
     getInitialState: ->
+        settings = SettingsStore.get()
         return {
             displayHeaders: false
-            messageDisplayHTML: @props.settings.get 'messageDisplayHTML'
-            messageDisplayImages: @props.settings.get 'messageDisplayImages'
+            messageDisplayHTML: settings.get 'messageDisplayHTML'
+            messageDisplayImages: settings.get 'messageDisplayImages'
             currentMessageID: null
             prepared: {}
         }
@@ -114,8 +113,9 @@ module.exports = React.createClass
         state = {}
         if props.message.get('id') isnt @props.message.get('id')
             @_markRead(props.message, props.active)
-            state.messageDisplayHTML   = props.settings.get 'messageDisplayHTML'
-            state.messageDisplayImages = props.settings.get 'messageDisplayImages'
+            settings = SettingsStore.get()
+            state.messageDisplayHTML   = settings.get 'messageDisplayHTML'
+            state.messageDisplayImages = settings.get 'messageDisplayImages'
         @setState state
 
 
@@ -182,10 +182,7 @@ module.exports = React.createClass
         @props.message.get('flags').indexOf(MessageFlags.SEEN) is -1
 
     onHeaderClicked: ->
-        messageID = @props.message.get('id')
-        if @isUnread() and not @props.active
-            MessageActionCreator.mark {messageID}, MessageFlags.SEEN
-        @props.toggleActive messageID
+        RouterActionCreator.navigate {url} if (url = @props.url)?
 
     render: ->
         message  = @props.message
@@ -270,17 +267,13 @@ module.exports = React.createClass
         event.stopPropagation()
 
         success = =>
-            # Get next focus conversation
-            nextConversation = MessageStore.getPreviousConversation()
-            nextConversation = MessageStore.getNextConversation() unless nextConversation.size
-
             # Then remove message
             MessageActionCreator.delete messageID: @state.currentMessageID
 
             # Goto to next conversation
-            RouterActionCreator.navigate message: nextConversation
+            RouterActionCreator.navigate action: 'conversation.next'
 
-        needConfirmation = @props.settings.get('messageConfirmDelete')
+        needConfirmation = SettingsStore.get().get('messageConfirmDelete')
         unless needConfirmation
             success()
             return

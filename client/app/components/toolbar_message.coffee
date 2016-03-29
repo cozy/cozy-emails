@@ -33,6 +33,30 @@ module.exports = React.createClass
                 @renderToolboxMove()
                 @renderToolboxActions()) if @props.full
             @renderQuickActions() if @props.full
+            @renderReply()
+
+
+    renderReply: ->
+
+        # FIXME : utiliser RouterGetter
+        # Pour mettre en forme ces URL
+
+        div className: cBtnGroup,
+            a
+                className: "#{cBtn} fa-mail-reply mail-reply"
+                href: "#reply/#{@props.message.get 'id'}"
+                'aria-describedby': Tooltips.REPLY
+                'data-tooltip-direction': 'top'
+            a
+                className: "#{cBtn} fa-mail-reply-all mail-reply-all"
+                href: "#reply-all/#{@props.message.get 'id'}"
+                'aria-describedby': Tooltips.REPLY_ALL
+                'data-tooltip-direction': 'top'
+            a
+                className: "#{cBtn} fa-mail-forward mail-forward"
+                href: "#forward/#{@props.message.get 'id'}"
+                'aria-describedby': Tooltips.FORWARD
+                'data-tooltip-direction': 'top'
 
 
     renderQuickActions: ->

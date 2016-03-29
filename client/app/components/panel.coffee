@@ -10,39 +10,32 @@ MessageList    = React.createFactory require './message-list'
 Settings       = React.createFactory require './settings'
 SearchResult   = React.createFactory require './search_result'
 
-# Flux stores
-AccountStore  = require '../stores/account_store'
-MessageStore  = require '../stores/message_store'
-SearchStore   = require '../stores/search_store'
-SettingsStore = require '../stores/settings_store'
-
 RouterGetter = require '../getters/router'
-
-MessageActionCreator = require '../actions/message_action_creator'
+ApplicationGetters = require '../getters/application'
 
 {ComposeActions} = require '../constants/app_constants'
 
-
-module.exports = Panel = React.createClass
+Panel = React.createClass
     displayName: 'Panel'
 
-    # Build initial state from store values.
-    getInitialState: ->
-        @getStateFromStores()
-
-    componentDidMount: ->
-        MessageStore.addListener 'change', @fetchMessageComplete
-
-    componentWillUnmount: ->
-        MessageStore.removeListener 'change', @fetchMessageComplete
+    getDefaultProps: ->
+        ApplicationGetters.getProps 'panel'
 
     render: ->
         # -- Generates a list of messages for a given account and mailbox
         if @props.action is 'message.list'
-            @renderList()
+            MessageList
+                key         : 'messageList-' + @props.mailboxID
+                accountID   : @props.accountID
+                mailboxID   : @props.mailboxID
+                messages    : @props.messages
+                queryParams : RouterGetter.getQueryParams()
+                filter      : RouterGetter.getFilter()
+                scrollValue : RouterGetter.getPreviousScroll()
+                hasNextPage : !!RouterGetter.getNextURL()
 
         else if @props.action is 'search'
-            key = encodeURIComponent SearchStore.getCurrentSearch()
+            key = encodeURIComponent @props.searchValue
             SearchResult
                 key: "search-#{key}"
 
@@ -66,30 +59,13 @@ module.exports = Panel = React.createClass
             Settings
                 key     : 'settings'
                 ref     : 'settings'
-                settings: @state.settings
+                settings: @props.settings
 
         # -- Error case, shouldn't happen. Might be worth to make it pretty.
         else
             console.error "Unknown action #{@props.action}"
             window.cozyMails.logInfo "Unknown action #{@props.action}"
             return React.DOM.div null, "Unknown component #{@props.action}"
-
-
-    renderList: ->
-        unless @state.accounts.get @props.accountID
-            setTimeout =>
-                @redirect
-                    direction   : 'first'
-                    action      : 'default'
-            , 1
-            return React.DOM.div null, 'redirecting'
-
-        prefix = 'messageList-' + @props.mailboxID
-        MessageList
-            key         : RouterGetter.getKey prefix
-            accountID   : @props.accountID
-            mailboxID   : @props.mailboxID
-            queryParams : RouterGetter.getQueryParams()
 
     # Rendering the compose component requires several parameters. The main one
     # are related to the selected account, the selected mailbox and the compose
@@ -99,10 +75,8 @@ module.exports = Panel = React.createClass
             layout               : 'full'
             action               : null
             inReplyTo            : null
-            settings             : @state.settings
-            accounts             : @state.accounts
-            selectedAccountID    : @state.selectedAccount.get 'id'
-            selectedAccountLogin : @state.selectedAccount.get 'login'
+            settings             : @props.settings
+            accounts             : @props.accounts
             selectedMailboxID    : @props.mailboxID
             useIntents           : @props.useIntents
             ref                  : 'message'
@@ -150,17 +124,4 @@ module.exports = Panel = React.createClass
         component = Compose options
         return component
 
-    # Update state with store values.
-    fetchMessageComplete: (message) ->
-        return unless @isMounted()
-        @setState isLoadingReply: false
-
-    # FIXME : use Getters here
-    # FIXME : use smaller state
-    getStateFromStores: ->
-        return {
-            accounts              : AccountStore.getAll()
-            selectedAccount       : AccountStore.getSelectedOrDefault()
-            settings              : SettingsStore.get()
-            isLoadingReply        : not MessageStore.getByID(@props.messageID)?
-        }
+module.exports = Panel

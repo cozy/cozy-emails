@@ -5,6 +5,7 @@ SocketUtils = require '../utils/socketio_utils'
 LayoutStore  = require '../stores/layout_store'
 AccountStore = require '../stores/account_store'
 MessageStore = require '../stores/message_store'
+SelectionStore = require '../stores/selection_store'
 
 RouterStore = require '../stores/router_store'
 
@@ -26,6 +27,14 @@ module.exports = LayoutActionCreator =
     toggleListMode: ->
         AppDispatcher.handleViewAction
             type: ActionTypes.TOGGLE_LIST_MODE
+
+    selectAll: (value) ->
+        type = ActionTypes.MAILBOX_SELECT_ALL
+        AppDispatcher.handleViewAction {type}
+
+    updateSelection: (value) ->
+        type = ActionTypes.MAILBOX_SELECT
+        AppDispatcher.handleViewAction {type, value}
 
     # TODO: use a global method to DRY this 3-ones
     increasePreviewPanel: (factor = 1) ->
@@ -101,14 +110,12 @@ module.exports = LayoutActionCreator =
                 value: {messageID}
 
         if query
-            RouterActionCreator.updateFilter query
-
-        # Always get all messages form the list
-        unless MessageStore.getCurrentConversation()
-            params.action = 'message.list'
             AppDispatcher.handleViewAction
-                type: ActionTypes.MESSAGE_FETCH_REQUEST
-                value: RouterStore.getCurrentURL params
+                type: ActionTypes.QUERY_PARAMETER_CHANGED
+                value: {query}
+
+        AppDispatcher.handleViewAction
+            type: ActionTypes.MESSAGE_FETCH_REQUEST
 
 
     showSearchResult: (panelInfo) ->
@@ -168,19 +175,6 @@ module.exports = LayoutActionCreator =
         AppDispatcher.handleViewAction
             type: ActionTypes.INTENT_AVAILABLE
             value: availability
-
-    # Drawer
-    drawerShow: ->
-        AppDispatcher.handleViewAction
-            type: ActionTypes.DRAWER_SHOW
-
-    drawerHide: ->
-        AppDispatcher.handleViewAction
-            type: ActionTypes.DRAWER_HIDE
-
-    drawerToggle: ->
-        AppDispatcher.handleViewAction
-            type: ActionTypes.DRAWER_TOGGLE
 
     displayModal: (params) ->
         params.closeModal ?= -> LayoutActionCreator.hideModal()

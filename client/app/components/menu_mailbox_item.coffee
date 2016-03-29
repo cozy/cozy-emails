@@ -19,13 +19,9 @@ module.exports = MenuMailboxItem = React.createClass
     getInitialState: ->
         return target: false
 
-    onClickMailbox: ->
-        if @props.mailbox.get('id') is @props.selectedMailboxID and
-        @props.account.get 'supportRFC4551'
-            MessageActionCreator.refreshMailbox @props.selectedMailboxID
-
     render: ->
         mailboxID = @props.mailbox.get 'id'
+
         mailboxUrl = RouterGetter.getURL
             mailboxID: mailboxID
 
@@ -46,8 +42,9 @@ module.exports = MenuMailboxItem = React.createClass
                 specialMailbox = attrib
 
         classesParent = classNames
-            active: mailboxID is @props.selectedMailboxID
+            active: @props.isActive
             target: @state.target
+
         classesChild = classNames
             target:  @state.target
             special: specialMailbox
@@ -61,7 +58,6 @@ module.exports = MenuMailboxItem = React.createClass
         li className: classesParent,
             a
                 href: mailboxUrl
-                onClick: @onClickMailbox
                 className: "#{classesChild} lv-#{@props.mailbox.get('depth')}"
                 role: 'menuitem'
                 'data-mailbox-id': mailboxID

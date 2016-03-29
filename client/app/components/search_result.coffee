@@ -27,36 +27,20 @@ module.exports = React.createClass
         nextProps
 
     getStateFromStores: ->
-        search = SearchStore.getCurrentSearch()
         accountID = SearchStore.getCurrentSearchAccountID()
         accountID = null if accountID is 'all'
         return state =
-            currentSearchKey      : SearchStore.getCurrentSearchKey()
-            currentSearchResults  : SearchStore.getCurrentSearchResults()
-            conversationLengths   : MessageStore.getConversationsLength()
-            settings              : SettingsStore.get()
-            accountID             : accountID
-            currentMessageID      : MessageStore.getCurrentID()
-            currentConversationID : MessageStore.getCurrentConversationID()
-            accounts              : AccountStore.getAll()
-            mailboxes             : AccountStore.getAllMailboxes()
-            canLoadMore           : SearchStore.hasMoreSearch()
-            emptyListMessage      : t 'search deactivated', query: search
+            accountID  : accountID
+            search     : SearchStore.getCurrentSearch()
 
     render: ->
-
         MessageList
-            noFilters            : true
-            messages             : @state.currentSearchResults
+            key                  : 'messageList-' + SearchStore.getCurrentSearchKey()
+            messages             : SearchStore.getCurrentSearchResults()
             accountID            : @state.accountID
-            messageID            : @state.currentMessageID
-            conversationID       : @state.currentConversationID
-            accounts             : @state.accounts
-            mailboxes            : @state.mailboxes
-            settings             : @state.settings
-            conversationLengths  : @state.conversationLengths
-            emptyListMessage     : @state.emptyListMessage
+            hasNextPage          : SearchStore.hasMoreSearch()
             queryParams          : null
-            canLoadMore          : @state.canLoadMore
+            filters              : {}
+            emptyListMessage     : t 'search deactivated', query: @state.search
             loadMoreMessage      : ->
                 MessageActionCreator.fetchSearchResults()
