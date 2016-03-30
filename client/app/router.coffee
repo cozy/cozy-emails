@@ -70,7 +70,6 @@ class Router extends Backbone.Router
 
     messageList: (mailboxID, query) ->
         RouterActionCreator.setAction 'message.list'
-        console.log 'messageList', mailboxID, query
         LayoutActionCreator.updateMessageList {mailboxID, query}
 
     messageShow: (mailboxID, messageID, query) ->

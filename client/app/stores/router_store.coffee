@@ -47,9 +47,6 @@ class RouterStore extends Store
     getAction: ->
         return _action
 
-    hasRouteChanged: ->
-        _oldAction isnt _action or _oldNextUrl isnt _nextUrl
-
     # If filters are default
     # Nothing should appear in URL
     getQueryParams: ->
@@ -75,10 +72,18 @@ class RouterStore extends Store
         # conversation.next
         # conversation.previous
         action = _getRouteAction params
-        if action in ['conversationPrevious', 'conversationNext']
-            console.log 'TODO : getNextConversationHERE'
-            return ''
 
+        isMessage = !!params.messageID or -1 < action.indexOf 'message'
+        if isMessage and not params.mailboxID
+            params.mailboxID = AccountStore.getSelectedMailbox()?.get 'id'
+
+        isMailbox = -1 < action.indexOf 'mailbox'
+        if isMailbox and not params.mailboxID
+            params.mailboxID = AccountStore.getSelected()?.get 'id'
+
+        isAccount = -1 < action.indexOf 'account'
+        if isAccount and not params.accountID
+            params.accountID = AccountStore.getSelectedOrDefault()?.get 'id'
 
         filter = _getURIQueryParams params
 
@@ -231,9 +236,6 @@ class RouterStore extends Store
         handle ActionTypes.SET_ROUTE_ACTION, (value) ->
             _oldAction = _action
             _action = value
-
-            if _self.hasRouteChanged()
-                _scrollValue = { scrollTop: 0 }
             @emit 'change'
 
         handle ActionTypes.SAVE_ROUTES, (router) ->

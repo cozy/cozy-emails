@@ -319,10 +319,10 @@ class AccountStore extends Store
     getSelectedOrDefault: ->
         @getSelected() or @getDefault()
 
-    getSelectedMailboxes: (sorted) ->
+    getSelectedMailboxes: ->
         return null unless _selectedAccount?
         result = _selectedAccount.get 'mailboxes'
-        result = result.sort _mailboxSort if sorted
+        result = result.sort _mailboxSort
         return result
 
 

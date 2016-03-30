@@ -17,15 +17,6 @@ class SelectionStore extends Store
     _selected = Immutable.Set()
     _isAllSelected = false
 
-    # # FIXME : supprimer les appels au store
-    # _getSelectables = (params) ->
-    #     # mailboxID = AccountStore.getSelectedMailbox()?.get 'id'
-    #     # messages = MessageStore.getMessagesToDisplay mailboxID
-    #
-    #     # _selectables = messages.map (message) -> message.get('id')
-    #     # _selectables = Immutable.Set _selectables.toArray()
-    #     console.log '_setSelectables', params.messages, params.filter
-
     _resetSelection = ->
         _selected = Immutable.Set()
         _isAllSelected = false
