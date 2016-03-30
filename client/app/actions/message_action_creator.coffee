@@ -22,13 +22,32 @@ module.exports = MessageActionCreator =
             value: message
 
 
-    send: (message, callback) ->
-        XHRUtils.messageSend message, (error, message) ->
-            if (not error?) and (message?)
-                AppDispatcher.handleViewAction
-                    type: ActionTypes.MESSAGE_SEND
-                    value: message
-            callback? error, message
+    send: (action, message, callback) ->
+        conversationID = message.conversationID
+
+        # Message should have a html content
+        # event if it is a simple text
+        unless message.composeInHTML
+            message.html = message.text
+
+        XHRUtils.messageSend message, (error, message) =>
+            if error? or not message?
+                if 'MESSAGE_SEND' is action
+                    msgKo = t "message action sent ko"
+                else
+                    msgKo = t "message action draft ko"
+                LayoutActionCreator.alertError "#{msgKo} #{error}"
+                return
+
+            if conversationID and action in ['UNMOUNT', 'MESSAGE_SEND']
+                @fetchConversation conversationID
+
+            AppDispatcher.handleViewAction
+                type: ActionTypes.MESSAGE_SEND
+                value: message
+
+            if callback?
+                callback error, message
 
 
     # set conv to true to update current conversation ID

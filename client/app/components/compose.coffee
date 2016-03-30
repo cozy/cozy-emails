@@ -25,7 +25,6 @@ MessageActionCreator = require '../actions/message_action_creator'
 RouterMixin      = require '../mixins/router_mixin'
 LinkedStateMixin = require 'react-addons-linked-state-mixin'
 
-
 # Component that allows the user to write emails.
 module.exports = Compose = React.createClass
     displayName: 'Compose'
@@ -66,7 +65,7 @@ module.exports = Compose = React.createClass
         # Get Reply message
         if _.isString props.inReplyTo
             id = props.inReplyTo
-            if (message = MessageStore.getByID id) and message.size
+            if (message = MessageStore.getByID id)?.size
                 message.set 'id', id
                 props.inReplyTo = message
         MessageUtils.createBasicMessage props
@@ -77,15 +76,11 @@ module.exports = Compose = React.createClass
     getChildKey: (name) ->
         'message-' + (@state.id or 'new') + '-' + name
 
-    shouldComponentUpdate: (nextProps, nextState) ->
-        not _.isEqual nextState, @state
-
-    componentWillUpdate: (nextProps, nextState) ->
-        unless _.isEmpty (text = nextState.text.trim())
-            if nextProps.settings.get 'composeInHTML'
-                nextState.html = MessageUtils.cleanHTML nextState.html
-                nextState.text = MessageUtils.cleanReplyText nextState.html
-                nextState.html = MessageUtils.wrapReplyHtml nextState.html
+    componentWillUpdate: (nextProps={}, nextState={}) ->
+        if nextState.composeInHTML
+            {html, text} = MessageUtils.cleanContent nextState
+            nextState.html = html
+            nextState.text = text
 
     # Update state with store values.
     _setStateFromStores: (message) ->
@@ -113,109 +108,33 @@ module.exports = Compose = React.createClass
         # scroll compose window into view
         @refs.compose.scrollIntoView()
 
-        # Save focus
-        @addFocusListener()
-
-        # Focus Element
-        @handleFocus()
-
-        # Each state:change do not send data to server
-        # update date for client modifications
-        @state.date = new Date().toISOString() unless @state.date
-        @state.lastUpdate = @state.date unless @state.lastUpdate
+        # Compare changes
+        @_oldState = @state
 
     componentDidUpdate: ->
         # Initialize @state
         # with values from server
-        @saveDraft() if @isNew()
+        @saveDraft() if @isNew() and @hasChanged()
 
-        # Focus Element
-        @handleFocus()
-
-        # Each state:change do not send data to server
-        # update date for client modifications
-        @state.lastUpdate = new Date().toISOString()
 
     hasChanged: (props, state) ->
-        @state.lastUpdate isnt @state.date
+        _diff = _.filter @state, (value, key) =>
+            @_oldState[key] isnt value
+        _diff?.length
 
-    resetChange: ->
-        @state.lastUpdate = @state.date
+    resetChange: (message) ->
+        if message
+            @state.mailboxIDs = message.mailboxIDs
+            @state.id = message.id
+            @state.conversationID = message.conversationID
+        @_oldState = @state
 
     componentWillUnmount: ->
         MessageStore.removeListener 'change', @_setStateFromStores
 
-        # Stop listening to focus
-        @removeFocusListener()
-
         # Save Message into Draft
-        @closeSaveDraft()
-
-    handleFocus: ->
-        return unless (path = LayoutStore.getFocus())
-
-        if -1 < path.indexOf 'ref='
-            # Element Focusable are not always
-            # DOM form element :
-            # It can be React Component
-            ref = path.split('ref=')[1]
-            element = ReactDOM.findDOMNode @refs[ref]
-
-        else if (elements = ReactDOM.findDOMNode(@).querySelectorAll(path))
-            element = elements[0]
-
-        element.focus() if (element)
-
-
-    saveFocus: (event) =>
-        if event.refsPath
-            path = 'ref=' + event.refsPath
-        else if (name = event.currentTarget.name)
-            path = '[name="' + event.currentTarget.name + '"]'
-        LayoutActionCreator.focus path
-
-    addFocusListener: ->
-        _.each ['input[type="text"]', 'textarea'], (path) =>
-            _.each ReactDOM.findDOMNode(@).querySelectorAll(path), (element) =>
-                element.addEventListener 'focus', @saveFocus
-
-        # Editor is a specific case
-        if (editor = ReactDOM.findDOMNode @refs.editor)
-            editor.addEventListener 'click', (event) =>
-                @saveFocus refsPath: 'editor'
-
-    removeFocusListener: ->
-        _.each ['input[type="text"]', 'textarea'], (path) =>
-            _.each ReactDOM.findDOMNode(@).querySelectorAll(path), (element) =>
-                element.removeEventListener 'focus', @saveFocus
-
-        # Editor is a specific case
-        if (editor = ReactDOM.findDOMNode @refs.editor)
-            editor.removeEventListener 'click', @saveFocus
-
-    closeSaveDraft: ->
-        fetch = =>
-            # reload conversation to update its length
-            if (cid = @state.conversationID)
-                MessageActionCreator.fetchConversation cid
-
-        save = =>
-            MessageActionCreator.send _.clone(@state), (error, message) ->
-                if error? or not message?
-                    msg = "#{t "message action draft ko"} #{error}"
-                    LayoutActionCreator.alertError msg
-                    return
-
-                fetch()
-
-        # Fetch
-        unless @hasChanged()
-            fetch()
-            return
-
-        # Do not ask for save
-        save()
-        return
+        if @hasChanged()
+            MessageActionCreator.send 'UNMOUNT', _.clone(@state)
 
     render: ->
         closeUrl = @buildClosePanelUrl @props.layout
@@ -399,73 +318,50 @@ module.exports = Compose = React.createClass
     saveDraft: (event) ->
         event.preventDefault() if event?
         @state.isDraft = true
-        @sendActionMessage =>
+        @sendActionMessage 'SAVE_DRAFT', =>
             @refs.toolbox.setState action: null if @refs.toolbox
 
     sendMessage: (event) ->
         event.preventDefault() if event?
         @state.isDraft = false
 
-        @sendActionMessage (error, message) =>
-            # Do not try to save client changes
-            # after Sending message
-            @resetChange()
-
-            if error
-                msgKo = t "message action sent ko"
-                LayoutActionCreator.alertError "#{msgKo} #{error}"
-                return
-
-            # Display confirmation message
-            # for no-draft email
-            msgOk = t "message action sent ok"
-            LayoutActionCreator.notify msgOk, autoclose: true
-
-            @finalRedirect()
+        @sendActionMessage 'MESSAGE_SEND', @finalRedirect
 
     validateMessage: ->
         return if @state.isDraft
         error = 'dest': ['to']
         getGroupedError error, @state, _.isEmpty
 
-    sendActionMessage: (success) ->
+    sendActionMessage: (action, success) ->
         return if @state.isSaving
         if (validate = @validateMessage())
             LayoutActionCreator.alertError t 'compose error no ' + validate[1]
             success(null, @state) if _.isFunction success
             return
 
-        _message = _.clone @state
+        # Do not save twice
         @state.isSaving = true
-        MessageActionCreator.send _message, (error, message) =>
-            delete @state.isSaving
-            if error? or not message?
-                if @state.isDraft
-                    msgKo = t "message action draft ko"
-                    LayoutActionCreator.alertError "#{msgKo} #{error}"
 
-                success(error, message) if _.isFunction success
-                return
+        MessageActionCreator.send action, _.clone(@state), (error, message) =>
+            delete @state.isSaving
+
+            return if error? or not message?
 
             # Check for Updates
-            @state.mailboxIDs = message.mailboxIDs
-            @state.date = message.date
-            @state.lastUpdate = message.date
+            @resetChange message
 
-            # Refresh URL
-            # to save temporary info
-            unless @state.id
-                @state.id = message.id
-                @state.conversationID = message.conversationID
+            # Update Component
+            if (redirect = not @state.id)
                 @redirect
                     action: 'compose.edit'
                     direction: 'first'
                     fullWidth: true
                     parameters:
                         messageID: @state.id
-                return
 
-            success(error, message) if _.isFunction success
+            else if _.isFunction success
+                success error, message
+
 
     deleteDraft: (event) ->
         event.preventDefault() if event
