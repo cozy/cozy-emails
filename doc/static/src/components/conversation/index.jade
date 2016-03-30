@@ -1,0 +1,26 @@
+- var counter = 0
+- var messages = Math.random()*10|0 + 5
+- var lastUnread = 0
+
+section#conversation.pane
+    h1 Est omnis dolor quidem. Fugit deleniti suscipit nesciunt dolor neque qui.
+
+    nav(role="toolbar"): ul
+        li: a(href="#" role=button) prev
+        li: a(href="#" role=button) next
+
+    .conversation.segments
+        //-
+            just a loader to render a trusted conversation
+            **DO NOT IMPLEMENT** as this, just use the stacked component
+        while counter < messages
+            - var unread = !(Math.random()+.5|0)
+            if unread || counter - lastUnread < 3
+                if counter - lastUnread > 2
+                    include ./stacked.jade
+                if unread
+                    - lastUnread = counter
+                include ./message.jade
+            - counter++
+    
+    include ../composer/quick-compose.jade

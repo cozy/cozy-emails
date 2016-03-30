@@ -1,7 +1,7 @@
 doctype
 html(lang='en')
     meta(charset="utf-8")
-    title STATIC MOCKUPS | Cozy Emails - Conversations list
+    title STATIC MOCKUPS | Cozy Emails - General Settings
     link(rel="stylesheet" charset="utf-8" href="./styles/app.css")
 
 body
@@ -11,3 +11,7 @@ body
         div(role="contentinfo")
             include ./components/conversations/index.jade
             include ./components/conversation/empty.jade
+        
+        div(role="complementary")
+            - var error = true
+            include ./components/settings/create-account.jade

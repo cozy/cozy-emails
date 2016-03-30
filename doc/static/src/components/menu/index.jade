@@ -1,0 +1,13 @@
+aside
+    ul(role="toolbar")
+        li: a(role="button" href="composer.html") Compose
+
+    - var slug = 'gmail'
+    include ./account.jade
+    - var slug = 'gandi'
+    include ./account.jade
+
+    nav
+        ul
+            li: a(role="button" href="./create-account.html") add account
+            li: a(role="button" href="./settings.html") settings

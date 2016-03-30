@@ -1,0 +1,10 @@
+div.content
+    if inReply
+        .editor(contenteditable=true) Type your message here…
+    else if (!inReply && quick)
+        //-
+            just a workaround to display the two states in static mockups.
+            use @state to describes the state switch (compact [true|false])
+        a.placeholder(href="open-conversation-in-reply.html") Type your message here…
+
+    include ./toolbar.jade

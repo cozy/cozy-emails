@@ -1,0 +1,10 @@
+section.quick.composer(class={compact: !inReply})
+    div(role="toolbar")
+        select
+            option reply
+            option(selected=true) reply all
+            option forward
+        a(href="composer.html"): i.open edit
+    
+    - var quick = true
+    include ./editor.jade

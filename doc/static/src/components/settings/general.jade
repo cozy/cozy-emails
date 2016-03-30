@@ -1,0 +1,30 @@
+.content
+    fieldset
+        legend The layout you choose defines the look and feel of your app
+        label(data-input="radio" for="settings-general-layout-clean")
+            input#settings-general-layout-clean(type="radio" name="settings-general-layout" value="clean" checked)
+            span.label Column clean
+        label(data-input="radio" for="settings-general-layout-compact")
+            input#settings-general-layout-compact(type="radio" name="settings-general-layout" value="compact")
+            span.label Column compact
+        label(data-input="radio" for="settings-general-layout-row")
+            input#settings-general-layout-row(type="radio" name="settings-general-layout" value="row")
+            span.label Row
+    fieldset
+        legend The position of your reply-to emails
+        label(data-input="radio" for="settings-general-replyto-above")
+            input#settings-general-replyto-above(type="radio" name="settings-general-replyto" value="above" checked)
+            span.label Above
+        label(data-input="radio" for="settings-general-replyto-below")
+            input#settings-general-replyto-below(type="radio" name="settings-general-replyto" value="below")
+            span.label Below
+    label(data-input="checkbox" for="settings-general-html")
+        input#settings-general-html(type="checkbox" name="settings-general-html" value="true" checked)
+        span.label Write your emails in HTML
+    label(data-input="checkbox" for="settings-general-deletealert")
+        input#settings-general-deletealert(type="checkbox" name="settings-general-deletealert" value="true")
+        span.label Show an alert when you delete an email
+    label(data-input="checkbox" for="settings-general-showimages")
+        input#settings-general-showimages(type="checkbox" name="settings-general-showimages" value="true")
+        span.label Show images by default
+        

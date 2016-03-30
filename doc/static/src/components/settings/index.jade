@@ -1,0 +1,21 @@
+section.settings
+    aside
+        p
+            strong Me
+            span.addr me@gmail.com
+        
+        ul(role="tablist")
+            li(role="tab" aria-selected="true" aria-controls="settings-general"): a(href="#") General
+            li(role="tab"): a(href="#") Account
+            li(role="tab"): a(href="#") Folders
+            li(role="tab"): a(href="#") Signature
+            li(role="tab"): a(href="#") Delete
+            
+    #settings-general(role="tabpanel")
+        h1 General Settings
+        include ./account.jade
+
+    footer
+        nav: ul(role="toolbar")
+            li: a(href="./index.html" role="button") Cancel
+            li: button Save

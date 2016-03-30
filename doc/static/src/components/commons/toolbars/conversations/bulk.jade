@@ -1,0 +1,16 @@
+nav: ul(role="toolbar")
+    li: button.unread Mark as unread
+    li: button.favorite Mark as favorite
+    li: button.archive Archive
+    li
+        button.move(aria-controls="move-options") Move
+        ul#move-options
+            li Inbox
+            li Family
+            li
+                | Friends
+                ul
+                    li Joey
+                    li Monica
+            li Work
+    li: button.delete Delete

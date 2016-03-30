@@ -1,0 +1,20 @@
+- var hasAvatar = !(Math.random()+.5|0)
+- var hasAttachments = !(Math.random()+.5|0)
+- var isFavorited = !(Math.random()+.5|0)
+- var isUnread = !(Math.random()+.5|0)
+- var len = (Math.random()*25|0)
+- var selected = (active && active == counter) || all
+li(class={unread: isUnread} aria-selected=(selected?'true':'false')): a(href="open-conversation.html")
+    if hasAvatar
+        img.avatar(src="./img/avatar.jpg" width="48" height="48")
+    else
+        span.avatar JA
+    h1.subject Est omnis dolor quidem. Fugit deleniti suscipit nesciunt dolor neque qui.
+    p.sender J.J. Abrams
+    p.date 24/03/2016
+    ul.flags
+        if hasAttachments
+            li: i.attachment A
+        li(aria-hidden=(isFavorited? 'false' : 'true')): i.favorite F
+        if len > 0
+            li: i.counter= len

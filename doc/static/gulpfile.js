@@ -1,7 +1,7 @@
-var gulp = require('gulp');
-var plumber = require('gulp-plumber');
-var jade = require('gulp-jade');
-var stylus = require('gulp-stylus');
+var gulp        = require('gulp');
+var plumber     = require('gulp-plumber');
+var jade        = require('gulp-jade');
+var stylus      = require('gulp-stylus');
 var browserSync = require('browser-sync');
 
 
@@ -25,9 +25,13 @@ gulp.task('serve', ['templates', 'styles'], function () {
   browserSync({
       server: {
           baseDir: './dist'
-      }
+      },
+      open: false
   });
 
-  gulp.watch('./src/*.jade', ['templates']);
+  gulp.src('./src/assets/**/*')
+    .pipe(gulp.dest('./dist/'))
+
+  gulp.watch('./src/**/*.jade', ['templates']);
   gulp.watch('./src/styles/**/*.styl', ['styles']);
 });
