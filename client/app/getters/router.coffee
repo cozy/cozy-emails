@@ -4,7 +4,7 @@ RouterStore = require '../stores/router_store'
 
 Immutable = require 'immutable'
 {sortByDate} = require '../utils/misc'
-{MessageFilter, MessageFlags} = require '../constants/app_constants'
+{MessageFilter, MessageFlags, MailboxFlags} = require '../constants/app_constants'
 
 _ = require 'lodash'
 
@@ -30,9 +30,6 @@ class RouteGetter
     isLoading: ->
         MessageStore.isFetching()
 
-    hasRouteChanged: ->
-        RouterStore.hasRouteChanged()
-
     ###*
     * Get older conversation displayed before current
     *
@@ -55,10 +52,16 @@ class RouteGetter
         transform = (index) -> --index
         @getMessage _.extend params, {transform}
 
+
+    isFlags: (name, flags) ->
+        flags = flags or []
+        MessageFilter[name] is flags or MessageFilter[name] in flags
+
     getMessagesToDisplay: (mailboxID) ->
         # Get Messages from Mailbox
-        mailboxID ?= AccountStore.getSelectedMailbox()?.get 'id'
+        mailboxID ?= @getMailboxID()
         messages = MessageStore.getCurrentConversations mailboxID
+
 
         # Apply Filters
         # We dont filter for type from and dest because it is
@@ -66,18 +69,18 @@ class RouteGetter
         # Instead we clear the message, see QUERY_PARAMETER_CHANGED handler.
         filter = @getFilter()
         if not _.isEmpty(filter.flags)
-            messages = messages.filter (message, index) ->
+            messages = messages.filter (message, index) =>
                 value = true
 
-                if _isFilter 'FLAGGED', filter.flags
+                if @isFlags 'FLAGGED', filter.flags
                     unless (value = MessageFlags.FLAGGED in message.get 'flags')
                         return false
 
-                if _isFilter 'ATTACH', filter.flags
+                if @isFlags 'ATTACH', filter.flags
                     unless (value = message.get('attachments').size > 0)
                         return false
 
-                if _isFilter 'UNSEEN', filter.flags
+                if @isFlags 'UNSEEN', filter.flags
                     unless (value = MessageFlags.SEEN not in message.get 'flags')
                         return false
                 value
@@ -173,9 +176,41 @@ class RouteGetter
     isCurrentMessage: (messageID) ->
         messageID is @getCurrentMessageID()
 
+    getCurrentMailbox: (id) ->
+        AccountStore.getSelectedMailbox id
 
-    getPreviousScroll: ->
-        RouterStore.getScrollValue()
+    getAccountID: ->
+        AccountStore.getSelectedOrDefault()?.get 'id'
+
+    getMailboxID: ->
+        @getCurrentMailbox()?.get 'id'
+
+    getLogin: ->
+        @getCurrentMailbox()?.get 'login'
+
+    getMailboxes: ->
+        AccountStore.getSelectedMailboxes()
+
+    getTags: (message) ->
+        mailboxID = @getMailboxID()
+        mailboxesIDs = Object.keys message.get 'mailboxIDs'
+        result = mailboxesIDs.map (id) =>
+            if (mailbox = @getCurrentMailbox id)
+                isGlobal = MailboxFlags.ALL in mailbox.get 'attribs'
+                isEqual = mailboxID is id
+                unless (isEqual or isGlobal)
+                    return mailbox?.get 'label'
+        _.uniq _.compact result
+
+    getEmptyMessage: ->
+        filter = @getFilter()
+        if @isFlags 'UNSEEN', filter.flags
+            return  t 'no unseen message'
+        if @isFlags 'FLAGGED', filter.flags
+            return  t 'no flagged message'
+        if @isFlags 'ATTACH', filter.flags
+            return t 'no filter message'
+        return  t 'list empty'
 
     # Uniq Key from URL params
     #
@@ -187,9 +222,5 @@ class RouteGetter
             keys.unshift str unless _.isEmpty str
             return keys.join('-')
         return str
-
-_isFilter = (type, flags) ->
-    flags = flags or []
-    MessageFilter[type] is flags or MessageFilter[type] in flags
 
 module.exports = new RouteGetter()

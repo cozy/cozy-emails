@@ -13,27 +13,28 @@ colorhash = require '../utils/colorhash'
 class ApplicationGetter
 
     getState: (name, state={}) ->
-        mailboxID = AccountStore.getSelectedMailbox()?.get 'id'
+        mailboxID = RouterGetter.getMailboxID()
+        accountID = RouterGetter.getMailboxID()
         if 'menu' is name
             return {
                 mailboxID        : mailboxID
                 onlyFavorites    : not state or state.onlyFavorites is true
                 refreshes        : RefreshesStore.getRefreshing()
-                accountID        : AccountStore.getSelectedOrDefault()?.get 'id'
+                accountID        : accountID
                 search           : SearchStore.getCurrentSearch()
             }
 
         return {
-            mailboxID             : mailboxID
-            hasRouteChanged       : RouterGetter.hasRouteChanged()
-            action                : RouterGetter.getAction()
-            currentSearch         : SearchStore.getCurrentSearch()
-            modal                 : LayoutStore.getModal()
-            messages              : RouterGetter.getMessagesToDisplay()
+            mailboxID       : mailboxID
+            accountID       : accountID
+            messageID       : MessageStore.getCurrentID()
+            action          : RouterGetter.getAction()
+            currentSearch   : SearchStore.getCurrentSearch()
+            modal           : LayoutStore.getModal()
         }
 
     getProps: (name, props={}) ->
-        mailboxID = AccountStore.getSelectedMailbox()?.get 'id'
+        mailboxID = RouterGetter.getMailboxID()
 
         if 'application' is name
             disposition = LayoutStore.getDisposition()
@@ -65,7 +66,7 @@ class ApplicationGetter
                     mailboxID: mailboxID
                 newAccountURL: RouterGetter.getURL
                     action: 'account.new'
-                    accountID: AccountStore.getSelectedOrDefault()?.get 'id'
+                    accountID: RouterGetter.getMailboxID()
                 action: RouterGetter.getAction()
                 accounts: accounts.toArray()
             }
@@ -78,7 +79,7 @@ class ApplicationGetter
                 key               : prefix
                 action            : action
                 mailboxID         : mailboxID
-                accountID         : AccountStore.getSelectedOrDefault()?.get 'id'
+                accountID         : RouterGetter.getAccountID()
                 messageID         : MessageStore.getCurrentID()
                 # tab               : params.tab
                 useIntents        : LayoutStore.intentAvailable()
@@ -89,9 +90,9 @@ class ApplicationGetter
             }
 
         if 'account' is name and (account = props.account) and (state = props.state)
-            isSelected = account is AccountStore.getSelectedOrDefault()
             accountID = account.get 'id'
-            mailboxes = AccountStore.getSelectedMailboxes true
+            isSelected = accountID is RouterGetter.getAccountID()
+            mailboxes = RouterGetter.getMailboxes()
             favorites = AccountStore.getSelectedFavorites true
 
             result = {}
