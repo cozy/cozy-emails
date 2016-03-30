@@ -52,14 +52,10 @@ module.exports = MessageList = React.createClass
     #     RouterActionCreator.saveScroll scrollTop: @refs.scrollable.scrollTop
 
     getStateFromStores: ->
-        {mailboxID} =  @props
-
-        messages = RouterGetter.getMessagesToDisplay mailboxID
+        messages = RouterGetter.getMessagesToDisplay @props.mailboxID
         selection = SelectionGetters.getProps messages
-
         nextstate = _.extend selection,
             messages    : messages
-            filter      : RouterGetter.getFilter()
             hasNextPage : !!RouterGetter.getNextURL()
         return nextstate
 
@@ -79,7 +75,6 @@ module.exports = MessageList = React.createClass
                 messages: @state.messages
                 selection: @state.selection
                 isAllSelected: @state.isAllSelected
-                filter: @state.filter
 
             # Message List
             if @state.isLoading

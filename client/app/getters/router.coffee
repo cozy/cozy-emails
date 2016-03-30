@@ -53,8 +53,8 @@ class RouteGetter
         @getMessage _.extend params, {transform}
 
 
-    isFlags: (name, flags) ->
-        flags = flags or []
+    isFlags: (name) ->
+        flags = @getFilter()?.flags or []
         MessageFilter[name] is flags or MessageFilter[name] in flags
 
     getMessagesToDisplay: (mailboxID) ->

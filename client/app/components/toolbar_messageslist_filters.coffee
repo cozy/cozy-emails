@@ -4,14 +4,10 @@ React = require 'react'
 {div, ul, li, span, i, button} = React.DOM
 {MessageFilter, Tooltips}      = require '../constants/app_constants'
 
+RouterGetter = require '../getters/router'
 RouterActionCreator = require '../actions/router_action_creator'
 
-
 DateRangePicker = React.createFactory require './date_range_picker'
-
-_isFilter = (type, flags) ->
-    flags = flags or []
-    MessageFilter[type] is flags or MessageFilter[type] in flags
 
 module.exports = FiltersToolbarMessagesList = React.createClass
     displayName: 'FiltersToolbarMessagesList'
@@ -46,7 +42,7 @@ module.exports = FiltersToolbarMessagesList = React.createClass
 
             button
                 role: 'menuitem'
-                'aria-selected': _isFilter 'UNSEEN', @props.filter.flags
+                'aria-selected': RouterGetter.isFlags 'UNSEEN'
                 onClick: => @toggleFilters flags: MessageFilter.UNSEEN
                 'aria-describedby': Tooltips.FILTER_ONLY_UNREAD
                 'data-tooltip-direction': 'bottom'
@@ -56,7 +52,7 @@ module.exports = FiltersToolbarMessagesList = React.createClass
 
             button
                 role: 'menuitem'
-                'aria-selected': _isFilter 'FLAGGED', @props.filter.flags
+                'aria-selected': RouterGetter.isFlags 'FLAGGED'
                 onClick: => @toggleFilters flags: MessageFilter.FLAGGED
                 'aria-describedby': Tooltips.FILTER_ONLY_IMPORTANT
                 'data-tooltip-direction': 'bottom'
@@ -66,7 +62,7 @@ module.exports = FiltersToolbarMessagesList = React.createClass
 
             button
                 role: 'menuitem'
-                'aria-selected': _isFilter 'ATTACH', @props.filter.flags
+                'aria-selected': RouterGetter.isFlags 'ATTACH'
                 onClick: => @toggleFilters flags: MessageFilter.ATTACH
                 'aria-describedby': Tooltips.FILTER_ONLY_WITH_ATTACHMENT
                 'data-tooltip-direction': 'bottom'
@@ -74,6 +70,5 @@ module.exports = FiltersToolbarMessagesList = React.createClass
                 i className: 'fa fa-paperclip'
                 span className: 'btn-label', t 'filters attach'
 
-            # DateRangePicker
-            #     active: @props.filter.type is 'date'
-            #     onDateFilter: @onDateFilter
+            DateRangePicker
+                onDateFilter: @onDateFilter
