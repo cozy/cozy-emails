@@ -85,6 +85,7 @@ class RouterStore extends Store
         if isAccount and not params.accountID
             params.accountID = AccountStore.getSelectedOrDefault()?.get 'id'
 
+
         filter = _getURIQueryParams params
 
         # console.log 'getURL', filter, params.filter
@@ -115,7 +116,6 @@ class RouterStore extends Store
     _getRouteAction = (params) ->
         unless (action = params.action)
             return 'message.show' if params.messageID
-            return _action if _action
             return 'message.list'
         action
 
