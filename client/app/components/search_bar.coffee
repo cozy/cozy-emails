@@ -48,24 +48,14 @@ module.exports = GlobalSearchBar = React.createClass
             return
 
         @setState search: ''
-
-        accountID = null if @state.accountID is 'all'
         RouterActionCreator.navigate
             action: 'message.list'
-            accountID: accountID
 
     onAccountChanged: (accountID) ->
-        currentAccountId = AccountStore.getSelected()?.get('id')
-
         if @state.search isnt ''
-            Router.redirect
+            RouterActionCreator.navigate
                 action: 'search'
                 value: @state.search
-
-        else if accountID not in ['all', currentAccountId]
-            Router.redirect
-                action: 'message.list'
-
         else
             @setState {accountID}
 
