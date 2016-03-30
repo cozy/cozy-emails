@@ -1,21 +1,16 @@
 XHRUtils = require '../utils/xhr_utils'
 SocketUtils = require '../utils/socketio_utils'
 
-
-LayoutStore  = require '../stores/layout_store'
-AccountStore = require '../stores/account_store'
 MessageStore = require '../stores/message_store'
-SelectionStore = require '../stores/selection_store'
 
 RouterGetter = require '../getters/router'
 
 AppDispatcher = require '../app_dispatcher'
 
-{ActionTypes, MessageFlags} = require '../constants/app_constants'
+{ActionTypes} = require '../constants/app_constants'
 
 AccountActionCreator = require './account_action_creator'
 MessageActionCreator = require './message_action_creator'
-RouterActionCreator = require './router_action_creator'
 
 module.exports = LayoutActionCreator =
 
@@ -57,21 +52,10 @@ module.exports = LayoutActionCreator =
             type: ActionTypes.FOCUS
             value: path
 
-    refresh: ->
-        AppDispatcher.handleViewAction
-            type: ActionTypes.REFRESH
-            value: null
-
     clearToasts: ->
         AppDispatcher.handleViewAction
             type: ActionTypes.CLEAR_TOASTS
             value: null
-
-    getDefaultRoute: ->
-        # if there is no account, we display the configAccount
-        if AccountStore.getAll().size is 0 then 'account.new'
-        # else go directly to first account
-        else 'message.list'
 
     updateMessageList: (params) ->
         {accountID, mailboxID, messageID, query} = params
@@ -146,8 +130,6 @@ module.exports = LayoutActionCreator =
 
     showConfigAccount: (panelInfo, direction) ->
         AccountActionCreator.selectAccount panelInfo.parameters.accountID
-
-    showSettings: (panelInfo, direction) ->
 
     toastsShow: ->
         AppDispatcher.handleViewAction
