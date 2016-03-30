@@ -4,6 +4,8 @@ React = require 'react'
 
 {MessageFlags, FlagsConstants, Tooltips} = require '../constants/app_constants'
 
+RouterGetter = require '../getters/router'
+
 ToolboxActions = React.createFactory require './toolbox_actions'
 ToolboxMove    = React.createFactory require './toolbox_move'
 
@@ -34,24 +36,27 @@ module.exports = React.createClass
 
 
     renderReply: ->
-
-        # FIXME : utiliser RouterGetter
-        # Pour mettre en forme ces URL
-
+        messageID = @props.message.get 'id'
         div className: cBtnGroup,
+
+            action = 'message.reply'
             a
                 className: "#{cBtn} fa-mail-reply mail-reply"
-                href: "#reply/#{@props.message.get 'id'}"
+                href: RouterGetter.getURL {action, messageID}
                 'aria-describedby': Tooltips.REPLY
                 'data-tooltip-direction': 'top'
+
+            action = 'message.reply.all'
             a
                 className: "#{cBtn} fa-mail-reply-all mail-reply-all"
-                href: "#reply-all/#{@props.message.get 'id'}"
+                href: RouterGetter.getURL {action, messageID}
                 'aria-describedby': Tooltips.REPLY_ALL
                 'data-tooltip-direction': 'top'
+
+            action = 'message.forward'
             a
                 className: "#{cBtn} fa-mail-forward mail-forward"
-                href: "#forward/#{@props.message.get 'id'}"
+                href: RouterGetter.getURL {action, messageID}
                 'aria-describedby': Tooltips.FORWARD
                 'data-tooltip-direction': 'top'
 
