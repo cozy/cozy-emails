@@ -1,7 +1,8 @@
 AppDispatcher = require '../app_dispatcher'
 {ActionTypes} = require '../constants/app_constants'
 Activity = require '../utils/activity_utils'
-LayoutActionCreator = require '../actions/layout_action_creator'
+
+NotificationActionsCreator = require '../actions/notification_action_creator'
 
 module.exports = ContactActionCreator =
 
@@ -46,12 +47,11 @@ module.exports = ContactActionCreator =
 
             msg = t('contact create success',
                 {contact: contact.name or contact.address})
-            LayoutActionCreator.notify msg, autoclose: true
+            NotificationActionsCreator.alert msg, autoclose: true
             callback?()
 
         activity.onerror = ->
             console.log @name
             msg = t('contact create error', {error: @name})
-            LayoutActionCreator.alertError msg, autoclose: true
+            NotificationActionsCreator.alertError msg, autoclose: true
             callback?()
-

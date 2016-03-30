@@ -10,15 +10,18 @@ ToastContainer = React.createFactory require './toast_container'
 Tooltips       = React.createFactory require './tooltips-manager'
 MessageList    = React.createFactory require './message-list'
 Conversation   = React.createFactory require './conversation'
+AccountConfig  = React.createFactory require './account_config'
 
 # React Mixins
+AccountStore         = require '../stores/account_store'
 MessageStore         = require '../stores/message_store'
 RouterStore          = require '../stores/router_store'
 SettingsStore        = require '../stores/settings_store'
 StoreWatchMixin      = require '../mixins/store_watch_mixin'
 TooltipRefesherMixin = require '../mixins/tooltip_refresher_mixin'
 
-ApplicationGetters = require '../getters/application'
+ApplicationGetter = require '../getters/application'
+RouterGetter = require '../getters/router'
 
 ###
     This component is the root of the React tree.
@@ -38,43 +41,57 @@ Application = React.createClass
     ]
 
     getDefaultProps: ->
-        ApplicationGetters.getProps 'application'
+        ApplicationGetter.getProps 'application'
 
     getInitialState: ->
-        ApplicationGetters.getState()
+        ApplicationGetter.getState()
 
     componentWillReceiveProps: (nextProps={}) ->
-        @setState ApplicationGetters.getState()
+        @setState ApplicationGetter.getState()
         nextProps
 
     render: ->
-        console.log 'APPLICATION', @state
+        console.log 'APPLICATION', @state, @props
         div className: @props.className,
 
             div className: 'app',
+                Menu
+                    ref             : 'menu'
+                    key             : 'menu-' + @state.accountID
+                    accountID       : @state.accountID
+                    mailboxID       : @state.mailboxID
+                    accounts        : RouterGetter.getAccounts().toArray()
+                    composeURL      : RouterGetter.getURL action: 'message.new'
+                    newAccountURL   : RouterGetter.getURL action: 'account.new'
 
-                Menu()
                 main
                     className: @props.layout
 
-                    div
-                        className: 'panels'
-                        MessageList
-                            ref         : 'messageList'
-                            key         : 'messageList-' + @state.mailboxID
-                            accountID   : @state.accountID
-                            mailboxID   : @state.mailboxID
-
-                        if @state.action is 'message.show'
-                            Conversation
-                                ref         : 'conversation'
-                                key         : 'conversation-' + @state.messageID
-                                messageID   : @state.messageID
+                    if -1 < @state.action.indexOf('account')
+                        accountID = @state.accountID or 'new'
+                        tab = RouterGetter.getSelectedTab()
+                        AccountConfig
+                            key: "account-config-#{accountID}-#{tab}"
+                            accountID: @state.accountID
+                    else
+                        div
+                            className: 'panels'
+                            MessageList
+                                ref         : 'messageList'
+                                key         : 'messageList-' + @state.mailboxID
+                                accountID   : @state.accountID
                                 mailboxID   : @state.mailboxID
-                        else
-                            section
-                                'key'          : 'placeholder'
-                                'aria-expanded': false
+
+                            if @state.action is 'message.show'
+                                Conversation
+                                    ref         : 'conversation'
+                                    key         : 'conversation-' + @state.messageID
+                                    messageID   : @state.messageID
+                                    mailboxID   : @state.mailboxID
+                            else
+                                section
+                                    'key'          : 'placeholder'
+                                    'aria-expanded': false
 
             # Display feedback
             Modal @state.modal if @state.modal?

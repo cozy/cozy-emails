@@ -74,10 +74,9 @@ module.exports = LayoutActionCreator =
             value: {accountID, mailboxID}
 
         # Set message as current
-        if messageID
-            AppDispatcher.handleViewAction
-                type: ActionTypes.MESSAGE_CURRENT
-                value: {messageID}
+        AppDispatcher.handleViewAction
+            type: ActionTypes.MESSAGE_CURRENT
+            value: {messageID}
 
         if query
             AppDispatcher.handleViewAction
@@ -88,48 +87,42 @@ module.exports = LayoutActionCreator =
             type: ActionTypes.MESSAGE_FETCH_REQUEST
 
 
-    showSearchResult: (panelInfo) ->
-        {accountID, search} = panelInfo.parameters
+    showSearchResult: (parameters) ->
+        console.log 'showSearchResult', parameters
+        # {accountID, search} = parameters
+        #
+        # if accountID isnt 'all'
+        #     AccountActionCreator.ensureSelected accountID
+        # else
+        #     AccountActionCreator.selectAccount null
+        #
+        # AppDispatcher.handleViewAction
+        #     type: ActionTypes.SEARCH_PARAMETER_CHANGED
+        #     value: {accountID, search}
+        #
+        # if search isnt '-'
+        #     MessageActionCreator.fetchSearchResults accountID, search
 
-        if accountID isnt 'all'
-            AccountActionCreator.ensureSelected accountID
-        else
-            AccountActionCreator.selectAccount null
+    saveMessage: (params) ->
+        {accountID, mailboxID, messageID} = params
+        accountID ?= RouterGetter.getAccountID()
+        mailboxID ?= RouterGetter.getMailboxID()
 
+        console.log 'showMessage', messageID
+
+        # Select Mailbox
         AppDispatcher.handleViewAction
-            type: ActionTypes.SEARCH_PARAMETER_CHANGED
-            value: {accountID, search}
+            type: ActionTypes.SELECT_ACCOUNT
+            value: {accountID, mailboxID}
 
-        if search isnt '-'
-            MessageActionCreator.fetchSearchResults accountID, search
+        # Set message as current
+        if messageID
+            AppDispatcher.handleViewAction
+                type: ActionTypes.MESSAGE_CURRENT
+                value: {messageID}
 
-    showMessage: (panelInfo) ->
-        {messageID} = panelInfo.parameters
-        return unless messageID
-
-        message = MessageStore.getByID messageID
-        if message?
-            AccountActionCreator.selectAccountForMessage message
-        else
-            XHRUtils.fetchMessage messageID, (err, rawMessage) ->
-
-                if err?
-                    LayoutActionCreator.alertError err
-                else
-                    MessageActionCreator.receiveRawMessage rawMessage
-                    AccountActionCreator.selectAccountForMessage rawMessage
-
-    # Display compose widget but this time it's aimed to be pre-filled:
-    # either with reply/forward or with draft information.
-    showComposeMessage: (panelInfo, direction) ->
-        AccountActionCreator.selectDefaultIfNoneSelected()
-        LayoutActionCreator.showMessage panelInfo
-
-    showCreateAccount: (panelInfo, direction) ->
-        AccountActionCreator.selectAccount null
-
-    showConfigAccount: (panelInfo, direction) ->
-        AccountActionCreator.selectAccount panelInfo.parameters.accountID
+            AppDispatcher.handleViewAction
+                type: ActionTypes.MESSAGE_FETCH_REQUEST
 
     toastsShow: ->
         AppDispatcher.handleViewAction

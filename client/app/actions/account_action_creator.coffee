@@ -6,6 +6,7 @@ AccountStore = require '../stores/account_store'
 RouterStore = require '../stores/router_store'
 
 LayoutActionCreator = require '../actions/layout_action_creator'
+NotificationActionsCreator = require '../actions/notification_action_creator'
 MessageActionCreator = require './message_action_creator'
 RouterActionCreator = require './router_action_creator'
 
@@ -96,43 +97,22 @@ module.exports = AccountActionCreator =
             type: ActionTypes.REMOVE_ACCOUNT
             value: accountID
         XHRUtils.removeAccount accountID, (error) ->
-        LayoutActionCreator.notify t('account removed'), autoclose: true
+        NotificationActionsCreator.alert t('account removed'), autoclose: true
         RouterActionCreator.navigate url: ''
 
     ensureSelected: (accountID, mailboxID) =>
         if AccountStore.selectedIsDifferentThan accountID, mailboxID
             AccountActionCreator.selectAccount accountID, mailboxID
 
-    selectDefaultIfNoneSelected: () =>
-        selectedAccount = AccountStore.getSelected()
-        defaultAccount = AccountStore.getDefault()
-        if not selectedAccount? and defaultAccount
-            AccountActionCreator.selectAccount defaultAccount.get 'id'
-
-    selectAccount: (accountID, mailboxID) ->
-        changed = AccountStore.selectedIsDifferentThan accountID, mailboxID
-
+    selectAccount: (accountID) ->
         AppDispatcher.handleViewAction
             type: ActionTypes.SELECT_ACCOUNT
-            value:
-                accountID: accountID
-                mailboxID: mailboxID
+            value: {accountID}
 
-        selected = AccountStore.getSelected()
-        supportRFC4551 = selected?.get('supportRFC4551')
-
-        if mailboxID? and changed and supportRFC4551
-            MessageActionCreator.refreshMailbox(mailboxID)
-
-    selectAccountForMessage: (message) =>
-        # if there isn't a selected account (page loaded directly),
-        # select the message's account
-        selectedAccount = AccountStore.getSelected()
-        if not selectedAccount? and message?.accountID
-            AccountActionCreator.selectAccount message.accountID
-
-    discover: (domain, callback) ->
-        XHRUtils.accountDiscover domain, callback
+    saveEditTab: (tab) ->
+        AppDispatcher.handleViewAction
+            type: ActionTypes.EDIT_ACCOUNT_TAB
+            value: {tab}
 
     mailboxCreate: (inputValues, callback) ->
         XHRUtils.mailboxCreate inputValues, (error, account) ->
@@ -141,11 +121,11 @@ module.exports = AccountActionCreator =
                     type: ActionTypes.MAILBOX_CREATE
                     value: account
 
-                LayoutActionCreator.alertSuccess t("mailbox create ok")
+                NotificationActionsCreator.alertSuccess t("mailbox create ok")
 
             else
                 message = "#{t("mailbox create ko")} #{error.message or error}"
-                LayoutActionCreator.alertError message
+                NotificationActionsCreator.alertError message
 
             callback? error
 
@@ -156,10 +136,10 @@ module.exports = AccountActionCreator =
                     type: ActionTypes.MAILBOX_UPDATE
                     value: account
 
-                LayoutActionCreator.alertSuccess t("mailbox update ok"),
+                NotificationActionsCreator.alertSuccess t("mailbox update ok"),
             else
                 message = "#{t("mailbox update ko")} #{error.message or error}"
-                LayoutActionCreator.alertError message
+                NotificationActionsCreator.alertError message
                     autoclose: true
 
             callback? error
@@ -188,7 +168,7 @@ module.exports = AccountActionCreator =
             # FIXME : handle redirect
 
             # if error?
-            #     LayoutActionCreator.alertError """
+            #     NotificationActionsCreator.alertError """
             #         #{t("mailbox expunge ko")} #{error.message or error}
             #     """
             #
@@ -197,8 +177,8 @@ module.exports = AccountActionCreator =
             #         parameters = RouterStore.getFilter()
             #         parameters.accountID = accountID
             #         parameters.mailboxID = mailboxID
-            #         LayoutActionCreator.showMessageList {parameters}
+            #         LayoutActionCreator.updateessageList {parameters}
             #
             # else
-            #     LayoutActionCreator.notify t("mailbox expunge ok"),
+            #     NotificationActionsCreator.alert t("mailbox expunge ok"),
             #         autoclose: true

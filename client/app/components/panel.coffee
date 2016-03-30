@@ -3,35 +3,22 @@ _     = require 'underscore'
 
 # Components
 {Spinner}      = require('./basic_components').factories
-AccountConfig  = React.createFactory require './account_config'
 Compose        = React.createFactory require './compose'
 Settings       = React.createFactory require './settings'
 SearchResult   = React.createFactory require './search_result'
 
 RouterGetter = require '../getters/router'
-ApplicationGetters = require '../getters/application'
 
 {ComposeActions} = require '../constants/app_constants'
 
 Panel = React.createClass
     displayName: 'Panel'
-
-    getDefaultProps: ->
-        ApplicationGetters.getProps 'panel'
-
     render: ->
 
         if @props.action is 'search'
             key = encodeURIComponent @props.searchValue
             SearchResult
                 key: "search-#{key}"
-
-        # -- Generates a configuration window for a given account
-        else if -1 < @props.action.indexOf 'account'
-            id = @props.accountID or 'new'
-            AccountConfig
-                key: "account-config-#{id}"
-                tab: @props.tab
 
         # -- Display the settings form
         else if @props.action is 'settings'

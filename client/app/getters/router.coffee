@@ -30,6 +30,9 @@ class RouteGetter
     isLoading: ->
         MessageStore.isFetching()
 
+    getSelectedTab: ->
+        AccountStore.getSelectedTab()
+
     ###*
     * Get older conversation displayed before current
     *
@@ -178,6 +181,15 @@ class RouteGetter
 
     getCurrentMailbox: (id) ->
         AccountStore.getSelectedMailbox id
+
+    getAccounts: ->
+        accountID = @getAccountID()
+        AccountStore.getAll().sort (account1, account2) ->
+            if accountID is account1.get('id')
+                return -1
+            if accountID is account2.get('id')
+                return 1
+            return 0
 
     getAccountID: ->
         AccountStore.getSelectedOrDefault()?.get 'id'

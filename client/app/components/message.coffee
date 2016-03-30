@@ -20,6 +20,7 @@ SettingsStore = require '../stores/settings_store'
 {MessageFlags} = require '../constants/app_constants'
 
 LayoutActionCreator  = require '../actions/layout_action_creator'
+NotificationActionsCreator = require '../actions/notification_action_creator'
 MessageActionCreator = require '../actions/message_action_creator'
 ContactActionCreator = require '../actions/contact_action_creator'
 RouterActionCreator = require '../actions/router_action_creator'
@@ -317,7 +318,7 @@ module.exports = React.createClass
 
 
     onCopy: (args) ->
-        LayoutActionCreator.alertWarning t "app unimplemented"
+        NotificationActionsCreator.alertWarning t "app unimplemented"
 
 
     onHeaders: (event) ->

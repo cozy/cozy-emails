@@ -72,6 +72,7 @@ class RouterStore extends Store
         # conversation.next
         # conversation.previous
         action = _getRouteAction params
+        filter = _getURIQueryParams params
 
         isMessage = !!params.messageID or -1 < action.indexOf 'message'
         if isMessage and not params.mailboxID
@@ -84,11 +85,8 @@ class RouterStore extends Store
         isAccount = -1 < action.indexOf 'account'
         if isAccount and not params.accountID
             params.accountID = AccountStore.getSelectedOrDefault()?.get 'id'
-
-
-        filter = _getURIQueryParams params
-
-        # console.log 'getURL', filter, params.filter
+        if isAccount and not params.tab
+            params.tab = 'account'
 
         if (route = _getRoute action)
             isValid = true

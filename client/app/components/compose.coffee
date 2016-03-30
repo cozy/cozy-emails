@@ -11,17 +11,14 @@ FilePicker     = React.createFactory require './file_picker'
 MailsInput     = React.createFactory require './mails_input'
 AccountPicker  = React.createFactory require './account_picker'
 
-AccountStore = require '../stores/account_store'
 MessageStore = require '../stores/message_store'
-LayoutStore = require '../stores/layout_store'
-
-{ComposeActions, Tooltips} = require '../constants/app_constants'
 
 MessageUtils = require '../utils/message_utils'
 
 LayoutActionCreator  = require '../actions/layout_action_creator'
 MessageActionCreator = require '../actions/message_action_creator'
 RouterActionCreator = require '../actions/router_action_creator'
+NotificationActionsCreator = require '../actions/notification_action_creator'
 
 LinkedStateMixin = require 'react-addons-linked-state-mixin'
 
@@ -307,7 +304,7 @@ module.exports = Compose = React.createClass
     sendActionMessage: (action, success) ->
         return if @state.isSaving
         if (validate = @validateMessage())
-            LayoutActionCreator.alertError t 'compose error no ' + validate[1]
+            NotificationActionsCreator.alertError t 'compose error no ' + validate[1]
             success(null, @state) if _.isFunction success
             return
 

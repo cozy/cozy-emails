@@ -6,7 +6,7 @@ Immutable = require 'immutable'
 AccountStore = require '../stores/account_store'
 
 AccountActionCreator = require '../actions/account_action_creator'
-LayoutActions = require '../actions/layout_action_creator'
+NotificationActionsCreator = require '../actions/notification_action_creator'
 
 RouterGetter = require '../getters/router'
 
@@ -16,6 +16,9 @@ AccountConfigMain = React.createFactory require './account_config_main'
 AccountConfigMailboxes = React.createFactory require './account_config_mailboxes'
 AccountConfigSignature = React.createFactory require './account_config_signature'
 
+AccountStore         = require '../stores/account_store'
+SettingsStore        = require '../stores/settings_store'
+StoreWatchMixin      = require '../mixins/store_watch_mixin'
 
 REQUIRED_FIELDS_NEW = [
     'label', 'name', 'login', 'password', 'imapServer', 'imapPort',
@@ -29,6 +32,10 @@ TABS = ['account', 'mailboxes', 'signature']
 module.exports = React.createClass
     displayName: 'AccountConfig'
 
+    mixins: [
+        StoreWatchMixin [SettingsStore, AccountStore]
+    ]
+
     _lastDiscovered: ''
 
     # FIXME : use getters instead
@@ -39,6 +46,7 @@ module.exports = React.createClass
     # FIXME : use getters instead
     # such as : AccountConfig.getState()
     componentWillReceiveProps: (nextProps={}) ->
+        console.log 'componentWillReceiveProps', @getStateFromStores()
         @setState @getStateFromStores()
         nextProps
 
@@ -50,19 +58,15 @@ module.exports = React.createClass
         nstate.selectedAccount   = AccountStore.getSelected()
         nstate.isWaiting         = AccountStore.isWaiting()
         nstate.isChecking        = AccountStore.isChecking()
-        nstate.mailboxes         = RouterGetter.getMailboxes(true)
-        nstate.favoriteMailboxes = AccountStore.getSelectedFavorites()
-        nstate.submitted         = AccountStore.getSelected()?
+        nstate.tab               = RouterGetter.getSelectedTab()
 
-        # getInitialState
-        if not @state
-            editedAccount = AccountStore.getSelected()
-            editedAccount ?= AccountStore.makeEmptyAccount()
+        unless (nstate.editedAccount = nstate.selectedAccount)
+            nstate.editedAccount = AccountStore.makeEmptyAccount()
+
+        unless @state
             nstate.isWaiting = false
             nstate.errors = Immutable.Map()
-            nstate.editedAccount = editedAccount
         else
-
             # the account has changed from the server
             if @state.selectedAccount isnt nstate.selectedAccount
                 nedited = @state.editedAccount.merge nstate.selectedAccount
@@ -80,11 +84,6 @@ module.exports = React.createClass
     isNew: ->
         not @state.selectedAccount?
 
-    getCurrentTab: ->
-        mailboxes = @state.editedAccount.get 'mailboxes'
-        defaultTab = if mailboxes?.size is 0 then 'mailboxes' else 'account'
-        return @props.tab or defaultTab
-
     onTabChangesDoSubmit: (changes) ->
         @onTabChanges changes, => @onSubmit()
 
@@ -93,29 +92,28 @@ module.exports = React.createClass
             editedAccount: @state.editedAccount.merge(changes)
             errors: Immutable.Map()
 
-        if @state.submitted
+        if @state.selectedAccount?
             validErrors = @getLocalValidationErrors nextstate.editedAccount
             nextstate.errors = Immutable.Map validErrors
 
         @setState nextstate, callback
 
     render: ->
-        activeTab = @getCurrentTab()
-
         Container
             id: 'mailbox-config'
             expand: true,
 
             Title text: t if @isNew() then 'account new' else 'account edit'
-            if @state.editedAccount.get('id')
+            if (accountID = @state.editedAccount.get('id'))
                 Tabs tabs: TABS.map (name) =>
-                    class: if activeTab is name then 'active' else ''
+                    class: if @state.tab is name then 'active' else ''
                     text: t "account tab #{name}"
                     url: RouterGetter.getURL
                         action: 'account.edit'
-                        parameters: [@state.editedAccount.get('id'), name]
+                        accountID: accountID
+                        tab: name
 
-            switch activeTab
+            switch @state.tab
 
                 when 'signature'
                     AccountConfigSignature
@@ -170,7 +168,7 @@ module.exports = React.createClass
         accountValue = @state.editedAccount.toJS()
 
         if Object.keys(errors).length > 0
-            LayoutActions.alertError t 'account errors'
+            NotificationActionsCreator.alertError t 'account errors'
             @setState submitted: true, errors: Immutable.Map(errors)
 
         else if check is true

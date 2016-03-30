@@ -7,7 +7,7 @@ classNames = require 'classnames'
 MessageUtils    = require '../utils/message_utils'
 ContactStore    = require '../stores/contact_store'
 ContactActionCreator = require '../actions/contact_action_creator'
-LayoutActionCreator = require '../actions/layout_action_creator'
+NotificationActionsCreator = require '../actions/notification_action_creator'
 
 
 # Public: input to enter multiple mails
@@ -273,7 +273,7 @@ module.exports = MailsInput = React.createClass
 
                         msg = t 'compose wrong email format',
                             address: address.address
-                        LayoutActionCreator.alertError msg
+                        NotificationActionsCreator.alertError msg
             else
                 @setState open: false
 

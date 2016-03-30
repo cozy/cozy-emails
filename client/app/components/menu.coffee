@@ -1,6 +1,5 @@
 _          = require 'underscore'
 React      = require 'react'
-classNames = require 'classnames'
 
 {div, aside, nav, ul, li, span, a, i, button} = React.DOM
 
@@ -12,24 +11,25 @@ colorhash = require '../utils/colorhash'
 LayoutActionCreator  = require '../actions/layout_action_creator'
 {Tooltips} = require '../constants/app_constants'
 
+RefreshesStore = require '../stores/refreshes_store'
 ApplicationGetter = require '../getters/application'
 RouterGetter = require '../getters/router'
 
 module.exports = Menu = React.createClass
     displayName: 'Menu'
 
-    getDefaultProps: ->
-        ApplicationGetter.getProps 'menu'
-
     getInitialState: ->
-        ApplicationGetter.getState 'menu', @state
+        return {
+            onlyFavorites: false
+            refreshes: RefreshesStore.getRefreshing()
+        }
 
     componentWillReceiveProps: (nextProps={}) ->
-        @setState ApplicationGetter.getState 'menu', @state
+        @setState refreshes: RefreshesStore.getRefreshing()
         nextProps
 
     _toggleFavorites: ->
-        @setState onlyFavorites: not @state.onlyFavorites
+        @setState onlyFavorites: not @state?.onlyFavorites
 
     displayErrors: (refreshee) ->
         errors = refreshee.get 'errors'
@@ -45,7 +45,6 @@ module.exports = Menu = React.createClass
         LayoutActionCreator.displayModal modal
 
     render: ->
-
         aside
             role: 'menubar'
             'aria-expanded': true,
@@ -58,18 +57,18 @@ module.exports = Menu = React.createClass
                         span className: 'item-label', " #{t 'menu compose'}"
 
             nav className: 'mainmenu',
-                if @props?.search and not @props.accountID
-                    div className: 'active',
-                        div className: 'account-title',
-                            a
-                                role: 'menuitem'
-                                className: 'account active',
-
-                                i className: 'fa fa-search'
-
-                                div
-                                    className: 'account-details',
-                                        span {}, @props?.search
+                # if @props?.search and not @props.accountID
+                #     div className: 'active',
+                #         div className: 'account-title',
+                #             a
+                #                 role: 'menuitem'
+                #                 className: 'account active',
+                #
+                #                 i className: 'fa fa-search'
+                #
+                #                 div
+                #                     className: 'account-details',
+                #                         span {}, @props?.search
 
                 @props.accounts.map @renderMailBoxes
 

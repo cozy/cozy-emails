@@ -50,6 +50,8 @@ class AccountStore extends Store
 
     _emitTimeout = null
 
+    _tab = null
+
     # FIXME : utilisé?
     _refreshSelected = ->
         if selectedAccountID = _selectedAccount?.get 'id'
@@ -187,12 +189,18 @@ class AccountStore extends Store
             _setError error
             @emit 'change'
 
+        handle ActionTypes.EDIT_ACCOUNT_TAB, (params) ->
+            unless (_tab = params.tab)
+                mailboxes = @getSelected()?.get 'mailboxes'
+                _tab = if mailboxes?.size is 0 then 'mailboxes' else 'account'
+            @emit 'change'
+
         handle ActionTypes.SELECT_ACCOUNT, (value) ->
-            if value.accountID?
+            if value?.accountID
                 @_setCurrentAccount(_accounts.get(value.accountID) or null)
             else
                 @_setCurrentAccount(null)
-            if value.mailboxID?
+            if value?.mailboxID
                 mailbox = _selectedAccount
                     ?.get('mailboxes')
                     ?.get(value.mailboxID) or null
@@ -273,6 +281,8 @@ class AccountStore extends Store
     getMailboxCounters: ->
         return _mailboxesCounters
 
+    getSelectedTab: ->
+        return _tab
 
     getByID: (accountID) ->
         return _accounts.get accountID
@@ -339,22 +349,18 @@ class AccountStore extends Store
             return _selectedMailbox
         return @getDefaultMailbox()
 
-    getSelectedFavorites: (sorted) ->
-        mailboxes = @getSelectedMailboxes()
-        ids = _selectedAccount?.get 'favorites'
+    getSelectedFavorites: ->
+        if (mailboxes = @getSelectedMailboxes())
+            ids = _selectedAccount?.get 'favorites'
+            if ids?
+                mailboxes = mailboxes
+                    .filter (box, key) -> key in ids
+                    .toOrderedMap()
+            else
+                mailboxes = mailboxes.toOrderedMap()
 
-        if ids?
-            mb = mailboxes
-                .filter (box, key) -> key in ids
-                .toOrderedMap()
-        else
-            mb = mailboxes
-                .toOrderedMap()
-
-        if sorted
-            mb = mb.sort _mailboxSort
-
-        return mb
+            mailboxes = mailboxes.sort _mailboxSort
+        return mailboxes
 
 
     getErrors: -> _serverAccountErrorByField

@@ -1,5 +1,6 @@
 RouterActionCreator = require './actions/router_action_creator'
 LayoutActionCreator = require './actions/layout_action_creator'
+AccountActionCreator = require './actions/account_action_creator'
 
 ApplicationGetter = require './getters/application'
 
@@ -20,9 +21,9 @@ class Router extends Backbone.Router
     routes:
         'mailbox/:mailboxID/*'                      : 'messageList'
         'account/new'                               : 'accountNew'
-        'account/:accountID/config/:tab'            : 'accountConfig'
-        'search/?q=:search'                         : 'search'
-        'mailbox/:mailboxID/search/?q=:search'      : 'search'
+        'account/:accountID/config/:tab'            : 'accountEdit'
+        # 'search/?q=:search'                         : 'search'
+        # 'mailbox/:mailboxID/search/?q=:search'      : 'search'
         'mailbox/:mailboxID/:messageID/*'           : 'messageShow'
         'mailbox/:mailboxID/:messageID/edit'        : 'messageEdit'
         'mailbox/:mailboxID/new'                    : 'messageNew'
@@ -60,13 +61,14 @@ class Router extends Backbone.Router
 
         super url, options
 
-    accountNew: (accountID) ->
+    accountNew: ->
         RouterActionCreator.setAction 'account.new'
-        console.log 'new account', accountID
+        AccountActionCreator.selectAccount()
 
-    accountConfig: (accountID) ->
-        RouterActionCreator.setAction 'account.new'
-        console.log 'GOTO account', accountID
+    accountEdit: (accountID, tab) ->
+        RouterActionCreator.setAction 'account.edit'
+        AccountActionCreator.saveEditTab tab
+        AccountActionCreator.selectAccount accountID
 
     messageList: (mailboxID, query) ->
         RouterActionCreator.setAction 'message.list'
@@ -76,29 +78,29 @@ class Router extends Backbone.Router
         RouterActionCreator.setAction 'message.show'
         LayoutActionCreator.updateMessageList {mailboxID, messageID, query}
 
-    messageEdit: (messageID) ->
+    messageEdit: (mailboxID, messageID) ->
         RouterActionCreator.setAction 'message.edit'
-        console.log 'Compose', 'action=edit', 'id=', messageID
+        LayoutActionCreator.saveMessage {mailboxID, messageID}
 
-    messageNew: ->
+    messageNew: (mailboxID) ->
         RouterActionCreator.setAction 'message.new'
-        console.log 'Compose', 'action=new'
+        LayoutActionCreator.saveMessage {mailboxID}
 
-    messageForward: (messageID) ->
+    messageForward: (mailboxID, messageID) ->
         RouterActionCreator.setAction 'message.forward'
-        console.log 'Compose', 'action=forward', 'id=', messageID
+        LayoutActionCreator.saveMessage {mailboxID, messageID}
 
-    messageReply: (messageID) ->
+    messageReply: (mailboxID, messageID) ->
         RouterActionCreator.setAction 'message.reply'
-        console.log 'Compose', 'action=reply', 'id=', messageID
+        LayoutActionCreator.saveMessage {mailboxID, messageID}
 
-    messageReplyAll: (messageID) ->
+    messageReplyAll: (mailboxID, messageID) ->
         RouterActionCreator.setAction 'message.reply.all'
-        console.log 'Compose', 'action=reply-all', 'id=', messageID
+        LayoutActionCreator.saveMessage {mailboxID, messageID}
 
-    search: (accountID, mailboxID, value) ->
-        RouterActionCreator.setAction 'search'
-        console.log 'Search', accountID, mailboxID, value
+    # search: (accountID, mailboxID, value) ->
+    #     RouterActionCreator.setAction 'search'
+    #     console.log 'Search', accountID, mailboxID, value
 
 _displayApplication = ->
     React = require 'react'

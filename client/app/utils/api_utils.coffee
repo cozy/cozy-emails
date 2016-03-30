@@ -14,6 +14,7 @@ SettingsStore = require '../stores/settings_store'
 LayoutActionCreator  = require '../actions/layout_action_creator'
 MessageActionCreator = require '../actions/message_action_creator'
 RouterActionCreator  = require '../actions/layout_action_creator'
+NotificationActionsCreator = require '../actions/notification_action_creator'
 
 
 
@@ -196,7 +197,7 @@ module.exports = Utils =
                     body: title
             # prevent dispatching when already dispatching
             window.setTimeout ->
-                LayoutActionCreator.notify "#{title} - #{options.body}"
+                NotificationActionsCreator.alert "#{title} - #{options.body}"
             , 0
 
 
