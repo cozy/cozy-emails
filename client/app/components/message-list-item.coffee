@@ -9,7 +9,7 @@ classNames = require 'classnames'
 colorhash                    = require '../utils/colorhash'
 MessageUtils                 = require '../utils/message_utils'
 
-MailboxesGetter = require '../getters/mailboxes'
+RouterGetter = require '../getters/router'
 
 RouterActionCreator = require '../actions/router_action_creator'
 LayoutActionCreator = require '../actions/layout_action_creator'
@@ -36,25 +36,14 @@ module.exports = MessageItem = React.createClass
         date    = MessageUtils.formatDate message.get('createdAt'), compact
         avatar  = MessageUtils.getAvatar message
 
-<<<<<<< 4afe5290ccc5efc59528004e4c4bdf8e9cbd2863
-
         li
             className:              classes
             key:                    @props.key
             'data-message-active':  @props.isActive
-=======
-        li
-            className:              classes
-            key:                    @props.key
->>>>>>> Navigate with ROuter Only
             draggable:              false
             onClick:                @onMessageClick
 
             a
-<<<<<<< 4afe5290ccc5efc59528004e4c4bdf8e9cbd2863
-                className:         'wrapper'
-=======
->>>>>>> Navigate with ROuter Only
                 ref:               'target'
                 className:         'wrapper'
 
@@ -109,7 +98,7 @@ module.exports = MessageItem = React.createClass
         return p opts, MessageUtils.highlightSearch(text)...
 
     getMailboxTags: ->
-        tags = MailboxesGetter.getTags @props.message
+        tags = RouterGetter.getTags @props.message
         tags.map (tag) ->
             span className: 'mailbox-tag', tag
 
@@ -122,7 +111,6 @@ module.exports = MessageItem = React.createClass
     onMessageClick: (event) ->
         RouterActionCreator.navigate
             messageID: @props.message.get 'id'
-            mailboxID: @props.mailboxID
 
     onDragStart: (event) ->
         event.stopPropagation()

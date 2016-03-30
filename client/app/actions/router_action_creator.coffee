@@ -50,7 +50,6 @@ RouterActionCreator =
         {url} = params
         url ?= RouterStore.getURL params
 
-        console.log 'navigate', params
         if url
             # Update URL && context
             router = RouterStore.getRouter()

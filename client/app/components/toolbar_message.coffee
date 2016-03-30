@@ -17,7 +17,6 @@ module.exports = React.createClass
 
     propTypes:
         message            : React.PropTypes.object.isRequired
-        mailboxes          : React.PropTypes.object.isRequired
         selectedMailboxID  : React.PropTypes.string.isRequired
         onDelete           : React.PropTypes.func.isRequired
         onMove             : React.PropTypes.func.isRequired
@@ -29,9 +28,7 @@ module.exports = React.createClass
             className: 'toolbar toolbar-message btn-toolbar'
             onClick: (event) -> event.stopPropagation()
             # inverted order due to `pull-right` class
-            div(className: cBtnGroup,
-                @renderToolboxMove()
-                @renderToolboxActions()) if @props.full
+            div(className: cBtnGroup, @renderToolboxMove())
             @renderQuickActions() if @props.full
             @renderReply()
 
@@ -67,30 +64,31 @@ module.exports = React.createClass
                 'aria-describedby': Tooltips.REMOVE_MESSAGE
                 'data-tooltip-direction': 'top'
 
-
-    renderToolboxActions: ->
-        flags = @props.message.get('flags') or []
-        isFlagged = FlagsConstants.FLAGGED in flags
-        isSeen    = FlagsConstants.SEEN in flags
-
-        ToolboxActions
-            mode: 'message'
-            mailboxes:      @props.mailboxes
-            isSeen:         isSeen
-            isFlagged:      isFlagged
-            messageID:      @props.message.get 'id'
-            message:        @props.message
-            onMark:         @props.onMark
-            onHeaders:      @props.onHeaders
-            onConversationMark: @props.onConversationMark
-            onConversationMove: @props.onConversationMove
-            onConversationDelete: @props.onConversationMove
-            direction:      'right'
+    # FIXME : j'ai supprimé la partie message de cette toolbox
+    # vérifier dans la réduction des fctionnalité si c'état celle là
+    # ou celle des conversation a retirer
+    # renderToolboxActions: ->
+    #     # FIXME : use Utils to get this value
+    #     flags = @props.message.get('flags') or []
+    #     isFlagged = FlagsConstants.FLAGGED in flags
+    #     isSeen    = FlagsConstants.SEEN in flags
+    #
+    #     ToolboxActions
+    #         mode: 'message'
+    #         isSeen:         isSeen
+    #         isFlagged:      isFlagged
+    #         messageID:      @props.message.get 'id'
+    #         message:        @props.message
+    #         onMark:         @props.onMark
+    #         onHeaders:      @props.onHeaders
+    #         onConversationMark: @props.onConversationMark
+    #         onConversationMove: @props.onConversationMove
+    #         onConversationDelete: @props.onConversationMove
+    #         direction:      'right'
 
 
     renderToolboxMove: ->
         ToolboxMove
             ref:       'toolboxMove'
-            mailboxes: @props.mailboxes
             onMove:    @props.onMove
             direction: 'right'

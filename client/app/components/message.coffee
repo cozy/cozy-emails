@@ -33,7 +33,6 @@ module.exports = React.createClass
     propTypes:
         active                 : React.PropTypes.bool
         key                    : React.PropTypes.string.isRequired
-        mailboxes              : React.PropTypes.object.isRequired
         message                : React.PropTypes.object.isRequired
         selectedMailboxID      : React.PropTypes.string.isRequired
         useIntents             : React.PropTypes.bool.isRequired
@@ -249,7 +248,6 @@ module.exports = React.createClass
         ToolbarMessage
             full                 : full
             message              : @props.message
-            mailboxes            : @props.mailboxes
             selectedMailboxID    : @props.selectedMailboxID
             onDelete             : @onDelete
             onHeaders            : @onHeaders

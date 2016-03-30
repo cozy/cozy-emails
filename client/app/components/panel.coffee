@@ -5,8 +5,6 @@ _     = require 'underscore'
 {Spinner}      = require('./basic_components').factories
 AccountConfig  = React.createFactory require './account_config'
 Compose        = React.createFactory require './compose'
-Conversation   = React.createFactory require './conversation'
-MessageList    = React.createFactory require './message-list'
 Settings       = React.createFactory require './settings'
 SearchResult   = React.createFactory require './search_result'
 
@@ -22,19 +20,8 @@ Panel = React.createClass
         ApplicationGetters.getProps 'panel'
 
     render: ->
-        # -- Generates a list of messages for a given account and mailbox
-        if @props.action is 'message.list'
-            MessageList
-                key         : 'messageList-' + @props.mailboxID
-                accountID   : @props.accountID
-                mailboxID   : @props.mailboxID
-                messages    : @props.messages
-                queryParams : RouterGetter.getQueryParams()
-                filter      : RouterGetter.getFilter()
-                scrollValue : RouterGetter.getPreviousScroll()
-                hasNextPage : !!RouterGetter.getNextURL()
 
-        else if @props.action is 'search'
+        if @props.action is 'search'
             key = encodeURIComponent @props.searchValue
             SearchResult
                 key: "search-#{key}"
@@ -45,13 +32,6 @@ Panel = React.createClass
             AccountConfig
                 key: "account-config-#{id}"
                 tab: @props.tab
-
-        # -- Generates a conversation
-        else if @props.action is 'message.show'
-            Conversation
-                messageID: @props.messageID
-                key: 'conversation-' + @props.messageID
-                ref: 'conversation'
 
         # -- Display the settings form
         else if @props.action is 'settings'

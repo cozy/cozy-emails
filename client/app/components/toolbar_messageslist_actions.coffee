@@ -10,8 +10,6 @@ LayoutActionCreator  = require '../actions/layout_action_creator'
 MessageActionCreator = require '../actions/message_action_creator'
 RouterActionCreator = require '../actions/router_action_creator'
 
-MailboxesGetter = require '../getters/mailboxes'
-
 module.exports = ActionsToolbarMessagesList = React.createClass
     displayName: 'ActionsToolbarMessagesList'
 
@@ -20,25 +18,6 @@ module.exports = ActionsToolbarMessagesList = React.createClass
         mailboxID:            React.PropTypes.string.isRequired
         messages:             React.PropTypes.object.isRequired
         selection:            React.PropTypes.array.isRequired
-
-
-    _getSelectedAndMode: (applyToConversation) ->
-        selected = @props.selection?.toArray()
-        count = @props.selection.size
-        applyToConversation = Boolean applyToConversation
-
-        if selected.length is 0
-            LayoutActionCreator.alertError t 'list mass no message'
-            return false
-
-        else
-            conversationIDs = selected.map (id) =>
-                isMessage = (message) -> message.get('id') is id
-                if (message = @props.messages.find isMessage)
-                    return message.get('conversationID')
-
-            return {count, conversationIDs, applyToConversation}
-
 
     render: ->
         div role: 'group',
@@ -54,52 +33,28 @@ module.exports = ActionsToolbarMessagesList = React.createClass
             ToolboxActions
                 direction:            'left'
                 mode:                 'conversation'
-                mailboxes:            MailboxesGetter.getSelected()
                 onMark:               @onMark
                 onConversationDelete: @onConversationDelete
                 onConversationMark:   @onConversationMark
                 onConversationMove:   @onConversationMove
 
 
-    onDelete: (applyToConversation) ->
-        return unless options = @_getSelectedAndMode applyToConversation
+    onDelete: ->
+        MessageActionCreator.delete options
 
-        doDelete = =>
-            MessageActionCreator.delete options
+        # FIXME : faire un dispatch après le delete
+        # pour aller au message suivant
+        # puis gérer ça dans le RouterActionCreator
+        RouterActionCreator.navigate action: 'conversation.next'
 
-            # Goto to next conversation
-            RouterActionCreator.navigate action: 'conversation.next'
-
-        unless @props.settings.get 'messageConfirmDelete'
-            doDelete()
-        else
-            if options.applyToConversation
-                msg = 'list delete conv confirm'
-            else
-                msg = 'list delete confirm'
-            modal =
-                title       : t 'app confirm delete'
-                subtitle    : t msg, smart_count: options.count
-                closeLabel  : t 'app cancel'
-                actionLabel : t 'app confirm'
-                action      : ->
-                    doDelete()
-                    LayoutActionCreator.hideModal()
-            LayoutActionCreator.displayModal modal
-
-    onMove: (to, applyToConversation) ->
-        return unless options = @_getSelectedAndMode applyToConversation
-
+    onMove: (to) ->
         from = @props.mailboxID
-
         MessageActionCreator.move options, from, to, =>
             if options.count > 0 and @props.messages.size > 0
                 firstMessageID = @props.messages.first().get('id')
                 MessageActionCreator.setCurrent firstMessageID, true
 
-
-    onMark: (flag, applyToConversation) ->
-        return unless options = @_getSelectedAndMode applyToConversation
+    onMark: (flag) ->
         MessageActionCreator.mark options, flag
 
 
@@ -107,9 +62,12 @@ module.exports = ActionsToolbarMessagesList = React.createClass
         @onDelete true
 
 
+    # FIXME : déplacer ces logiques dans
+    # les actionsCreator
     onConversationMove: (to) ->
-        @onMove to, true
+        @onMove to
 
-
+    # FIXME : déplacer ces logiques dans
+    # les actionsCreator
     onConversationMark: (flag) ->
-        @onMark flag, true
+        @onMark flag

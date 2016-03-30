@@ -3,6 +3,9 @@ React = require 'react'
 
 {div, ul, li, span, a, button} = React.DOM
 {Menu, MenuHeader, MenuItem, MenuDivider} = require('./basic_components').factories
+
+ToolboxMailboxes    = React.createFactory require './toolbox_mailboxes'
+
 {FlagsConstants} = require '../constants/app_constants'
 
 # This component is used in 3 places
@@ -18,8 +21,6 @@ module.exports = React.createClass
         isFlagged            : React.PropTypes.bool
         # is the message or all messages seen
         isSeen               : React.PropTypes.bool
-        # mailboxes this message can be moved to
-        mailboxes            : React.PropTypes.object.isRequired
         # id of the message we are working on (empty for conversation)
         messageID            : React.PropTypes.string
         # handlers for action
@@ -68,13 +69,8 @@ module.exports = React.createClass
                     onClickValue: FlagsConstants.NOFLAG
                     t 'mail action conversation noflag'
 
-            MenuHeader key: 'header-move', t 'mail action conversation move'
+            MenuHeader
+                key: 'header-move',
+                t 'mail action conversation move'
 
-            @props.mailboxes.map (mbox, id) =>
-                MenuItem
-                    key: id
-                    className: "pusher pusher-#{mbox.get('depth')}"
-                    onClick: @props.onConversationMove
-                    onClickValue: id
-                    mbox.get('label')
-            .toArray()
+            ToolboxMailboxes()

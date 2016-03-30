@@ -50,7 +50,7 @@ module.exports = React.createClass
         nstate.selectedAccount   = AccountStore.getSelected()
         nstate.isWaiting         = AccountStore.isWaiting()
         nstate.isChecking        = AccountStore.isChecking()
-        nstate.mailboxes         = AccountStore.getSelectedMailboxes(true)
+        nstate.mailboxes         = RouterGetter.getMailboxes(true)
         nstate.favoriteMailboxes = AccountStore.getSelectedFavorites()
         nstate.submitted         = AccountStore.getSelected()?
 

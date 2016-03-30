@@ -9,7 +9,6 @@ MessageItem = React.createFactory require './message-list-item'
 DomUtils = require '../utils/dom_utils'
 
 SettingsStore = require '../stores/settings_store'
-MessageStore = require '../stores/message_store'
 RouterGetter = require '../getters/router'
 
 module.exports = MessageListBody = React.createClass
@@ -27,14 +26,12 @@ module.exports = MessageListBody = React.createClass
                     ["message-#{key}", MessageItem
                         key: 'conversation-' + conversationID
                         message: message
-                        accountID: @props.accountID
                         mailboxID: @props.mailboxID
-                        accountLabel: @props.accountLabel
                         conversationLengths: RouterGetter.getConversationLength messageID
-                        settings: SettingsStore.get()
+                        isCompact: SettingsStore.get('listStyle') is 'compact'
                         isSelected: isSelected
                         isActive: RouterGetter.isCurrentMessage messageID
-                        login: @props.login
+                        login: RouterGetter.getLogin()
                         displayConversations: @props.displayConversations
                         ref: 'messageItem'
                     ]

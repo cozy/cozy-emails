@@ -6,9 +6,10 @@ React = require 'react'
 # React components
 Menu           = React.createFactory require './menu'
 Modal          = React.createFactory require './modal'
-Panel          = React.createFactory require './panel'
 ToastContainer = React.createFactory require './toast_container'
 Tooltips       = React.createFactory require './tooltips-manager'
+MessageList    = React.createFactory require './message-list'
+Conversation   = React.createFactory require './conversation'
 
 # React Mixins
 MessageStore         = require '../stores/message_store'
@@ -47,21 +48,29 @@ Application = React.createClass
         nextProps
 
     render: ->
+        console.log 'APPLICATION', @state
         div className: @props.className,
 
             div className: 'app',
 
                 Menu()
-
                 main
                     className: @props.layout
 
                     div
                         className: 'panels'
+                        MessageList
+                            ref         : 'messageList'
+                            key         : 'messageList-' + @state.mailboxID
+                            accountID   : @state.accountID
+                            mailboxID   : @state.mailboxID
 
-                        Panel messages: @state.messages, action: 'message.list'
                         if @state.action is 'message.show'
-                            Panel messages: @state.messages, action: 'message.show'
+                            Conversation
+                                ref         : 'conversation'
+                                key         : 'conversation-' + @state.messageID
+                                messageID   : @state.messageID
+                                mailboxID   : @state.mailboxID
                         else
                             section
                                 'key'          : 'placeholder'

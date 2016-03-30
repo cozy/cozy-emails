@@ -14,7 +14,6 @@ module.exports = ToolbarMessagesList = React.createClass
     displayName: 'ToolbarMessagesList'
 
     propTypes:
-        settings:             React.PropTypes.object
         accountID:            React.PropTypes.string
         mailboxID:            React.PropTypes.string
         messages:             React.PropTypes.object.isRequired
@@ -52,7 +51,6 @@ module.exports = ToolbarMessagesList = React.createClass
                 FiltersToolbarMessagesList
                     accountID: @props.accountID
                     mailboxID: @props.mailboxID
-                    queryParams: @props.queryParams
                     filter: @props.filter
 
             SearchBar()

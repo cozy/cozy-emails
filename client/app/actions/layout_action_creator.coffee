@@ -7,7 +7,7 @@ AccountStore = require '../stores/account_store'
 MessageStore = require '../stores/message_store'
 SelectionStore = require '../stores/selection_store'
 
-RouterStore = require '../stores/router_store'
+RouterGetter = require '../getters/router'
 
 AppDispatcher = require '../app_dispatcher'
 
@@ -75,8 +75,8 @@ module.exports = LayoutActionCreator =
 
     updateMessageList: (params) ->
         {accountID, mailboxID, messageID, query} = params
-        accountID ?= AccountStore.getSelectedOrDefault()?.get 'id'
-        mailboxID ?= AccountStore.getSelectedMailbox()?.get 'id'
+        accountID ?= RouterGetter.getAccountID()
+        mailboxID ?= RouterGetter.getMailboxID()
 
         unless accountID
             # TODO : si pas accountID

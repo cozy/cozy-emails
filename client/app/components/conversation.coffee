@@ -13,6 +13,8 @@ RouterGetter = require '../getters/router'
 AccountStore        = require '../stores/account_store'
 MessageStore        = require '../stores/message_store'
 LayoutStore         = require '../stores/layout_store'
+SelectionStore       = require '../stores/selection_store'
+StoreWatchMixin      = require '../mixins/store_watch_mixin'
 
 _compactMin = 3
 
@@ -21,6 +23,10 @@ module.exports = React.createClass
 
     propTypes:
         messageID: React.PropTypes.string
+
+    mixins: [
+        StoreWatchMixin [SelectionStore, MessageStore]
+    ]
 
     # FIXME : use getters instead
     # such as : Conversation.getState()
@@ -35,8 +41,9 @@ module.exports = React.createClass
 
     getStateFromStores: ->
         return {
+            isLoading: RouterGetter.isLoading()
             message: RouterGetter.getMessage()
-            messages: (messages = RouterGetter.getConversationMessages())
+            messages: RouterGetter.getConversationMessages()
             compact: if @state then @state.compact else true
             isCompacted: if @state then @state.isCompacted else false
         }
@@ -57,21 +64,20 @@ module.exports = React.createClass
                 t 'load more messages', hiddenSize
 
         accounts = AccountStore.getAll()
-        accountID = AccountStore.getSelectedOrDefault().get 'id'
+        accountID = RouterGetter.getAccountID()
         messageID = message.get('id')
-        mailboxID = AccountStore.getSelectedMailbox()?.get 'id'
         Message
             ref                 : 'message'
             key                 : 'message-' + messageID
             message             : message
             active              : RouterGetter.isCurrentMessage messageID
-            url                 : RouterGetter.getURL {messageID, mailboxID}
-            mailboxes           : AccountStore.getSelectedMailboxes()
-            selectedMailboxID   : mailboxID
+            url                 : RouterGetter.getURL {messageID}
+            selectedMailboxID   : @props.mailboxID
             useIntents          : LayoutStore.intentAvailable()
             trashMailbox        : accounts[accountID]?.trashMailbox
 
     render: ->
+        console.log 'CONVERSATION', @state
         unless @state.messages?.size
             return section
                 key: 'conversation'
@@ -95,11 +101,10 @@ module.exports = React.createClass
                 ToolbarConversation
                     key                 : 'ToolbarConversation-' + conversationID
                     conversationID      : conversationID
-                    mailboxID           : (mailboxID = AccountStore.getSelectedMailbox()?.get 'id')
+                    mailboxID           : @props.mailboxID
                 a
                     className: 'clickable btn btn-default fa fa-close'
                     href: RouterGetter.getURL
                         action: 'message.list'
-                        mailboxID: mailboxID
 
             @state.messages.map @renderMessage

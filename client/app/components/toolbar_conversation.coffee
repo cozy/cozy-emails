@@ -26,7 +26,6 @@ module.exports = React.createClass
                 key                  : 'ToolboxActions-' + @props.conversationID
                 mode                 : 'conversation'
                 direction            : 'right'
-                mailboxes            : AccountStore.getSelectedMailboxes()
                 onConversationDelete : @onDelete
                 onConversationMark   : @onMark
                 onConversationMove   : @onMove

@@ -8,9 +8,10 @@ SelectionGetters = require '../getters/selection'
 RouterGetter = require '../getters/router'
 
 # React Mixins
-AccountStore         = require '../stores/account_store'
 SettingsStore        = require '../stores/settings_store'
+MessageStore        = require '../stores/message_store'
 LayoutStore          = require '../stores/layout_store'
+RouterStore = require '../stores/router_store'
 
 SelectionStore       = require '../stores/selection_store'
 StoreWatchMixin      = require '../mixins/store_watch_mixin'
@@ -31,7 +32,7 @@ module.exports = MessageList = React.createClass
     displayName: 'MessageList'
 
     mixins: [
-        StoreWatchMixin [SelectionStore, LayoutStore]
+        StoreWatchMixin [SelectionStore, MessageStore]
     ]
 
     # FIXME : use getters instead
@@ -39,54 +40,31 @@ module.exports = MessageList = React.createClass
     getInitialState: ->
         @getStateFromStores()
 
-    # FIXME : use getters instead
-    # such as : MessagesListGetter.getState()
-    componentWillReceiveProps: (nextProps={}) ->
-        @setState @getStateFromStores()
-        nextProps
-
-    componentDidMount: ->
-        @_initScroll()
-
-    componentDidUpdate: ->
-        @_resetScroll()
-        @_initScroll()
-
-    componentWillUnmount: ->
-        @_resetScroll()
-        RouterActionCreator.saveScroll scrollTop: @refs.scrollable.scrollTop
+    # componentDidMount: ->
+    #     @_initScroll()
+    #
+    # componentDidUpdate: ->
+    #     @_resetScroll()
+    #     @_initScroll()
+    #
+    # componentWillUnmount: ->
+    #     @_resetScroll()
+    #     RouterActionCreator.saveScroll scrollTop: @refs.scrollable.scrollTop
 
     getStateFromStores: ->
-        {accountID, mailboxID} = @props
+        {mailboxID} =  @props
 
-        unless mailboxID
-            return {messages: Immutable.Map()}
+        messages = RouterGetter.getMessagesToDisplay mailboxID
+        selection = SelectionGetters.getProps messages
 
-        account   = AccountStore.getByID accountID
-        selection = SelectionGetters.getProps @props.messages
         nextstate = _.extend selection,
-            login           : account?.get 'login'
-            accountLabel    : account?.get 'label'
-            selectedID      : RouterGetter.getCurrentMessageID()
-            isLoading       : RouterGetter.isLoading()
-            messagesLength  : @props.messages?.size
+            messages    : messages
+            filter      : RouterGetter.getFilter()
+            hasNextPage : !!RouterGetter.getNextURL()
         return nextstate
 
-    getEmptyListMessage: ->
-        # FIXME : vérifier la valeur des filtres
-        # poiur pouvoir faire ce test
-        console.log 'getEmptyListMessage', @props.filter.type, MessageFilter.ALL
-        # switch @props.filter.field
-        #     when MessageFilter.FLAGGED
-        #         t 'no flagged message'
-        #     when MessageFilter.UNSEEN
-        #         t 'no unseen message'
-        #     when MessageFilter.ALL
-        #         t 'list empty'
-        #     else
-        #         t 'no filter message'
-
     render: ->
+        console.log 'MESSAGE_LIST', @state
         section
             key:               "messages-list-#{@props.mailboxID}"
             ref:               'list'
@@ -98,35 +76,33 @@ module.exports = MessageList = React.createClass
                 settings: SettingsStore.get()
                 accountID: @props.accountID
                 mailboxID: @props.mailboxID
-                messages: @props.messages
+                messages: @state.messages
                 selection: @state.selection
                 isAllSelected: @state.isAllSelected
-                queryParams: @props.queryParams
-                filter: @props.filter
+                filter: @state.filter
 
             # Message List
             if @state.isLoading
                 p className: 'listFetching list-loading', t 'list fetching'
             else
-                unless @props.messages.size
+                unless @state.messages.size
                     p
                         className: 'list-empty'
                         ref: 'listEmpty'
-                        @getEmptyListMessage()
+                        RouterGetter.getEmptyMessage()
                 else
                     div
                         className: 'main-content'
                         ref: 'scrollable',
+
                         MessageListBody
-                            messages: @props.messages
+                            messages: @state.messages
                             accountID: @props.accountID
                             mailboxID: @props.mailboxID
-                            accountLabel: @state.accountLabel
-                            login: @state.login
                             selection: @state.selection
                             ref: 'listBody'
 
-                        if @props.hasNextPage
+                        if @state.hasNextPage
                             a
                                 className: 'more-messages'
                                 onClick: @loadMoreMessage,
@@ -146,12 +122,12 @@ module.exports = MessageList = React.createClass
         if lastMessage? and DomUtils.isVisible(lastMessage)
             @loadMoreMessage()
 
-    _initScroll: ->
-        if (value = @props.scrollValue?.scrollTop)?
-            @refs.scrollable?.scrollTop = value
-
-        @refs.scrollable?.addEventListener 'scroll', @_loadNext
-
-
-    _resetScroll: ->
-        @refs.scrollable?.removeEventListener 'scroll', @_loadNext
+    # _initScroll: ->
+    #     # if (value = @props.scrollValue?.scrollTop)?
+    #     #     @refs.scrollable?.scrollTop = value
+    #
+    #     @refs.scrollable?.addEventListener 'scroll', @_loadNext
+    #
+    #
+    # _resetScroll: ->
+    #     @refs.scrollable?.removeEventListener 'scroll', @_loadNext
