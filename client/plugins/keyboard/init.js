@@ -281,27 +281,6 @@ if (typeof window.plugins !== "object") {
           MessageActionCreator.undelete();
         }
       },
-      'r': {
-        name: 'Reply',
-        action: function (e) {
-          if (e && e instanceof Event) { e.preventDefault(); }
-          mailAction('reply');
-        }
-      },
-      'g': {
-        name: 'Reply all',
-        action: function (e) {
-          if (e && e instanceof Event) { e.preventDefault(); }
-          mailAction('reply-all');
-        }
-      },
-      'f': {
-        name: 'Forward',
-        action: function (e) {
-          if (e && e instanceof Event) { e.preventDefault(); }
-          mailAction('forward');
-        }
-      },
       '?': {
         name: "Toggle display of available bindings",
         action: bindingHelp

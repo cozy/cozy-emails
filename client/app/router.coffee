@@ -30,25 +30,6 @@ module.exports = class Router extends PanelRouter
             pattern: 'conversation/:conversationID/:messageID/'
             fluxAction: 'showConversation'
 
-        'compose.edit':
-            pattern: 'compose/edit/:messageID'
-            fluxAction: 'showComposeMessage'
-        'compose':
-            pattern: 'compose'
-            fluxAction: 'showComposeMessage'
-        'compose.reply':
-            pattern: 'reply/:messageID'
-            fluxAction: 'showComposeMessage'
-        'compose.reply-all':
-            pattern: 'reply-all/:messageID'
-            fluxAction: 'showComposeMessage'
-        'compose.forward':
-            pattern: 'forward/:messageID'
-            fluxAction: 'showComposeMessage'
-        'edit':
-            pattern: 'edit/:messageID'
-            fluxAction: 'showComposeMessage'
-
         'default':
             pattern: ''
             fluxAction: ''

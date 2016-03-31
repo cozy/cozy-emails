@@ -47,7 +47,7 @@ module.exports = React.createClass
                             i className: 'fa fa-star'
                         if @props.isDraft
                             a
-                                href: "#edit/#{@props.message.get 'id'}",
+                                href: "#message/#{@props.message.get 'id'}",
                                 i className: 'fa fa-edit'
                                 span null, t "edit draft"
 
