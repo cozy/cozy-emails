@@ -28,7 +28,7 @@ module.exports = ToolbarMessagesList = React.createClass
 
     render: ->
         checkboxState = if @props.isAllSelected then 'fa-check-square-o'
-        else if @props.selection then 'fa-minus-square-o'
+        else if @props.selection?.length then 'fa-minus-square-o'
         else 'fa-square-o'
 
         aside role: 'toolbar',
@@ -40,7 +40,7 @@ module.exports = ToolbarMessagesList = React.createClass
 
                 i className: "fa #{checkboxState}"
 
-            if @props.selection.size or @props.isAllSelected
+            if @props.selection?.length
                 ActionsToolbarMessagesList
                     settings:             @props.settings
                     mailboxID:            @props.mailboxID
