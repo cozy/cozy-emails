@@ -121,18 +121,19 @@ class MessageStore extends Store
                     type: ActionTypes.MESSAGE_FETCH_FAILURE
                     value: {mailboxID}
             else
+                messages = if _.isArray(rawMsg) then rawMsg else rawMsg.messages
+                next = rawMsg?.links?.next
+
                 # This prevent to override local updates with older ones
                 # from server
-                rawMsg.messages.forEach (msg) -> msg.updated = ts
+                rawMsg.messages?.forEach (msg) -> msg.updated = ts
                 AppDispatcher.handleViewAction
                     type: ActionTypes.MESSAGE_FETCH_SUCCESS
-                    value: {mailboxID, fetchResult: rawMsg}
+                    value: {mailboxID, messages}
 
-                if rawMsg.links
-                    AppDispatcher.handleViewAction
-                        type: ActionTypes.SAVE_NEXT_URL
-                        value: rawMsg.links.next
-
+                AppDispatcher.handleViewAction
+                    type: ActionTypes.SAVE_NEXT_URL
+                    value: next
 
         if messageID
             XHRUtils.fetchConversation {messageID}, callback
@@ -309,23 +310,23 @@ class MessageStore extends Store
             @emit 'change'
 
         # FIXME : gérer ça dans messageActionCreate
-        handle ActionTypes.MESSAGE_FETCH_SUCCESS, ({fetchResult}) ->
-            for message in fetchResult.messages when message?
+        handle ActionTypes.MESSAGE_FETCH_SUCCESS, (result) ->
+            for message in result.messages when message?
                 _saveMessage message
 
-            unless fetchResult.messages.length
+            unless result.messages.length
                 # either end of list or no messages, we stay open
-                SocketUtils.changeRealtimeScope fetchResult.mailboxID, EPOCH
+                SocketUtils.changeRealtimeScope result.mailboxID, EPOCH
 
             else if lastdate = _messages.last()?.get('date')
-                SocketUtils.changeRealtimeScope fetchResult.mailboxID, lastdate
+                SocketUtils.changeRealtimeScope result.mailboxID, lastdate
 
             @emit 'change'
 
-        handle ActionTypes.CONVERSATION_FETCH_SUCCESS, ({updated}) ->
-            for message in updated
-                _saveMessage message
-            @emit 'change'
+        # handle ActionTypes.CONVERSATION_FETCH_SUCCESS, ({updated}) ->
+        #     for message in updated
+        #         _saveMessage message
+        #     @emit 'change'
 
         handle ActionTypes.MESSAGE_SEND, (message) ->
             _saveMessage message

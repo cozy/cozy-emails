@@ -8,12 +8,6 @@ module.exports = React.createClass
 
     displayName: 'AccountPicker'
 
-
-    shouldComponentUpdate: (nextProps, nextState) ->
-        return not(_.isEqual(nextState, @state)) or
-            not (_.isEqual(nextProps, @props))
-
-
     render: ->
         accounts = @props.accounts
         if Object.keys(accounts).length is 1

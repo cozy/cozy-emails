@@ -24,12 +24,12 @@ class Router extends Backbone.Router
         'account/:accountID/config/:tab'            : 'accountEdit'
         # 'search/?q=:search'                         : 'search'
         # 'mailbox/:mailboxID/search/?q=:search'      : 'search'
-        'mailbox/:mailboxID/:messageID/*'           : 'messageShow'
-        'mailbox/:mailboxID/:messageID/edit'        : 'messageEdit'
         'mailbox/:mailboxID/new'                    : 'messageNew'
+        'mailbox/:mailboxID/:messageID/edit'        : 'messageEdit'
         'mailbox/:mailboxID/:messageID/forward'     : 'messageForward'
         'mailbox/:mailboxID/:messageID/reply'       : 'messageReply'
         'mailbox/:mailboxID/:messageID/reply-all'   : 'messageReplyAll'
+        'mailbox/:mailboxID/:messageID/*'           : 'messageShow'
         '/*'                                        : 'messageList'
 
     initialize: ->

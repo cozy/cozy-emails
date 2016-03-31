@@ -11,9 +11,9 @@ Tooltips       = React.createFactory require './tooltips-manager'
 MessageList    = React.createFactory require './message-list'
 Conversation   = React.createFactory require './conversation'
 AccountConfig  = React.createFactory require './account_config'
+Compose        = React.createFactory require './compose'
 
 # React Mixins
-AccountStore         = require '../stores/account_store'
 MessageStore         = require '../stores/message_store'
 RouterStore          = require '../stores/router_store'
 SettingsStore        = require '../stores/settings_store'
@@ -51,7 +51,6 @@ Application = React.createClass
         nextProps
 
     render: ->
-        console.log 'APPLICATION', @state, @props
         div className: @props.className,
 
             div className: 'app',
@@ -67,12 +66,24 @@ Application = React.createClass
                 main
                     className: @props.layout
 
-                    if -1 < @state.action.indexOf('account')
+                    if -1 < @state.action.indexOf 'account'
                         accountID = @state.accountID or 'new'
                         tab = RouterGetter.getSelectedTab()
                         AccountConfig
                             key: "account-config-#{accountID}-#{tab}"
                             accountID: @state.accountID
+
+                    else if @state.isEditable
+                        Compose
+                            ref                  : 'compose-' + @state.action
+                            key                  : @state.action + '-' + @state.messageID
+                            id                   : @state.messageID
+                            action               : @state.action
+                            message              : @state.message
+                            inReplyTo            : @state.inReplyTo
+                            settings             : SettingsStore.get()
+                            account              : RouterGetter.getAccounts().get(@state.accountID)
+
                     else
                         div
                             className: 'panels'

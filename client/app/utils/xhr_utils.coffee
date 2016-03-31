@@ -52,7 +52,7 @@ module.exports =
         request.get "messages/batchFetch?messageID=#{messageID}"
         .set 'Accept', 'application/json'
         .end (err, res) ->
-            _cb = handleResponse(callback, 'fetchConversation', conversationID)
+            _cb = handleResponse(callback, 'fetchConversation', messageID)
             _cb err, res
 
 

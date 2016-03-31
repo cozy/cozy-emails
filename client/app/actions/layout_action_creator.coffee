@@ -108,8 +108,6 @@ module.exports = LayoutActionCreator =
         accountID ?= RouterGetter.getAccountID()
         mailboxID ?= RouterGetter.getMailboxID()
 
-        console.log 'showMessage', messageID
-
         # Select Mailbox
         AppDispatcher.handleViewAction
             type: ActionTypes.SELECT_ACCOUNT
@@ -123,6 +121,7 @@ module.exports = LayoutActionCreator =
 
             AppDispatcher.handleViewAction
                 type: ActionTypes.MESSAGE_FETCH_REQUEST
+                value: {messageID}
 
     toastsShow: ->
         AppDispatcher.handleViewAction

@@ -11,7 +11,15 @@ FilePicker     = React.createFactory require './file_picker'
 MailsInput     = React.createFactory require './mails_input'
 AccountPicker  = React.createFactory require './account_picker'
 
+<<<<<<< 4895eec6bc9cb606ada70d3f1a9be013bffb6a28
 MessageStore = require '../stores/message_store'
+=======
+LayoutStore = require '../stores/layout_store'
+
+RouterGetter = require '../getters/router'
+
+{ComposeActions, Tooltips} = require '../constants/app_constants'
+>>>>>>> Message compose : active routes
 
 MessageUtils = require '../utils/message_utils'
 
@@ -23,46 +31,24 @@ NotificationActionsCreator = require '../actions/notification_action_creator'
 LinkedStateMixin = require 'react-addons-linked-state-mixin'
 
 # Component that allows the user to write emails.
-module.exports = Compose = React.createClass
+module.exports = React.createClass
     displayName: 'Compose'
-
 
     mixins: [
         LinkedStateMixin
     ]
 
-
     propTypes:
-        layout:               React.PropTypes.string
-        accounts:             React.PropTypes.object.isRequired
-        message:              React.PropTypes.object
-        action:               React.PropTypes.string
-        callback:             React.PropTypes.func
-        onCancel:             React.PropTypes.func
-        settings:             React.PropTypes.object.isRequired
-        useIntents:           React.PropTypes.bool.isRequired
-
-
-    getDefaultProps: ->
-        layout: 'full'
+        message:    React.PropTypes.object
+        id:         React.PropTypes.string
+        message:    React.PropTypes.object
+        inReplyTo:  React.PropTypes.object
+        account:    React.PropTypes.object
+        action:     React.PropTypes.string
+        settings:   React.PropTypes.object.isRequired
 
     getInitialState: ->
-        @getStateFromStores()
-
-    getStateFromStores: ->
-        props = _.clone @props
-
-        # Get Message
-        unless props.message
-            props.message = MessageStore.getByID props.messageID
-
-        # Get Reply message
-        if _.isString props.inReplyTo
-            id = props.inReplyTo
-            if (message = MessageStore.getByID id)?.size
-                message.set 'id', id
-                props.inReplyTo = message
-        MessageUtils.createBasicMessage props
+        MessageUtils.createBasicMessage @props
 
     isNew: ->
         not @state.conversationID
@@ -70,35 +56,11 @@ module.exports = Compose = React.createClass
     getChildKey: (name) ->
         'compose-' + (@state.id or 'new') + '-' + name
 
-    componentWillUpdate: (nextProps={}, nextState={}) ->
-        if nextState.composeInHTML
-            {html, text} = MessageUtils.cleanContent nextState
-            nextState.html = html
-            nextState.text = text
-
-    # Update state with store values.
-    _setStateFromStores: (message) ->
-        isMessage = message?._id is @state.id
-        isReplyTo = message?._id is @props.inReplyTo
-        if not @isMounted() or (not isMessage and not isReplyTo)
-            return
-
-        _difference = (obj0, obj1) ->
-            result = {}
-            _.filter obj0, (value, key) ->
-                unless _.isEqual value, obj1[key]
-                    result[key] = value
-            result
-
-        nextState = @getStateFromStores()
-        changes = _difference nextState, @state
-        unless _.isEmpty changes
-            @setState changes
+    componentWillReceiveProps: (nextProps) ->
+        @setState MessageUtils.createBasicMessage nextProps
+        nextProps
 
     componentDidMount: ->
-        # Listen to Stores changes
-        MessageStore.addListener 'change', @_setStateFromStores
-
         # scroll compose window into view
         @refs.compose.scrollIntoView()
 
@@ -124,8 +86,6 @@ module.exports = Compose = React.createClass
         @_oldState = @state
 
     componentWillUnmount: ->
-        MessageStore.removeListener 'change', @_setStateFromStores
-
         # Save Message into Draft
         if @hasChanged()
             MessageActionCreator.send 'UNMOUNT', _.clone @state
@@ -138,7 +98,7 @@ module.exports = Compose = React.createClass
             ref: 'compose'
             className: classNames
                 compose: true
-                panel:   @props.layout is 'full'
+                panel: true
             'aria-expanded': true,
 
             form className: 'form-compose', method: 'POST',
@@ -148,7 +108,8 @@ module.exports = Compose = React.createClass
                         className: classLabel,
                         t "compose from"
                     AccountPicker
-                        accounts: @props.accounts
+                        accounts: RouterGetter.getAccounts()
+                        signature: RouterGetter.getAccountSignature()
                         valueLink: @linkState 'accountID'
                 div className: 'clearfix', null
 
@@ -210,13 +171,12 @@ module.exports = Compose = React.createClass
                         messageID         : @state.id
                         html              : @linkState('html')
                         text              : @linkState('text')
-                        accounts          : @props.accounts
-                        accountID         : @state.accountID
+                        account           : @props.account
                         settings          : @props.settings
                         onSend            : @sendMessage
                         composeInHTML     : @state.composeInHTML
                         getPicker         : @getPicker
-                        useIntents        : @props.useIntents
+                        useIntents        : LayoutStore.intentAvailable()
                         ref               : 'editor'
                         key               : @getChildKey 'editor'
 
@@ -240,14 +200,13 @@ module.exports = Compose = React.createClass
                 div className: 'clearfix', null
 
 
-    # FIXME : it should be into message_action_creator
-
     # If we are answering to a message, canceling should bring back to
     # this message.
     # The message URL requires many information: account ID, mailbox ID,
     # conversation ID and message ID. These infor are collected via current
     # selection and message information.
     finalRedirect: ->
+        # FIXME : it should be into message_action_creator
         RouterActionCreator.navigate
             messageID: @state.id
 
@@ -255,12 +214,7 @@ module.exports = Compose = React.createClass
     # If it's while replying to a message,
     # it brings back to this message.
     close: (event) ->
-        # Action after cancelation: call @props.onCancel
-        # or navigate to message list.
-        if @props.onCancel?
-            @props.onCancel()
-        else
-            @finalRedirect()
+        @finalRedirect()
 
     showModal: (params, success) ->
         return if @isNew()
@@ -273,10 +227,6 @@ module.exports = Compose = React.createClass
             messageID = @state.id
             MessageActionCreator.delete {messageID}
             LayoutActionCreator.hideModal()
-
-            if @props.callback
-                @props.callback()
-                return
 
             # specific callback
             success() if _.isFunction success
@@ -356,7 +306,8 @@ module.exports = Compose = React.createClass
 
         view.setState focus: value
 
-    # Get the file picker component (method used to pass it to the editor)
+    # Get the file picker component
+    # method used to pass it to the editor
     getPicker: ->
         return @refs.attachments
 

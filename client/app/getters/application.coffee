@@ -2,7 +2,6 @@ AccountStore = require '../stores/account_store'
 LayoutStore = require '../stores/layout_store'
 SearchStore = require '../stores/search_store'
 MessageStore = require '../stores/message_store'
-SettingsStore = require '../stores/settings_store'
 RefreshesStore = require '../stores/refreshes_store'
 
 RouterGetter = require '../getters/router'
@@ -13,12 +12,17 @@ colorhash = require '../utils/colorhash'
 class ApplicationGetter
 
     getState: (name, state) ->
+        messageID = MessageStore.getCurrentID()
+        inReplyTo = MessageStore.getByID messageID if RouterGetter.isReply()
 
         return {
             mailboxID       : RouterGetter.getMailboxID()
-            accountID       : RouterGetter.getMailboxID()
-            messageID       : MessageStore.getCurrentID()
+            accountID       : RouterGetter.getAccountID()
+            messageID       : messageID
+            message         : MessageStore.getByID messageID
             action          : RouterGetter.getAction()
+            isEditable      : RouterGetter.isEditable()
+            inReplyTo       : inReplyTo
             currentSearch   : SearchStore.getCurrentSearch()
             modal           : LayoutStore.getModal()
         }
@@ -38,7 +42,7 @@ class ApplicationGetter
                 "layout-preview-#{previewSize}"].join(' ')
 
             return {
-                 className: className
+                 className    : className
             }
 
         if 'account' is name and (account = props.account) and (state = props.state)

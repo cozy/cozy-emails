@@ -21,6 +21,21 @@ class RouteGetter
     getAction: ->
         RouterStore.getAction()
 
+    isReply: ->
+        action = @getAction()
+        action isnt 'message.edit'
+
+    isEditable: ->
+        action = @getAction()
+        editables = [
+            'message.new',
+            'message.edit',
+            'message.reply',
+            'message.reply.all',
+            'message.forward'
+            ]
+        action in editables
+
     getQueryParams: ->
         RouterStore.getQueryParams()
 
@@ -190,6 +205,9 @@ class RouteGetter
             if accountID is account2.get('id')
                 return 1
             return 0
+
+    getAccountSignature: ->
+        AccountStore.getSelectedOrDefault()?.get 'signature'
 
     getAccountID: ->
         AccountStore.getSelectedOrDefault()?.get 'id'

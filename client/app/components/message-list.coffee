@@ -60,7 +60,6 @@ module.exports = MessageList = React.createClass
         return nextstate
 
     render: ->
-        console.log 'MESSAGE_LIST', @state
         section
             key:               "messages-list-#{@props.mailboxID}"
             ref:               'list'

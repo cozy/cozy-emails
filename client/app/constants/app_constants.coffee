@@ -126,10 +126,10 @@ module.exports =
         'SERVER_ACTION' : 'SERVER_ACTION'
 
     ComposeActions:
-        'REPLY'         : 'REPLY'
-        'REPLY_ALL'     : 'REPLY_ALL'
-        'FORWARD'       : 'FORWARD'
-        'EDIT'          : 'EDIT'
+        'REPLY'         : 'message.reply'
+        'REPLY_ALL'     : 'message.reply.all'
+        'FORWARD'       : 'message.forward'
+        'EDIT'          : 'message.edit'
 
     AlertLevel:
         'SUCCESS'      : 'SUCCESS'
