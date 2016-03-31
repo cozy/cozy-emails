@@ -4,7 +4,7 @@ ReactDOM  = require 'react-dom'
 
 {div, section, p, ul, li, a, span, i, button, input, img} = React.DOM
 
-SelectionGetters = require '../getters/selection'
+SelectionGetter = require '../getters/selection'
 RouterGetter = require '../getters/router'
 
 # React Mixins
@@ -53,21 +53,24 @@ module.exports = MessageList = React.createClass
 
     getStateFromStores: ->
         messages = RouterGetter.getMessagesToDisplay @props.mailboxID
-        selection = SelectionGetters.getProps messages
+        selection = SelectionGetter.getProps messages
         nextstate = _.extend selection,
             messages    : messages
             hasNextPage : !!RouterGetter.getNextURL()
         return nextstate
 
     render: ->
+        console.log 'MESSAGE_LIST', @state
         section
-            key:               "messages-list-#{@props.mailboxID}"
-            ref:               'list'
-            'data-mailbox-id': @props.mailboxID
-            className:         'messages-list panel'
+            'key'               : "messages-list-#{@props.mailboxID}"
+            'ref'               : 'list'
+            'data-mailbox-id'   : @props.mailboxID
+            'className'         : 'messages-list panel'
 
             # Toolbar
             ToolbarMessagesList
+                ref: 'messageList-toolbar'
+                key: 'messageList-toolbar-' + @state.selection?.length
                 settings: SettingsStore.get()
                 accountID: @props.accountID
                 mailboxID: @props.mailboxID
@@ -76,7 +79,7 @@ module.exports = MessageList = React.createClass
                 isAllSelected: @state.isAllSelected
 
             # Message List
-            if @state.isLoading
+            if @state.isLoading?
                 p className: 'listFetching list-loading', t 'list fetching'
             else
                 unless @state.messages.size
