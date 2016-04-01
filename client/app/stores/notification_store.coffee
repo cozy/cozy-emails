@@ -95,7 +95,7 @@ class NotificationStore extends Store
             subject: subject or ''
             smart_count: smart_count
 
-    makeUndoAction = (ref) ->
+    _makeUndoAction = (ref) ->
         label: t 'action undo'
         onClick: -> getMessageActionCreator().undo ref
 

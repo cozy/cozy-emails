@@ -59,6 +59,11 @@ class SelectionStore extends Store
             _update params
             @emit 'change'
 
+        handle ActionTypes.MESSAGE_TRASH_SUCCESS, ({target}) ->
+            # Remove ID from Selection
+            if target.messageIDs?
+                _selected = _selected.subtract target.messageIDs
+                @emit 'change'
     ###
         Public API
     ###

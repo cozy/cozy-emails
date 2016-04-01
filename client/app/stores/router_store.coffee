@@ -4,8 +4,6 @@ Immutable = require 'immutable'
 Store = require '../libs/flux/store/store'
 AccountStore = require '../stores/account_store'
 
-# MessageStore = require '../stores/message_store'
-
 AppDispatcher = require '../app_dispatcher'
 
 {ActionTypes} = require '../constants/app_constants'
@@ -18,10 +16,8 @@ class RouterStore extends Store
     ###
     _router = null
 
-    _oldAction = null
     _action = null
 
-    _oldNextUrl = null
     _nextUrl = null
 
     # FIXME : cette valeur doit etre déduite dans la vue
@@ -87,6 +83,7 @@ class RouterStore extends Store
             params.accountID = AccountStore.getSelectedOrDefault()?.get 'id'
         if isAccount and not params.tab
             params.tab = 'account'
+
 
         if (route = _getRoute action)
             isValid = true
@@ -232,7 +229,6 @@ class RouterStore extends Store
             @emit 'change'
 
         handle ActionTypes.SET_ROUTE_ACTION, (value) ->
-            _oldAction = _action
             _action = value
             @emit 'change'
 
@@ -241,10 +237,8 @@ class RouterStore extends Store
             @emit 'change'
 
         handle ActionTypes.SAVE_NEXT_URL, (value) ->
-            _oldNextUrl = _nextUrl
             _nextUrl = if value then decodeURIComponent value else null
-            if _oldNextUrl isnt _nextUrl
-                @emit 'change'
+            @emit 'change'
 
         handle ActionTypes.SAVE_SCROLL, (value) ->
             _scrollValue = value
@@ -254,6 +248,13 @@ class RouterStore extends Store
             _resetFilter()
             @emit 'change'
 
+        handle ActionTypes.MESSAGE_TRASH_SUCCESS, (params) ->
+            if 'message.show' is _action
+                if (messageID = params?.next?.get 'id')
+                    _router.navigate @getURL {messageID}
+                else
+                    _action = 'message.list'
+                @emit 'change'
 
 _toCamelCase = (value) ->
     return value.replace /\.(\w)*/gi, (match) ->

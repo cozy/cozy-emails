@@ -40,12 +40,8 @@ module.exports = ActionsToolbarMessagesList = React.createClass
 
 
     onDelete: ->
-        MessageActionCreator.delete options
-
-        # FIXME : faire un dispatch après le delete
-        # pour aller au message suivant
-        # puis gérer ça dans le RouterActionCreator
-        RouterActionCreator.navigate action: 'conversation.next'
+        messageIDs = @props.selection
+        MessageActionCreator.delete {messageIDs}
 
     onMove: (to) ->
         from = @props.mailboxID
@@ -56,7 +52,6 @@ module.exports = ActionsToolbarMessagesList = React.createClass
 
     onMark: (flag) ->
         MessageActionCreator.mark options, flag
-
 
     onConversationDelete: ->
         @onDelete true

@@ -23,6 +23,7 @@ class MessageStore extends Store
     ###
 
     _messages = Immutable.OrderedMap()
+    _currentMessages = Immutable.OrderedMap()
     _conversations = Immutable.Map()
 
     _fetching = 0
@@ -39,22 +40,20 @@ class MessageStore extends Store
         _currentID = messageID
 
     _addInFlight = (request) ->
-        console.log 'ADD', request.type, request.ref
-        # _inFlightByRef[request.ref] = request
-        # request.messages.forEach (message) ->
-        #     id = message.get('id')
-        #     requests = (_inFlightByMessageID[id] ?= [])
-        #     requests.push request
+        _inFlightByRef[request.ref] = request
+        request.messages.forEach (message) ->
+            id = message.get('id')
+            requests = (_inFlightByMessageID[id] ?= [])
+            requests.push request
 
     _removeInFlight = (ref) ->
-        console.log 'REMOVE', ref
-        # request = _inFlightByRef[ref]
-        # delete _inFlightByRef[ref]
-        # request.messages.forEach (message) ->
-        #     id = message.get('id')
-        #     requests = _inFlightByMessageID[id]
-        #     _inFlightByMessageID[id] = _.without requests, request
-        # return request
+        request = _inFlightByRef[ref]
+        delete _inFlightByRef[ref]
+        request.messages.forEach (message) ->
+            id = message.get('id')
+            requests = _inFlightByMessageID[id]
+            _inFlightByMessageID[id] = _.without requests, request
+        return request
 
     _transformMessageWithRequest = (message, request) ->
         switch request.type
@@ -87,18 +86,22 @@ class MessageStore extends Store
 
         return message
 
+    # Retrieve a batch of message with various criteria
+    # target - is an {Object} wi h a property messageID or messageIDs or
+    #          conversationID or messageIDs
+    # target.accountID is needed to success Delete
+    #
+    # Returns an {Array} of {Immutable.Map} messages
     _getMixed = (target) ->
         if target.messageID
             return [_messages.get(target.messageID)]
         else if target.messageIDs
-            return target.messageIDs.map (id) -> _messages.get id
+            return target.messageIDs.map (id) ->
+                 _messages.get id
+            .filter (message) -> message?
         else if target.conversationID
             return _messages.filter (message) ->
-                message.get('conversationID') is target.conversationID
-            .toArray()
-        else if target.messageIDs
-            return _messages.filter (message) ->
-                message.get('conversationID') in target.messageIDs
+                message?.get('conversationID') is target?.conversationID
             .toArray()
         else throw new Error 'Wrong Usage : unrecognized target AS.getMixed'
 
@@ -227,10 +230,16 @@ class MessageStore extends Store
             if message.accountID? and (diff = _computeMailboxDiff oldmsg, messageMap)
                 AccountStore._applyMailboxDiff message.accountID, diff
 
-    # FIXME : mettre à jour ici les conversations
-    # supprimer l'occurence de conversationID
     _deleteMessage = (message) ->
-        _messages = _messages.remove message.id
+        _messages = _messages.remove (id = message.id)
+
+        # Remove all references to this ID
+        _messages = _messages.map (message) ->
+            messageIDs = message.get 'messageIDs'
+            if messageIDs? and -1 < (index = messageIDs.indexOf id)
+                messageIDs = messageIDs.splice index, 1
+                message = message.set 'messageIDs', messageIDs
+            return message
 
 
     ###
@@ -259,21 +268,20 @@ class MessageStore extends Store
             @emit 'change'
 
         handle ActionTypes.MESSAGE_TRASH_REQUEST, ({target, ref}) ->
-            messages = @getMixed target
-            account = AccountStore.getByID messages[0]?.get('accountID')
-            trashBoxID = account?.get? 'trashMailbox'
+            messages = _getMixed target
+            target.accountID = messages[0].get 'accountID'
+            trashBoxID = AccountStore.getSelected().get 'trashMailbox'
             _addInFlight {type: 'trash', trashBoxID, messages, ref}
-
             @emit 'change'
 
-        handle ActionTypes.MESSAGE_TRASH_SUCCESS, ({target, updated, ref}) ->
+        handle ActionTypes.MESSAGE_TRASH_SUCCESS, ({target, updated, ref, next}) ->
             _undoable[ref] =_removeInFlight ref
             for message in updated
                 if message._deleted
                     _deleteMessage message
+                    _setCurrentID next?.get('id')
                 else
                     _saveMessage message
-
             @emit 'change'
 
         handle ActionTypes.MESSAGE_FLAGS_SUCCESS, ({target, updated, ref}) ->
@@ -286,7 +294,7 @@ class MessageStore extends Store
             @emit 'change'
 
         handle ActionTypes.MESSAGE_MOVE_REQUEST, ({target, from, to, ref}) ->
-            messages = @getMixed target
+            messages = _getMixed target
             _addInFlight {type: 'move', from, to, messages, ref}
             @emit 'change'
 
@@ -378,7 +386,7 @@ class MessageStore extends Store
         conversationID = message.get 'conversationID'
         message.set 'messageIDs', _conversations.get conversationID
 
-    getCurrentConversations: (mailboxID) ->
+    _getCurrentConversations = (mailboxID) ->
         __conv = {}
         _messages.filter (message) ->
             conversationID = message.get 'conversationID'
@@ -388,16 +396,129 @@ class MessageStore extends Store
         .map _addMessageIDs
         .toList()
 
-    # Retrieve a batch of message with various criteria
-    # target - is an {Object} wi h a property messageID or messageIDs or
-    #          conversationID or messageIDs
-    # target.accountID is needed to success Delete
-    #
-    # Returns an {Array} of {Immutable.Map} messages
-    getMixed: (target) ->
-        messages = _getMixed target
-        target.accountID = messages[0].get('accountID')
-        messages
+    getMessagesToDisplay: (params={}) ->
+        {mailboxID, filter} = params
+
+        messages = _getCurrentConversations mailboxID
+
+        # Apply Filters
+        # We dont filter for type from and dest because it is
+        # complicated by collation and name vs address.
+        # Instead we clear the message, see QUERY_PARAMETER_CHANGED handler.
+        unless _.isEmpty(filter.flags)
+            messages = messages.filter (message, index) =>
+                value = true
+
+                if @isFlags 'FLAGGED', filter.flags
+                    unless (value = MessageFlags.FLAGGED in message.get 'flags')
+                        return false
+
+                if @isFlags 'ATTACH', filter.flags
+                    unless (value = message.get('attachments').size > 0)
+                        return false
+
+                if @isFlags 'UNSEEN', filter.flags
+                    unless (value = MessageFlags.SEEN not in message.get 'flags')
+                        return false
+                value
+
+        # FIXME : use params ASC et DESC into URL
+        messages = messages.sort sortByDate filter.order
+
+        _currentMessages = messages.toOrderedMap()
+        return _currentMessages
+
+    getConversationLength: (messageID) ->
+        messageID ?= MessageStore.getCurrentID()
+        message = _currentMessages.find (message) ->
+            message.get('id') is messageID
+        message.get('messageIDs')?.size
+
+
+    ###*
+    * Get Conversation
+    *
+    * If none parameters    return current conversation
+    * @param.transform      return the list index needed
+    * @param.type="message" return the closest message
+    *                       instead of conversation
+    *
+    * @param {String}   type
+    * @param {Function} transform
+    *
+    * @return {List}
+    ###
+    getMessage: (param={}) ->
+        # FIXME : vérifier les params rentrant
+        # ne passer que par messageID si possible
+        {messageID, conversationID, messages, conversationIDs} = param
+
+        # console.log 'getMessage', conversationID, conversationIDs
+        messages ?= _currentMessages
+
+        # In this case, we just want
+        # next/previous message from a selection
+        # then remove selected messages from the list
+        if conversationIDs?
+            conversationID = conversationIDs[0]
+            messages = messages
+                .filter (message) ->
+                    id = message.get 'conversationID'
+                    index = conversationIDs.indexOf id
+                    return index is -1
+                .toList()
+
+        unless conversationID
+            messageID ?= @getCurrentID()
+            message = @getByID messageID
+            conversationID = message?.get 'conversationID'
+
+        # If no specific action is precised
+        # return contextual conversations
+        unless _.isFunction param.transform
+            return @getByID messageID
+
+        getMessage = =>
+            _getMessage = (index) ->
+                index0 = param.transform index
+                messages?.get(index0)
+
+            # Get next Conversation not next message
+            # `messages` is the list of all messages not conversations
+            # TODO : regroup message by its conversationID
+            # and use messages.find instead with a simple test
+            # FIXME : inconsistency between the 2 results, see why?
+            index0 = messages.toArray().findIndex (message, index) ->
+                isSameMessage = conversationID is message?.get 'conversationID'
+                isNextSameConversation = _getMessage(index)?.get('conversationID') isnt conversationID
+                return isSameMessage and isNextSameConversation
+
+            _getMessage(index0)
+
+        # Change Conversation
+        return Immutable.Map getMessage()
+
+    ###*
+    * Get older conversation displayed before current
+    *
+    * @param {Function}  transform
+    *
+    * @return {List}
+    ###
+    getPreviousConversation: (param={}) ->
+        transform = (index) -> ++index
+        @getMessage _.extend param, {transform}
+
+    ###*
+    * Get earlier conversation displayed after current
+    *
+    * @param {Function}  transform
+    *
+    * @return {List}
+    ###
+    getNextConversation: (params={}) ->
+        transform = (index) -> --index
+        @getMessage _.extend params, {transform}
 
     isFetching: ->
         return _fetching > 0

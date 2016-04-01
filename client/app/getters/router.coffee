@@ -10,8 +10,6 @@ _ = require 'lodash'
 
 class RouteGetter
 
-    _currentMessages = null
-
     getNextURL: ->
         RouterStore.getNextURL()
 
@@ -48,138 +46,20 @@ class RouteGetter
     getSelectedTab: ->
         AccountStore.getSelectedTab()
 
-    ###*
-    * Get older conversation displayed before current
-    *
-    * @param {Function}  transform
-    *
-    * @return {List}
-    ###
-    getPreviousConversation: (param={}) ->
-        transform = (index) -> ++index
-        @getMessage _.extend param, {transform}
-
-    ###*
-    * Get earlier conversation displayed after current
-    *
-    * @param {Function}  transform
-    *
-    * @return {List}
-    ###
-    getNextConversation: (params={}) ->
-        transform = (index) -> --index
-        @getMessage _.extend params, {transform}
-
-
     isFlags: (name) ->
         flags = @getFilter()?.flags or []
         MessageFilter[name] is flags or MessageFilter[name] in flags
 
     getMessagesToDisplay: (mailboxID) ->
-        # Get Messages from Mailbox
         mailboxID ?= @getMailboxID()
-        messages = MessageStore.getCurrentConversations mailboxID
-
-
-        # Apply Filters
-        # We dont filter for type from and dest because it is
-        # complicated by collation and name vs address.
-        # Instead we clear the message, see QUERY_PARAMETER_CHANGED handler.
         filter = @getFilter()
-        if not _.isEmpty(filter.flags)
-            messages = messages.filter (message, index) =>
-                value = true
+        MessageStore.getMessagesToDisplay {mailboxID, filter}
 
-                if @isFlags 'FLAGGED', filter.flags
-                    unless (value = MessageFlags.FLAGGED in message.get 'flags')
-                        return false
-
-                if @isFlags 'ATTACH', filter.flags
-                    unless (value = message.get('attachments').size > 0)
-                        return false
-
-                if @isFlags 'UNSEEN', filter.flags
-                    unless (value = MessageFlags.SEEN not in message.get 'flags')
-                        return false
-                value
-
-        # FIXME : use params ASC et DESC into URL
-        messages = messages.sort sortByDate filter.order
-
-        _currentMessages = messages.toOrderedMap()
-        return _currentMessages
-
-
-    ###*
-    * Get Conversation
-    *
-    * If none parameters    return current conversation
-    * @param.transform      return the list index needed
-    * @param.type="message" return the closest message
-    *                       instead of conversation
-    *
-    * @param {String}   type
-    * @param {Function} transform
-    *
-    * @return {List}
-    ###
-    getMessage: (param={}) ->
-        # FIXME : vérifier les params rentrant
-        # ne passer que par messageID si possible
-        {messageID, conversationID, messages, conversationIDs} = param
-
-        # console.log 'getMessage', conversationID, conversationIDs
-        messages ?= _currentMessages
-
-        # In this case, we just want
-        # next/previous message from a selection
-        # then remove selected messages from the list
-        if conversationIDs?
-            conversationID = conversationIDs[0]
-            messages = messages
-                .filter (message) ->
-                    id = message.get 'conversationID'
-                    index = conversationIDs.indexOf id
-                    return index is -1
-                .toList()
-
-        unless conversationID
-            messageID ?= MessageStore.getCurrentID()
-            message = MessageStore.getByID messageID
-            conversationID = message?.get 'conversationID'
-
-        # If no specific action is precised
-        # return contextual conversations
-        unless _.isFunction param.transform
-            return MessageStore.getByID messageID
-
-        getMessage = =>
-            _getMessage = (index) ->
-                index0 = param.transform index
-                messages?.get(index0)
-
-            # Get next Conversation not next message
-            # `messages` is the list of all messages not conversations
-            # TODO : regroup message by its conversationID
-            # and use messages.find instead with a simple test
-            # FIXME : inconsistency between the 2 results, see why?
-            index0 = messages.toArray().findIndex (message, index) ->
-                isSameMessage = conversationID is message?.get 'conversationID'
-                isNextSameConversation = _getMessage(index)?.get('conversationID') isnt conversationID
-                return isSameMessage and isNextSameConversation
-
-            _getMessage(index0)
-
-        # Change Conversation
-        return Immutable.Map getMessage()
+    getMessage: (messageID) ->
+        MessageStore.getMessage messageID
 
     getConversationLength: (messageID) ->
-        messageID ?= MessageStore.getCurrentID()
-        message = _currentMessages.find (message) ->
-            message.get('id') is messageID
-        # console.log message.get('messageIDs').toJS()
-        message.get('messageIDs')?.size
-
+        MessageStore.getConversationLength messageID
 
     getConversationMessages: (messageID) ->
         messageID ?= MessageStore.getCurrentID()

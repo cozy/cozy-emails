@@ -40,6 +40,10 @@ module.exports = MessageList = React.createClass
     getInitialState: ->
         @getStateFromStores()
 
+    componentWillReceiveProps: (nextProps={}) ->
+        @setState @getStateFromStores()
+        nextProps
+
     # componentDidMount: ->
     #     @_initScroll()
     #
@@ -60,7 +64,7 @@ module.exports = MessageList = React.createClass
         return nextstate
 
     render: ->
-        console.log 'MESSAGE_LIST', @state
+        console.log 'MESSAGE_LIST', @state.selection
         section
             'key'               : "messages-list-#{@props.mailboxID}"
             'ref'               : 'list'

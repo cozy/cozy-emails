@@ -53,6 +53,6 @@ RouterActionCreator =
         if url
             # Update URL && context
             router = RouterStore.getRouter()
-            router.navigate url, update: true
+            router.navigate url, trigger: true
 
 module.exports = RouterActionCreator

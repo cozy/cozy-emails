@@ -69,28 +69,6 @@ module.exports = React.createClass
                 'aria-describedby': Tooltips.REMOVE_MESSAGE
                 'data-tooltip-direction': 'top'
 
-    # FIXME : j'ai supprimé la partie message de cette toolbox
-    # vérifier dans la réduction des fctionnalité si c'état celle là
-    # ou celle des conversation a retirer
-    # renderToolboxActions: ->
-    #     # FIXME : use Utils to get this value
-    #     flags = @props.message.get('flags') or []
-    #     isFlagged = FlagsConstants.FLAGGED in flags
-    #     isSeen    = FlagsConstants.SEEN in flags
-    #
-    #     ToolboxActions
-    #         mode: 'message'
-    #         isSeen:         isSeen
-    #         isFlagged:      isFlagged
-    #         messageID:      @props.message.get 'id'
-    #         message:        @props.message
-    #         onMark:         @props.onMark
-    #         onHeaders:      @props.onHeaders
-    #         onConversationMark: @props.onConversationMark
-    #         onConversationMove: @props.onConversationMove
-    #         onConversationDelete: @props.onConversationMove
-    #         direction:      'right'
-
 
     renderToolboxMove: ->
         ToolboxMove

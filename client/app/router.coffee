@@ -44,23 +44,6 @@ class Router extends Backbone.Router
         # Display application
         _displayApplication()
 
-
-    navigate: (url, options={}) ->
-        # Get Callback to execute
-        # to force Stores update
-        if options.update
-            parameters = null
-            routeCallback = _.find @routes, (callback, pattern) =>
-                pattern = @_routeToRegExp '#' + pattern
-                route = new RegExp pattern, 'gi'
-                if url.match route
-                    parameters = @_extractParameters route, url
-                    return true
-            if routeCallback
-                @[routeCallback].apply @, parameters
-
-        super url, options
-
     accountNew: ->
         RouterActionCreator.setAction 'account.new'
         AccountActionCreator.selectAccount()

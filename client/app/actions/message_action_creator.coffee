@@ -17,7 +17,6 @@ MessageActionCreator =
             type: ActionTypes.RECEIVE_RAW_MESSAGES
             value: messages
 
-
     receiveRawMessage: (message) ->
         AppDispatcher.handleViewAction
             type: ActionTypes.RECEIVE_RAW_MESSAGE
@@ -137,17 +136,16 @@ MessageActionCreator =
     # Delete message(s)
     # target:
     #  - messageID or messageIDs or conversationIDs or conversationIDs
-    #  - isDraft?
-    #  - silent? (don't display confirmation message when deleting
-    #    an empty draft)
-    delete: (target, callback) ->
+    delete: (target) ->
         ref = refCounter++
+
         AppDispatcher.handleViewAction
             type: ActionTypes.MESSAGE_TRASH_REQUEST
             value: {target, ref}
 
         # send request
         ts = Date.now()
+        next = MessageStore.getNextConversation()
         XHRUtils.batchDelete target, (error, updated) =>
             if error
                 AppDispatcher.handleViewAction
@@ -158,14 +156,12 @@ MessageActionCreator =
                 # in doubt, recover the changed to messages to sync with
                 # server
                 @recover target, ref
-            else if updated?.length
-                msg.updated = ts for msg in updated
-                AppDispatcher.handleViewAction
-                    type: ActionTypes.MESSAGE_TRASH_SUCCESS
-                    value: {target, ref, updated}
+                return
 
-            callback? error, updated
-
+            msg.updated = ts for msg in updated
+            AppDispatcher.handleViewAction
+                type: ActionTypes.MESSAGE_TRASH_SUCCESS
+                value: {target, ref, updated, next}
 
     move: (target, from, to, callback) ->
         ref = refCounter++

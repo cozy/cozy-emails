@@ -4,7 +4,7 @@ React = require 'react'
 {div, ul, li, span, a, button} = React.DOM
 {Menu, MenuHeader, MenuItem, MenuDivider} = require('./basic_components').factories
 
-ToolboxMailboxes    = React.createFactory require './toolbox_mailboxes'
+ToolboxMailboxes = React.createFactory require './toolbox_mailboxes'
 
 {FlagsConstants} = require '../constants/app_constants'
 
