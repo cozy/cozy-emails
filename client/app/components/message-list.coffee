@@ -59,7 +59,6 @@ module.exports = MessageList = React.createClass
         return nextstate
 
     render: ->
-        console.log 'MESSAGE_LIST', @state.selection
         section
             'key'               : "messages-list-#{@props.mailboxID}"
             'ref'               : 'list'
@@ -110,21 +109,13 @@ module.exports = MessageList = React.createClass
     loadMoreMessage: ->
         RouterActionCreator.getNextPage()
 
-    _loadNext: ->
-        # load next message if last one is displayed (useful when navigating
-        # with keyboard)
-        lastMessage = ReactDOM.findDOMNode(@refs.listBody)?.lastElementChild
-        if lastMessage? and DomUtils.isVisible(lastMessage)
-            @loadMoreMessage()
-
     _initScroll: ->
         if not (scrollable = ReactDOM.findDOMNode @refs.scrollable) or scrollable.scrollTop
             return
 
         activeElement = scrollable.querySelector '[data-message-active="true"]'
         if @props.messageID and not activeElement
-            console.log 'LOAD_MORE_MESSAGES'
-            # @loadMoreMessage()
+            @loadMoreMessage()
             return
 
         if activeElement
