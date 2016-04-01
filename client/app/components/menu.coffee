@@ -20,6 +20,7 @@ module.exports = Menu = React.createClass
 
     getInitialState: ->
         return {
+            search: ''
             onlyFavorites: false
             refreshes: RefreshesStore.getRefreshing()
         }
@@ -57,18 +58,18 @@ module.exports = Menu = React.createClass
                         span className: 'item-label', " #{t 'menu compose'}"
 
             nav className: 'mainmenu',
-                # if @props?.search and not @props.accountID
-                #     div className: 'active',
-                #         div className: 'account-title',
-                #             a
-                #                 role: 'menuitem'
-                #                 className: 'account active',
-                #
-                #                 i className: 'fa fa-search'
-                #
-                #                 div
-                #                     className: 'account-details',
-                #                         span {}, @props?.search
+                if @props?.search and not @props.accountID
+                    div className: 'active',
+                        div className: 'account-title',
+                            a
+                                role: 'menuitem'
+                                className: 'account active',
+
+                                i className: 'fa fa-search'
+
+                                div
+                                    className: 'account-details',
+                                        span {}, @props?.search
 
                 @props.accounts.map @renderMailBoxes
 
