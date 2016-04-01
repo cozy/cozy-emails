@@ -15,15 +15,9 @@ RouterActionCreator =
 
 
     getNextPage: ->
-        # Action is going to fast
-        # this dispatch is executed while previous is STOPPED
-        # use setTimeout to avoid a dispatchError
-        # FIXME : should be fixed when using a framework vs our dispatcher
-        setTimeout ->
-            AppDispatcher.handleViewAction
-                type: ActionTypes.MESSAGE_FETCH_REQUEST
-                value: action: 'page.next'
-            , 0
+        AppDispatcher.handleViewAction
+            type: ActionTypes.MESSAGE_FETCH_REQUEST
+            value: action: 'page.next'
 
 
     addFilter: (params) ->

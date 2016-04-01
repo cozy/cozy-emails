@@ -61,6 +61,7 @@ module.exports = LayoutActionCreator =
         {accountID, mailboxID, messageID, query} = params
         accountID ?= RouterGetter.getAccountID()
         mailboxID ?= RouterGetter.getMailboxID()
+        messageID ?= RouterGetter.getCurrentMessageID()
 
         unless accountID
             # TODO : si pas accountID
@@ -85,6 +86,7 @@ module.exports = LayoutActionCreator =
 
         AppDispatcher.handleViewAction
             type: ActionTypes.MESSAGE_FETCH_REQUEST
+            value: {action: 'message.list', messageID}
 
 
     showSearchResult: (parameters) ->

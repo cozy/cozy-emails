@@ -233,7 +233,7 @@ class RouterStore extends Store
             @emit 'change'
 
         handle ActionTypes.MESSAGE_FETCH_SUCCESS, (params) ->
-            _nextURL = params.nextURL
+            _nextURL = params.nextURL if params.nextURL
             @emit 'change'
 
         handle ActionTypes.SELECT_ACCOUNT, (value) ->

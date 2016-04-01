@@ -112,9 +112,10 @@ class MessageStore extends Store
     _fetchMessage = (params={}) ->
         return if _self.isFetching()
 
-        ts = Date.now()
+        timestamp = Date.now()
+        {messageID, action} = params
         mailboxID = AccountStore.getSelectedMailbox()?.get 'id'
-        messageID = params.messageID
+
         _fetching++
 
         callback = (err, rawMsg) ->
@@ -124,17 +125,33 @@ class MessageStore extends Store
                     type: ActionTypes.MESSAGE_FETCH_FAILURE
                     value: {mailboxID}
             else
-                messages = if _.isArray(rawMsg) then rawMsg else rawMsg.messages
                 nextURL = rawMsg?.links?.next
 
-                # This prevent to override local updates with older ones
-                # from server
-                rawMsg.messages?.forEach (msg) -> msg.updated = ts
-                AppDispatcher.handleViewAction
-                    type: ActionTypes.MESSAGE_FETCH_SUCCESS
-                    value: {mailboxID, messages, nextURL}
+                # This prevent to override local updates
+                # with older ones from server
+                messages = if _.isArray(rawMsg) then rawMsg else rawMsg.messages
+                messages?.forEach (message) -> message.updated = timestamp
+                _saveMessage message for message in messages when message?
 
-        if messageID
+                unless messages.length
+                    # either end of list or no messages, we stay open
+                    SocketUtils.changeRealtimeScope mailboxID, EPOCH
+
+                else if (lastdate = _messages.last()?.get 'date')
+                    SocketUtils.changeRealtimeScope mailboxID, lastdate
+
+                # Message is not in the result
+                # get next page
+                if messageID and not _messages.toJS()[messageID]
+                    AppDispatcher.handleViewAction
+                        type: ActionTypes.MESSAGE_FETCH_REQUEST
+                        value: {messageID, action: 'page.next'}
+                else
+                    AppDispatcher.handleViewAction
+                        type: ActionTypes.MESSAGE_FETCH_SUCCESS
+                        value: {mailboxID, messages, nextURL, messageID}
+
+        if messageID and action isnt 'message.list'
             XHRUtils.fetchConversation {messageID}, callback
         else
             XHRUtils.fetchMessagesByFolder params, callback
@@ -311,20 +328,6 @@ class MessageStore extends Store
             @emit 'change'
 
         handle ActionTypes.MESSAGE_FETCH_FAILURE, ->
-            @emit 'change'
-
-        # FIXME : gérer ça dans messageActionCreate
-        handle ActionTypes.MESSAGE_FETCH_SUCCESS, (result) ->
-            for message in result.messages when message?
-                _saveMessage message
-
-            unless result.messages.length
-                # either end of list or no messages, we stay open
-                SocketUtils.changeRealtimeScope result.mailboxID, EPOCH
-
-            else if lastdate = _messages.last()?.get('date')
-                SocketUtils.changeRealtimeScope result.mailboxID, lastdate
-
             @emit 'change'
 
         # handle ActionTypes.CONVERSATION_FETCH_SUCCESS, ({updated}) ->

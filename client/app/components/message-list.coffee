@@ -113,11 +113,6 @@ module.exports = MessageList = React.createClass
         if not (scrollable = ReactDOM.findDOMNode @refs.scrollable) or scrollable.scrollTop
             return
 
-        activeElement = scrollable.querySelector '[data-message-active="true"]'
-        if @props.messageID and not activeElement
-            @loadMoreMessage()
-            return
-
-        if activeElement
+        if (activeElement = scrollable.querySelector '[data-message-active="true"]')
             scrollTop = activeElement.offsetTop - activeElement.getBoundingClientRect().height
             scrollable.scrollTop = scrollTop
