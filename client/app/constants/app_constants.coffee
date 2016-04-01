@@ -80,7 +80,6 @@ module.exports =
         # Router
         'SAVE_ROUTES'               : 'SAVE_ROUTES'
         'SET_ROUTE_ACTION'          : 'SET_ROUTE_ACTION'
-        'SAVE_NEXT_URL'              : 'SAVE_NEXT_URL'
         'SET_FILTER'                : 'SET_FILTER'
 
         # Layout

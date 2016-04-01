@@ -18,7 +18,7 @@ class RouterStore extends Store
 
     _action = null
 
-    _nextUrl = null
+    _nextURL = null
 
     _currentFilter = _defaultFilter =
         field: 'date'
@@ -96,7 +96,7 @@ class RouterStore extends Store
         return '/' + filter
 
     getNextURL: ->
-        return _nextUrl
+        return _nextURL
 
     getCurrentURL: (options={}) ->
         params = _.extend {}, {isServer: true}, options
@@ -232,8 +232,8 @@ class RouterStore extends Store
             _router = router
             @emit 'change'
 
-        handle ActionTypes.SAVE_NEXT_URL, (value) ->
-            _nextUrl = if value then decodeURIComponent value else null
+        handle ActionTypes.MESSAGE_FETCH_SUCCESS, (params) ->
+            _nextURL = params.nextURL
             @emit 'change'
 
         handle ActionTypes.SELECT_ACCOUNT, (value) ->

@@ -125,18 +125,14 @@ class MessageStore extends Store
                     value: {mailboxID}
             else
                 messages = if _.isArray(rawMsg) then rawMsg else rawMsg.messages
-                next = rawMsg?.links?.next
+                nextURL = rawMsg?.links?.next
 
                 # This prevent to override local updates with older ones
                 # from server
                 rawMsg.messages?.forEach (msg) -> msg.updated = ts
                 AppDispatcher.handleViewAction
                     type: ActionTypes.MESSAGE_FETCH_SUCCESS
-                    value: {mailboxID, messages}
-
-                AppDispatcher.handleViewAction
-                    type: ActionTypes.SAVE_NEXT_URL
-                    value: next
+                    value: {mailboxID, messages, nextURL}
 
         if messageID
             XHRUtils.fetchConversation {messageID}, callback
