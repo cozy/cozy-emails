@@ -114,5 +114,6 @@ module.exports = MessageList = React.createClass
             return
 
         if (activeElement = scrollable.querySelector '[data-message-active="true"]')
-            scrollTop = activeElement.offsetTop - activeElement.getBoundingClientRect().height
-            scrollable.scrollTop = scrollTop
+            unless DomUtils.isVisible(activeElement)
+                coords = activeElement.getBoundingClientRect()
+                scrollable.scrollTop = coords.top - coords.height

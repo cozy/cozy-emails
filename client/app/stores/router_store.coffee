@@ -239,7 +239,7 @@ class RouterStore extends Store
 
             # PageAfter should get older Messages
             # if not do not change _nextPage
-            if not _lastDate or oldDate > _lastDate
+            if not _lastDate or _lastDate > newDate
                 _nextURL = params.nextURL
                 _lastDate = newDate
             @emit 'change'

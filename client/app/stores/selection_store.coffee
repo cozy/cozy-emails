@@ -39,15 +39,6 @@ class SelectionStore extends Store
             _resetSelection()
             @emit 'change'
 
-        # handle ActionTypes.MAILBOX_UPDATE, (params) ->
-        #     _getSelectables params
-        #     console.log '!!! GET SELECTED ITEMS'
-        #     @emit 'change'
-
-        # handle ActionTypes.MESSAGE_FETCH_SUCCESS, (params) ->
-        #     _getSelectables params
-        #     @emit 'change'
-
         handle ActionTypes.MAILBOX_SELECT_ALL, ->
             if _isAllSelected
                 _resetSelection()

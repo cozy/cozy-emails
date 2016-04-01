@@ -112,9 +112,10 @@ class MessageStore extends Store
     _fetchMessage = (params={}) ->
         return if _self.isFetching()
 
-        timestamp = Date.now()
         {messageID, action} = params
         mailboxID = AccountStore.getSelectedMailbox()?.get 'id'
+        action ?= 'message.list'
+        timestamp = Date.now()
 
         _fetching++
 
@@ -140,21 +141,21 @@ class MessageStore extends Store
                 else if (lastdate = _messages.last()?.get 'date')
                     SocketUtils.changeRealtimeScope mailboxID, lastdate
 
+                AppDispatcher.handleViewAction
+                    type: ActionTypes.MESSAGE_FETCH_SUCCESS
+                    value: {action, nextURL, messageID}
+
                 # Message is not in the result
                 # get next page
                 if messageID and not _messages.toJS()[messageID]
                     AppDispatcher.handleViewAction
                         type: ActionTypes.MESSAGE_FETCH_REQUEST
                         value: {messageID, action: 'page.next'}
-                else
-                    AppDispatcher.handleViewAction
-                        type: ActionTypes.MESSAGE_FETCH_SUCCESS
-                        value: {mailboxID, messages, nextURL, messageID}
 
-        if messageID and action isnt 'message.list'
-            XHRUtils.fetchConversation {messageID}, callback
-        else
+        if action in ['message.list', 'page.next']
             XHRUtils.fetchMessagesByFolder params, callback
+        else
+            XHRUtils.fetchConversation {messageID}, callback
 
     _computeMailboxDiff = (oldmsg, newmsg) ->
         return {} unless oldmsg
