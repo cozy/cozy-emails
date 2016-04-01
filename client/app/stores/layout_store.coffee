@@ -19,8 +19,6 @@ class LayoutStore extends Store
     # TODO: Use a constant for default value?
     _previewSize = 60
 
-    _previewFullscreen = false
-
     _focus = null
 
     _shown = true
@@ -94,10 +92,6 @@ class LayoutStore extends Store
 
     getPreviewSize: ->
         return _previewSize
-
-
-    isPreviewFullscreen: ->
-        return _previewFullscreen
 
 
     getFocus: ->

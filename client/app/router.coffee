@@ -2,8 +2,6 @@ RouterActionCreator = require './actions/router_action_creator'
 LayoutActionCreator = require './actions/layout_action_creator'
 AccountActionCreator = require './actions/account_action_creator'
 
-ApplicationGetter = require './getters/application'
-
 AppDispatcher = require './app_dispatcher'
 
 {ActionTypes} = require './constants/app_constants'
@@ -90,7 +88,6 @@ _displayApplication = ->
     ReactDOM   = require 'react-dom'
 
     Application = React.createFactory require './components/application'
-    props = ApplicationGetter.getProps 'application'
-    ReactDOM.render Application(props), document.querySelector '[role=application]'
+    ReactDOM.render Application(), document.querySelector '[role=application]'
 
 module.exports = Router

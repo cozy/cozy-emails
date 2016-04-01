@@ -1,5 +1,8 @@
 AccountStore = require '../stores/account_store'
 MessageStore = require '../stores/message_store'
+LayoutStore = require '../stores/layout_store'
+SearchStore = require '../stores/search_store'
+RefreshesStore = require '../stores/refreshes_store'
 RouterStore = require '../stores/router_store'
 
 Immutable = require 'immutable'
@@ -19,9 +22,9 @@ class RouteGetter
     getAction: ->
         RouterStore.getAction()
 
-    isReply: ->
-        action = @getAction()
-        action isnt 'message.edit'
+    getReplyMessage: (messageID) ->
+        if (isReply = @getAction() isnt 'message.edit')
+            return MessageStore.getByID messageID
 
     isEditable: ->
         action = @getAction()
@@ -40,11 +43,27 @@ class RouteGetter
     getFilter: ->
         RouterStore.getFilter()
 
+    getSearch: ->
+        SearchStore.getCurrentSearch()
+
+    getLayoutSettings: ->
+        {
+            disposition: LayoutStore.getDisposition()
+            isCompact: LayoutStore.getListModeCompact()
+            previewSize: LayoutStore.getPreviewSize()
+        }
+
     isLoading: ->
         MessageStore.isFetching()
 
+    getProgress: (accountID) ->
+        RefreshesStore.getRefreshing().get accountID
+
     getSelectedTab: ->
         AccountStore.getSelectedTab()
+
+    getModal: ->
+        LayoutStore.getModal()
 
     isFlags: (name) ->
         flags = @getFilter()?.flags or []
@@ -70,6 +89,9 @@ class RouteGetter
 
     getCurrentMessageID: ->
         MessageStore.getCurrentID()
+
+    getCurrentMessage: ->
+        MessageStore.getByID MessageStore.getCurrentID()
 
     isCurrentMessage: (messageID) ->
         messageID is @getCurrentMessageID()

@@ -12,6 +12,7 @@ MessageList    = React.createFactory require './message-list'
 Conversation   = React.createFactory require './conversation'
 AccountConfig  = React.createFactory require './account_config'
 Compose        = React.createFactory require './compose'
+classNames = require 'classnames'
 
 # React Mixins
 MessageStore         = require '../stores/message_store'
@@ -20,7 +21,6 @@ SettingsStore        = require '../stores/settings_store'
 StoreWatchMixin      = require '../mixins/store_watch_mixin'
 TooltipRefesherMixin = require '../mixins/tooltip_refresher_mixin'
 
-ApplicationGetter = require '../getters/application'
 RouterGetter = require '../getters/router'
 
 ###
@@ -41,14 +41,33 @@ Application = React.createClass
     ]
 
     getDefaultProps: ->
-        ApplicationGetter.getProps 'application'
+        props = RouterGetter.getLayoutSettings()
+        className = ['layout'
+            "layout-#{props.disposition}"
+            if props.isCompact then "layout-compact"
+            "layout-preview-#{props.previewSize}"].join(' ')
+        return {className}
 
     getInitialState: ->
-        ApplicationGetter.getState()
+        @getStateFromStores()
 
     componentWillReceiveProps: (nextProps={}) ->
-        @setState ApplicationGetter.getState()
+        @setState @getStateFromStores()
         nextProps
+
+    getStateFromStores: ->
+        return {
+            mailboxID       : RouterGetter.getMailboxID()
+            accountID       : RouterGetter.getAccountID()
+            messageID       : (messageID = RouterGetter.getCurrentMessageID())
+            message         : RouterGetter.getCurrentMessage()
+            action          : RouterGetter.getAction()
+            isEditable      : RouterGetter.isEditable()
+            inReplyTo       : RouterGetter.getReplyMessage messageID
+            currentSearch   : RouterGetter.getSearch()
+            modal           : RouterGetter.getModal()
+            nextURL         : RouterGetter.getNextURL()
+        }
 
     render: ->
         div className: @props.className,

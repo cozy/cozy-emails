@@ -51,9 +51,7 @@ module.exports = MenuMailboxItem = React.createClass
             news:    nbRecent > 0
         classesChild += " #{specialMailbox}" if specialMailbox
 
-
-        progress = @props.refreshes.get mailboxID
-        displayError = @props.displayErrors.bind null, progress
+        displayError = @props.displayErrors.bind null, @props.progress
 
         li className: classesParent,
             a
@@ -76,7 +74,7 @@ module.exports = MenuMailboxItem = React.createClass
                         className: 'item-label',
                         "#{@props.mailbox.get 'label'}"
 
-                if progress?.get('errors').length
+                if @props.progress?.get('errors').length
                     span className: 'refresh-error', onClick: displayError,
                         i className: 'fa fa-warning', null
 
@@ -89,7 +87,7 @@ module.exports = MenuMailboxItem = React.createClass
 
                     span className: 'fa fa-recycle'
 
-            if not progress and nbUnread and nbUnread > 0
+            if not @props.progress and nbUnread and nbUnread > 0
                 span className: 'badge', nbUnread
 
 

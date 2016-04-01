@@ -124,7 +124,7 @@ module.exports = MessageList = React.createClass
         activeElement = scrollable.querySelector '[data-message-active="true"]'
         if @props.messageID and not activeElement
             console.log 'LOAD_MORE_MESSAGES'
-            @loadMoreMessage()
+            # @loadMoreMessage()
             return
 
         if activeElement

@@ -11,26 +11,10 @@ colorhash = require '../utils/colorhash'
 LayoutActionCreator  = require '../actions/layout_action_creator'
 {Tooltips} = require '../constants/app_constants'
 
-RefreshesStore = require '../stores/refreshes_store'
-ApplicationGetter = require '../getters/application'
 RouterGetter = require '../getters/router'
 
 module.exports = Menu = React.createClass
     displayName: 'Menu'
-
-    getInitialState: ->
-        return {
-            search: ''
-            onlyFavorites: false
-            refreshes: RefreshesStore.getRefreshing()
-        }
-
-    componentWillReceiveProps: (nextProps={}) ->
-        @setState refreshes: RefreshesStore.getRefreshing()
-        nextProps
-
-    _toggleFavorites: ->
-        @setState onlyFavorites: not @state?.onlyFavorites
 
     displayErrors: (refreshee) ->
         errors = refreshee.get 'errors'
