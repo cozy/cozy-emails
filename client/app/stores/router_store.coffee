@@ -20,10 +20,6 @@ class RouterStore extends Store
 
     _nextUrl = null
 
-    # FIXME : cette valeur doit etre déduite dans la vue
-    # en fction du messageID
-    _scrollValue = null
-
     _currentFilter = _defaultFilter =
         field: 'date'
         order: '-'
@@ -238,10 +234,6 @@ class RouterStore extends Store
 
         handle ActionTypes.SAVE_NEXT_URL, (value) ->
             _nextUrl = if value then decodeURIComponent value else null
-            @emit 'change'
-
-        handle ActionTypes.SAVE_SCROLL, (value) ->
-            _scrollValue = value
             @emit 'change'
 
         handle ActionTypes.SELECT_ACCOUNT, (value) ->

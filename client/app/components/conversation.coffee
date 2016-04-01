@@ -77,7 +77,6 @@ module.exports = React.createClass
             trashMailbox        : accounts[accountID]?.trashMailbox
 
     render: ->
-        console.log 'CONVERSATION', @state
         unless @state.messages?.size
             return section
                 key: 'conversation'

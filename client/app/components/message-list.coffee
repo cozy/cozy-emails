@@ -44,16 +44,11 @@ module.exports = MessageList = React.createClass
         @setState @getStateFromStores()
         nextProps
 
-    # componentDidMount: ->
-    #     @_initScroll()
-    #
-    # componentDidUpdate: ->
-    #     @_resetScroll()
-    #     @_initScroll()
-    #
-    # componentWillUnmount: ->
-    #     @_resetScroll()
-    #     RouterActionCreator.saveScroll scrollTop: @refs.scrollable.scrollTop
+    componentDidMount: ->
+        @_initScroll()
+
+    componentDidUpdate: ->
+        @_initScroll()
 
     getStateFromStores: ->
         messages = RouterGetter.getMessagesToDisplay @props.mailboxID
@@ -113,7 +108,6 @@ module.exports = MessageList = React.createClass
                             p ref: 'listEnd', t 'list end'
 
     loadMoreMessage: ->
-        RouterActionCreator.saveScroll scrollTop: @refs.scrollable.scrollTop
         RouterActionCreator.getNextPage()
 
     _loadNext: ->
@@ -123,12 +117,16 @@ module.exports = MessageList = React.createClass
         if lastMessage? and DomUtils.isVisible(lastMessage)
             @loadMoreMessage()
 
-    # _initScroll: ->
-    #     # if (value = @props.scrollValue?.scrollTop)?
-    #     #     @refs.scrollable?.scrollTop = value
-    #
-    #     @refs.scrollable?.addEventListener 'scroll', @_loadNext
-    #
-    #
-    # _resetScroll: ->
-    #     @refs.scrollable?.removeEventListener 'scroll', @_loadNext
+    _initScroll: ->
+        if not (scrollable = ReactDOM.findDOMNode @refs.scrollable) or scrollable.scrollTop
+            return
+
+        activeElement = scrollable.querySelector '[data-message-active="true"]'
+        if @props.messageID and not activeElement
+            console.log 'LOAD_MORE_MESSAGES'
+            @loadMoreMessage()
+            return
+
+        if activeElement
+            scrollTop = activeElement.offsetTop - activeElement.getBoundingClientRect().height
+            scrollable.scrollTop = scrollTop

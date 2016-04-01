@@ -13,12 +13,8 @@ RouterActionCreator =
             type: ActionTypes.SET_ROUTE_ACTION
             value: value
 
-    saveScroll: (scroll) ->
-        AppDispatcher.handleViewAction
-            type: ActionTypes.SAVE_SCROLL
-            value: scroll
 
-    getNextPage: (scroll) ->
+    getNextPage: ->
         action = 'page.next'
         AppDispatcher.handleViewAction
             type: ActionTypes.MESSAGE_FETCH_REQUEST

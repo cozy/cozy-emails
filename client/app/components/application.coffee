@@ -92,6 +92,7 @@ Application = React.createClass
                                 key         : 'messageList-' + @state.mailboxID
                                 accountID   : @state.accountID
                                 mailboxID   : @state.mailboxID
+                                messageID   : @state.messageID
 
                             if @state.action is 'message.show'
                                 Conversation

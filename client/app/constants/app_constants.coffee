@@ -93,7 +93,6 @@ module.exports =
         'REFRESH'                   : 'REFRESH'
         'FOCUS'                     : 'FOCUS'
         'INTENT_AVAILABLE'          : 'INTENT_AVAILABLE'
-        'SAVE_SCROLL'               : 'SAVE_SCROLL'
 
         # Settings
         'SETTINGS_UPDATED'          : 'SETTINGS_UPDATED'

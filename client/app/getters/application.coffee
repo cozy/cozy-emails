@@ -25,6 +25,7 @@ class ApplicationGetter
             inReplyTo       : inReplyTo
             currentSearch   : SearchStore.getCurrentSearch()
             modal           : LayoutStore.getModal()
+            nextURL         : RouterGetter.getNextURL()
         }
 
     getProps: (name, props={}) ->
