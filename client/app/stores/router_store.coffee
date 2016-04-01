@@ -19,6 +19,7 @@ class RouterStore extends Store
     _action = null
 
     _nextURL = null
+    _lastDate = null
 
     _currentFilter = _defaultFilter =
         field: 'date'
@@ -233,7 +234,14 @@ class RouterStore extends Store
             @emit 'change'
 
         handle ActionTypes.MESSAGE_FETCH_SUCCESS, (params) ->
-            _nextURL = params.nextURL if params.nextURL
+            newDate = params.nextURL?.match(/pageAfter=[\w-%.]*&*/gi)
+            newDate = newDate?[0].split('=')[1]
+
+            # PageAfter should get older Messages
+            # if not do not change _nextPage
+            if not _lastDate or oldDate > _lastDate
+                _nextURL = params.nextURL
+                _lastDate = newDate
             @emit 'change'
 
         handle ActionTypes.SELECT_ACCOUNT, (value) ->
