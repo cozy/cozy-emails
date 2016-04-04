@@ -5,11 +5,6 @@ AppDispatcher = require '../app_dispatcher'
 AccountStore = require '../stores/account_store'
 RouterStore = require '../stores/router_store'
 
-LayoutActionCreator = require '../actions/layout_action_creator'
-NotificationActionsCreator = require '../actions/notification_action_creator'
-MessageActionCreator = require './message_action_creator'
-RouterActionCreator = require './router_action_creator'
-
 module.exports = AccountActionCreator =
 
     create: (inputValues, afterCreation) ->
@@ -18,7 +13,7 @@ module.exports = AccountActionCreator =
             value: {inputValues}
 
         XHRUtils.createAccount inputValues, (error, account) ->
-            if error? or not account?
+            if error?
                 AppDispatcher.handleViewAction
                     type: ActionTypes.ADD_ACCOUNT_FAILURE
                     value: {error}
@@ -39,17 +34,7 @@ module.exports = AccountActionCreator =
                     type: ActionTypes.ADD_ACCOUNT_SUCCESS
                     value: {account, areMailboxesConfigured}
 
-                {id, inboxMailbox} = account
-                if areMailboxesConfigured
-                    filters = "sort/-date/nofilter/-/before/-/after/-"
-                    url = "account/#{id}/mailbox/#{inboxMailbox}/#{filters}"
-                else
-                    url = "account/#{id}/config/mailboxes"
-
-                RouterActionCreator.navigate {url}
-
-
-    edit: (inputValues, accountID, callback) ->
+    edit: (inputValues, accountID) ->
         newAccount = AccountStore.getByID(accountID).mergeDeep inputValues
 
         AppDispatcher.handleViewAction
@@ -66,9 +51,7 @@ module.exports = AccountActionCreator =
                     type: ActionTypes.EDIT_ACCOUNT_SUCCESS
                     value: {rawAccount}
 
-                callback?()
-
-    check: (inputValues, accountID, cb) ->
+    check: (inputValues, accountID) ->
         if accountID?
             account = AccountStore.getByID accountID
             newAccount = account.mergeDeep(inputValues).toJS()
@@ -90,19 +73,19 @@ module.exports = AccountActionCreator =
                     type: ActionTypes.CHECK_ACCOUNT_SUCCESS
                     value: {rawAccount}
 
-            cb? error, rawAccount
-
     remove: (accountID) ->
         AppDispatcher.handleViewAction
-            type: ActionTypes.REMOVE_ACCOUNT
+            type: ActionTypes.REMOVE_ACCOUNT_REQUEST
             value: accountID
         XHRUtils.removeAccount accountID, (error) ->
-        NotificationActionsCreator.alert t('account removed'), autoclose: true
-        RouterActionCreator.navigate url: ''
-
-    ensureSelected: (accountID, mailboxID) =>
-        if AccountStore.selectedIsDifferentThan accountID, mailboxID
-            AccountActionCreator.selectAccount accountID, mailboxID
+            if error
+                AppDispatcher.handleViewAction
+                    type: ActionTypes.REMOVE_ACCOUNT_FAILURE
+                    value: accountID
+            else
+                AppDispatcher.handleViewAction
+                    type: ActionTypes.REMOVE_ACCOUNT_SUCCESS
+                    value: accountID
 
     selectAccount: (accountID) ->
         AppDispatcher.handleViewAction
@@ -114,71 +97,64 @@ module.exports = AccountActionCreator =
             type: ActionTypes.EDIT_ACCOUNT_TAB
             value: {tab}
 
-    mailboxCreate: (inputValues, callback) ->
+    mailboxCreate: (inputValues) ->
+        AppDispatcher.handleViewAction
+            type: ActionTypes.MAILBOX_CREATE_REQUEST
+            value: account
         XHRUtils.mailboxCreate inputValues, (error, account) ->
             unless error?
                 AppDispatcher.handleViewAction
-                    type: ActionTypes.MAILBOX_CREATE
+                    type: ActionTypes.MAILBOX_CREATE_SUCCESS
+                    value: account
+            else
+                AppDispatcher.handleViewAction
+                    type: ActionTypes.MAILBOX_CREATE_FAILURE
                     value: account
 
-                NotificationActionsCreator.alertSuccess t("mailbox create ok")
-
-            else
-                message = "#{t("mailbox create ko")} #{error.message or error}"
-                NotificationActionsCreator.alertError message
-
-            callback? error
-
-    mailboxUpdate: (inputValues, callback) ->
+    mailboxUpdate: (inputValues) ->
+        AppDispatcher.handleViewAction
+            type: ActionTypes.MAILBOX_UPDATE_REQUEST
+            value: account
         XHRUtils.mailboxUpdate inputValues, (error, account) ->
             unless error?
                 AppDispatcher.handleViewAction
-                    type: ActionTypes.MAILBOX_UPDATE
+                    type: ActionTypes.MAILBOX_UPDATE_SUCCESS
                     value: account
-
-                NotificationActionsCreator.alertSuccess t("mailbox update ok"),
             else
-                message = "#{t("mailbox update ko")} #{error.message or error}"
-                NotificationActionsCreator.alertError message
-                    autoclose: true
-
-            callback? error
-
-
-    mailboxDelete: (inputValues, callback) ->
-        XHRUtils.mailboxDelete inputValues, (error, account) ->
-            if not error?
                 AppDispatcher.handleViewAction
-                    type: ActionTypes.MAILBOX_DELETE
+                    type: ActionTypes.MAILBOX_UPDATE_FAILURE
                     value: account
-            if callback?
-                callback error
+
+    mailboxDelete: (inputValues) ->
+        AppDispatcher.handleViewAction
+            type: ActionTypes.MAILBOX_DELETE_REQUEST
+            value: account
+        XHRUtils.mailboxDelete inputValues, (error, account) ->
+            if error?
+                AppDispatcher.handleViewAction
+                    type: ActionTypes.MAILBOX_DELETE_FAILURE
+                    value: account
+            else
+                AppDispatcher.handleViewAction
+                    type: ActionTypes.MAILBOX_DELETE_SUCCESS
+                    value: account
+
 
     mailboxExpunge: (options) ->
-
         {accountID, mailboxID} = options
 
         # delete message from local store to refresh display,
         # we'll fetch them again on error
         AppDispatcher.handleViewAction
-            type: ActionTypes.MAILBOX_EXPUNGE
+            type: ActionTypes.MAILBOX_EXPUNGE_REQUEST
             value: mailboxID
 
         XHRUtils.mailboxExpunge options, (error, account) ->
-            # FIXME : handle redirect
-
-            # if error?
-            #     NotificationActionsCreator.alertError """
-            #         #{t("mailbox expunge ko")} #{error.message or error}
-            #     """
-            #
-            #     # if user hasn't switched to another box, refresh display
-            #     unless AccountStore.selectedIsDifferentThan accountID, mailboxID
-            #         parameters = RouterStore.getFilter()
-            #         parameters.accountID = accountID
-            #         parameters.mailboxID = mailboxID
-            #         LayoutActionCreator.updateessageList {parameters}
-            #
-            # else
-            #     NotificationActionsCreator.alert t("mailbox expunge ok"),
-            #         autoclose: true
+            if error
+                AppDispatcher.handleViewAction
+                    type: ActionTypes.MAILBOX_EXPUNGE_FAILURE
+                    value: {mailboxID, accountID, error}
+            else
+                AppDispatcher.handleViewAction
+                    type: ActionTypes.MAILBOX_EXPUNGE_SUCCESS
+                    value: {mailboxID, accountID}

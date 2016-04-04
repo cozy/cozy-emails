@@ -104,29 +104,32 @@ class NotificationStore extends Store
     ###
     __bindHandlers: (handle) ->
 
-        handle ActionTypes.MAILBOX_CREATE, ->
+        handle ActionTypes.SETTINGS_UPDATE_FAILURE, ({error}) ->
+            @alertError t('settings save error') + error
+
+        handle ActionTypes.MAILBOX_CREATE_SUCCESS, ->
             @alertSuccess t("mailbox create ok")
 
-        handle ActionTypes.MAILBOX_CREATE_ERROR, ->
+        handle ActionTypes.MAILBOX_CREATE_FAILURE, ->
             message = "#{t("mailbox create ko")} #{error.message or error}"
             @alertError message
 
-        handle ActionTypes.MAILBOX_UPDATE, ->
+        handle ActionTypes.MAILBOX_UPDATE_SUCCESS, ->
             @alertSuccess t("mailbox update ok")
 
-        handle ActionTypes.MAILBOX_UPDATE_ERROR, ->
+        handle ActionTypes.MAILBOX_UPDATE_FAILURE, ->
             message = "#{t("mailbox update ko")} #{error.message or error}"
             @alertError message
 
-        handle ActionTypes.MAILBOX_EXPUNGE, ->
-            @alert t("mailbox expunge ok")
+        handle ActionTypes.MAILBOX_EXPUNGE_SUCCESS, ->
+            @alert t("mailbox expunge ok"), autoclose: true
 
-        handle ActionTypes.MAILBOX_EXPUNGE_ERROR, ->
+        handle ActionTypes.MAILBOX_EXPUNGE_FAILURE, ({error, mailboxID, accountID}) ->
             @alertError """
                 #{t("mailbox expunge ko")} #{error.message or error}
             """
 
-        handle ActionTypes.REMOVE_ACCOUNT, ->
+        handle ActionTypes.REMOVE_ACCOUNT_SUCCESS, ->
             @alertError t('account removed')
 
         handle ActionTypes.CLEAR_TOASTS, ->
@@ -137,6 +140,13 @@ class NotificationStore extends Store
 
         handle ActionTypes.RECEIVE_TASK_DELETE, (taskid) ->
             _removeNotification taskid
+
+        handle ActionTypes.MESSAGE_SEND_FAILURE, ({error, action}) ->
+            if ActionTypes.MESSAGE_SEND_REQUEST is action
+                msgKo = t "message action sent ko"
+            else
+                msgKo = t "message action draft ko"
+            @alertError "#{msgKo} #{error}"
 
         handle ActionTypes.MESSAGE_TRASH_SUCCESS, ({target, ref, updated}) ->
             _showNotification

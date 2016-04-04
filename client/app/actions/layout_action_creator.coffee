@@ -94,7 +94,7 @@ module.exports = LayoutActionCreator =
         # {accountID, search} = parameters
         #
         # if accountID isnt 'all'
-        #     AccountActionCreator.ensureSelected accountID
+        #     AccountActionCreator.selectAccount accountID
         # else
         #     AccountActionCreator.selectAccount null
         #

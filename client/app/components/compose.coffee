@@ -238,7 +238,7 @@ module.exports = React.createClass
         event.preventDefault() if event?
         @state.isDraft = false
 
-        @sendActionMessage 'MESSAGE_SEND', @finalRedirect
+        @sendActionMessage 'MESSAGE_SEND_REQUEST', @finalRedirect
 
     validateMessage: ->
         return if @state.isDraft

@@ -274,8 +274,7 @@ class MessageStore extends Store
                 _saveMessage message
             @emit 'change'
 
-        handle ActionTypes.REMOVE_ACCOUNT, (accountID) ->
-            AppDispatcher.waitFor [AccountStore.dispatchToken]
+        handle ActionTypes.REMOVE_ACCOUNT_SUCCESS, (accountID) ->
             _messages = _messages.filter (message) ->
                 accountID isnt message.get 'accountID'
             .toOrderedMap()
@@ -336,8 +335,10 @@ class MessageStore extends Store
         #         _saveMessage message
         #     @emit 'change'
 
-        handle ActionTypes.MESSAGE_SEND, (message) ->
+        handle ActionTypes.MESSAGE_SEND_SUCCESS, ({message, action}) ->
             _saveMessage message
+            # if conversationID and action in ['UNMOUNT', 'MESSAGE_SEND_REQUEST']
+            #     @fetchConversation conversationID
             @emit 'change'
 
         handle ActionTypes.QUERY_PARAMETER_CHANGED, ->

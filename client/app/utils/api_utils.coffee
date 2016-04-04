@@ -92,7 +92,7 @@ module.exports = Utils =
         else
             settings[key] = value
         AppDispatcher.handleViewAction
-            type: ActionTypes.SETTINGS_UPDATED
+            type: ActionTypes.SETTINGS_UPDATE_SUCCESS
             value: settings
 
     messageNavigate: (direction, inConv) ->

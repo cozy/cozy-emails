@@ -226,18 +226,25 @@ class AccountStore extends Store
             _setError error
             @emit 'change'
 
-        # handle ActionTypes.MAILBOX_CREATE, (rawAccount) ->
+        # handle ActionTypes.MAILBOX_CREATE_SUCCESS, (rawAccount) ->
         #     @_onAccountUpdated rawAccount
         #     @emit 'change'
         #
-        # handle ActionTypes.MAILBOX_UPDATE, (rawAccount) ->
+        # handle ActionTypes.MAILBOX_UPDATE_SUCCESS, (rawAccount) ->
         #     @_onAccountUpdated rawAccount
         #     @emit 'change'
-        # handle ActionTypes.MAILBOX_DELETE, (rawAccount) ->
+        # handle ActionTypes.MAILBOX_DELETE_SUCCESS, (rawAccount) ->
         #     @_onAccountUpdated rawAccount
         #     @emit 'change'
 
-        handle ActionTypes.REMOVE_ACCOUNT, (accountID) ->
+        handle ActionTypes.MAILBOX_EXPUNGE_FAILURE, ({error, mailboxID, accountID}) ->
+            # if user hasn't switched to another box, refresh display
+            unless _selectedMailbox?.get('id') isnt mailboxID
+                _setCurrentMailbox _selectedAccount
+                    ?.get('mailboxes')
+                    ?.get(mailboxID) or null
+
+        handle ActionTypes.REMOVE_ACCOUNT_SUCCESS, (accountID) ->
             _accounts = _accounts.delete accountID
             @_setCurrentAccount @getDefault()
             @emit 'change'
@@ -250,7 +257,7 @@ class AccountStore extends Store
             _accountsUnread.set data.accountID, data.totalUnread
             @emit 'change'
 
-        handle ActionTypes.REFRESH_REQUEST, ({mailboxID}) ->
+        handle ActionTypes.REFRESH_SUCCESS, ({mailboxID}) ->
             _mailboxRefreshing[mailboxID] ?= 0
             _mailboxRefreshing[mailboxID]++
             @emit 'change'
@@ -334,13 +341,6 @@ class AccountStore extends Store
         result = _selectedAccount.get 'mailboxes'
         result = result.sort _mailboxSort
         return result
-
-
-    selectedIsDifferentThan: (accountID, mailboxID) ->
-        differentSelected = _selectedAccount?.get('id') isnt accountID or
-        _selectedMailbox?.get('id') isnt mailboxID
-
-        return differentSelected
 
 
     getSelectedMailbox: (selectedID) ->

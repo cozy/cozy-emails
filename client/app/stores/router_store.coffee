@@ -233,6 +233,15 @@ class RouterStore extends Store
             _router = router
             @emit 'change'
 
+        handle ActionTypes.REMOVE_ACCOUNT_SUCCESS, ->
+            _router?.navigate url: ''
+
+        handle ActionTypes.ADD_ACCOUNT_SUCCESS, ({account, areMailboxesConfigured}) ->
+            accountID = account.id
+            action = if areMailboxesConfigured then 'message.list' else 'account.edit'
+            _router?.navigate {accountID, action}
+            @emit 'change'
+
         handle ActionTypes.MESSAGE_FETCH_SUCCESS, (params) ->
             newDate = params.nextURL?.match(/pageAfter=[\w-%.]*&*/gi)
             newDate = newDate?[0].split('=')[1]

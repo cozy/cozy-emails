@@ -23,7 +23,7 @@ MessageActionCreator =
             value: message
 
 
-    send: (action, message, callback) ->
+    send: (action, message) ->
         conversationID = message.conversationID
 
         # Message should have a html content
@@ -31,24 +31,19 @@ MessageActionCreator =
         unless message.composeInHTML
             message.html = message.text
 
+        AppDispatcher.handleViewAction
+            type: ActionTypes.MESSAGE_SEND_REQUEST
+            value: message
+
         XHRUtils.messageSend message, (error, message) =>
-            if error? or not message?
-                if 'MESSAGE_SEND' is action
-                    msgKo = t "message action sent ko"
-                else
-                    msgKo = t "message action draft ko"
-                LayoutActionCreator.alertError "#{msgKo} #{error}"
-                return
-
-            if conversationID and action in ['UNMOUNT', 'MESSAGE_SEND']
-                @fetchConversation conversationID
-
-            AppDispatcher.handleViewAction
-                type: ActionTypes.MESSAGE_SEND
-                value: message
-
-            if callback?
-                callback error, message
+            if error?
+                AppDispatcher.handleViewAction
+                    type: ActionTypes.MESSAGE_SEND_FAILURE
+                    value: {error, action, message}
+            else
+                AppDispatcher.handleViewAction
+                    type: ActionTypes.MESSAGE_SEND_SUCCESS
+                    value: {action, message}
 
 
     # set conv to true to update current conversation ID
@@ -209,6 +204,11 @@ MessageActionCreator =
                 throw new Error "Wrong usage : unrecognized FlagsConstants"
 
         ts = Date.now()
+
+        AppDispatcher.handleViewAction
+            type: ActionTypes.MESSAGE_FLAGS_REQUEST
+            value: {target, ref, error, op, flag, flagAction}
+
         XHRUtils[op] target, flag, (error, updated) =>
             if error
                 AppDispatcher.handleViewAction
