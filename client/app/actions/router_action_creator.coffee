@@ -10,7 +10,7 @@ RouterActionCreator =
 
     setAction: (value) ->
         AppDispatcher.handleViewAction
-            type: ActionTypes.SET_ROUTE_ACTION
+            type: ActionTypes.ROUTE_CHANGE
             value: value
 
 

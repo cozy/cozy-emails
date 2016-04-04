@@ -35,7 +35,7 @@ class SelectionStore extends Store
     ###
     __bindHandlers: (handle) ->
 
-        handle ActionTypes.SET_ROUTE_ACTION, ->
+        handle ActionTypes.ROUTE_CHANGE, ->
             _resetSelection()
             @emit 'change'
 

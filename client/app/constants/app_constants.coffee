@@ -78,12 +78,10 @@ module.exports =
         'CONTACT_LOCAL_SEARCH'       : 'CONTACT_LOCAL_SEARCH'
 
         # Router
-        'SAVE_ROUTES'               : 'SAVE_ROUTES'
-        'SET_ROUTE_ACTION'          : 'SET_ROUTE_ACTION'
-        'SET_FILTER'                : 'SET_FILTER'
+        'ROUTES_INITIALIZE'     : 'ROUTES_INITIALIZE'
+        'ROUTE_CHANGE'          : 'ROUTE_CHANGE'
 
         # Layout
-        'SET_APPLICATION'           : 'SET_APPLICATION'
         'SET_DISPOSITION'           : 'SET_DISPOSITION'
         'TOGGLE_LIST_MODE'          : 'TOGGLE_LIST_MODE'
         'RESIZE_PREVIEW_PANE'       : 'RESIZE_PREVIEW_PANE'

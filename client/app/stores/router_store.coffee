@@ -225,11 +225,11 @@ class RouterStore extends Store
             _self.setFilter params
             @emit 'change'
 
-        handle ActionTypes.SET_ROUTE_ACTION, (value) ->
+        handle ActionTypes.ROUTE_CHANGE, (value) ->
             _action = value
             @emit 'change'
 
-        handle ActionTypes.SAVE_ROUTES, (router) ->
+        handle ActionTypes.ROUTES_INITIALIZE, (router) ->
             _router = router
             @emit 'change'
 
