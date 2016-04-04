@@ -76,6 +76,7 @@ module.exports = Menu = React.createClass
     # FIXME : make a component for this
     renderMailBoxes: (account) ->
         accountID = account.get 'id'
+
         props = {
             key: 'account-' + accountID
             isSelected: accountID is RouterGetter.getAccountID()

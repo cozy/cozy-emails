@@ -106,13 +106,13 @@ module.exports = React.createClass
 
 
     componentWillMount: ->
-        @_markRead(@props.message, @props.active)
+        @_markRead @props.message, @props.active
 
 
     componentWillReceiveProps: (props) ->
         state = {}
         if props.message.get('id') isnt @props.message.get('id')
-            @_markRead(props.message, props.active)
+            @_markRead props.message, props.active
             settings = SettingsStore.get()
             state.messageDisplayHTML   = settings.get 'messageDisplayHTML'
             state.messageDisplayImages = settings.get 'messageDisplayImages'
@@ -206,6 +206,7 @@ module.exports = React.createClass
         article
             className: classes,
             key: @props.key,
+            'data-message-active': @props.active
             'data-id': @props.message.get('id'),
                 header onClick: @onHeaderClicked,
                     MessageHeader

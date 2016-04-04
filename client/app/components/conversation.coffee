@@ -1,6 +1,9 @@
 _ = require 'underscore'
 React     = require 'react'
+ReactDOM  = require 'react-dom'
+
 {section, header, ul, li, span, i, p, h3, a, button} = React.DOM
+DomUtils = require '../utils/dom_utils'
 
 {MessageFlags} = require '../constants/app_constants'
 
@@ -16,8 +19,6 @@ LayoutStore         = require '../stores/layout_store'
 SelectionStore       = require '../stores/selection_store'
 StoreWatchMixin      = require '../mixins/store_watch_mixin'
 
-_compactMin = 3
-
 module.exports = React.createClass
     displayName: 'Conversation'
 
@@ -28,40 +29,43 @@ module.exports = React.createClass
         StoreWatchMixin [SelectionStore, MessageStore]
     ]
 
-    # FIXME : use getters instead
-    # such as : Conversation.getState()
     getInitialState: ->
         @getStateFromStores()
 
-    # FIXME : use getters instead
-    # such as : Conversation.getState()
     componentWillReceiveProps: (nextProps={}) ->
         @setState @getStateFromStores()
         nextProps
+
+    componentDidMount: ->
+        @_initScroll()
+
+    componentDidUpdate: ->
+        @_initScroll()
 
     getStateFromStores: ->
         return {
             isLoading: RouterGetter.isLoading()
             message: RouterGetter.getMessage()
             messages: RouterGetter.getConversationMessages()
-            compact: if @state then @state.compact else true
-            isCompacted: if @state then @state.isCompacted else false
+            # compactMin: 3
+            # compact: if @state then @state.compact else true
+            # isCompacted: if @state then @state.isCompacted else false
         }
 
     renderMessage: (message, index) ->
-        isCompactMode = not @state.isCompacted and @state.compact
-        doCompact = index > 0 and index <= _compactMin
-        if isCompactMode and doCompact
-            hiddenSize = @state.messages?.size - _compactMin
-            @state.isCompacted = true
-            return button
-                ref: 'button-expand'
-                key: 'button-expand-' + message.get 'id'
-                className: 'more'
-                onClick: =>
-                    @setState compact: false
-                i className: 'fa fa-refresh'
-                t 'load more messages', hiddenSize
+        # isCompactMode = not @state.isCompacted and @state.compact
+        # doCompact = index <= @state.compactMin
+        # if isCompactMode and doCompact
+        #     hiddenSize = @state.messages?.size -  @state.compactMin
+        #     @state.isCompacted = true
+        #     return button
+        #         ref: 'button-expand'
+        #         key: 'button-expand-' + message.get 'id'
+        #         className: 'more'
+        #         onClick: =>
+        #             @setState compact: false
+        #         i className: 'fa fa-refresh'
+        #         t 'load more messages', hiddenSize
 
         accounts = AccountStore.getAll()
         accountID = RouterGetter.getAccountID()
@@ -107,3 +111,12 @@ module.exports = React.createClass
                         action: 'message.list'
 
             @state.messages.map @renderMessage
+
+    _initScroll: ->
+        if not (conversation = ReactDOM.findDOMNode @refs.conversation) or conversation.scrollTop
+            return
+
+        if (activeElement = conversation.querySelector '[data-message-active="true"]')
+            unless DomUtils.isVisible activeElement
+                coords = activeElement.getBoundingClientRect()
+                conversation.scrollTop = coords.top

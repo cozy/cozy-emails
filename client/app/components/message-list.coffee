@@ -3,6 +3,7 @@ React     = require 'react'
 ReactDOM  = require 'react-dom'
 
 {div, section, p, ul, li, a, span, i, button, input, img} = React.DOM
+DomUtils = require '../utils/dom_utils'
 
 SelectionGetter = require '../getters/selection'
 RouterGetter = require '../getters/router'
@@ -15,8 +16,6 @@ RouterStore = require '../stores/router_store'
 
 SelectionStore       = require '../stores/selection_store'
 StoreWatchMixin      = require '../mixins/store_watch_mixin'
-
-DomUtils     = require '../utils/dom_utils'
 
 RouterActionCreator = require '../actions/router_action_creator'
 
@@ -114,6 +113,6 @@ module.exports = MessageList = React.createClass
             return
 
         if (activeElement = scrollable.querySelector '[data-message-active="true"]')
-            unless DomUtils.isVisible(activeElement)
+            unless DomUtils.isVisible activeElement
                 coords = activeElement.getBoundingClientRect()
                 scrollable.scrollTop = coords.top - coords.height
