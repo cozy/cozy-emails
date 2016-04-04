@@ -148,7 +148,7 @@ module.exports = Menu = React.createClass
                                 mailbox:           mailbox
                                 key:               'mailbox-item-' + key
                                 isActive:          @props.mailboxID is mailbox.get 'id'
-                                refreshes:         @state.refreshes
+                                refreshes:         @props.refreshes
                                 displayErrors:     @displayErrors
                                 progress:          @props.progress
                         .toArray()

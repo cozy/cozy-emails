@@ -11,15 +11,9 @@ FilePicker     = React.createFactory require './file_picker'
 MailsInput     = React.createFactory require './mails_input'
 AccountPicker  = React.createFactory require './account_picker'
 
-<<<<<<< 4895eec6bc9cb606ada70d3f1a9be013bffb6a28
-MessageStore = require '../stores/message_store'
-=======
 LayoutStore = require '../stores/layout_store'
 
 RouterGetter = require '../getters/router'
-
-{ComposeActions, Tooltips} = require '../constants/app_constants'
->>>>>>> Message compose : active routes
 
 MessageUtils = require '../utils/message_utils'
 
