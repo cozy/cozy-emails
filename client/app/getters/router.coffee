@@ -93,8 +93,8 @@ class RouteGetter
     getCurrentMessage: ->
         MessageStore.getByID MessageStore.getCurrentID()
 
-    isCurrentMessage: (messageID) ->
-        messageID is @getCurrentMessageID()
+    isCurrentConversation: (conversationID) ->
+        conversationID is @getCurrentMessage()?.get 'conversationID'
 
     getCurrentMailbox: (id) ->
         AccountStore.getSelectedMailbox id

@@ -20,19 +20,17 @@ module.exports = MessageListBody = React.createClass
                 .mapEntries ([key, message]) =>
                     messageID = message.get 'id'
                     conversationID = message.get 'conversationID'
-
-                    isSelected = -1 < @props.selection?.indexOf messageID
-
                     ["message-#{key}", MessageItem
                         key: 'conversation-' + conversationID
+                        ref: 'messageItem'
                         message: message
                         mailboxID: @props.mailboxID
                         conversationLengths: RouterGetter.getConversationLength messageID
                         isCompact: SettingsStore.get('listStyle') is 'compact'
-                        isSelected: isSelected
-                        isActive: RouterGetter.isCurrentMessage messageID
+                        isSelected: -1 < @props.selection?.indexOf messageID
+                        isActive: RouterGetter.isCurrentConversation conversationID
                         login: RouterGetter.getLogin()
                         displayConversations: @props.displayConversations
-                        ref: 'messageItem'
+                        tags:  RouterGetter.getTags message
                     ]
                 .toArray()

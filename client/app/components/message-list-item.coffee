@@ -9,8 +9,6 @@ classNames = require 'classnames'
 colorhash                    = require '../utils/colorhash'
 MessageUtils                 = require '../utils/message_utils'
 
-RouterGetter = require '../getters/router'
-
 RouterActionCreator = require '../actions/router_action_creator'
 LayoutActionCreator = require '../actions/layout_action_creator'
 
@@ -81,7 +79,9 @@ module.exports = MessageItem = React.createClass
                         div className: 'subject ellipsable',
                             @highlightSearch message.get('subject')
                         div className: 'mailboxes',
-                            @getMailboxTags(message)...
+                            @props.tags.map (tag) ->
+                                span className: 'mailbox-tag', tag
+
                         div className: 'date',
                             # TODO: use time-elements component here for the date
                             date
@@ -96,11 +96,6 @@ module.exports = MessageItem = React.createClass
 
     highlightSearch: (text, opts = null) ->
         return p opts, MessageUtils.highlightSearch(text)...
-
-    getMailboxTags: ->
-        tags = RouterGetter.getTags @props.message
-        tags.map (tag) ->
-            span className: 'mailbox-tag', tag
 
     onSelect: (event) ->
         event.stopPropagation()

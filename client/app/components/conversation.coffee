@@ -69,12 +69,13 @@ module.exports = React.createClass
 
         accounts = AccountStore.getAll()
         accountID = RouterGetter.getAccountID()
-        messageID = message.get('id')
+        messageID = message.get 'id'
+        conversationID = message.get('conversationID')
         Message
             ref                 : 'message'
             key                 : 'message-' + messageID
             message             : message
-            active              : RouterGetter.isCurrentMessage messageID
+            active              : RouterGetter.isCurrentConversation conversationID
             url                 : RouterGetter.getURL {messageID}
             selectedMailboxID   : @props.mailboxID
             useIntents          : LayoutStore.intentAvailable()
