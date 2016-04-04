@@ -111,13 +111,15 @@ module.exports = React.createClass
                     href: RouterGetter.getURL
                         action: 'message.list'
 
-            @state.messages.map @renderMessage
+            section
+                ref: 'scrollable',
+                    @state.messages.map @renderMessage
 
     _initScroll: ->
-        if not (conversation = ReactDOM.findDOMNode @refs.conversation) or conversation.scrollTop
+        if not (scrollable = ReactDOM.findDOMNode @refs.scrollable) or scrollable.scrollTop
             return
 
-        if (activeElement = conversation.querySelector '[data-message-active="true"]')
+        if (activeElement = scrollable.querySelector '[data-message-active="true"]')
             unless DomUtils.isVisible activeElement
                 coords = activeElement.getBoundingClientRect()
-                conversation.scrollTop = coords.top
+                scrollable.scrollTop = coords.top
