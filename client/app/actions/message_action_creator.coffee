@@ -187,7 +187,7 @@ MessageActionCreator =
 
         AppDispatcher.handleViewAction
             type: ActionTypes.MESSAGE_FLAGS_REQUEST
-            value: {target, ref, error, op, flag, flagAction}
+            value: {target, ref, op, flag, flagAction}
 
         XHRUtils[op] target, flag, (error, updated) =>
             if error
