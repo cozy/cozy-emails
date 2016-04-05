@@ -6,7 +6,6 @@ XHRUtils      = require '../utils/xhr_utils'
 
 AccountStore  = require "../stores/account_store"
 MessageStore  = require '../stores/message_store'
-SearchStore  = require '../stores/search_store'
 
 refCounter = 1
 
@@ -54,25 +53,6 @@ MessageActionCreator =
             type: ActionTypes.MESSAGE_CURRENT
             value:
                 messageID: messageID
-
-    fetchSearchResults: (accountID, search) ->
-        return null if search is '-'
-        url = SearchStore.getNextSearchUrl()
-        return unless url
-
-        AppDispatcher.handleViewAction
-            type: ActionTypes.SEARCH_REQUEST
-            value: {search}
-
-        XHRUtils.search url, (error, searchResults) ->
-            if error?
-                AppDispatcher.handleViewAction
-                    type: ActionTypes.SEARCH_FAILURE
-                    value: {error}
-            else
-                AppDispatcher.handleViewAction
-                    type: ActionTypes.SEARCH_SUCCESS
-                    value: {searchResults}
 
     fetchConversation: (conversationID) ->
 

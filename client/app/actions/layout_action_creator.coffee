@@ -1,16 +1,8 @@
-XHRUtils = require '../utils/xhr_utils'
-SocketUtils = require '../utils/socketio_utils'
-
-MessageStore = require '../stores/message_store'
-
 RouterGetter = require '../getters/router'
 
 AppDispatcher = require '../app_dispatcher'
 
 {ActionTypes, MessageActions} = require '../constants/app_constants'
-
-AccountActionCreator = require './account_action_creator'
-MessageActionCreator = require './message_action_creator'
 
 module.exports = LayoutActionCreator =
 
@@ -90,20 +82,15 @@ module.exports = LayoutActionCreator =
 
 
     showSearchResult: (parameters) ->
-        console.log 'showSearchResult', parameters
-        # {accountID, search} = parameters
-        #
-        # if accountID isnt 'all'
-        #     AccountActionCreator.selectAccount accountID
-        # else
-        #     AccountActionCreator.selectAccount null
-        #
-        # AppDispatcher.handleViewAction
-        #     type: ActionTypes.SEARCH_PARAMETER_CHANGED
-        #     value: {accountID, search}
-        #
-        # if search isnt '-'
-        #     MessageActionCreator.fetchSearchResults accountID, search
+        {accountID, search} = parameters
+
+        AppDispatcher.handleViewAction
+            type: ActionTypes.SELECT_ACCOUNT
+            value: {accountID}
+
+        AppDispatcher.handleViewAction
+            type: ActionTypes.SEARCH_PARAMETER_CHANGED
+            value: {accountID, search}
 
     saveMessage: (params) ->
         {accountID, mailboxID, messageID} = params

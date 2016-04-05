@@ -367,8 +367,8 @@ class MessageStore extends Store
             .toOrderedMap()
             @emit 'change'
 
-        handle ActionTypes.SEARCH_SUCCESS, ({searchResults}) ->
-            for message in searchResults.rows when message?
+        handle ActionTypes.SEARCH_SUCCESS, ({result}) ->
+            for message in result.rows when message?
                 _saveMessage message
             @emit 'change'
 
