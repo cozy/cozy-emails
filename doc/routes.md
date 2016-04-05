@@ -15,7 +15,7 @@ The v2 refactoring introduces a new router pattern[^1] which sets new routes, an
 - `mailbox/:mailboxID`
   : display the content of a mailbox (i.e. the conversations list). Can be customized using _queryString_ parameters:
   - `?filters=[:filters]`
-    : filter conversations list, can be a list of filters (e.g. `gmail/inbox?filters=starred,unread` display gmail's _inbox_ messages which are both _unread_ and _starred_)
+    : filter conversations list, can be a list of filters (e.g. `flagged` AND/OR `attach` AND/OR `unread`)
   - `?sort=:column:[ASC|DESC]`
     : set the sorting order and on which criteria for the list (e.g. `gmail/inbox?sort=sender:ASC` sort messages from gmail's inbox by sender address, ascending)
 
