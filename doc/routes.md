@@ -66,3 +66,33 @@ Complex filters (in opposite to boolean filters like previous) can have paramete
 - `??before=2016-04-03T22:00:00.000Z&after=2016-04-04T21:59:59.999Z`: returns messages from _2016-04-04_,
 - `?before=2016-04-03T22:00:00.000Z`: returns messages since _2016/04/24_ included,
 - `?before=2016-04-03T22:00:00.000Z&flags=unseen`: returns only _unread_ messages since _2016/04/24_ included.
+
+
+## Redirection
+
+2 cases exist :
+ - a redirection from the view,
+ - or a redirection from an `action`.
+
+### Use a basic link into view
+You need to go to a specific page with a `click` action ?
+ - `RouterGetter.getURL(params)` will return the right URL for `params`
+ - define `params` as smaller as you can : `Stores` knows everything for you!
+
+### Make a redirection from stores
+A message is deleted, then you need to select the next message from the list?
+First of all: do not redirect into the view but listen to `ActionType.RECEIVE_MESSAGE_DELETE` into `RouterStore`, such as:
+
+ ```
+ handle ActionTypes.MESSAGE_TRASH_SUCCESS, (params) ->
+     if MessageActions.SHOW is _action
+         if (messageID = params?.next?.get 'id')
+             _router.navigate @getURL {messageID}
+         else
+             _action = MessageActions.SHOW_ALL
+         @emit 'change'
+```
+
+If context (that should be updated) isnt from `RouterStore` (ie. `messageID` is `MessageStore`):
+ - then use `_router.navigate` with the right params,
+ - Otherwhise, update `local` variable, and emit a `change` event.
