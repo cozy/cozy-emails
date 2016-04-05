@@ -74,15 +74,6 @@ module.exports = Panel = React.createClass
                 key: 'conversation-' + @props.messageID
                 ref: 'conversation'
 
-        # -- Generates the new message composition form
-        else if @props.action is 'compose' or
-                @props.action is 'compose.edit' or
-                @props.action is 'edit' or
-                @props.action is 'compose.reply' or
-                @props.action is 'compose.reply-all' or
-                @props.action is 'compose.forward'
-            @renderCompose()
-
         # -- Display the settings form
         else if @props.action is 'settings'
 

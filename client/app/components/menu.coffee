@@ -87,9 +87,6 @@ module.exports = Menu = React.createClass
             role: 'menubar'
             'aria-expanded': @state.isDrawerExpanded,
 
-            if @state.accounts.size
-                @renderComposeButton()
-
             nav className: 'mainmenu',
                 if @state.search and not @state.selectedAccount
                     div className: 'active',
@@ -129,19 +126,6 @@ module.exports = Menu = React.createClass
                         'fa-caret-right': not @state.isDrawerExpanded
                         'fa-caret-left':  @state.isDrawerExpanded
                     onClick: LayoutActionCreator.drawerToggle
-
-    renderComposeButton: () ->
-        composeUrl = @buildUrl
-            direction: 'first'
-            action: 'compose'
-            parameters: null
-            fullWidth: true
-
-        a
-            href: composeUrl
-            className: 'compose-action btn btn-cozy',
-                i className: 'fa fa-pencil'
-                span className: 'item-label', " #{t 'menu compose'}"
 
     renderNewMailboxButton: () ->
         if @state.accounts.size

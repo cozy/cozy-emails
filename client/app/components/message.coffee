@@ -55,7 +55,6 @@ module.exports = React.createClass
 
     getInitialState: ->
         return {
-            composeAction: ''
             displayHeaders: false
             messageDisplayHTML: @props.settings.get 'messageDisplayHTML'
             messageDisplayImages: @props.settings.get 'messageDisplayImages'

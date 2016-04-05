@@ -152,12 +152,8 @@ module.exports = MessageItem = React.createClass
         params =
             messageID: @props.message.get 'id'
 
-        if MessageFlags.DRAFT in @props.message.get('flags') and
-        not @props.isTrash
-            action = 'edit'
-        else
-            action = 'conversation'
-            params.conversationID = @props.message.get 'conversationID'
+        action = 'conversation'
+        params.conversationID = @props.message.get 'conversationID'
 
         return @buildUrl
             direction: 'second'
