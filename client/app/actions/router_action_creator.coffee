@@ -25,7 +25,7 @@ RouterActionCreator =
         separator = ','
         filters = RouterStore.getFilter()
 
-        _.each params, (value, key) ->
+        for key, value of params
             # Toggle filter value
             # Add value if it doesnt exist
             # Remove if from filters otherwhise
