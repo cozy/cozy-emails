@@ -4,6 +4,7 @@
     "classnames": "2.2.3",
     "immutable": "3.7.6",
     "jquery": "2.2.1",
+    "lodash": "4.12.0",
     "markdown": "0.5.0",
     "moment": "2.11.2",
     "node-event-emitter": "0.0.1",
@@ -25,6 +26,7 @@
     "bootstrap": "3.3.6",
     "browser-sync": "2.11.1",
     "browser-sync-webpack-plugin": "1.0.1",
+    "coffee-jsx-loader": "0.1.5",
     "coffee-loader": "0.7.2",
     "coffee-script": "1.10.0",
     "copy-webpack-plugin": "1.1.1",
@@ -35,12 +37,11 @@
     "file-loader": "0.8.5",
     "glob-loader": "0.2.0",
     "imports-loader": "0.6.5",
-    "jade": "1.11.0",
-    "jade-loader": "0.8.0",
     "json-loader": "0.5.4",
     "postcss-loader": "0.8.1",
     "style-loader": "0.13.0",
-    "stylus-loader": "1.5.1",
+    "stylus": "0.54.5",
+    "stylus-loader": "2.1.1",
     "url-loader": "0.5.7"
   }
 }

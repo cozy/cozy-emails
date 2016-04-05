@@ -1,57 +1,35 @@
-AppDispatcher = require '../app_dispatcher'
+AppDispatcher = require '../libs/flux/dispatcher/dispatcher'
 {ActionTypes} = require '../constants/app_constants'
-Activity = require '../utils/activity_utils'
-LayoutActionCreator = require '../actions/layout_action_creator'
+Activity = require '../libs/activity'
 
 module.exports = ContactActionCreator =
 
 
-    searchContact: (query) ->
-        options =
-            name: 'search'
-            data:
-                type: 'contact'
-                query: query
-
-        activity = new Activity options
-
-        activity.onsuccess = ->
-            AppDispatcher.handleViewAction
-                type: ActionTypes.RECEIVE_RAW_CONTACT_RESULTS
-                value: @result
-
-        activity.onerror = ->
-            console.log "KO", @error, @name
-
-
     searchContactLocal: (query) ->
-        AppDispatcher.handleViewAction
+        AppDispatcher.dispatch
             type: ActionTypes.CONTACT_LOCAL_SEARCH
             value: query
 
 
-    createContact: (contact, callback) ->
+    createContact: (contact) ->
         options =
             name: 'create'
             data:
                 type: 'contact'
                 contact: contact
 
+        AppDispatcher.dispatch
+            type: ActionTypes.CREATE_CONTACT_REQUEST
+            value: options
+
         activity = new Activity options
 
-        activity.onsuccess = (err, res) ->
-            AppDispatcher.handleViewAction
-                type: ActionTypes.RECEIVE_RAW_CONTACT_RESULTS
-                value: @result
+        activity.onsuccess = ->
+            AppDispatcher.dispatch
+                type: ActionTypes.CREATE_CONTACT_SUCCESS
+                value: contact
 
-            msg = t('contact create success',
-                {contact: contact.name or contact.address})
-            LayoutActionCreator.notify msg, autoclose: true
-            callback?()
-
-        activity.onerror = ->
-            console.log @name
-            msg = t('contact create error', {error: @name})
-            LayoutActionCreator.alertError msg, autoclose: true
-            callback?()
-
+        activity.onerror = (error) ->
+            AppDispatcher.dispatch
+                type: ActionTypes.CREATE_CONTACT_FAILURE
+                value: error

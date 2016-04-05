@@ -6,50 +6,47 @@ describe 'Mailbox fetching', ->
 
     inboxCount = 0
     readCount = 0
-    flaggedCount = 0
 
-    testNextLinks = (first, iterator, callback) ->
+
+    testResultLength = (first, iterator, callback) ->
         [iterator, callback] = [null, iterator] unless callback
-        totalFound = 0
-        count = null
+        totalFound = null
+
         step = (link, callback) ->
             client.get link, (err, res, body) ->
                 return callback err if err
                 body.messages.length.should.be.lessThan MSGBYPAGE + 1
-                count ?= body.count
-                totalFound += body.messages.length
+                totalFound = body.messages.length
                 iterator?(body.messages)
-                if body.links.next then step body.links.next, callback
-                else callback null
+                callback null
 
         step first, ->
-            if totalFound is count then callback null, totalFound
+            if totalFound isnt null then callback null, totalFound
             else callback new Error 'total & count doesnt match'
 
 
     it "When I follow the next links", (done) ->
-        testNextLinks "/mailbox/#{store.inboxID}",
+        testResultLength "/mailbox/#{store.inboxID}",
             (messages) ->
                 readCount += messages
-                            .filter (m) -> '\\Seen' in m.flags
-                            .length
+                    .filter (m) -> '\\Seen' in m.flags
+                    .length
 
-                flaggedCount += messages
-                            .filter (m) -> '\\Flagged' in m.flags
-                            .length
-
-            (err, total) ->
+            (error, total) ->
                 inboxCount = total
-                done err
+                done error
+
 
     it "When I get a mailbox (filter by flag)", (done) ->
-        testNextLinks "/mailbox/#{store.inboxID}?flag=seen", (err, total) ->
+        testResultLength "/mailbox/#{store.inboxID}?flag=seen",
+            (err, total) ->
                 total.should.equal readCount
                 done()
 
 
     it "When I get a mailbox (filter by not flag)", (done) ->
-        testNextLinks "/mailbox/#{store.inboxID}?flag=unseen", (err, total) ->
+        testResultLength "/mailbox/#{store.inboxID}?flag=unseen",
+            (err, total) ->
                 total.should.equal inboxCount - readCount
                 done()
 

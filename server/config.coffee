@@ -52,6 +52,7 @@ config =
             Scheduler.schedule proc, (err) ->
                 log.info "Initialization complete"
 
+
     development: [
         americano.logger 'dev'
     ]

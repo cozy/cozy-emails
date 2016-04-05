@@ -6,15 +6,12 @@ Immutable = require 'immutable'
 
 {Dropdown} = require('./basic_components').factories
 PropTypes = require '../libs/prop_types'
-RouterMixin = require '../mixins/router_mixin'
+
 cachedTransform = require '../libs/cached_transform'
-ShouldComponentUpdate = require '../mixins/should_update_mixin'
 
 
 module.exports = React.createClass
     displayName: 'MailboxPicker'
-
-    mixins: [RouterMixin, ShouldComponentUpdate.UnderscoreEqualitySlow]
 
     propTypes:
         allowUndefined: React.PropTypes.bool

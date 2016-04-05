@@ -141,31 +141,9 @@ module.exports.listByMailbox = (req, res, next) ->
     , (err, result) ->
         return next err if err
 
-        messages = result.messages
-        if messages.length is MSGBYPAGE
-            last = messages[messages.length - 1]
-            # for 'from' and 'dest', we use pageAfter as the number of records
-            # to skip
-            if req.sortField is 'from' or req.sortField is 'dest'
-                pageAfter = messages.length + (parseInt(req.pageAfter, 10) or 0)
-            else
-                lastDate = last.date or new Date()
-                pageAfter = lastDate.toISOString()
-
-            links = next: "mailbox/#{mailboxID}/?" + querystring.stringify
-                flag: req.flagcode
-                sort: req.sort
-                before: req.before
-                after: req.after
-                pageAfter: pageAfter
-
-        else
-            links = {}
-
         result.messages ?= []
         result.mailboxID = mailboxID
         result.messages = result.messages.map (msg) -> msg.toClientObject()
-        result.links = links
 
         res.send result
 

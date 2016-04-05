@@ -6,7 +6,7 @@ React  = require 'react'
 
 LinkedStateMixin = require 'react-addons-linked-state-mixin'
 
-FileUtils    = require '../utils/file_utils'
+FileGetter    = require '../getters/file'
 
 module.exports = ComposeEditor = React.createClass
     displayName: 'ComposeEditor'
@@ -17,14 +17,8 @@ module.exports = ComposeEditor = React.createClass
 
     getInitialState: ->
         return {
-            html: @props.html
-            text: @props.text
             target: false     # true when hovering with a file
         }
-
-    shouldComponentUpdate: (nextProps, nextState) ->
-        return not(_.isEqual(nextState, @state)) or
-            not (_.isEqual(nextProps, @props))
 
     # Update parent component when content has been updated
     onHTMLChange: (event) ->
@@ -35,7 +29,6 @@ module.exports = ComposeEditor = React.createClass
         @props.text.requestChange @refs.content.value
 
     render: ->
-
         if @props.settings.get 'composeOnTop'
             classFolded = 'folded'
         else
@@ -53,6 +46,7 @@ module.exports = ComposeEditor = React.createClass
                                 'aria-describedby': Tooltips.COMPOSE_IMAGE
                                 'data-tooltip-direction': 'top'
             if @props.composeInHTML
+
                 div
                     className: "form-control rt-editor #{classFolded} #{classTarget}",
                     ref: 'html',
@@ -68,20 +62,22 @@ module.exports = ComposeEditor = React.createClass
                     # blur event
                     onBlur: @onHTMLChange,
                     dangerouslySetInnerHTML: {
-                        __html: @state.html.value
+                        __html: @props.html.value
                     }
             else
                 textarea
                     className: "editor #{classTarget}",
-                    ref: 'content',
-                    onKeyDown: @onKeyDown,
-                    onChange: @onTextChange,
-                    onBlur: @onTextChange,
-                    defaultValue: @state.text.value
-                    onDragOver: @allowDrop,
-                    onDragEnter: @onDragEnter,
-                    onDragLeave: @onDragLeave,
-                    onDrop: @handleFiles,
+                    ref: 'content'
+                    onKeyDown: @onKeyDown
+                    onChange: @onTextChange
+                    onBlur: @onTextChange
+                    defaultValue: @state.text
+                    value: @props.text.value
+                    onDragOver: @allowDrop
+                    onDragEnter: @onDragEnter
+                    onDragLeave: @onDragLeave
+                    onDrop: @handleFiles
+
 
     _initCompose: ->
 
@@ -232,24 +228,19 @@ module.exports = ComposeEditor = React.createClass
             node = @refs.html?
             if node?
                 document.querySelector(".rt-editor").focus()
-                if not @props.settings.get 'composeOnTop'
+                unless @props.settings.get 'composeOnTop'
 
-                    account = @props.accounts[@props.accountID]
-
-                    signatureNode = document.getElementById "signature"
-                    if account.signature? and
-                    account.signature.length > 0 and
-                    signatureNode?
-                        node = signatureNode
-                        node.innerHTML = """
-                        <p><br /></p>
-                        #{node.innerHTML}
-                        """
-                        node = node.firstChild
-
-                    else
-                        node.innerHTML += "<p><br /></p><p><br /></p>"
-                        node = node.lastChild
+                    if (signatureNode = document.getElementById "signature")
+                        if @props.signature and @props.signature.length > 0
+                            node = signatureNode
+                            node.innerHTML = """
+                            <p><br /></p>
+                            #{node.innerHTML}
+                            """
+                            node = node.firstChild
+                        else
+                            node.innerHTML += "<p><br /></p><p><br /></p>"
+                            node = node.lastChild
 
                     if node?
                         # move cursor to the bottom
@@ -272,11 +263,11 @@ module.exports = ComposeEditor = React.createClass
             @_initCompose()
 
         # On account change, update message signature
-        if oldProps.accountID isnt @props.accountID
+        if oldProps.account.get('id') isnt @props.account.get('id')
             @_updateSignature()
 
     _updateSignature: ->
-        signature = @props.accounts[@props.accountID].signature
+        signature = @props.account?.get 'signature'
         if @refs.html?
             signatureNode = document.getElementById "signature"
             if signature? and signature.length > 0
@@ -298,7 +289,7 @@ module.exports = ComposeEditor = React.createClass
             @onHTMLChange()
         else if @refs.content?
             node = @refs.content
-            oldSig = @props.accounts[oldProps.accountID].signature
+            oldSig = oldProps.account.get 'signature'
             if signature? and signature.length > 0
                 if oldSig and oldSig.length > 0
                     # replace old signature by new one
@@ -357,13 +348,14 @@ module.exports = ComposeEditor = React.createClass
                             document.querySelector('.rt-editor').innerHTML += img
                     else
                         document.execCommand 'insertHTML', false, img
-                    FileUtils.fileToDataURI file, (result) =>
+                    FileGetter.fileToDataURI file, (result) =>
                         img = document.getElementById id
                         if img
                             img.removeAttribute 'id'
                             img.src = result
                             # force update of React component
                             @onHTMLChange()
+
         @setState target: false
 
 
@@ -384,7 +376,7 @@ module.exports = ComposeEditor = React.createClass
     choosePhoto_answer : (message) ->
         answer = message.data
         if answer.newPhotoChosen
-            data      = FileUtils.dataURItoBlob answer.dataUrl
+            data      = FileGetter.dataURItoBlob answer.dataUrl
             blob      = new Blob([data.blob, {type: data.mime}])
             blob.name = answer.name
             picker    = @props.getPicker()

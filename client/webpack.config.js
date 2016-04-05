@@ -34,8 +34,8 @@ var loaders = [
         loader: ExtractTextPlugin.extract('style', cssOptions)
     },
     {
-        test: /\.jade$/,
-        loader: 'jade'
+        test: /\.cjsx$/,
+        loader: 'coffee-jsx'
     },
     {
         test: /\.json$/,
@@ -138,7 +138,7 @@ module.exports = {
         chunkFilename: optimize? 'register.[hash].js' : 'register.js'
     },
     resolve: {
-        extensions: ['', '.js', '.coffee', '.jade', '.json']
+        extensions: ['', '.js', '.coffee', '.cjsx', '.json']
     },
     debug: !optimize,
     devtool: 'source-map',
