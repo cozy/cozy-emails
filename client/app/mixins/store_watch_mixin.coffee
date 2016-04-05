@@ -12,8 +12,16 @@ module.exports = StoreWatchMixin = (stores) ->
         stores.forEach (store) =>
             store.removeListener 'change', @_setStateFromStores
 
+    # Build initial state from store values.
+    getInitialState: ->
+        return @getStateFromStores()
+
+    componentWillReceiveProps: (nextProps={}) ->
+        @setState @getStateFromStores()
+        nextProps
+
     # Update state with store values
-    _setStateFromStores: (nextState = @getInitialState()) ->
+    _setStateFromStores: ->
         return unless @isMounted()
 
         _difference = (obj0, obj1) ->
@@ -23,6 +31,7 @@ module.exports = StoreWatchMixin = (stores) ->
                     result[key] = value
             result
 
+        nextState = @getInitialState()
         changes = _difference nextState, @state
         unless _.isEmpty changes
             console.log 'change', changes

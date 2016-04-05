@@ -38,18 +38,6 @@ module.exports = React.createClass
 
     _lastDiscovered: ''
 
-    # FIXME : use getters instead
-    # such as : AccountConfig.getState()
-    getInitialState: ->
-        @getStateFromStores()
-
-    # FIXME : use getters instead
-    # such as : AccountConfig.getState()
-    componentWillReceiveProps: (nextProps={}) ->
-        console.log 'componentWillReceiveProps', @getStateFromStores()
-        @setState @getStateFromStores()
-        nextProps
-
     getStateFromStores: ->
         nstate = {}
 

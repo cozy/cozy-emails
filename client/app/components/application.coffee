@@ -42,13 +42,6 @@ Application = React.createClass
         StoreWatchMixin [SettingsStore, RouterStore, MessageStore]
     ]
 
-    getInitialState: ->
-        @getStateFromStores()
-
-    componentWillReceiveProps: (nextProps={}) ->
-        @setState @getStateFromStores()
-        nextProps
-
     getStateFromStores: ->
         settings = RouterGetter.getLayoutSettings()
         className = ['layout'

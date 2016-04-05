@@ -34,15 +34,6 @@ module.exports = MessageList = React.createClass
         StoreWatchMixin [SelectionStore, MessageStore]
     ]
 
-    # FIXME : use getters instead
-    # such as : MessagesListGetter.getState()
-    getInitialState: ->
-        @getStateFromStores()
-
-    componentWillReceiveProps: (nextProps={}) ->
-        @setState @getStateFromStores()
-        nextProps
-
     componentDidMount: ->
         @_initScroll()
 

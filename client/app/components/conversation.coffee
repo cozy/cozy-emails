@@ -29,13 +29,6 @@ module.exports = React.createClass
         StoreWatchMixin [SelectionStore, MessageStore]
     ]
 
-    getInitialState: ->
-        @getStateFromStores()
-
-    componentWillReceiveProps: (nextProps={}) ->
-        @setState @getStateFromStores()
-        nextProps
-
     componentDidMount: ->
         @_initScroll()
 
