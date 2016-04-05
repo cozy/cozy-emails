@@ -40,7 +40,7 @@ module.exports = Settings = cozydb.getModel('MailsSettings', {
   },
   messageConfirmDelete: {
     type: Boolean,
-    "default": true
+    "default": false
   },
   messageDisplayHTML: {
     type: Boolean,
@@ -87,7 +87,7 @@ Settings.getDefault = function(callback) {
     displayPreview: true,
     layoutStyle: 'column',
     listStyle: 'default',
-    messageConfirmDelete: true,
+    messageConfirmDelete: false,
     messageDisplayHTML: true,
     messageDisplayImages: false,
     plugins: {
