@@ -5,17 +5,12 @@ SelectionStore = require '../stores/selection_store'
 
 class SelectionGetter
 
-    getProps: (messages) ->
-        selectAll = SelectionStore.getAllSelected()
-        if selectAll and messages?.size
-            selection = messages.map (message) -> message.get('id')
-        else
-            selection = SelectionStore.getSelected()
+    isAllSelected: ->
+        SelectionStore.getAllSelected()
 
-        return {
-            selection: selection.toArray()
-            isAllSelected: selectAll
-        }
-
+    getSelection: (messages) ->
+        if @getAllSelected() and messages?.size
+            return messages.map (message) -> message.get('id')
+        return SelectionStore.getSelected()
 
 module.exports = new SelectionGetter()

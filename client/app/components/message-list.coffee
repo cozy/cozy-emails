@@ -51,11 +51,12 @@ module.exports = MessageList = React.createClass
 
     getStateFromStores: ->
         messages = RouterGetter.getMessagesToDisplay @props.mailboxID
-        selection = SelectionGetter.getProps messages
-        nextstate = _.extend selection,
-            messages    : messages
-            hasNextPage : !!RouterGetter.getNextURL()
-        return nextstate
+        return {
+            isAllSelected   : SelectionGetter.isAllSelected()
+            selection       : SelectionGetter.getSelection messages
+            messages        : messages
+            hasNextPage     : !!RouterGetter.getNextURL()
+        }
 
     render: ->
         section
