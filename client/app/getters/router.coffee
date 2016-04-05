@@ -80,13 +80,13 @@ class RouteGetter
             messages = messages.filter (message, index) =>
                 value = true
 
-                if @isFlags 'FLAGGED', filter.flags
+                if @isFlags 'FLAGGED'
                     unless (value = MessageFlags.FLAGGED in message.get 'flags')
                         return false
-                if @isFlags 'ATTACH', filter.flags
+                if @isFlags 'ATTACH'
                     unless (value = message.get('attachments').size > 0)
                         return false
-                if @isFlags 'UNSEEN', filter.flags
+                if @isFlags 'UNSEEN'
                     unless (value = MessageFlags.SEEN not in message.get 'flags')
                         return false
                 value
