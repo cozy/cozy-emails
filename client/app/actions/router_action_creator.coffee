@@ -31,15 +31,21 @@ RouterActionCreator =
             # Remove if from filters otherwhise
             tmp = filters[key]
             tmp = tmp.split separator if _.isString filters[key]
-            tmp ?= []
-            if -1 < tmp.indexOf value
-                tmp = _.without tmp, value
-            else
-                tmp.push value
-            filter[key] = tmp?.join separator
+            value = decodeURIComponent value
 
-        isServer = false
-        @navigate url: RouterStore.getCurrentURL {filter, isServer}
+            if 'flags' is key
+                tmp ?= []
+                if -1 < tmp.indexOf value
+                    tmp = _.without tmp, value
+                else
+                    tmp.push value
+                filter[key] = tmp?.join separator
+            else
+                filter[key] = value
+
+        # FIXME : faire un dispatch à la place
+        # pour faire le navigate dans routerStore
+        @navigate url: RouterStore.getCurrentURL {filter, isServer: false}
 
     navigate: (params={}) ->
         {url} = params

@@ -19,11 +19,8 @@ module.exports = FiltersToolbarMessagesList = React.createClass
     getInitialState: ->
         expanded:  false
 
-    onDateFilter: (start, end) ->
-        date = if !!start and !!end then [start, end] else null
-        @props.onFilterChange
-            type: 'date',
-            range: date
+    onDateFilter: (before, after) ->
+        RouterActionCreator.addFilter {before, after}
 
     toggleFilters: (filter) ->
         RouterActionCreator.addFilter filter

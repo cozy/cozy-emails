@@ -62,9 +62,10 @@ module.exports =
         if params.action is MessageActions.PAGE_NEXT
             url = RouterStore.getNextURL()
         else
-            url = RouterStore.getCurrentURL
-                action: MessageActions.SHOW_ALL
-                mailboxID: AccountStore.getSelectedMailbox()?.get 'id'
+            action = MessageActions.SHOW_ALL
+            mailboxID = AccountStore.getSelectedMailbox()?.get 'id'
+            url = RouterStore.getCurrentURL {action, mailboxID}
+
         request.get url
         .set 'Accept', 'application/json'
         .end handleResponse callback, "fetchMessagesByFolder", url

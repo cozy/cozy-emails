@@ -20,9 +20,6 @@ module.exports = ToolbarMessagesList = React.createClass
         selection:            React.PropTypes.array.isRequired
         isAllSelected:        React.PropTypes.bool.isRequired
 
-    onFilterChange: (params) ->
-        RouterActionCreator.updateFilter params
-
     selectAll: ->
         LayoutActionCreator.selectAll()
 

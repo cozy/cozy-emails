@@ -22,11 +22,7 @@ class RouterStore extends Store
     _lastDate = null
 
     _currentFilter = _defaultFilter =
-        field: 'date'
-        order: '-'
-
-        # FIXME : est-ce que ce filtre est util?!
-        type: null
+        sort: '-'
 
         flags: null
 
@@ -81,7 +77,6 @@ class RouterStore extends Store
         if isAccount and not params.tab
             params.tab = 'account'
 
-
         if (route = _getRoute action)
             isValid = true
             prefix = unless params.isServer then '#' else ''
@@ -100,7 +95,7 @@ class RouterStore extends Store
         return _nextURL
 
     getCurrentURL: (options={}) ->
-        params = _.extend {}, {isServer: true}, options
+        params = _.extend {isServer: true}, options
         params.action = @getAction() unless params.action
         params.mailboxID = AccountStore.getSelectedMailbox()?.get('id')
         return @getURL params
@@ -120,19 +115,17 @@ class RouterStore extends Store
     _getURLparams = (query) ->
         # Get data from URL
         if _.isString query
-            params = query.match /([\w]+=[-+\w,]+)+/gi
+            params = query.match /([\w]+=[-+\w,:.]+)+/gi
             return unless params?.length
-
             result = {}
+
             _.each params, (param) ->
                 param = param.split '='
                 if -1 < (value = param[1]).indexOf ','
                     value = value.split ','
-                if 'sort' is param[0]
-                    result['order'] = value.substr 0, 1
-                    result['field'] = value.substr 1
                 else
                     result[param[0]] = value
+
             return result
 
         # Get data from Views
@@ -141,12 +134,6 @@ class RouterStore extends Store
                 result = {}
                 result.before = query.value
                 result.after = "#{query.value}\uFFFF"
-
-            when 'date'
-                if query.range
-                    result = {}
-                    result.before = query.range[0]
-                    result.after = query.range[1]
 
             when 'flag'
                 # Keep previous filters
@@ -161,50 +148,24 @@ class RouterStore extends Store
                 (result = {}).flags = flags
         return result
 
-    # _getFilterParams = ->
-    #     'starred,unread'
-    #
-    # _getSortParams = ->
-    #     'sender:ASC'
-    #
-    # _getStartDateParams = ->
-    #     '2016-03-01T23:00:00.000Z'
-    #
-    # _getEndDateParams = ->
-    #     '2016-03-03T22:59:59.999Z'
-
     _getURIQueryParams = (params) ->
         filters = _self.getFilter()
+        isServer = params.isServer
         params = _.extend {}, filters, params?.filter
         result = ''
 
-        # FIXME : adapter les URL
-        # à l'API côté serveur
-        if params.isServer
-            sortField = params.order + '' + params.field
-            params.sort = sortField
-            delete params.order
-            delete params.field
-
+        if isServer
+            params.sort = "#{params.sort}date"
             _.each params, (value, key) ->
-                if value
-                    result = '/?' unless result.length
-                    result += key + '=' + value + '&'
-
+                if value and value isnt 'undefined'
+                    start = unless result.length then '/?' else '&'
+                    result += start + key + '=' + encodeURIComponent(value)
         else
             _.each params, (value, key) ->
-                if value and _defaultFilter[key] isnt value
-                    result = '/?' unless result.length
-                    result += key + '=' + value + '&'
+                if value and value isnt 'undefined' and _defaultFilter[key] isnt value
+                    start = unless result.length then '/?' else '&'
+                    result += start + key + '=' + value
         result
-
-
-    _getSort = (filter) ->
-        filter = _self.getFilter() unless filter
-
-        value = filter.field
-        value = filter.type if _self.isResetFilter filter
-        encodeURIComponent "#{filter.order}#{value}"
 
     _resetFilter = ->
         _currentFilter = _defaultFilter
@@ -214,7 +175,6 @@ class RouterStore extends Store
     isResetFilter: (filter) ->
         filter = _self.getFilter() unless filter
         filter.type in ['from', 'dest']
-
 
     ###
         Defines here the action handlers.
