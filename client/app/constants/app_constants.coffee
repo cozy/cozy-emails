@@ -129,11 +129,24 @@ module.exports =
         'VIEW_ACTION'   : 'VIEW_ACTION'
         'SERVER_ACTION' : 'SERVER_ACTION'
 
-    ComposeActions:
+
+    AccountActions:
+        'EDIT'      : 'account.edit'
+        'CREATE'    : 'account.new'
+
+    MessageActions:
+        'SHOW_ALL'      : 'message.list'
+        'SHOW'          : 'message.show'
+        'EDIT'          : 'message.edit'
         'REPLY'         : 'message.reply'
         'REPLY_ALL'     : 'message.reply.all'
         'FORWARD'       : 'message.forward'
-        'EDIT'          : 'message.edit'
+        'CREATE'        : 'message.new'
+        'GROUP_NEXT'    : 'conversation.next'
+        'PAGE_NEXT'     : 'page.next'
+
+    SearchActions:
+        'SHOW_ALL'      : 'search'
 
     AlertLevel:
         'SUCCESS'      : 'SUCCESS'

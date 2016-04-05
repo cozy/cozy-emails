@@ -9,7 +9,7 @@ toMarkdown = require 'to-markdown'
 _      = require 'underscore'
 jQuery = require 'jquery'
 
-{ComposeActions} = require '../constants/app_constants'
+{MessageActions} = require '../constants/app_constants'
 ContactStore     = require '../stores/contact_store'
 SearchStore      = require '../stores/search_store'
 
@@ -144,7 +144,7 @@ module.exports = MessageUtils =
 
         # edition of an existing draft
         if (_message = props.message)
-            props.action = ComposeActions.EDIT unless props.action
+            props.action = MessageActions.EDIT unless props.action
             _.extend message, _message.toJS()
             message.attachments = _message.get 'attachments'
 
@@ -174,13 +174,13 @@ module.exports = MessageUtils =
         }
 
         switch props.action
-            when ComposeActions.REPLY
+            when MessageActions.REPLY
                 @setMessageAsReply options
 
-            when ComposeActions.REPLY_ALL
+            when MessageActions.REPLY_ALL
                 @setMessageAsReplyAll options
 
-            when ComposeActions.FORWARD
+            when MessageActions.FORWARD
                 @setMessageAsForward options
 
             when null

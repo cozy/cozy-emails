@@ -8,6 +8,8 @@ RouterStore = require '../stores/router_store'
 AccountStore = require '../stores/account_store'
 MessageStore = require '../stores/message_store'
 
+{MessageActions} = require '../constants/app_constants'
+
 
 handleResponse = (callback, details...) ->
     # Prepare the handler to get `err`, `res` from superagent, and next the
@@ -57,11 +59,11 @@ module.exports =
 
 
     fetchMessagesByFolder: (params, callback) ->
-        if params.action is 'page.next'
+        if params.action is MessageActions.PAGE_NEXT
             url = RouterStore.getNextURL()
         else
             url = RouterStore.getCurrentURL
-                action: 'message.list'
+                action: MessageActions.SHOW_ALL
                 mailboxID: AccountStore.getSelectedMailbox()?.get 'id'
         request.get url
         .set 'Accept', 'application/json'

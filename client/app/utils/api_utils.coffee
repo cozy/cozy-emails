@@ -16,10 +16,11 @@ MessageActionCreator = require '../actions/message_action_creator'
 RouterActionCreator  = require '../actions/layout_action_creator'
 NotificationActionsCreator = require '../actions/notification_action_creator'
 
+{MessageActions, AccountActions} = require '../constants/app_constants'
 
 
 onMessageList = ->
-    return RouterStore.getAction() is 'message.list'
+    return RouterStore.getAction() is MessageActions.SHOW_ALL
 
 
 module.exports = Utils =
@@ -97,7 +98,7 @@ module.exports = Utils =
 
     messageNavigate: (direction, inConv) ->
         return unless onMessageList()
-        RouterActionCreator.navigate action: 'conversation.next'
+        RouterActionCreator.navigate action: MessageActions.GROUP_NEXT
 
 
     messageSetCurrent: (message) ->
@@ -131,7 +132,7 @@ module.exports = Utils =
 
         deleteMessage = (isModal) ->
             MessageActionCreator.delete {messageID}
-            RouterActionCreator.navigate action: 'conversation.next'
+            RouterActionCreator.navigate action: MessageActions.GROUP_NEXT
 
         settings = SettingsStore.get()
 

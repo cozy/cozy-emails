@@ -9,7 +9,7 @@ classNames = require 'classnames'
 colorhash = require '../utils/colorhash'
 
 LayoutActionCreator  = require '../actions/layout_action_creator'
-{Tooltips} = require '../constants/app_constants'
+{Tooltips, AccountActions} = require '../constants/app_constants'
 
 RouterGetter = require '../getters/router'
 
@@ -82,10 +82,10 @@ module.exports = Menu = React.createClass
             isSelected: accountID is RouterGetter.getAccountID()
             mailboxes: RouterGetter.getMailboxes()
             newAccountURL: RouterGetter.getURL
-                action: 'account.new'
+                action: AccountActions.CREATE
                 accountID: accountID
             configURL: RouterGetter.getURL
-                action: 'account.edit'
+                action: AccountActions.EDIT
                 accountID: accountID
             nbUnread: account.get 'totalUnread'
             color: colorhash account.get 'label'

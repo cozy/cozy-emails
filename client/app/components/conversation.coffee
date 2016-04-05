@@ -5,7 +5,7 @@ ReactDOM  = require 'react-dom'
 {section, header, ul, li, span, i, p, h3, a, button} = React.DOM
 DomUtils = require '../utils/dom_utils'
 
-{MessageFlags} = require '../constants/app_constants'
+{MessageFlags, MessageActions} = require '../constants/app_constants'
 
 Message             = React.createFactory require './message'
 ToolbarConversation = React.createFactory require './toolbar_conversation'
@@ -109,7 +109,7 @@ module.exports = React.createClass
                 a
                     className: 'clickable btn btn-default fa fa-close'
                     href: RouterGetter.getURL
-                        action: 'message.list'
+                        action: MessageActions.SHOW_ALL
 
             section
                 ref: 'scrollable',

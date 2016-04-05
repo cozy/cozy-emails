@@ -23,6 +23,8 @@ TooltipRefesherMixin = require '../mixins/tooltip_refresher_mixin'
 
 RouterGetter = require '../getters/router'
 
+{MessageActions, AccountActions} = require '../constants/app_constants'
+
 ###
     This component is the root of the React tree.
 
@@ -79,8 +81,8 @@ Application = React.createClass
                     accountID       : @state.accountID
                     mailboxID       : @state.mailboxID
                     accounts        : RouterGetter.getAccounts().toArray()
-                    composeURL      : RouterGetter.getURL action: 'message.new'
-                    newAccountURL   : RouterGetter.getURL action: 'account.new'
+                    composeURL      : RouterGetter.getURL action: MessageActions.CREATE
+                    newAccountURL   : RouterGetter.getURL action: AccountActions.CREATE
 
                 main
                     className: @props.layout
@@ -113,7 +115,7 @@ Application = React.createClass
                                 mailboxID   : @state.mailboxID
                                 messageID   : @state.messageID
 
-                            if @state.action is 'message.show'
+                            if @state.action is MessageActions.SHOW
                                 Conversation
                                     ref         : 'conversation'
                                     key         : 'conversation-' + @state.messageID

@@ -24,6 +24,8 @@ NotificationActionsCreator = require '../actions/notification_action_creator'
 
 LinkedStateMixin = require 'react-addons-linked-state-mixin'
 
+{MessageActions} = require '../constants/app_constants'
+
 # Component that allows the user to write emails.
 module.exports = React.createClass
     displayName: 'Compose'
@@ -269,7 +271,7 @@ module.exports = React.createClass
                 @state.id = message.id
                 @state.conversationID = message.conversationID
                 RouterActionCreator.navigate
-                    action: 'message.edit'
+                    action: MessageActions.EDIT
                     messageID: @state.id
                 return
 

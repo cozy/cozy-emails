@@ -7,7 +7,7 @@ RouterStore = require '../stores/router_store'
 
 Immutable = require 'immutable'
 {sortByDate} = require '../utils/misc'
-{MessageFilter, MessageFlags, MailboxFlags} = require '../constants/app_constants'
+{MessageFilter, MessageActions, MessageFlags, MailboxFlags} = require '../constants/app_constants'
 
 _ = require 'lodash'
 
@@ -29,11 +29,11 @@ class RouteGetter
     isEditable: ->
         action = @getAction()
         editables = [
-            'message.new',
-            'message.edit',
-            'message.reply',
-            'message.reply.all',
-            'message.forward'
+            MessageActions.CREATE,
+            MessageActions.EDIT,
+            MessageActions.REPLY,
+            MessageActions.REPLY_ALL,
+            MessageActions.FORWARD
             ]
         action in editables
 

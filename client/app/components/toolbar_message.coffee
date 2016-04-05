@@ -2,7 +2,7 @@ React = require 'react'
 
 {nav, div, button, a} = React.DOM
 
-{MessageFlags, FlagsConstants, Tooltips} = require '../constants/app_constants'
+{MessageFlags, FlagsConstants, MessageActions, Tooltips} = require '../constants/app_constants'
 
 RouterGetter = require '../getters/router'
 
@@ -41,19 +41,19 @@ module.exports = React.createClass
 
             a
                 className: "#{cBtn} fa-mail-reply mail-reply"
-                href: RouterGetter.getURL {action: 'message.reply', messageID}
+                href: RouterGetter.getURL {action: MessageActions.REPLY, messageID}
                 'aria-describedby': Tooltips.REPLY
                 'data-tooltip-direction': 'top'
 
             a
                 className: "#{cBtn} fa-mail-reply-all mail-reply-all"
-                href: RouterGetter.getURL {action: 'message.reply.all', messageID}
+                href: RouterGetter.getURL {action: MessageActions.REPLY_ALL, messageID}
                 'aria-describedby': Tooltips.REPLY_ALL
                 'data-tooltip-direction': 'top'
 
             a
                 className: "#{cBtn} fa-mail-forward mail-forward"
-                href: RouterGetter.getURL {action: 'message.forward', messageID}
+                href: RouterGetter.getURL {action: MessageActions.FORWARD, messageID}
                 'aria-describedby': Tooltips.FORWARD
                 'data-tooltip-direction': 'top'
 

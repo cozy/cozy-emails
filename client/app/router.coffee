@@ -4,7 +4,7 @@ AccountActionCreator = require './actions/account_action_creator'
 
 AppDispatcher = require './app_dispatcher'
 
-{ActionTypes} = require './constants/app_constants'
+{ActionTypes, MessageActions, AccountActions, SearchActions} = require './constants/app_constants'
 
 _ = require 'lodash'
 
@@ -43,44 +43,44 @@ class Router extends Backbone.Router
         _displayApplication()
 
     accountNew: ->
-        RouterActionCreator.setAction 'account.new'
+        RouterActionCreator.setAction AccountActions.CREATE
         AccountActionCreator.selectAccount()
 
     accountEdit: (accountID, tab) ->
-        RouterActionCreator.setAction 'account.edit'
+        RouterActionCreator.setAction AccountActions.EDIT
         AccountActionCreator.saveEditTab tab
         AccountActionCreator.selectAccount accountID
 
     messageList: (mailboxID, query) ->
-        RouterActionCreator.setAction 'message.list'
+        RouterActionCreator.setAction MessageActions.SHOW_ALL
         LayoutActionCreator.updateMessageList {mailboxID, query}
 
     messageShow: (mailboxID, messageID, query) ->
-        RouterActionCreator.setAction 'message.show'
+        RouterActionCreator.setAction MessageActions.SHOW
         LayoutActionCreator.updateMessageList {mailboxID, messageID, query}
 
     messageEdit: (mailboxID, messageID) ->
-        RouterActionCreator.setAction 'message.edit'
+        RouterActionCreator.setAction MessageActions.EDIT
         LayoutActionCreator.saveMessage {mailboxID, messageID}
 
     messageNew: (mailboxID) ->
-        RouterActionCreator.setAction 'message.new'
+        RouterActionCreator.setAction MessageActions.CREATE
         LayoutActionCreator.saveMessage {mailboxID}
 
     messageForward: (mailboxID, messageID) ->
-        RouterActionCreator.setAction 'message.forward'
+        RouterActionCreator.setAction MessageActions.FORWARD
         LayoutActionCreator.saveMessage {mailboxID, messageID}
 
     messageReply: (mailboxID, messageID) ->
-        RouterActionCreator.setAction 'message.reply'
+        RouterActionCreator.setAction MessageActions.REPLY
         LayoutActionCreator.saveMessage {mailboxID, messageID}
 
     messageReplyAll: (mailboxID, messageID) ->
-        RouterActionCreator.setAction 'message.reply.all'
+        RouterActionCreator.setAction MessageActions.REPLY_ALL
         LayoutActionCreator.saveMessage {mailboxID, messageID}
 
     # search: (accountID, mailboxID, value) ->
-    #     RouterActionCreator.setAction 'search'
+    #     RouterActionCreator.setAction SearchActions.SHOW_ALL
     #     console.log 'Search', accountID, mailboxID, value
 
 _displayApplication = ->

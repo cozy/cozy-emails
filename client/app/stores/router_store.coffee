@@ -6,7 +6,7 @@ AccountStore = require '../stores/account_store'
 
 AppDispatcher = require '../app_dispatcher'
 
-{ActionTypes} = require '../constants/app_constants'
+{ActionTypes, MessageActions, AccountActions} = require '../constants/app_constants'
 
 class RouterStore extends Store
 
@@ -62,8 +62,8 @@ class RouterStore extends Store
 
     getURL: (params={}) ->
         # FIXME : prendre en compte ici le cas
-        # conversation.next
-        # conversation.previous
+        # next conversation : MessageActions.GROUP_NEXT
+        # previous conversation : MessageActions.GROUP_PREVIOUS
         action = _getRouteAction params
         filter = _getURIQueryParams params
 
@@ -107,8 +107,8 @@ class RouterStore extends Store
 
     _getRouteAction = (params) ->
         unless (action = params.action)
-            return 'message.show' if params.messageID
-            return 'message.list'
+            return MessageActions.SHOW if params.messageID
+            return MessageActions.SHOW_ALL
         action
 
     _getRoute = (action) ->
@@ -238,7 +238,7 @@ class RouterStore extends Store
 
         handle ActionTypes.ADD_ACCOUNT_SUCCESS, ({account, areMailboxesConfigured}) ->
             accountID = account.id
-            action = if areMailboxesConfigured then 'message.list' else 'account.edit'
+            action = if areMailboxesConfigured then MessageActions.SHOW_ALL else AccountActions.EDIT
             _router?.navigate {accountID, action}
             @emit 'change'
 
@@ -258,11 +258,11 @@ class RouterStore extends Store
             @emit 'change'
 
         handle ActionTypes.MESSAGE_TRASH_SUCCESS, (params) ->
-            if 'message.show' is _action
+            if MessageActions.SHOW is _action
                 if (messageID = params?.next?.get 'id')
                     _router.navigate @getURL {messageID}
                 else
-                    _action = 'message.list'
+                    _action = MessageActions.SHOW_ALL
                 @emit 'change'
 
 _toCamelCase = (value) ->

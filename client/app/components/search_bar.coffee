@@ -9,6 +9,7 @@ AccountStore = require '../stores/account_store'
 SearchStore = require '../stores/search_store'
 
 RouterActionCreator = require '../actions/router_action_creator'
+{MessageActions, SearchActions} = require '../constants/app_constants'
 
 module.exports = GlobalSearchBar = React.createClass
     displayName: 'GlobalSearchBar'
@@ -43,18 +44,18 @@ module.exports = GlobalSearchBar = React.createClass
     onSearchTriggered: (newvalue) ->
         unless _.isEmpty newvalue
             RouterActionCreator.navigate
-                action: 'search'
+                action: SearchActions.SHOW_ALL
                 value: newvalue
             return
 
         @setState search: ''
         RouterActionCreator.navigate
-            action: 'message.list'
+            action: MessageActions.SHOW_ALL
 
     onAccountChanged: (accountID) ->
         if @state.search isnt ''
             RouterActionCreator.navigate
-                action: 'search'
+                action: SearchActions.SHOW_ALL
                 value: @state.search
         else
             @setState {accountID}

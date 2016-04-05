@@ -3,8 +3,6 @@ React     = require 'react'
 
 Immutable = require 'immutable'
 
-AccountStore = require '../stores/account_store'
-
 AccountActionCreator = require '../actions/account_action_creator'
 NotificationActionsCreator = require '../actions/notification_action_creator'
 
@@ -19,6 +17,8 @@ AccountConfigSignature = React.createFactory require './account_config_signature
 AccountStore         = require '../stores/account_store'
 SettingsStore        = require '../stores/settings_store'
 StoreWatchMixin      = require '../mixins/store_watch_mixin'
+
+{AccountActions} = require '../constants/app_constants'
 
 REQUIRED_FIELDS_NEW = [
     'label', 'name', 'login', 'password', 'imapServer', 'imapPort',
@@ -109,7 +109,7 @@ module.exports = React.createClass
                     class: if @state.tab is name then 'active' else ''
                     text: t "account tab #{name}"
                     url: RouterGetter.getURL
-                        action: 'account.edit'
+                        action: AccountActions.EDIT
                         accountID: accountID
                         tab: name
 

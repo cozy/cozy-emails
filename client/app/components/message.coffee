@@ -17,7 +17,7 @@ MessageContent = React.createFactory require './message-content'
 
 SettingsStore = require '../stores/settings_store'
 
-{MessageFlags} = require '../constants/app_constants'
+{MessageFlags, MessageActions} = require '../constants/app_constants'
 
 LayoutActionCreator  = require '../actions/layout_action_creator'
 NotificationActionsCreator = require '../actions/notification_action_creator'
@@ -271,7 +271,7 @@ module.exports = React.createClass
             MessageActionCreator.delete messageID: @state.currentMessageID
 
             # Goto to next conversation
-            RouterActionCreator.navigate action: 'conversation.next'
+            RouterActionCreator.navigate action: MessageActions.GROUP_NEXT
 
         needConfirmation = SettingsStore.get().get('messageConfirmDelete')
         unless needConfirmation

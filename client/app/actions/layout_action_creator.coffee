@@ -7,7 +7,7 @@ RouterGetter = require '../getters/router'
 
 AppDispatcher = require '../app_dispatcher'
 
-{ActionTypes} = require '../constants/app_constants'
+{ActionTypes, MessageActions} = require '../constants/app_constants'
 
 AccountActionCreator = require './account_action_creator'
 MessageActionCreator = require './message_action_creator'
@@ -86,7 +86,7 @@ module.exports = LayoutActionCreator =
 
         AppDispatcher.handleViewAction
             type: ActionTypes.MESSAGE_FETCH_REQUEST
-            value: {action: 'message.list', messageID}
+            value: {action: MessageActions.SHOW_ALL, messageID}
 
 
     showSearchResult: (parameters) ->

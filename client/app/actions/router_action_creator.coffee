@@ -4,7 +4,7 @@ AppDispatcher = require '../app_dispatcher'
 
 RouterStore = require '../stores/router_store'
 
-{ActionTypes} = require '../constants/app_constants'
+{ActionTypes, MessageActions} = require '../constants/app_constants'
 
 RouterActionCreator =
 
@@ -17,7 +17,7 @@ RouterActionCreator =
     getNextPage: ->
         AppDispatcher.handleViewAction
             type: ActionTypes.MESSAGE_FETCH_REQUEST
-            value: action: 'page.next'
+            value: action: MessageActions.PAGE_NEXT
 
 
     addFilter: (params) ->

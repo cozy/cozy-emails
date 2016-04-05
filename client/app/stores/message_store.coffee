@@ -11,7 +11,7 @@ RouterStore = require '../stores/router_store'
 SocketUtils = require '../utils/socketio_utils'
 {sortByDate} = require '../utils/misc'
 
-{ActionTypes, MessageFlags} = require '../constants/app_constants'
+{ActionTypes, MessageFlags, MessageActions} = require '../constants/app_constants'
 
 EPOCH = (new Date(0)).toISOString()
 
@@ -114,7 +114,7 @@ class MessageStore extends Store
 
         {messageID, action} = params
         mailboxID = AccountStore.getSelectedMailbox()?.get 'id'
-        action ?= 'message.list'
+        action ?= MessageActions.SHOW_ALL
         timestamp = Date.now()
 
         _fetching++
@@ -150,9 +150,9 @@ class MessageStore extends Store
                 if messageID and not _messages.toJS()[messageID]
                     AppDispatcher.handleViewAction
                         type: ActionTypes.MESSAGE_FETCH_REQUEST
-                        value: {messageID, action: 'page.next'}
+                        value: {messageID, action: MessageActions.PAGE_NEXT}
 
-        if action in ['message.list', 'page.next']
+        if action in [MessageActions.SHOW_ALL, MessageActions.PAGE_NEXT]
             XHRUtils.fetchMessagesByFolder params, callback
         else
             XHRUtils.fetchConversation {messageID}, callback

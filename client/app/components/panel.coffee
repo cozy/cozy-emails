@@ -8,8 +8,6 @@ SearchResult   = React.createFactory require './search_result'
 
 RouterGetter = require '../getters/router'
 
-{ComposeActions} = require '../constants/app_constants'
-
 Panel = React.createClass
     displayName: 'Panel'
     render: ->
