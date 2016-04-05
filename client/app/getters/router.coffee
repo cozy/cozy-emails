@@ -71,8 +71,28 @@ class RouteGetter
 
     getMessagesToDisplay: (mailboxID) ->
         mailboxID ?= @getMailboxID()
+        messages = MessageStore.getMessagesToDisplay mailboxID
+
+        # We dont filter for type from and dest because it is
+        # complicated by collation and name vs address.
         filter = @getFilter()
-        MessageStore.getMessagesToDisplay {mailboxID, filter}
+        unless _.isEmpty(filter.flags)
+            messages = messages.filter (message, index) =>
+                value = true
+
+                if @isFlags 'FLAGGED', filter.flags
+                    unless (value = MessageFlags.FLAGGED in message.get 'flags')
+                        return false
+                if @isFlags 'ATTACH', filter.flags
+                    unless (value = message.get('attachments').size > 0)
+                        return false
+                if @isFlags 'UNSEEN', filter.flags
+                    unless (value = MessageFlags.SEEN not in message.get 'flags')
+                        return false
+                value
+
+        # FIXME : use params ASC et DESC into URL
+        messages.sort sortByDate filter.order
 
     getMessage: (messageID) ->
         MessageStore.getMessage messageID

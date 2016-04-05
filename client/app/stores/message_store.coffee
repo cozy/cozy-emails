@@ -397,36 +397,8 @@ class MessageStore extends Store
         .map _addMessageIDs
         .toList()
 
-    getMessagesToDisplay: (params={}) ->
-        {mailboxID, filter} = params
-
-        messages = _getCurrentConversations mailboxID
-
-        # Apply Filters
-        # We dont filter for type from and dest because it is
-        # complicated by collation and name vs address.
-        # Instead we clear the message, see QUERY_PARAMETER_CHANGED handler.
-        unless _.isEmpty(filter.flags)
-            messages = messages.filter (message, index) =>
-                value = true
-
-                if @isFlags 'FLAGGED', filter.flags
-                    unless (value = MessageFlags.FLAGGED in message.get 'flags')
-                        return false
-
-                if @isFlags 'ATTACH', filter.flags
-                    unless (value = message.get('attachments').size > 0)
-                        return false
-
-                if @isFlags 'UNSEEN', filter.flags
-                    unless (value = MessageFlags.SEEN not in message.get 'flags')
-                        return false
-                value
-
-        # FIXME : use params ASC et DESC into URL
-        messages = messages.sort sortByDate filter.order
-
-        _currentMessages = messages.toOrderedMap()
+    getMessagesToDisplay: (mailboxID) ->
+        _currentMessages = _getCurrentConversations(mailboxID)?.toOrderedMap()
         return _currentMessages
 
     getConversationLength: (messageID) ->
