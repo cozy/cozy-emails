@@ -19,7 +19,7 @@ class Router extends Backbone.Router
     routes:
         'mailbox/:mailboxID/*'                      : 'messageList'
         'account/new'                               : 'accountNew'
-        'account/:accountID/config/:tab'            : 'accountEdit'
+        'account/:accountID/settings/:tab'            : 'accountEdit'
         # 'search/?q=:search'                         : 'search'
         # 'mailbox/:mailboxID/search/?q=:search'      : 'search'
         'mailbox/:mailboxID/new'                    : 'messageNew'

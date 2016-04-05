@@ -12,17 +12,17 @@ The v2 refactoring introduces a new router pattern[^1] which sets new routes, an
 - `:accountID/settings/:section`
   : access the settings for the given account, scoped to the specified section (e.g. `gmail/settings/general`)
 
-- `:accountID/:mailbox`
-  : display the content of a mailbox in an account (i.e. the conversations list). Can be customized using _queryString_ parameters:
+- `mailbox/:mailboxID`
+  : display the content of a mailbox (i.e. the conversations list). Can be customized using _queryString_ parameters:
   - `?filters=[:filters]`
     : filter conversations list, can be a list of filters (e.g. `gmail/inbox?filters=starred,unread` display gmail's _inbox_ messages which are both _unread_ and _starred_)
   - `?sort=:column:[ASC|DESC]`
     : set the sorting order and on which criteria for the list (e.g. `gmail/inbox?sort=sender:ASC` sort messages from gmail's inbox by sender address, ascending)
 
-- `:accountID/new`
+- `mailbox/:mailboxID/new`
   : opens the compose editor to create a new message from the given account
 
-- `:accountID/message/:messageID`
+- `mailbox/:mailboxID/:messageID`
   : open the requested message, i.e. the main view has the conversations list in the first pane, and the conversation which the message belongs to in the second pane, with the message open
     - `/reply`
       : open the composition view with the message's conversation context in reply mode
@@ -31,7 +31,7 @@ The v2 refactoring introduces a new router pattern[^1] which sets new routes, an
     - `/forward`
       : same as above, in forward mode
 
-- `:accountID/*?compose=[new|:messageID[::mode]]`
+- `mailbox/:mailboxID/*?compose=[new|:messageID[::mode]]`
   : any URL can be queried with a `compose` param, which opens the composition's popup view. See _drafts_ section below for more informations.
 
 - `search/[:accountID]`
