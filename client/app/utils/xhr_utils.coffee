@@ -43,29 +43,14 @@ module.exports =
         .send settings
         .end handleResponse callback, 'changeSettings', settings
 
-    fetchMessage: (params={}, callback) ->
-        messageID = params.messageID or MessageStore.getCurrentID()
-        request.get "message/#{messageID}"
-        .set 'Accept', 'application/json'
-        .end handleResponse callback, 'fetchMessage', emailID
-
-    fetchConversation: (params={}, callback) ->
-        messageID = params.messageID or MessageStore.getCurrentID()
+    fetchConversation: (messageID, callback) ->
         request.get "messages/batchFetch?messageID=#{messageID}"
         .set 'Accept', 'application/json'
         .end (err, res) ->
-            _cb = handleResponse(callback, 'fetchConversation', messageID)
+            _cb = handleResponse callback, 'fetchConversation', messageID
             _cb err, res
 
-
-    fetchMessagesByFolder: (params, callback) ->
-        if params.action is MessageActions.PAGE_NEXT
-            url = RouterStore.getNextURL()
-        else
-            action = MessageActions.SHOW_ALL
-            mailboxID = AccountStore.getSelectedMailbox()?.get 'id'
-            url = RouterStore.getCurrentURL {action, mailboxID}
-
+    fetchMessagesByFolder: (url, callback) ->
         request.get url
         .set 'Accept', 'application/json'
         .end handleResponse callback, "fetchMessagesByFolder", url

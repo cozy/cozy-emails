@@ -152,10 +152,17 @@ class MessageStore extends Store
                         type: ActionTypes.MESSAGE_FETCH_REQUEST
                         value: {messageID, action: MessageActions.PAGE_NEXT}
 
-        if action in [MessageActions.SHOW_ALL, MessageActions.PAGE_NEXT]
-            XHRUtils.fetchMessagesByFolder params, callback
+        if action is MessageActions.PAGE_NEXT
+            url = RouterStore.getNextURL()
+            XHRUtils.fetchMessagesByFolder url, callback
+
+        else if action is MessageActions.SHOW_ALL
+            mailboxID = AccountStore.getSelectedMailbox()?.get 'id'
+            url = RouterStore.getCurrentURL {action, mailboxID}
+            XHRUtils.fetchMessagesByFolder url, callback
+
         else
-            XHRUtils.fetchConversation {messageID}, callback
+            XHRUtils.fetchConversation messageID, callback
 
     _computeMailboxDiff = (oldmsg, newmsg) ->
         return {} unless oldmsg

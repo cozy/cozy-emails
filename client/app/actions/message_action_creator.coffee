@@ -54,7 +54,7 @@ MessageActionCreator =
             value:
                 messageID: messageID
 
-    fetchConversation: (conversationID) ->
+    fetchConversation: (messageID) ->
 
         console.log 'FETCH_CONVERSATION'
         # AppDispatcher.handleViewAction
