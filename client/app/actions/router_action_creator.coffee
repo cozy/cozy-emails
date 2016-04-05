@@ -43,8 +43,8 @@ RouterActionCreator =
             else
                 filter[key] = value
 
-        # FIXME : faire un dispatch à la place
-        # pour faire le navigate dans routerStore
+        # FIXME : use distacher instead
+        # then into routerStore, use navigate
         @navigate url: RouterStore.getCurrentURL {filter, isServer: false}
 
     navigate: (params={}) ->
