@@ -4,6 +4,7 @@ classNames = require 'classnames'
 {markdown} = require 'markdown'
 toMarkdown = require 'to-markdown'
 
+React     = require 'react'
 {
     div, article, header, footer, ul, li, span, i, p, a, button, pre,
     iframe, textarea
@@ -14,17 +15,15 @@ MessageFooter  = React.createFactory require './message_footer'
 ToolbarMessage = React.createFactory require './toolbar_message'
 MessageContent = React.createFactory require './message-content'
 
-MessageStore = require '../stores/message_store'
+SettingsStore = require '../stores/settings_store'
 
-{MessageFlags} = require '../constants/app_constants'
+{MessageFlags, MessageActions} = require '../constants/app_constants'
 
 LayoutActionCreator  = require '../actions/layout_action_creator'
+NotificationActionsCreator = require '../actions/notification_action_creator'
 MessageActionCreator = require '../actions/message_action_creator'
 ContactActionCreator = require '../actions/contact_action_creator'
-
-RouterMixin           = require '../mixins/router_mixin'
-ShouldComponentUpdate = require '../mixins/should_update_mixin'
-TooltipRefresherMixin = require '../mixins/tooltip_refresher_mixin'
+RouterActionCreator = require '../actions/router_action_creator'
 
 RGXP_PROTOCOL = /:\/\//
 
@@ -32,32 +31,20 @@ RGXP_PROTOCOL = /:\/\//
 module.exports = React.createClass
     displayName: 'Message'
 
-    mixins: [
-        RouterMixin
-        TooltipRefresherMixin
-        ShouldComponentUpdate.UnderscoreEqualitySlow
-    ]
-
     propTypes:
-        accounts               : React.PropTypes.object.isRequired
         active                 : React.PropTypes.bool
-        inConversation         : React.PropTypes.bool
         key                    : React.PropTypes.string.isRequired
-        mailboxes              : React.PropTypes.object.isRequired
         message                : React.PropTypes.object.isRequired
-        selectedAccountID      : React.PropTypes.string.isRequired
-        selectedAccountLogin   : React.PropTypes.string.isRequired
         selectedMailboxID      : React.PropTypes.string.isRequired
-        settings               : React.PropTypes.object.isRequired
         useIntents             : React.PropTypes.bool.isRequired
-        toggleActive           : React.PropTypes.func.isRequired
 
 
     getInitialState: ->
+        settings = SettingsStore.get()
         return {
             displayHeaders: false
-            messageDisplayHTML: @props.settings.get 'messageDisplayHTML'
-            messageDisplayImages: @props.settings.get 'messageDisplayImages'
+            messageDisplayHTML: settings.get 'messageDisplayHTML'
+            messageDisplayImages: settings.get 'messageDisplayImages'
             currentMessageID: null
             prepared: {}
         }
@@ -96,9 +83,6 @@ module.exports = React.createClass
         if html? and not text? and not @state.messageDisplayHTML
             text = toMarkdown html
 
-        mailboxes = message.get 'mailboxIDs'
-        trash = @props.accounts[@props.selectedAccountID]?.trashMailbox
-
         if text?
             rich = text.replace urls, '<a href="$1" target="_blank">$1</a>'
             rich = rich.replace /^>>>>>[^>]?.*$/gim, '<span class="quote5">$&</span>'
@@ -108,6 +92,8 @@ module.exports = React.createClass
             rich = rich.replace /^>[^>]?.*$/gim, '<span class="quote1">$&</span>'
 
         flags = @props.message.get('flags').slice()
+        mailboxes = message.get 'mailboxIDs'
+        trash = @props.trashMailbox
         return {
             attachments: message.get 'attachments'
             fullHeaders: fullHeaders
@@ -120,15 +106,16 @@ module.exports = React.createClass
 
 
     componentWillMount: ->
-        @_markRead(@props.message, @props.active)
+        @_markRead @props.message, @props.active
 
 
     componentWillReceiveProps: (props) ->
         state = {}
         if props.message.get('id') isnt @props.message.get('id')
-            @_markRead(props.message, props.active)
-            state.messageDisplayHTML   = props.settings.get 'messageDisplayHTML'
-            state.messageDisplayImages = props.settings.get 'messageDisplayImages'
+            @_markRead props.message, props.active
+            settings = SettingsStore.get()
+            state.messageDisplayHTML   = settings.get 'messageDisplayHTML'
+            state.messageDisplayImages = settings.get 'messageDisplayImages'
         @setState state
 
 
@@ -195,10 +182,7 @@ module.exports = React.createClass
         @props.message.get('flags').indexOf(MessageFlags.SEEN) is -1
 
     onHeaderClicked: ->
-        messageID = @props.message.get('id')
-        if @isUnread() and not @props.active
-            MessageActionCreator.mark {messageID}, MessageFlags.SEEN
-        @props.toggleActive messageID
+        RouterActionCreator.navigate {url} if (url = @props.url)?
 
     render: ->
         message  = @props.message
@@ -222,6 +206,7 @@ module.exports = React.createClass
         article
             className: classes,
             key: @props.key,
+            'data-message-active': @props.active
             'data-id': @props.message.get('id'),
                 header onClick: @onHeaderClicked,
                     MessageHeader
@@ -265,9 +250,7 @@ module.exports = React.createClass
         ToolbarMessage
             full                 : full
             message              : @props.message
-            mailboxes            : @props.mailboxes
             selectedMailboxID    : @props.selectedMailboxID
-            inConversation       : @props.inConversation
             onDelete             : @onDelete
             onHeaders            : @onHeaders
             onMove               : @onMove
@@ -284,26 +267,13 @@ module.exports = React.createClass
         event.stopPropagation()
 
         success = =>
-            # Get next focus conversation
-            nextConversation = MessageStore.getPreviousConversation()
-            nextConversation = MessageStore.getNextConversation() unless nextConversation.size
-
             # Then remove message
             MessageActionCreator.delete messageID: @state.currentMessageID
 
-            unless nextConversation.size
-                # Close 2nd panel : no next conversation found
-                @redirect (url = @buildClosePanelUrl 'second')
-            else
-                # Goto to next conversation
-                @redirect
-                    direction: 'second',
-                    action: 'conversation',
-                    parameters:
-                        messageID: nextConversation.get('id')
-                        conversationID: nextConversation.get('conversationID')
+            # Goto to next conversation
+            RouterActionCreator.navigate action: MessageActions.GROUP_NEXT
 
-        needConfirmation = @props.settings.get('messageConfirmDelete')
+        needConfirmation = SettingsStore.get().get('messageConfirmDelete')
         unless needConfirmation
             success()
             return
@@ -349,7 +319,7 @@ module.exports = React.createClass
 
 
     onCopy: (args) ->
-        LayoutActionCreator.alertWarning t "app unimplemented"
+        NotificationActionsCreator.alertWarning t "app unimplemented"
 
 
     onHeaders: (event) ->

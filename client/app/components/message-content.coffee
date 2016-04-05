@@ -31,7 +31,6 @@ module.exports = MessageContent = React.createClass
                                 onClick: @props.displayImages,
                                 t 'message images display'
                 iframe
-                    'data-message-id': @props.messageID
                     name: "frame-#{@props.messageID}"
                     className: 'content',
                     ref: 'content',

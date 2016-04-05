@@ -4,6 +4,11 @@ _       = require 'underscore'
 AccountTranslator = require './translators/account_translator'
 
 SettingsStore = require '../stores/settings_store'
+RouterStore = require '../stores/router_store'
+AccountStore = require '../stores/account_store'
+MessageStore = require '../stores/message_store'
+
+{MessageActions} = require '../constants/app_constants'
 
 
 handleResponse = (callback, details...) ->
@@ -38,21 +43,12 @@ module.exports =
         .send settings
         .end handleResponse callback, 'changeSettings', settings
 
-    fetchMessage: (emailID, callback) ->
-        request.get "message/#{emailID}"
-        .set 'Accept', 'application/json'
-        .end handleResponse callback, 'fetchMessage', emailID
-
-    fetchConversation: (conversationID, callback) ->
-        request.get "messages/batchFetch?conversationID=#{conversationID}"
+    fetchConversation: (messageID, callback) ->
+        request.get "messages/batchFetch?messageID=#{messageID}"
         .set 'Accept', 'application/json'
         .end (err, res) ->
-            _cb = handleResponse(callback, 'fetchConversation', conversationID)
-            if res.ok
-                res.body.conversationLengths = {}
-                res.body.conversationLengths[conversationID] = res.body.length
-            _cb(err, res)
-
+            _cb = handleResponse callback, 'fetchConversation', messageID
+            _cb err, res
 
     fetchMessagesByFolder: (url, callback) ->
         request.get url

@@ -1,6 +1,5 @@
 _     = require 'underscore'
 React = require 'react'
-
 {div, span, i, img, a} = React.DOM
 {MessageFlags} = require '../constants/app_constants'
 

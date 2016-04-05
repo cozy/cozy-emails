@@ -50,7 +50,9 @@ class AccountStore extends Store
 
     _emitTimeout = null
 
+    _tab = null
 
+    # FIXME : utilisé?
     _refreshSelected = ->
         if selectedAccountID = _selectedAccount?.get 'id'
             _selectedAccount = _accounts.get selectedAccountID
@@ -187,12 +189,18 @@ class AccountStore extends Store
             _setError error
             @emit 'change'
 
+        handle ActionTypes.EDIT_ACCOUNT_TAB, (params) ->
+            unless (_tab = params.tab)
+                mailboxes = @getSelected()?.get 'mailboxes'
+                _tab = if mailboxes?.size is 0 then 'mailboxes' else 'account'
+            @emit 'change'
+
         handle ActionTypes.SELECT_ACCOUNT, (value) ->
-            if value.accountID?
+            if value?.accountID
                 @_setCurrentAccount(_accounts.get(value.accountID) or null)
             else
                 @_setCurrentAccount(null)
-            if value.mailboxID?
+            if value?.mailboxID
                 mailbox = _selectedAccount
                     ?.get('mailboxes')
                     ?.get(value.mailboxID) or null
@@ -218,19 +226,25 @@ class AccountStore extends Store
             _setError error
             @emit 'change'
 
-        handle ActionTypes.MAILBOX_CREATE, (rawAccount) ->
-            @_onAccountUpdated rawAccount
-            @emit 'change'
+        # handle ActionTypes.MAILBOX_CREATE_SUCCESS, (rawAccount) ->
+        #     @_onAccountUpdated rawAccount
+        #     @emit 'change'
+        #
+        # handle ActionTypes.MAILBOX_UPDATE_SUCCESS, (rawAccount) ->
+        #     @_onAccountUpdated rawAccount
+        #     @emit 'change'
+        # handle ActionTypes.MAILBOX_DELETE_SUCCESS, (rawAccount) ->
+        #     @_onAccountUpdated rawAccount
+        #     @emit 'change'
 
-        handle ActionTypes.MAILBOX_UPDATE, (rawAccount) ->
-            @_onAccountUpdated rawAccount
-            @emit 'change'
+        handle ActionTypes.MAILBOX_EXPUNGE_FAILURE, ({error, mailboxID, accountID}) ->
+            # if user hasn't switched to another box, refresh display
+            unless _selectedMailbox?.get('id') isnt mailboxID
+                _setCurrentMailbox _selectedAccount
+                    ?.get('mailboxes')
+                    ?.get(mailboxID) or null
 
-        handle ActionTypes.MAILBOX_DELETE, (rawAccount) ->
-            @_onAccountUpdated rawAccount
-            @emit 'change'
-
-        handle ActionTypes.REMOVE_ACCOUNT, (accountID) ->
+        handle ActionTypes.REMOVE_ACCOUNT_SUCCESS, (accountID) ->
             _accounts = _accounts.delete accountID
             @_setCurrentAccount @getDefault()
             @emit 'change'
@@ -243,7 +257,7 @@ class AccountStore extends Store
             _accountsUnread.set data.accountID, data.totalUnread
             @emit 'change'
 
-        handle ActionTypes.REFRESH_REQUEST, ({mailboxID}) ->
+        handle ActionTypes.REFRESH_SUCCESS, ({mailboxID}) ->
             _mailboxRefreshing[mailboxID] ?= 0
             _mailboxRefreshing[mailboxID]++
             @emit 'change'
@@ -274,6 +288,8 @@ class AccountStore extends Store
     getMailboxCounters: ->
         return _mailboxesCounters
 
+    getSelectedTab: ->
+        return _tab
 
     getByID: (accountID) ->
         return _accounts.get accountID
@@ -295,7 +311,8 @@ class AccountStore extends Store
         mailboxes = account.get('mailboxes')
         mailbox = mailboxes.filter (mailbox) ->
             return mailbox.get('label').toLowerCase() is 'inbox'
-        if mailbox.size isnt 0
+
+        if mailbox.size
             return mailbox.first()
         else
             favorites = account.get('favorites')
@@ -319,55 +336,31 @@ class AccountStore extends Store
     getSelectedOrDefault: ->
         @getSelected() or @getDefault()
 
-    getSelectedMailboxes: (sorted) ->
-
-        return Immutable.OrderedMap() unless _selectedAccount?
-
-        result = _selectedAccount.get('mailboxes')
-
-        if sorted
-            result = result.sort _mailboxSort
-
+    getSelectedMailboxes: ->
+        return null unless _selectedAccount?
+        result = _selectedAccount.get 'mailboxes'
+        result = result.sort _mailboxSort
         return result
 
 
-    selectedIsDifferentThan: (accountID, mailboxID) ->
-        differentSelected = _selectedAccount?.get('id') isnt accountID or
-        _selectedMailbox?.get('id') isnt mailboxID
-
-        return differentSelected
-
-
     getSelectedMailbox: (selectedID) ->
-        mailboxes = @getSelectedMailboxes()
-
-        if selectedID?
-            return mailboxes.get selectedID
-
-        else if _selectedMailbox?
+        if (mailboxes = @getSelectedMailboxes())?.size
+            return mailboxes.get(selectedID) if selectedID
             return _selectedMailbox
+        return @getDefaultMailbox()
 
-        else
-            return mailboxes.first()
+    getSelectedFavorites: ->
+        if (mailboxes = @getSelectedMailboxes())
+            ids = _selectedAccount?.get 'favorites'
+            if ids?
+                mailboxes = mailboxes
+                    .filter (box, key) -> key in ids
+                    .toOrderedMap()
+            else
+                mailboxes = mailboxes.toOrderedMap()
 
-
-    getSelectedFavorites: (sorted) ->
-
-        mailboxes = @getSelectedMailboxes()
-        ids = _selectedAccount?.get 'favorites'
-
-        if ids?
-            mb = mailboxes
-                .filter (box, key) -> key in ids
-                .toOrderedMap()
-        else
-            mb = mailboxes
-                .toOrderedMap()
-
-        if sorted
-            mb = mb.sort _mailboxSort
-
-        return mb
+            mailboxes = mailboxes.sort _mailboxSort
+        return mailboxes
 
 
     getErrors: -> _serverAccountErrorByField
@@ -388,13 +381,6 @@ class AccountStore extends Store
 
     isWaiting: -> return _newAccountWaiting
     isChecking: -> return _newAccountChecking
-
-    isMailboxRefreshing: (mailboxID)->
-        _mailboxRefreshing[mailboxID] > 0
-
-
-    getMailboxRefresh: (mailboxID) ->
-        if _mailboxRefreshing[mailboxID] > 0 then 0.9 else 0
 
     # Select the "best" mailbox among a list of candidates
     # prefer in order inbox, favorites, or first of list

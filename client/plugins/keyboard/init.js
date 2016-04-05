@@ -221,13 +221,6 @@ if (typeof window.plugins !== "object") {
           layoutRatio();
         }
       },
-      'F': {
-        name: "Toggle fullscreen",
-        action: function (e) {
-          if (e && e instanceof Event) { e.preventDefault(); }
-          LayoutActionCreator.toggleFullscreen();
-        }
-      },
       'w': {
         name: "Toggle layout",
         action: function (e) {

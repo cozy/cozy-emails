@@ -1,6 +1,5 @@
 classNames = require 'classnames'
 React      = require 'react'
-
 {li, span, i, input} = React.DOM
 
 {Spinner} = require('./basic_components').factories
@@ -8,7 +7,6 @@ React      = require 'react'
 AccountActionCreator = require '../actions/account_action_creator'
 LayoutActionCreator  = require '../actions/layout_action_creator'
 
-RouterMixin      = require '../mixins/router_mixin'
 LinkedStateMixin = require 'react-addons-linked-state-mixin'
 
 # Line for the mailbox list.
@@ -16,7 +14,6 @@ module.exports = MailboxItem = React.createClass
     displayName: 'MailboxItem'
 
     mixins: [
-        RouterMixin
         LinkedStateMixin
     ]
 
@@ -151,8 +148,9 @@ module.exports = MailboxItem = React.createClass
             mailboxID: @props.mailbox.get 'id'
             accountID: @props.accountID
 
-        AccountActionCreator.mailboxUpdate mailbox, (error) =>
-            @setState edited: false unless error
+        # FIXME : normalement le store devrait se mettre à jour
+        # et la vue en fonction de la mise à jour des datas
+        AccountActionCreator.mailboxUpdate mailbox
 
 
     # Set mailbox as favorite. Save information to the server. It shows
@@ -166,8 +164,10 @@ module.exports = MailboxItem = React.createClass
         wasFavorite = @state.favorite
 
         @setState favorite: not @state.favorite
-        AccountActionCreator.mailboxUpdate mailbox, (error) ->
-            @setState favorite: wasFavorite if error
+
+        # FIXME : normalement le store devrait se mettre à jour
+        # et la vue en fonction de la mise à jour des datas
+        AccountActionCreator.mailboxUpdate mailbox
 
 
     # Ask for confirmation before sending box deletion request to the server.
@@ -187,14 +187,8 @@ module.exports = MailboxItem = React.createClass
                     mailboxID: @props.mailbox.get 'id'
                     accountID: @props.accountID
 
-                AccountActionCreator.mailboxDelete mailbox, (error) =>
-                    if error?
-                        message = "#{t("mailbox delete ko")} #{error}"
-                        LayoutActionCreator.alertError message
-                    else
-                        LayoutActionCreator.notify t("mailbox delete ok"),
-                            autoclose: true
-                    if @isMounted()
-                        @setState deleting: false
+                # FIXME : normalement le store devrait se mettre à jour
+                # et la vue en fonction de la mise à jour des datas
+                AccountActionCreator.mailboxDelete mailbox
 
         LayoutActionCreator.displayModal modal

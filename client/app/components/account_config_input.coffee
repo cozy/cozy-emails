@@ -3,7 +3,6 @@ React = require 'react'
 {div, label, input, textarea} = React.DOM
 {ErrorLine, Dropdown} = require('./basic_components').factories
 
-RouterMixin      = require '../mixins/router_mixin'
 LinkedStateMixin = require 'react-addons-linked-state-mixin'
 
 
@@ -13,7 +12,6 @@ module.exports = AccountInput = React.createClass
     displayName: 'AccountInput'
 
     mixins: [
-        RouterMixin
         LinkedStateMixin
     ]
 

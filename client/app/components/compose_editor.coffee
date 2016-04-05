@@ -228,24 +228,19 @@ module.exports = ComposeEditor = React.createClass
             node = @refs.html?
             if node?
                 document.querySelector(".rt-editor").focus()
-                if not @props.settings.get 'composeOnTop'
+                unless @props.settings.get 'composeOnTop'
 
-                    account = @props.accounts[@props.accountID]
-
-                    signatureNode = document.getElementById "signature"
-                    if account.signature? and
-                    account.signature.length > 0 and
-                    signatureNode?
-                        node = signatureNode
-                        node.innerHTML = """
-                        <p><br /></p>
-                        #{node.innerHTML}
-                        """
-                        node = node.firstChild
-
-                    else
-                        node.innerHTML += "<p><br /></p><p><br /></p>"
-                        node = node.lastChild
+                    if (signatureNode = document.getElementById "signature")
+                        if @props.signature and @props.signature.length > 0
+                            node = signatureNode
+                            node.innerHTML = """
+                            <p><br /></p>
+                            #{node.innerHTML}
+                            """
+                            node = node.firstChild
+                        else
+                            node.innerHTML += "<p><br /></p><p><br /></p>"
+                            node = node.lastChild
 
                     if node?
                         # move cursor to the bottom
@@ -268,11 +263,11 @@ module.exports = ComposeEditor = React.createClass
             @_initCompose()
 
         # On account change, update message signature
-        if oldProps.accountID isnt @props.accountID
+        if oldProps.account.get('id') isnt @props.account.get('id')
             @_updateSignature()
 
     _updateSignature: ->
-        signature = @props.accounts[@props.accountID].signature
+        signature = @props.account?.get 'signature'
         if @refs.html?
             signatureNode = document.getElementById "signature"
             if signature? and signature.length > 0
@@ -294,7 +289,7 @@ module.exports = ComposeEditor = React.createClass
             @onHTMLChange()
         else if @refs.content?
             node = @refs.content
-            oldSig = @props.accounts[oldProps.accountID].signature
+            oldSig = oldProps.account.get 'signature'
             if signature? and signature.length > 0
                 if oldSig and oldSig.length > 0
                     # replace old signature by new one

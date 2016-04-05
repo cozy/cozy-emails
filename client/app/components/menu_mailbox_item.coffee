@@ -4,7 +4,8 @@ classNames = require 'classnames'
 
 {div, aside, nav, ul, li, span, a, i, button} = React.DOM
 
-RouterMixin          = require '../mixins/router_mixin'
+RouterGetter = require '../getters/router'
+
 MessageActionCreator = require '../actions/message_action_creator'
 LayoutActionCreator  = require '../actions/layout_action_creator'
 AccountActionCreator = require '../actions/account_action_creator'
@@ -15,27 +16,14 @@ AccountActionCreator = require '../actions/account_action_creator'
 module.exports = MenuMailboxItem = React.createClass
     displayName: 'MenuMailboxItem'
 
-    mixins: [RouterMixin]
-
-    shouldComponentUpdate: (nextProps, nextState) ->
-        return not(_.isEqual(nextState, @state)) or
-               not(_.isEqual(nextProps, @props))
-
     getInitialState: ->
         return target: false
 
-    onClickMailbox: ->
-        if @props.mailbox.get('id') is @props.selectedMailboxID and
-        @props.account.get 'supportRFC4551'
-            MessageActionCreator.refreshMailbox @props.selectedMailboxID
-
     render: ->
         mailboxID = @props.mailbox.get 'id'
-        mailboxUrl = @buildUrl
-            direction: 'first'
-            fullWidth: true  # remove 2nd panel
-            action: 'account.mailbox.messages'
-            parameters: [@props.account.get('id'), mailboxID]
+
+        mailboxUrl = RouterGetter.getURL
+            mailboxID: mailboxID
 
         nbTotal  = @props.mailbox.get('nbTotal') or 0
         nbUnread = @props.mailbox.get('nbUnread') or 0
@@ -54,22 +42,20 @@ module.exports = MenuMailboxItem = React.createClass
                 specialMailbox = attrib
 
         classesParent = classNames
-            active: mailboxID is @props.selectedMailboxID
+            active: @props.isActive
             target: @state.target
+
         classesChild = classNames
             target:  @state.target
             special: specialMailbox
             news:    nbRecent > 0
         classesChild += " #{specialMailbox}" if specialMailbox
 
-
-        progress = @props.refreshes.get mailboxID
-        displayError = @props.displayErrors.bind null, progress
+        displayError = @props.displayErrors.bind null, @props.progress
 
         li className: classesParent,
             a
                 href: mailboxUrl
-                onClick: @onClickMailbox
                 className: "#{classesChild} lv-#{@props.mailbox.get('depth')}"
                 role: 'menuitem'
                 'data-mailbox-id': mailboxID
@@ -88,7 +74,7 @@ module.exports = MenuMailboxItem = React.createClass
                         className: 'item-label',
                         "#{@props.mailbox.get 'label'}"
 
-                if progress?.get('errors').length
+                if @props.progress?.get('errors').length
                     span className: 'refresh-error', onClick: displayError,
                         i className: 'fa fa-warning', null
 
@@ -101,7 +87,7 @@ module.exports = MenuMailboxItem = React.createClass
 
                     span className: 'fa fa-recycle'
 
-            if not progress and nbUnread and nbUnread > 0
+            if not @props.progress and nbUnread and nbUnread > 0
                 span className: 'badge', nbUnread
 
 

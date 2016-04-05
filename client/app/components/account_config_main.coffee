@@ -17,8 +17,6 @@ AccountInput  = React.createFactory require './account_config_input'
 AccountDelete = React.createFactory require './account_config_delete'
 AccountActionCreator = require '../actions/account_action_creator'
 
-RouterMixin = require '../mixins/router_mixin'
-
 discovery2Fields = require '../utils/discovery_to_fields'
 
 
@@ -33,8 +31,6 @@ TRIMMEDFIELDS = ['imapServer', 'imapPort', 'smtpServer', 'smtpPort']
 
 module.exports = AccountConfigMain = React.createClass
     displayName: 'AccountConfigMain'
-
-    mixins: [ RouterMixin ]
 
     propTypes:
         editedAccount: React.PropTypes.instanceOf(Immutable.Map).isRequired
