@@ -42,14 +42,6 @@ Application = React.createClass
         StoreWatchMixin [SettingsStore, RouterStore, MessageStore]
     ]
 
-    getDefaultProps: ->
-        props = RouterGetter.getLayoutSettings()
-        className = ['layout'
-            "layout-#{props.disposition}"
-            if props.isCompact then "layout-compact"
-            "layout-preview-#{props.previewSize}"].join(' ')
-        return {className}
-
     getInitialState: ->
         @getStateFromStores()
 
@@ -58,6 +50,12 @@ Application = React.createClass
         nextProps
 
     getStateFromStores: ->
+        settings = RouterGetter.getLayoutSettings()
+        className = ['layout'
+            "layout-#{settings.disposition}"
+            if settings.isCompact then "layout-compact"
+            "layout-preview-#{settings.previewSize}"].join(' ')
+
         return {
             mailboxID       : RouterGetter.getMailboxID()
             accountID       : RouterGetter.getAccountID()
@@ -69,10 +67,11 @@ Application = React.createClass
             currentSearch   : RouterGetter.getSearch()
             modal           : RouterGetter.getModal()
             nextURL         : RouterGetter.getNextURL()
+            className       : className
         }
 
     render: ->
-        div className: @props.className,
+        div className: @state.className,
 
             div className: 'app',
                 Menu
