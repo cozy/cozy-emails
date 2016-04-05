@@ -75,21 +75,15 @@ class RouteGetter
 
         # We dont filter for type from and dest because it is
         # complicated by collation and name vs address.
-        filter = @getFilter()
-        unless _.isEmpty(filter.flags)
+        unless _.isEmpty (filter = @getFilter()).flags
             messages = messages.filter (message, index) =>
-                value = true
-
                 if @isFlags 'FLAGGED'
-                    unless (value = MessageFlags.FLAGGED in message.get 'flags')
-                        return false
+                    return MessageFlags.FLAGGED in message.get 'flags'
                 if @isFlags 'ATTACH'
-                    unless (value = message.get('attachments').size > 0)
-                        return false
+                    return message.get('attachments')?.size > 0
                 if @isFlags 'UNSEEN'
-                    unless (value = MessageFlags.SEEN not in message.get 'flags')
-                        return false
-                value
+                    return MessageFlags.SEEN not in message.get 'flags'
+                return true
 
         # FIXME : use params ASC et DESC into URL
         messages.sort sortByDate filter.order
