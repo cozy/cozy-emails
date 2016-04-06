@@ -10,6 +10,7 @@ DomUtils = require '../utils/dom_utils'
 Message             = React.createFactory require './message'
 ToolbarConversation = React.createFactory require './toolbar_conversation'
 
+SettingsStore = require '../stores/settings_store'
 RouterGetter = require '../getters/router'
 
 # FIXME : use Getters instead of Stores
@@ -37,39 +38,23 @@ module.exports = React.createClass
             isLoading: RouterGetter.isLoading()
             message: RouterGetter.getMessage()
             conversation: RouterGetter.getConversation()
-            # compactMin: 3
-            # compact: if @state then @state.compact else true
-            # isCompacted: if @state then @state.isCompacted else false
         }
 
     renderMessage: (message, index) ->
-        # isCompactMode = not @state.isCompacted and @state.compact
-        # doCompact = index <= @state.compactMin
-        # if isCompactMode and doCompact
-        #     hiddenSize = @state.conversation?.size -  @state.compactMin
-        #     @state.isCompacted = true
-        #     return button
-        #         ref: 'button-expand'
-        #         key: 'button-expand-' + message.get 'id'
-        #         className: 'more'
-        #         onClick: =>
-        #             @setState compact: false
-        #         i className: 'fa fa-refresh'
-        #         t 'load more messages', hiddenSize
-
         accounts = AccountStore.getAll()
         accountID = RouterGetter.getAccountID()
         messageID = message.get 'id'
-        conversationID = message.get('conversationID')
-        Message
+        return Message
             ref                 : 'message'
             key                 : 'message-' + messageID
             message             : message
-            active              : RouterGetter.isCurrentConversation conversationID
+            active              : @props.messageID is messageID
             url                 : RouterGetter.getURL {messageID}
             selectedMailboxID   : @props.mailboxID
             useIntents          : LayoutStore.intentAvailable()
             trashMailbox        : accounts[accountID]?.trashMailbox
+            displayHTML         : SettingsStore.get 'messageDisplayHTML'
+            displayImages       : SettingsStore.get 'messageDisplayImages'
 
     render: ->
         unless @state.conversation?.length

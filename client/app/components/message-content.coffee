@@ -10,13 +10,8 @@ React = require 'react'
 module.exports = MessageContent = React.createClass
     displayName: 'MessageContent'
 
-
-    shouldComponentUpdate: (nextProps, nextState) ->
-        return not(_.isEqual(nextState, @state)) or not (_.isEqual(nextProps, @props))
-
-
     render: ->
-        if @props.messageDisplayHTML and @props.html
+        if @props.displayHTML and @props.html
             div null,
                 if @props.imagesWarning
                     div
@@ -47,7 +42,7 @@ module.exports = MessageContent = React.createClass
         # - resize the frame to the height of its content
         # - if images are not displayed, create the function to display them
         #   and resize the frame
-        if @props.messageDisplayHTML and @refs.content
+        if @props.displayHTML and @refs.content
             frame = @refs.content
             doc = frame.contentDocument or frame.contentWindow?.document
             checkResize = false # disabled for now

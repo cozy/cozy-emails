@@ -15,8 +15,6 @@ MessageFooter  = React.createFactory require './message_footer'
 ToolbarMessage = React.createFactory require './toolbar_message'
 MessageContent = React.createFactory require './message-content'
 
-SettingsStore = require '../stores/settings_store'
-
 {MessageFlags, MessageActions} = require '../constants/app_constants'
 
 LayoutActionCreator  = require '../actions/layout_action_creator'
@@ -38,106 +36,88 @@ module.exports = React.createClass
         selectedMailboxID      : React.PropTypes.string.isRequired
         useIntents             : React.PropTypes.bool.isRequired
 
-
     getInitialState: ->
-        settings = SettingsStore.get()
+        return @getStateFromStores()
+
+    componentWillReceiveProps: ->
+        @setState @getStateFromStores()
+
+    getStateFromStores: ->
+        # FIXME : le toggle sur
+        # displayHTML et displayImages va casser
         return {
-            displayHeaders: false
-            messageDisplayHTML: settings.get 'messageDisplayHTML'
-            messageDisplayImages: settings.get 'messageDisplayImages'
-            currentMessageID: null
-            prepared: {}
+            prepared: @prepareMessage()
         }
 
-
-    _prepareMessage: (message) ->
+    prepareMessage: ->
         # display full headers
         fullHeaders = []
-        for key, value of message.get 'headers'
-            if Array.isArray(value)
-                fullHeaders.push "#{key}: #{value.join('\n    ')}"
-            else
-                fullHeaders.push "#{key}: #{value}"
+        for key, value of @props.message.get 'headers'
+            value = value.join('\n ') if Array.isArray value
+            fullHeaders.push "#{key}: #{value}"
 
-        text = message.get 'text'
-        html = message.get 'html'
-        alternatives = message.get 'alternatives'
-        urls = /((([A-Za-z]{3,9}:(?:\/\/)?)(?:[-;:&=\+\$,\w]+@)?[A-Za-z0-9.-]+|(?:www.|[-;:&=\+\$,\w]+@)[A-Za-z0-9.-]+)((?:\/[\+~%\/.\w-_]*)?\??(?:[-\+=&;%@.\w_]*)#?(?:[\w]*))?)/gim
-        if not text? and not html?
-            # Some calendar invite may contain neither text nor HTML part
-            if alternatives?.length > 0
-                text = t 'calendar unknown format'
-            else
-                text = ''
+        # Do not display content
+        # if message isnt active
+        if @props.active
+            text = @props.message.get 'text'
+            html = @props.message.get 'html'
+            urls = /((([A-Za-z]{3,9}:(?:\/\/)?)(?:[-;:&=\+\$,\w]+@)?[A-Za-z0-9.-]+|(?:www.|[-;:&=\+\$,\w]+@)[A-Za-z0-9.-]+)((?:\/[\+~%\/.\w-_]*)?\??(?:[-\+=&;%@.\w_]*)#?(?:[\w]*))?)/gim
 
-        # TODO: Do we want to convert text only messages to HTML ?
-        # /!\ if messageDisplayHTML is set, this method should always return
-        # a value fo html, otherwise the content of the email flashes
-        if text? and not html? and @state.messageDisplayHTML
-            try
-                html = markdown.toHTML text.replace(/(^>.*$)([^>]+)/gm, "$1\n$2")
-                html = "<div class='textOnly'>#{html}</div>"
-            catch e
-                html = "<div class='textOnly'>#{text}</div>"
+            # Some calendar invitation
+            # may contain neither text nor HTML part
+            if not text? and not html?
+                text = if (@props.message.get 'alternatives')?.length
+                    t 'calendar unknown format'
 
-        if html? and not text? and not @state.messageDisplayHTML
-            text = toMarkdown html
+            # TODO: Do we want to convert text only messages to HTML ?
+            # /!\ if displayHTML is set, this method should always return
+            # a value fo html, otherwise the content of the email flashes
+            if text? and not html? and @props.displayHTML
+                try
+                    html = markdown.toHTML text.replace(/(^>.*$)([^>]+)/gm, "$1\n$2")
+                    html = "<div class='textOnly'>#{html}</div>"
+                catch e
+                    html = "<div class='textOnly'>#{text}</div>"
 
-        if text?
-            rich = text.replace urls, '<a href="$1" target="_blank">$1</a>'
-            rich = rich.replace /^>>>>>[^>]?.*$/gim, '<span class="quote5">$&</span>'
-            rich = rich.replace /^>>>>[^>]?.*$/gim, '<span class="quote4">$&</span>'
-            rich = rich.replace /^>>>[^>]?.*$/gim, '<span class="quote3">$&</span>'
-            rich = rich.replace /^>>[^>]?.*$/gim, '<span class="quote2">$&</span>'
-            rich = rich.replace /^>[^>]?.*$/gim, '<span class="quote1">$&</span>'
+            if html? and not text? and not @props.displayHTML
+                text = toMarkdown html
+
+            if text?
+                rich = text.replace urls, '<a href="$1" target="_blank">$1</a>'
+                rich = rich.replace /^>>>>>[^>]?.*$/gim, '<span class="quote5">$&</span>'
+                rich = rich.replace /^>>>>[^>]?.*$/gim, '<span class="quote4">$&</span>'
+                rich = rich.replace /^>>>[^>]?.*$/gim, '<span class="quote3">$&</span>'
+                rich = rich.replace /^>>[^>]?.*$/gim, '<span class="quote2">$&</span>'
+                rich = rich.replace /^>[^>]?.*$/gim, '<span class="quote1">$&</span>'
 
         flags = @props.message.get('flags').slice()
-        mailboxes = message.get 'mailboxIDs'
+        mailboxes = @props.message.get 'mailboxIDs'
         trash = @props.trashMailbox
         return {
-            attachments: message.get 'attachments'
-            fullHeaders: fullHeaders
-            text       : text
-            rich       : rich
-            html       : html
-            isDraft    : (flags.indexOf(MessageFlags.DRAFT) > -1)
-            isDeleted  : mailboxes[trash]?
+            attachments : @props.message.get 'attachments'
+            fullHeaders : fullHeaders
+            text        : text
+            rich        : rich
+            html        : html
+            isDraft     : (flags.indexOf(MessageFlags.DRAFT) > -1)
+            isDeleted   : mailboxes[trash]?
         }
 
+    componentWillUnMount: ->
+        @_markRead()
 
-    componentWillMount: ->
-        @_markRead @props.message, @props.active
-
-
-    componentWillReceiveProps: (props) ->
-        state = {}
-        if props.message.get('id') isnt @props.message.get('id')
-            @_markRead props.message, props.active
-            settings = SettingsStore.get()
-            state.messageDisplayHTML   = settings.get 'messageDisplayHTML'
-            state.messageDisplayImages = settings.get 'messageDisplayImages'
-        @setState state
-
-
-    _markRead: (message, active) ->
-        # Hack to prevent infinite loop if server side mark as read fails
-        messageID = message.get 'id'
-        if @state.currentMessageID isnt messageID
-            state =
-                currentMessageID: messageID
-                prepared: @_prepareMessage message
-            @setState state
-
-            # Only mark as read current active message if unseen
-            flags = message.get('flags').slice()
-            if active and flags.indexOf(MessageFlags.SEEN) is -1
-                setTimeout ->
-                    MessageActionCreator.mark {messageID}, MessageFlags.SEEN
-                , 1
-
+    _markRead: ->
+        messageID = @props.message?.get('id')
+        console.log 'MARK_AS_READ', messageID
+        # # Only mark as read current active message if unseen
+        # flags = message.get('flags').slice()
+        # if flags.indexOf(MessageFlags.SEEN) is -1
+        #     setTimeout ->
+        #         MessageActionCreator.mark {messageID}, MessageFlags.SEEN
+        #     , 1
 
     prepareHTML: (html) ->
-        messageDisplayHTML = true
+        displayHTML = true
         parser = new DOMParser()
         html   = """<html><head>
                 <link rel="stylesheet" href="./fonts/fonts.css" />
@@ -147,15 +127,15 @@ module.exports = React.createClass
         doc    = parser.parseFromString html, "text/html"
         images = []
 
-        if not doc
+        unless doc
             doc = document.implementation.createHTMLDocument("")
             doc.documentElement.innerHTML = html
 
-        if not doc
+        unless doc
             console.error "Unable to parse HTML content of message"
-            messageDisplayHTML = false
+            displayHTML = false
 
-        if doc and not @state.messageDisplayImages
+        if doc and not @props.displayImages
             images = doc.querySelectorAll('IMG[src]')
             images = Array.prototype.filter.call images, (img) ->
                 RGXP_PROTOCOL.test img.getAttribute('src')
@@ -172,11 +152,9 @@ module.exports = React.createClass
                 link.setAttribute 'href', 'http://' + href
 
         if doc?
-            @_htmlContent = doc.documentElement.innerHTML
-        else
-            @_htmlContent = html
+            html = doc.documentElement.innerHTML
 
-        return {messageDisplayHTML, images}
+        return {displayHTML, images, html}
 
     isUnread: ->
         @props.message.get('flags').indexOf(MessageFlags.SEEN) is -1
@@ -188,13 +166,14 @@ module.exports = React.createClass
         message  = @props.message
         prepared = @state.prepared
 
-        if @state.messageDisplayHTML and prepared.html?
-            {messageDisplayHTML, images} = @prepareHTML prepared.html
+        if @props.displayHTML and prepared.html?
+            {displayHTML, images, html} = @prepareHTML prepared.html
             imagesWarning = images.length > 0 and
-                            not @state.messageDisplayImages
+                            not @props.displayImages
         else
-            messageDisplayHTML = false
-            imagesWarning      = false
+            displayHTML = false
+            imagesWarning = false
+            html = ''
 
         classes = classNames
             message: true
@@ -211,15 +190,15 @@ module.exports = React.createClass
                 header onClick: @onHeaderClicked,
                     MessageHeader
                         message: @props.message
-                        isDraft: @state.prepared.isDraft
-                        isDeleted: @state.prepared.isDeleted
+                        isDraft: prepared.isDraft
+                        isDeleted: prepared.isDeleted
                         active: @props.active
                         ref: 'header'
 
                     if @props.active
                         @renderToolbox()
 
-                if @props.active and @state.displayHeaders
+                if @props.active
                     div className: 'full-headers',
                         # should be a pre, but it breaks flex
                         textarea
@@ -227,12 +206,11 @@ module.exports = React.createClass
                             resize: false
                             value: prepared?.fullHeaders?.join("\n")
 
-                if @props.active
                     MessageContent
                         ref: 'messageContent'
                         messageID: message.get 'id'
-                        messageDisplayHTML: messageDisplayHTML
-                        html: @_htmlContent
+                        displayHTML: displayHTML
+                        html: html
                         text: prepared.text
                         rich: prepared.rich
                         imagesWarning: imagesWarning
@@ -252,7 +230,6 @@ module.exports = React.createClass
             message              : @props.message
             selectedMailboxID    : @props.selectedMailboxID
             onDelete             : @onDelete
-            onHeaders            : @onHeaders
             onMove               : @onMove
             onMark               : @onMark
             onConversationDelete : @onConversationDelete
@@ -268,7 +245,7 @@ module.exports = React.createClass
 
         success = =>
             # Then remove message
-            MessageActionCreator.delete messageID: @state.currentMessageID
+            MessageActionCreator.delete messageID: @props.message.get 'id'
 
             # Goto to next conversation
             RouterActionCreator.navigate action: MessageActions.GROUP_NEXT
@@ -322,20 +299,15 @@ module.exports = React.createClass
         NotificationActionsCreator.alertWarning t "app unimplemented"
 
 
-    onHeaders: (event) ->
-        id = @props.message.get 'id'
-        @setState displayHeaders: true
-
     addAddress: (address) ->
         ContactActionCreator.createContact address
 
 
     displayImages: (event) ->
         event.preventDefault()
-        @setState messageDisplayImages: true
+        @setState displayImages: true
 
 
     displayHTML: (value) ->
-        if not value?
-            value = true
-        @setState messageDisplayHTML: value
+        value = true unless value?
+        @setState displayHTML: value
