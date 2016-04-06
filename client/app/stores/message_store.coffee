@@ -23,12 +23,12 @@ class MessageStore extends Store
     ###
 
     _messages = Immutable.OrderedMap()
+    _conversationLength = Immutable.Map()
+
     _currentMessages = Immutable.OrderedMap()
-    _conversations = Immutable.Map()
 
     _fetching = 0
 
-    _conversation = null
     _currentID = null
 
     _inFlightByRef = {}
@@ -49,7 +49,7 @@ class MessageStore extends Store
     _removeInFlight = (ref) ->
         request = _inFlightByRef[ref]
         delete _inFlightByRef[ref]
-        request.messages.forEach (message) ->
+        request?.messages.forEach (message) ->
             id = message.get('id')
             requests = _inFlightByMessageID[id]
             _inFlightByMessageID[id] = _.without requests, request
@@ -87,7 +87,7 @@ class MessageStore extends Store
         return message
 
     # Retrieve a batch of message with various criteria
-    # target - is an {Object} wi h a property messageID or messageIDs or
+    # target - is an {Object} with a property messageID or messageIDs or
     #          conversationID or messageIDs
     # target.accountID is needed to success Delete
     #
@@ -119,22 +119,26 @@ class MessageStore extends Store
 
         _fetching++
 
-        callback = (err, rawMsg) ->
+        callback = (error, result) ->
             _fetching--
-            if err?
+            if error?
                 AppDispatcher.handleViewAction
                     type: ActionTypes.MESSAGE_FETCH_FAILURE
-                    value: {mailboxID}
+                    value: {error, mailboxID}
             else
-                nextURL = rawMsg?.links?.next
+
+                nextURL = result?.links?.next
 
                 # This prevent to override local updates
                 # with older ones from server
-                messages = if _.isArray(rawMsg) then rawMsg else rawMsg.messages
-                messages?.forEach (message) -> message.updated = timestamp
-                _saveMessage message for message in messages when message?
+                messages = if _.isArray(result) then result else result.messages
+                messages?.forEach (message) -> _saveMessage message, timestamp
 
-                unless messages.length
+                if (conversationLength = result?.conversationLength)
+                    for conversationID, length of conversationLength
+                        _saveConversationLength conversationID, length
+
+                unless messages
                     # either end of list or no messages, we stay open
                     SocketUtils.changeRealtimeScope mailboxID, EPOCH
 
@@ -204,13 +208,14 @@ class MessageStore extends Store
         else
             return false
 
-    _saveMessage = (message) ->
+    _saveMessage = (message, timestamp) ->
         oldmsg = _messages.get message.id
         updated = oldmsg?.get 'updated'
 
         # only update message if new version is newer than
         # the one currently stored
-        if not (message.updated? and updated? and updated > message.updated) and
+        message.updated = timestamp if timestamp
+        if not (timestamp? and updated? and updated > timestamp) and
            not message._deleted # deleted draft are empty, don't update them
 
             message.attachments   ?= []
@@ -233,35 +238,17 @@ class MessageStore extends Store
                     #{message.id} "#{message.from[0].name}" "#{message.subject}"
                 """
 
-            # FIXME : trier ici par conversation
-            # et associer la propriété messageIDs
-            # pour garder la trace des messages
-            # TODO : garder _messages
-            # mais faire aussi un _conversations
             _messages = _messages.set message.id, messageMap
-
-            # Save Conversations
-            conversationID = message.conversationID
-            conversation = _conversations.get(conversationID)
-            conversation ?= Immutable.List()
-            if -1 is conversation.indexOf(message.id)
-                conversation = conversation.push message.id
-            _conversations = _conversations.set conversationID, conversation
 
             if message.accountID? and (diff = _computeMailboxDiff oldmsg, messageMap)
                 AccountStore._applyMailboxDiff message.accountID, diff
 
     _deleteMessage = (message) ->
-        _messages = _messages.remove (id = message.id)
+        _messages = _messages.remove message.id
 
-        # Remove all references to this ID
-        _messages = _messages.map (message) ->
-            messageIDs = message.get 'messageIDs'
-            if messageIDs? and -1 < (index = messageIDs.indexOf id)
-                messageIDs = messageIDs.splice index, 1
-                message = message.set 'messageIDs', messageIDs
-            return message
 
+    _saveConversationLength = (conversationID, length) ->
+        _conversationLength = _conversationLength.set conversationID, length
 
     ###
         Defines here the action handlers.
@@ -295,7 +282,7 @@ class MessageStore extends Store
             @emit 'change'
 
         handle ActionTypes.MESSAGE_TRASH_SUCCESS, ({target, updated, ref, next}) ->
-            _undoable[ref] =_removeInFlight ref
+            _undoable[ref] = _removeInFlight ref
             for message in updated
                 if message._deleted
                     _deleteMessage message
@@ -319,7 +306,7 @@ class MessageStore extends Store
             @emit 'change'
 
         handle ActionTypes.MESSAGE_MOVE_SUCCESS, ({target, updated, ref}) ->
-            _undoable[ref] =_removeInFlight ref
+            _undoable[ref] = _removeInFlight ref
             _saveMessage message for message in updated
             @emit 'change'
 
@@ -387,12 +374,8 @@ class MessageStore extends Store
         return _currentID
 
     getByID: (messageID) ->
-        if (message = _messages.get messageID)
-            return _addMessageIDs message
-
-    _addMessageIDs = (message) ->
-        conversationID = message.get 'conversationID'
-        message.set 'messageIDs', _conversations.get conversationID
+        messageID ?= @getCurrentID()
+        _messages.get messageID
 
     _getCurrentConversations = (mailboxID) ->
         __conv = {}
@@ -401,7 +384,6 @@ class MessageStore extends Store
             __conv[conversationID] = true unless (exist = __conv[conversationID])
             inMailbox = mailboxID of message.get 'mailboxIDs'
             return inMailbox and not exist
-        .map _addMessageIDs
         .toList()
 
     getMessagesToDisplay: (mailboxID) ->
@@ -409,10 +391,10 @@ class MessageStore extends Store
         return _currentMessages
 
     getConversationLength: (messageID) ->
-        messageID ?= MessageStore.getCurrentID()
-        message = _currentMessages.find (message) ->
-            message.get('id') is messageID
-        message.get('messageIDs')?.size
+        if (message = @getByID messageID)
+            conversationID = message.get 'conversationID'
+            return _conversationLength.get conversationID
+        null
 
 
     ###*
