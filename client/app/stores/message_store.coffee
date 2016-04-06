@@ -107,7 +107,10 @@ class MessageStore extends Store
         action ?= MessageActions.SHOW_ALL
         timestamp = Date.now()
 
+        _fetching++
+
         callback = (error, result) ->
+            _fetching--
             if error?
                 AppDispatcher.dispatch
                     type: ActionTypes.MESSAGE_FETCH_FAILURE
@@ -119,7 +122,7 @@ class MessageStore extends Store
                 messages?.forEach (message) -> _saveMessage message, timestamp
 
                 # Shortcut to know conversationLength
-                # withount loading all massages of the conversation
+                # without loading all massages of the conversation
                 if (conversationLength = result?.conversationLength)
                     for conversationID, length of conversationLength
                         _saveConversationLength conversationID, length
@@ -129,6 +132,14 @@ class MessageStore extends Store
                 if not _self.isAllLoaded() and messageID and
                         not _messages?.get messageID
                     action = MessageActions.PAGE_NEXT
+
+                AppDispatcher.dispatch
+                    type: ActionTypes.MESSAGE_FETCH_SUCCESS
+                    value: {action, nextURL, messageID}
+
+                # Message is not in the result
+                # get next page
+                if messageID and not _messages.toJS()[messageID]
                     AppDispatcher.dispatch
                         type: ActionTypes.MESSAGE_FETCH_REQUEST
                         value: {action, messageID, mailboxID}
@@ -150,6 +161,19 @@ class MessageStore extends Store
         else
             XHRUtils.fetchConversation conversationID, callback
 
+<<<<<<< HEAD
+=======
+        out[accountID] = nbUnread: deltaUnread
+
+        stayed.forEach (boxid) ->
+            out[boxid] = nbTotal: 0, nbUnread: deltaUnread
+
+        if changed
+            return out
+        else
+            return false
+
+>>>>>>> e341e87... Get conversationLength from server not client
     _saveMessage = (message, timestamp) ->
         oldmsg = _messages.get message.id
         updated = oldmsg?.get 'updated'
@@ -157,7 +181,10 @@ class MessageStore extends Store
         # only update message if new version is newer than
         # the one currently stored
         message.updated = timestamp if timestamp
+<<<<<<< HEAD
 
+=======
+>>>>>>> e341e87... Get conversationLength from server not client
         if not (timestamp? and updated? and updated > timestamp) and
            not message._deleted # deleted draft are empty, don't update them
 
@@ -183,6 +210,12 @@ class MessageStore extends Store
 
             _messages = _messages.set message.id, messageMap
 
+<<<<<<< HEAD
+=======
+            if message.accountID? and (diff = _computeMailboxDiff oldmsg, messageMap)
+                AccountStore._applyMailboxDiff message.accountID, diff
+
+>>>>>>> e341e87... Get conversationLength from server not client
     _deleteMessage = (message) ->
         _messages = _messages.remove message.id
 
@@ -250,7 +283,11 @@ class MessageStore extends Store
             _addInFlight {type: 'trash', trashBoxID, messages, ref}
             @emit 'change'
 
+<<<<<<< HEAD
         handle ActionTypes.MESSAGE_TRASH_SUCCESS, ({target, updated, ref}) ->
+=======
+        handle ActionTypes.MESSAGE_TRASH_SUCCESS, ({target, updated, ref, next}) ->
+>>>>>>> e341e87... Get conversationLength from server not client
             _undoable[ref] = _removeInFlight ref
             for message in updated
                 if message._deleted
@@ -318,7 +355,7 @@ class MessageStore extends Store
         return _currentID
 
     getByID: (messageID) ->
-        messageID ?= _currentID
+        messageID ?= @getCurrentID()
         _messages.get messageID
 
     _getCurrentConversations = (mailboxID) ->
@@ -333,6 +370,7 @@ class MessageStore extends Store
     getMessagesList: (mailboxID) ->
         _currentMessages = _getCurrentConversations(mailboxID)?.toOrderedMap()
         return _currentMessages
+
 
     getConversation: (messageID) ->
         messageID ?= @getCurrentID()
