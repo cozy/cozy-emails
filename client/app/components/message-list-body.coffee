@@ -25,7 +25,7 @@ module.exports = MessageListBody = React.createClass
                         ref: 'messageItem'
                         message: message
                         mailboxID: @props.mailboxID
-                        conversationLengths: RouterGetter.getConversationLength messageID
+                        conversationLengths: RouterGetter.getConversationLength {conversationID}
                         isCompact: SettingsStore.get('listStyle') is 'compact'
                         isSelected: -1 < @props.selection?.indexOf messageID
                         isActive: RouterGetter.isCurrentConversation conversationID
