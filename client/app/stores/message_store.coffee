@@ -162,8 +162,37 @@ class MessageStore extends Store
         else
             XHRUtils.fetchConversation conversationID, callback
 
-<<<<<<< HEAD
-=======
+
+    _computeMailboxDiff = (oldmsg, newmsg) ->
+        return {} unless oldmsg
+        changed = false
+
+        wasRead = MessageFlags.SEEN in oldmsg.get 'flags'
+        isRead = MessageFlags.SEEN in newmsg.get 'flags'
+
+        accountID = newmsg.get 'accountID'
+        oldboxes = Object.keys oldmsg.get 'mailboxIDs'
+        newboxes = Object.keys newmsg.get 'mailboxIDs'
+
+        out = {}
+        added = _.difference(newboxes, oldboxes)
+        added.forEach (boxid) ->
+            changed = true
+            out[boxid] = nbTotal: +1, nbUnread: if isRead then 0 else +1
+
+        removed = _.difference oldboxes, newboxes
+        removed.forEach (boxid) ->
+            changed = true
+            out[boxid] = nbTotal: -1, nbUnread: if wasRead then -1 else 0
+
+        stayed = _.intersection oldboxes, newboxes
+        deltaUnread = if wasRead and not isRead then +1
+        else if not wasRead and isRead then -1
+        else 0
+
+        if deltaUnread isnt 0
+            changed = true
+
         out[accountID] = nbUnread: deltaUnread
 
         stayed.forEach (boxid) ->
@@ -174,7 +203,7 @@ class MessageStore extends Store
         else
             return false
 
->>>>>>> e341e87... Get conversationLength from server not client
+
     _saveMessage = (message, timestamp) ->
         oldmsg = _messages.get message.id
         updated = oldmsg?.get 'updated'
@@ -182,10 +211,7 @@ class MessageStore extends Store
         # only update message if new version is newer than
         # the one currently stored
         message.updated = timestamp if timestamp
-<<<<<<< HEAD
 
-=======
->>>>>>> e341e87... Get conversationLength from server not client
         if not (timestamp? and updated? and updated > timestamp) and
            not message._deleted # deleted draft are empty, don't update them
 
@@ -211,12 +237,7 @@ class MessageStore extends Store
 
             _messages = _messages.set message.id, messageMap
 
-<<<<<<< HEAD
-=======
-            if message.accountID? and (diff = _computeMailboxDiff oldmsg, messageMap)
-                AccountStore._applyMailboxDiff message.accountID, diff
 
->>>>>>> e341e87... Get conversationLength from server not client
     _deleteMessage = (message) ->
         _messages = _messages.remove message.id
 
@@ -284,11 +305,8 @@ class MessageStore extends Store
             _addInFlight {type: 'trash', trashBoxID, messages, ref}
             @emit 'change'
 
-<<<<<<< HEAD
+
         handle ActionTypes.MESSAGE_TRASH_SUCCESS, ({target, updated, ref}) ->
-=======
-        handle ActionTypes.MESSAGE_TRASH_SUCCESS, ({target, updated, ref, next}) ->
->>>>>>> e341e87... Get conversationLength from server not client
             _undoable[ref] = _removeInFlight ref
             for message in updated
                 if message._deleted
@@ -298,6 +316,7 @@ class MessageStore extends Store
                 else
                     _saveMessage message
             @emit 'change'
+
 
         handle ActionTypes.MESSAGE_FLAGS_SUCCESS, ({target, updated, ref}) ->
             _removeInFlight ref
@@ -356,7 +375,6 @@ class MessageStore extends Store
         return _currentID
 
     getByID: (messageID) ->
-        messageID ?= @getCurrentID()
         _messages.get messageID
 
     _getCurrentConversations = (mailboxID) ->
@@ -367,6 +385,7 @@ class MessageStore extends Store
             inMailbox = mailboxID of message.get 'mailboxIDs'
             return inMailbox and not exist
         .toList()
+
 
     getMessagesList: (mailboxID) ->
         _currentMessages = _getCurrentConversations(mailboxID)?.toOrderedMap()
