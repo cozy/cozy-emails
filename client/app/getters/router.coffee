@@ -94,12 +94,9 @@ class RouteGetter
     getConversationLength: (messageID) ->
         MessageStore.getConversationLength messageID
 
-    getConversationMessages: (messageID) ->
-        messageID ?= MessageStore.getCurrentID()
-        messageIDs = MessageStore.getByID(messageID)?.get('messageIDs')
-        return messageIDs?.map (messageID) ->
-            MessageStore.getByID messageID
-
+    getConversation: (messageID) ->
+        conversation = MessageStore.getConversation messageID
+        conversation?.toArray()
 
     getCurrentMessageID: ->
         MessageStore.getCurrentID()

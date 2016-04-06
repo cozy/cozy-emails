@@ -112,7 +112,7 @@ class MessageStore extends Store
     _fetchMessage = (params={}) ->
         return if _self.isFetching()
 
-        {messageID, action} = params
+        {messageID, conversationID, action} = params
         mailboxID = AccountStore.getSelectedMailbox()?.get 'id'
         action ?= MessageActions.SHOW_ALL
         timestamp = Date.now()
@@ -166,7 +166,7 @@ class MessageStore extends Store
             XHRUtils.fetchMessagesByFolder url, callback
 
         else
-            XHRUtils.fetchConversation messageID, callback
+            XHRUtils.fetchConversation {messageID, conversationID}, callback
 
     _computeMailboxDiff = (oldmsg, newmsg) ->
         return {} unless oldmsg
@@ -215,6 +215,7 @@ class MessageStore extends Store
         # only update message if new version is newer than
         # the one currently stored
         message.updated = timestamp if timestamp
+
         if not (timestamp? and updated? and updated > timestamp) and
            not message._deleted # deleted draft are empty, don't update them
 
@@ -374,7 +375,6 @@ class MessageStore extends Store
         return _currentID
 
     getByID: (messageID) ->
-        messageID ?= @getCurrentID()
         _messages.get messageID
 
     _getCurrentConversations = (mailboxID) ->
@@ -390,7 +390,22 @@ class MessageStore extends Store
         _currentMessages = _getCurrentConversations(mailboxID)?.toOrderedMap()
         return _currentMessages
 
+    getConversation: (messageID) ->
+        messageID ?= @getCurrentID()
+
+        # Get messages from loaded ones
+        conversationID = @getByID(messageID)?.get 'conversationID'
+        conversation = _messages.filter (message) ->
+            conversationID is message.get 'conversationID'
+
+        # If missing messages, get them
+        if (messageID and conversation?.size isnt @getConversationLength messageID)
+            _fetchMessage {messageID, conversationID, action: MessageActions.SHOW}
+
+        conversation
+
     getConversationLength: (messageID) ->
+        messageID ?= @getCurrentID()
         if (message = @getByID messageID)
             conversationID = message.get 'conversationID'
             return _conversationLength.get conversationID
@@ -415,7 +430,6 @@ class MessageStore extends Store
         # ne passer que par messageID si possible
         {messageID, conversationID, messages, conversationIDs} = param
 
-        # console.log 'getMessage', conversationID, conversationIDs
         messages ?= _currentMessages
 
         # In this case, we just want

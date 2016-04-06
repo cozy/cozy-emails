@@ -22,9 +22,6 @@ StoreWatchMixin      = require '../mixins/store_watch_mixin'
 module.exports = React.createClass
     displayName: 'Conversation'
 
-    propTypes:
-        messageID: React.PropTypes.string
-
     mixins: [
         StoreWatchMixin [SelectionStore, MessageStore]
     ]
@@ -39,7 +36,7 @@ module.exports = React.createClass
         return {
             isLoading: RouterGetter.isLoading()
             message: RouterGetter.getMessage()
-            messages: RouterGetter.getConversationMessages()
+            conversation: RouterGetter.getConversation()
             # compactMin: 3
             # compact: if @state then @state.compact else true
             # isCompacted: if @state then @state.isCompacted else false
@@ -49,7 +46,7 @@ module.exports = React.createClass
         # isCompactMode = not @state.isCompacted and @state.compact
         # doCompact = index <= @state.compactMin
         # if isCompactMode and doCompact
-        #     hiddenSize = @state.messages?.size -  @state.compactMin
+        #     hiddenSize = @state.conversation?.size -  @state.compactMin
         #     @state.isCompacted = true
         #     return button
         #         ref: 'button-expand'
@@ -75,7 +72,7 @@ module.exports = React.createClass
             trashMailbox        : accounts[accountID]?.trashMailbox
 
     render: ->
-        unless @state.messages?.size
+        unless @state.conversation?.length
             return section
                 key: 'conversation'
                 className: 'conversation panel'
@@ -106,7 +103,7 @@ module.exports = React.createClass
 
             section
                 ref: 'scrollable',
-                    @state.messages.map @renderMessage
+                    @state.conversation.map @renderMessage
 
     _initScroll: ->
         if not (scrollable = ReactDOM.findDOMNode @refs.scrollable) or scrollable.scrollTop
