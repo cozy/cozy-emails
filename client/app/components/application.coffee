@@ -18,6 +18,7 @@ classNames = require 'classnames'
 MessageStore         = require '../stores/message_store'
 RouterStore          = require '../stores/router_store'
 SettingsStore        = require '../stores/settings_store'
+RefreshesStore = require '../stores/refreshes_store'
 StoreWatchMixin      = require '../mixins/store_watch_mixin'
 TooltipRefesherMixin = require '../mixins/tooltip_refresher_mixin'
 
@@ -39,7 +40,7 @@ Application = React.createClass
 
     mixins: [
         TooltipRefesherMixin
-        StoreWatchMixin [SettingsStore, RouterStore, MessageStore]
+        StoreWatchMixin [SettingsStore, RefreshesStore, RouterStore, MessageStore]
     ]
 
     getStateFromStores: ->
@@ -49,8 +50,16 @@ Application = React.createClass
             if settings.isCompact then "layout-compact"
             "layout-preview-#{settings.previewSize}"].join(' ')
 
+        # FIXME : faire un force refresh
+        # à chaque strt de l'application (?)
+        # FIXME : décalage entre mailbox.get('nbUnread') et
+        # les messages non lus dans l'interface
+        mailbox = RouterGetter.getCurrentMailbox()
         return {
-            mailboxID       : RouterGetter.getMailboxID()
+            mailboxID       : mailbox.get 'id'
+            nbTotal         : mailbox.get('nbTotal') or 0
+            nbUnread        : mailbox.get('nbUnread') or 0
+            nbRecent        : mailbox.get('nbRecent') or 0
             accountID       : RouterGetter.getAccountID()
             messageID       : (messageID = RouterGetter.getCurrentMessageID())
             message         : RouterGetter.getCurrentMessage()

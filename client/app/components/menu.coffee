@@ -11,11 +11,30 @@ colorhash = require '../utils/colorhash'
 LayoutActionCreator  = require '../actions/layout_action_creator'
 {Tooltips, AccountActions} = require '../constants/app_constants'
 
+
+MessageStore = require '../stores/message_store'
+AccountStore = require '../stores/account_store'
+StoreWatchMixin = require '../mixins/store_watch_mixin'
+
 RouterGetter = require '../getters/router'
 
 module.exports = Menu = React.createClass
     displayName: 'Menu'
 
+    mixins: [
+        StoreWatchMixin [AccountStore, MessageStore]
+    ]
+
+    getStateFromStores: ->
+        # FIXME : mettre ici le nb de messages non lu
+        # de la mailbox courante
+        return {
+            mailboxes: RouterGetter.getMailboxes()
+        }
+
+    # FIXME : déplacer ça dans ModalStore
+    # et dispatcher un DISPLAY_MODAL
+    # via un ModalActionCreator
     displayErrors: (refreshee) ->
         errors = refreshee.get 'errors'
         modal =
@@ -80,7 +99,6 @@ module.exports = Menu = React.createClass
         props = {
             key: 'account-' + accountID
             isSelected: accountID is RouterGetter.getAccountID()
-            mailboxes: RouterGetter.getMailboxes()
             newAccountURL: RouterGetter.getURL
                 action: AccountActions.CREATE
                 accountID: accountID
@@ -143,7 +161,8 @@ module.exports = Menu = React.createClass
                     role: 'group'
                     className: 'list-unstyled mailbox-list',
 
-                    props.mailboxes?.map (mailbox, key) =>
+                    @state.mailboxes?.map (mailbox, key) =>
+                            mailboxID = mailbox.get 'id'
                             MenuMailboxItem
                                 account:           account
                                 mailbox:           mailbox
@@ -152,4 +171,5 @@ module.exports = Menu = React.createClass
                                 refreshes:         @props.refreshes
                                 displayErrors:     @displayErrors
                                 progress:          @props.progress
+                                mailboxUrl:        RouterGetter.getURL {mailboxID}
                         .toArray()
