@@ -6,27 +6,9 @@ Dispatcher = require './libs/flux/dispatcher/dispatcher'
 ###
 class AppDispatcher extends Dispatcher
 
-    handleViewAction: (action) ->
+    dispatch: (action) ->
         window.cozyMails.logAction action
-        payload =
-            source: PayloadSources.VIEW_ACTION
-            action: action
-
-        @dispatch payload
-
-        # create and dispatch a DOM event for plugins
-        window.cozyMails.customEvent PayloadSources.VIEW_ACTION, action
-
-    handleServerAction: (action) ->
-        window.cozyMails.logAction action
-        payload =
-            source: PayloadSources.SERVER_ACTION
-            action: action
-
-        @dispatch payload
-
-        # create and dispatch a DOM event for plugins
-        window.cozyMails.customEvent PayloadSources.SERVER_ACTION, action
+        super {action}
 
 
 module.exports = new AppDispatcher()

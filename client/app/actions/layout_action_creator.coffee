@@ -7,45 +7,45 @@ AppDispatcher = require '../app_dispatcher'
 module.exports = LayoutActionCreator =
 
     setDisposition: (type) ->
-        AppDispatcher.handleViewAction
+        AppDispatcher.dispatch
             type: ActionTypes.SET_DISPOSITION
             value: type
 
     toggleListMode: ->
-        AppDispatcher.handleViewAction
+        AppDispatcher.dispatch
             type: ActionTypes.TOGGLE_LIST_MODE
 
     selectAll: (value) ->
         type = ActionTypes.MAILBOX_SELECT_ALL
-        AppDispatcher.handleViewAction {type}
+        AppDispatcher.dispatch {type}
 
     updateSelection: (value) ->
         type = ActionTypes.MAILBOX_SELECT
-        AppDispatcher.handleViewAction {type, value}
+        AppDispatcher.dispatch {type, value}
 
     # TODO: use a global method to DRY this 3-ones
     increasePreviewPanel: (factor = 1) ->
-        AppDispatcher.handleViewAction
+        AppDispatcher.dispatch
             type: ActionTypes.RESIZE_PREVIEW_PANE
             value: Math.abs factor
 
     decreasePreviewPanel: (factor = 1) ->
-        AppDispatcher.handleViewAction
+        AppDispatcher.dispatch
             type: ActionTypes.RESIZE_PREVIEW_PANE
             value: -1 * Math.abs factor
 
     resetPreviewPanel: ->
-        AppDispatcher.handleViewAction
+        AppDispatcher.dispatch
             type: ActionTypes.RESIZE_PREVIEW_PANE
             value: null
 
     focus: (path) ->
-        AppDispatcher.handleViewAction
+        AppDispatcher.dispatch
             type: ActionTypes.FOCUS
             value: path
 
     clearToasts: ->
-        AppDispatcher.handleViewAction
+        AppDispatcher.dispatch
             type: ActionTypes.CLEAR_TOASTS
             value: null
 
@@ -62,21 +62,21 @@ module.exports = LayoutActionCreator =
             return
 
         # Select Mailbox
-        AppDispatcher.handleViewAction
+        AppDispatcher.dispatch
             type: ActionTypes.SELECT_ACCOUNT
             value: {accountID, mailboxID}
 
         # Set message as current
-        AppDispatcher.handleViewAction
+        AppDispatcher.dispatch
             type: ActionTypes.MESSAGE_CURRENT
             value: {messageID}
 
         if query
-            AppDispatcher.handleViewAction
+            AppDispatcher.dispatch
                 type: ActionTypes.QUERY_PARAMETER_CHANGED
                 value: {query}
 
-        AppDispatcher.handleViewAction
+        AppDispatcher.dispatch
             type: ActionTypes.MESSAGE_FETCH_REQUEST
             value: {action: MessageActions.SHOW_ALL, messageID}
 
@@ -84,11 +84,11 @@ module.exports = LayoutActionCreator =
     showSearchResult: (parameters) ->
         {accountID, search} = parameters
 
-        AppDispatcher.handleViewAction
+        AppDispatcher.dispatch
             type: ActionTypes.SELECT_ACCOUNT
             value: {accountID}
 
-        AppDispatcher.handleViewAction
+        AppDispatcher.dispatch
             type: ActionTypes.SEARCH_PARAMETER_CHANGED
             value: {accountID, search}
 
@@ -98,39 +98,39 @@ module.exports = LayoutActionCreator =
         mailboxID ?= RouterGetter.getMailboxID()
 
         # Select Mailbox
-        AppDispatcher.handleViewAction
+        AppDispatcher.dispatch
             type: ActionTypes.SELECT_ACCOUNT
             value: {accountID, mailboxID}
 
         # Set message as current
         if messageID
-            AppDispatcher.handleViewAction
+            AppDispatcher.dispatch
                 type: ActionTypes.MESSAGE_CURRENT
                 value: {messageID}
 
-            AppDispatcher.handleViewAction
+            AppDispatcher.dispatch
                 type: ActionTypes.MESSAGE_FETCH_REQUEST
                 value: {messageID}
 
     toastsShow: ->
-        AppDispatcher.handleViewAction
+        AppDispatcher.dispatch
             type: ActionTypes.TOASTS_SHOW
 
     toastsHide: ->
-        AppDispatcher.handleViewAction
+        AppDispatcher.dispatch
             type: ActionTypes.TOASTS_HIDE
 
     intentAvailability: (availability) ->
-        AppDispatcher.handleViewAction
+        AppDispatcher.dispatch
             type: ActionTypes.INTENT_AVAILABLE
             value: availability
 
     displayModal: (params) ->
         params.closeModal ?= -> LayoutActionCreator.hideModal()
-        AppDispatcher.handleViewAction
+        AppDispatcher.dispatch
             type: ActionTypes.DISPLAY_MODAL
             value: params
 
     hideModal: ->
-        AppDispatcher.handleViewAction
+        AppDispatcher.dispatch
             type: ActionTypes.HIDE_MODAL

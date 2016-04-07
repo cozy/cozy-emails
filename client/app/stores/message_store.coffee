@@ -122,7 +122,7 @@ class MessageStore extends Store
         callback = (err, rawMsg) ->
             _fetching--
             if err?
-                AppDispatcher.handleViewAction
+                AppDispatcher.dispatch
                     type: ActionTypes.MESSAGE_FETCH_FAILURE
                     value: {mailboxID}
             else
@@ -141,14 +141,14 @@ class MessageStore extends Store
                 else if (lastdate = _messages.last()?.get 'date')
                     SocketUtils.changeRealtimeScope mailboxID, lastdate
 
-                AppDispatcher.handleViewAction
+                AppDispatcher.dispatch
                     type: ActionTypes.MESSAGE_FETCH_SUCCESS
                     value: {action, nextURL, messageID}
 
                 # Message is not in the result
                 # get next page
                 if messageID and not _messages.toJS()[messageID]
-                    AppDispatcher.handleViewAction
+                    AppDispatcher.dispatch
                         type: ActionTypes.MESSAGE_FETCH_REQUEST
                         value: {messageID, action: MessageActions.PAGE_NEXT}
 

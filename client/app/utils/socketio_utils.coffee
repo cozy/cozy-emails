@@ -8,7 +8,7 @@ socket = require('socket.io-client').connect window.location.origin,
     reconnectionAttempts: 3
 
 dispatchAs = (action) -> (content) ->
-    AppDispatcher.handleServerAction
+    AppDispatcher.dispatch
         type: action
         value: content
 

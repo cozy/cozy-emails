@@ -9,13 +9,13 @@ RouterStore = require '../stores/router_store'
 RouterActionCreator =
 
     setAction: (value) ->
-        AppDispatcher.handleViewAction
+        AppDispatcher.dispatch
             type: ActionTypes.ROUTE_CHANGE
             value: value
 
 
     getNextPage: ->
-        AppDispatcher.handleViewAction
+        AppDispatcher.dispatch
             type: ActionTypes.MESSAGE_FETCH_REQUEST
             value: action: MessageActions.PAGE_NEXT
 

@@ -32,7 +32,7 @@ class Router extends Backbone.Router
 
     initialize: ->
         # Save Routes in Stores
-        AppDispatcher.handleViewAction
+        AppDispatcher.dispatch
             type: ActionTypes.ROUTES_INITIALIZE
             value: @
 

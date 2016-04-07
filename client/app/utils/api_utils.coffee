@@ -92,7 +92,7 @@ module.exports = Utils =
                 settings[k] = v
         else
             settings[key] = value
-        AppDispatcher.handleViewAction
+        AppDispatcher.dispatch
             type: ActionTypes.SETTINGS_UPDATE_SUCCESS
             value: settings
 
@@ -157,11 +157,6 @@ module.exports = Utils =
         MessageActionCreator.undo()
 
 
-    customEvent: (name, data) ->
-        domEvent = new CustomEvent name, detail: data
-        window.dispatchEvent domEvent
-
-
     simulateUpdate: ->
 
         AppDispatcher = require '../app_dispatcher'
@@ -182,7 +177,7 @@ module.exports = Utils =
                 "nbRecent": 5,
                 "weight": 1000,
                 "depth": 0
-            AppDispatcher.handleServerAction
+            AppDispatcher.dispatch
                 type: 'RECEIVE_MAILBOX_UPDATE'
                 value: content
         , 5000

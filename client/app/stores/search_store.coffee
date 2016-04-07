@@ -43,17 +43,17 @@ class SearchStore extends Store
     _fetchSearchResults = ->
         url = _getNextURL _currentSearch
 
-        AppDispatcher.handleViewAction
+        AppDispatcher.dispatch
             type: ActionTypes.SEARCH_REQUEST
             value: {search: _currentSearch}
 
         XHRUtils.search url, (error, searchResults) ->
             if error?
-                AppDispatcher.handleViewAction
+                AppDispatcher.dispatch
                     type: ActionTypes.SEARCH_FAILURE
                     value: {error}
             else
-                AppDispatcher.handleViewAction
+                AppDispatcher.dispatch
                     type: ActionTypes.SEARCH_SUCCESS
                         value: {searchResults}
 
