@@ -25,10 +25,10 @@ module.exports.initRealtime = ->
         reconectionDelay: 2000
         reconnectionAttempts: 3
 
-    # socket.on 'refresh.status', dispatchAs ActionTypes.RECEIVE_REFRESH_STATUS
-    # socket.on 'refresh.create', dispatchAs ActionTypes.RECEIVE_REFRESH_UPDATE
-    # socket.on 'refresh.update', dispatchAs ActionTypes.RECEIVE_REFRESH_UPDATE
-    # socket.on 'refresh.delete', dispatchAs ActionTypes.RECEIVE_REFRESH_DELETE
+    socket.on 'refresh.status', dispatchAs ActionTypes.RECEIVE_REFRESH_STATUS
+    socket.on 'refresh.create', dispatchAs ActionTypes.RECEIVE_REFRESH_UPDATE
+    socket.on 'refresh.update', dispatchAs ActionTypes.RECEIVE_REFRESH_UPDATE
+    socket.on 'refresh.delete', dispatchAs ActionTypes.RECEIVE_REFRESH_DELETE
 
     socket.on 'message.create',
         dispatchAs ActionTypes.RECEIVE_RAW_MESSAGE_REALTIME
