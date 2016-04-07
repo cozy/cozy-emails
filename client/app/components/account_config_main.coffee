@@ -1,23 +1,13 @@
 React      = require 'react'
-classNames = require 'classnames'
-
-{
-    div, p, form, label, input, button, ul, li, a, span, i,
-    fieldset, legend
-} = React.DOM
-
 _ = require 'underscore'
 Immutable = require 'immutable'
 
-{   Form
-    FieldSet
-    FormButtons
-    FormButton} = require('./basic_components').factories
-AccountInput  = React.createFactory require './account_config_input'
-AccountDelete = React.createFactory require './account_config_delete'
-AccountActionCreator = require '../actions/account_action_creator'
+{div, p, ul, li, a, i} = React.DOM
+{Form, FieldSet, FormButtons, FormButton} = require('./basic_components').factories
+classNames = require 'classnames'
 
-discovery2Fields = require '../utils/discovery_to_fields'
+AccountInput  = React.createFactory require './account_config_input'
+AccountActionCreator = require '../actions/account_action_creator'
 
 
 SMTP_OPTIONS =
@@ -29,28 +19,42 @@ SMTP_OPTIONS =
 GOOGLE_IMAP = ['imap.googlemail.com', 'imap.gmail.com']
 TRIMMEDFIELDS = ['imapServer', 'imapPort', 'smtpServer', 'smtpPort']
 
+
+_getLoginInfos = (login) ->
+    index0 = login.indexOf '@'
+    return {
+        alias: login.substring 0, index0
+        domain: login.substring index0 + 1, login.length
+    }
+
 module.exports = AccountConfigMain = React.createClass
     displayName: 'AccountConfigMain'
 
-    propTypes:
-        editedAccount: React.PropTypes.instanceOf(Immutable.Map).isRequired
-        requestChange: React.PropTypes.func.isRequired
-        isWaiting: React.PropTypes.bool.isRequired
-
-    # Do not update component if nothing has changed.
-    shouldComponentUpdate: (nextProps, nextState) ->
-        isNextState = _.isEqual nextState, @state
-        isNextProps = _.isEqual nextProps, @props
-        return not (isNextState and isNextProps)
-
     getInitialState: ->
-        domain = @props.editedAccount.get('login')?.split('@')[1]
-        if @props.editedAccount.get('id') and domain
-            @_lastDiscovered = domain
+        @getStateFromStores()
 
-        return state =
-            imapAdvanced: false
-            smtpAdvanced: false
+    componentWillReceiveProps: (props) ->
+        _hasErrorAndIsNot = (field, value = '') ->
+            props.errors.get(field) and
+            props.editedAccount.get(field) isnt value
+
+        imapAdvanced = _hasErrorAndIsNot('imapLogin') or
+                        _hasErrorAndIsNot('smtpLogin') or
+                        _hasErrorAndIsNot('smtpPassword') or
+                        _hasErrorAndIsNot('smtpMethod', 'PLAIN')
+
+        @setState @getStateFromStores {imapAdvanced}
+
+
+    getStateFromStores: (props={}) ->
+        {domain} = _getLoginInfos @props?.editedAccount.get('login')
+
+        return {
+            lastDiscovered: domain if domain
+            imapAdvanced: props.imapAdvanced or false
+            smtpAdvanced: props.smtpAdvanced or false
+        }
+
 
     makeLinkState: (field) ->
         cached = (@__cacheLS ?= {})[field]
@@ -59,7 +63,7 @@ module.exports = AccountConfigMain = React.createClass
         else return @__cacheLS[field] =
             value: value
             requestChange: (value) =>
-                @props.requestChange @makeChanges field, value
+                @makeChanges field, value
 
     makeChanges: (field, value) ->
         changes = {}
@@ -86,22 +90,9 @@ module.exports = AccountConfigMain = React.createClass
                 unless @state.smtpManualPort
                     changes.smtpPort = if value then '587' else '25'
             when 'login'
-                @doDiscovery value?.split('@')[1]
+                @doDiscovery value
 
         return changes
-
-    componentWillReceiveProps: (props) ->
-        hasErrorAndIsNot = (field, value = '') ->
-            props.errors.get(field) and
-            props.editedAccount.get(field) isnt value
-
-        changes = {}
-        changes.imapAdvanced = true if hasErrorAndIsNot 'imapLogin'
-        changes.smtpAdvanced = true if hasErrorAndIsNot 'smtpLogin'
-        changes.smtpAdvanced = true if hasErrorAndIsNot 'smtpPassword'
-        changes.smtpAdvanced = true if hasErrorAndIsNot 'smtpMethod', 'PLAIN'
-
-        @setState changes if changes.smtpAdvanced or changes.imapAdvanced
 
 
     buildButtonLabel: ->
@@ -247,30 +238,16 @@ module.exports = AccountConfigMain = React.createClass
     onCheck: (event) -> @props.onSubmit event, true
 
     # Display or not SMTP advanced settings.
-    toggleSMTPAdvanced: -> @setState smtpAdvanced: not @state.smtpAdvanced
+    toggleSMTPAdvanced: ->
+        @setState smtpAdvanced: not @state.smtpAdvanced
 
     # Display or not IMAP advanced settings.
-    toggleIMAPAdvanced: -> @setState imapAdvanced: not @state.imapAdvanced
+    toggleIMAPAdvanced: ->
+        @setState imapAdvanced: not @state.imapAdvanced
 
     # Attempt to discover default values depending on target server.
     # The target server is guessed by the email given by the user.
-    doDiscovery: (domain) ->
-        if domain?.length > 3 and domain isnt @_lastDiscovered
-            if @discoverTimeout
-                @nextDiscover = domain
-            else
-                @discoverTimeout = setTimeout (=> @doDiscoveryNow domain), 2000
-
-
-    doDiscoveryNow: (domain) ->
-        AccountActionCreator.discover domain, (err, provider) =>
-            unless err
-                infos = discovery2Fields provider
-
-                @props.requestChange infos
-
-            if @nextDiscover
-                @doDiscoveryNow @nextDiscover
-                @nextDiscover = null
-            else
-                @discoverTimeout = null
+    doDiscovery: (login) ->
+        {domain} = _getLoginInfos login
+        if domain isnt @state.lastDiscovered
+            AccountActionCreator.discover domain

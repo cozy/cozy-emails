@@ -75,6 +75,9 @@ module.exports = React.createClass
     onTabChangesDoSubmit: (changes) ->
         @onTabChanges changes, => @onSubmit()
 
+
+    # FIXME : normalement on devrait supprimer ça
+    # car l'url change à chaque fois
     onTabChanges: (changes, callback = ->) ->
         nextstate =
             editedAccount: @state.editedAccount.merge(changes)
@@ -123,7 +126,6 @@ module.exports = React.createClass
                 else
                     AccountConfigMain
                         editedAccount: @state.editedAccount
-                        requestChange: @onTabChanges
                         isWaiting: @state.isWaiting
                         checking: @state.isChecking
                         onSubmit: @onSubmit
