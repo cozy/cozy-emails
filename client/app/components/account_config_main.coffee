@@ -1,5 +1,4 @@
 React      = require 'react'
-
 _ = require 'underscore'
 Immutable = require 'immutable'
 
@@ -12,6 +11,14 @@ AccountActionCreator = require '../actions/account_action_creator'
 
 GOOGLE_EMAIL = ['googlemail.com', 'gmail.com']
 TRIMMEDFIELDS = ['imapServer', 'imapPort', 'smtpServer', 'smtpPort']
+
+
+_getLoginInfos = (login) ->
+    index0 = login.indexOf '@'
+    return {
+        alias: login.substring 0, index0
+        domain: login.substring index0 + 1, login.length
+    }
 
 module.exports = AccountConfigMain = React.createClass
     displayName: 'AccountConfigMain'
