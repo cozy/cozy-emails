@@ -233,16 +233,16 @@ class AccountStore extends Store
             _setError error
             @emit 'change'
 
-        # handle ActionTypes.MAILBOX_CREATE_SUCCESS, (rawAccount) ->
-        #     @_onAccountUpdated rawAccount
-        #     @emit 'change'
-        #
-        # handle ActionTypes.MAILBOX_UPDATE_SUCCESS, (rawAccount) ->
-        #     @_onAccountUpdated rawAccount
-        #     @emit 'change'
-        # handle ActionTypes.MAILBOX_DELETE_SUCCESS, (rawAccount) ->
-        #     @_onAccountUpdated rawAccount
-        #     @emit 'change'
+        handle ActionTypes.MAILBOX_CREATE_SUCCESS, (rawAccount) ->
+            @_onAccountUpdated rawAccount
+            @emit 'change'
+
+        handle ActionTypes.MAILBOX_UPDATE_SUCCESS, (rawAccount) ->
+            @_onAccountUpdated rawAccount
+            @emit 'change'
+        handle ActionTypes.MAILBOX_DELETE_SUCCESS, (rawAccount) ->
+            @_onAccountUpdated rawAccount
+            @emit 'change'
 
         handle ActionTypes.MAILBOX_EXPUNGE_FAILURE, ({error, mailboxID, accountID}) ->
             # if user hasn't switched to another box, refresh display
@@ -264,17 +264,23 @@ class AccountStore extends Store
             _accountsUnread.set data.accountID, data.totalUnread
             @emit 'change'
 
-        handle ActionTypes.REFRESH_SUCCESS, ({mailboxID}) ->
-            _mailboxRefreshing[mailboxID] ?= 0
-            _mailboxRefreshing[mailboxID]++
-            @emit 'change'
+        # # FIXME : attention 2 handler pour la même action
+        # # FIXME : bouger ça dans refreshStore?!
+        # handle ActionTypes.REFRESH_SUCCESS, ({mailboxID}) ->
+        #     _mailboxRefreshing[mailboxID] ?= 0
+        #     _mailboxRefreshing[mailboxID]++
+        #     @emit 'change'
 
+        # FIXME : bouger ça dans refreshStore?!
         handle ActionTypes.REFRESH_FAILURE, ({mailboxID, error}) ->
             _mailboxRefreshing[mailboxID]--
             _refreshLastError = error
             @emit 'change'
 
+        # FIXME : attention 2 handler pour la même action
+        # FIXME : bouger ça dans refreshStore?!
         handle ActionTypes.REFRESH_SUCCESS, ({mailboxID, updated}) ->
+            console.log 'REFRESH_SUCCESS', mailboxID
             _mailboxRefreshing[mailboxID]--
             if updated?
                 setMailbox updated.accountID, updated.id, updated
