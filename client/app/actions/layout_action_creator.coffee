@@ -71,12 +71,7 @@ module.exports = LayoutActionCreator =
             type: ActionTypes.SELECT_ACCOUNT
             value: {accountID, mailboxID}
 
-        # Set message as current
         if messageID
-            AppDispatcher.dispatch
-                type: ActionTypes.MESSAGE_CURRENT
-                value: {messageID}
-
             AppDispatcher.dispatch
                 type: ActionTypes.MESSAGE_FETCH_REQUEST
                 value: {messageID}

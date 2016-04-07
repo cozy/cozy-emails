@@ -109,16 +109,6 @@ module.exports = Utils =
             messageID = MessageStore.getPreviousConversation()?.get 'id'
         RouterActionCreator.navigate {messageID}
 
-
-    messageSetCurrent: (message) ->
-        return unless message?.get('id')
-
-        MessageActionCreator.setCurrent message.get('id'), true
-
-        if SettingsStore.get('displayPreview')
-            @messageDisplay message
-
-
     ##
     # Display a message
     # @params {Immutable} message the message (current one if null)

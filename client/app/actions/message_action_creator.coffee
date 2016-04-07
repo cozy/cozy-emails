@@ -1,6 +1,6 @@
 AppDispatcher = require '../libs/flux/dispatcher/dispatcher'
 
-{ActionTypes, MessageFlags, FlagsConstants} = require '../constants/app_constants'
+{ActionTypes} = require '../constants/app_constants'
 
 XHRUtils      = require '../utils/xhr_utils'
 
@@ -45,15 +45,6 @@ MessageActionCreator =
                     value: {action, message}
 
 
-    # set conv to true to update current conversation ID
-    setCurrent: (messageID, conv) ->
-        if messageID? and typeof messageID isnt 'string'
-            messageID = messageID.get 'id'
-        AppDispatcher.dispatch
-            type: ActionTypes.MESSAGE_CURRENT
-            value:
-                messageID: messageID
-
     # Immediately synchronise some messages with the server
     # Used if one of the action fail
     recover: (target, ref) ->
@@ -70,6 +61,7 @@ MessageActionCreator =
                 AppDispatcher.dispatch
                     type: ActionTypes.MESSAGE_RECOVER_SUCCESS
                     value: {ref}
+
 
 
     # Delete message(s)
@@ -107,18 +99,13 @@ MessageActionCreator =
             type: ActionTypes.MESSAGE_MOVE_REQUEST
             value: {target, ref, from, to}
 
-        ts = Date.now()
         # send request
+        timestamp = Date.now()
         XHRUtils.batchMove target, from, to, (error, updated) =>
             if error
                 AppDispatcher.dispatch
                     type: ActionTypes.MESSAGE_MOVE_FAILURE
                     value: {target, ref, error}
-
-                # we dont know if some succeeded or not,
-                # in doubt, recover the changed to messages to sync with
-                # server
-                @recover target, ref
             else
                 msg.updated = ts for msg in updated
                 AppDispatcher.dispatch
@@ -127,46 +114,10 @@ MessageActionCreator =
 
             callback? error, updated
 
-    mark: (target, flagAction) ->
-        ref = refCounter++
-
-        switch flagAction
-            when FlagsConstants.SEEN
-                op = 'batchAddFlag'
-                flag = FlagsConstants.SEEN
-            when FlagsConstants.FLAGGED
-                op = 'batchAddFlag'
-                flag = FlagsConstants.FLAGGED
-            when FlagsConstants.UNSEEN
-                op = 'batchRemoveFlag'
-                flag = FlagsConstants.SEEN
-            when FlagsConstants.NOFLAG
-                op = 'batchRemoveFlag'
-                flag = FlagsConstants.FLAGGED
-            else
-                throw new Error "Wrong usage : unrecognized FlagsConstants"
-
-        ts = Date.now()
-
-        AppDispatcher.dispatch
+    mark: (target, action) ->
+        AppDispatcher.handleViewAction
             type: ActionTypes.MESSAGE_FLAGS_REQUEST
-            value: {target, ref, op, flag, flagAction}
-
-        XHRUtils[op] target, flag, (error, updated) =>
-            if error
-                AppDispatcher.dispatch
-                    type: ActionTypes.MESSAGE_FLAGS_FAILURE
-                    value: {target, ref, error, op, flag, flagAction}
-
-                # we dont know if some succeeded or not,
-                # in doubt, recover the changed to messages to sync with
-                # server
-                @recover target, ref
-            else
-                msg.updated = ts for msg in updated
-                AppDispatcher.dispatch
-                    type: ActionTypes.MESSAGE_FLAGS_SUCCESS
-                    value: {target, ref, updated, op, flag, flagAction}
+            value: {target, action}
 
     undo: (ref) ->
 
@@ -196,11 +147,6 @@ MessageActionCreator =
                 AppDispatcher.dispatch
                     type: ActionTypes.MESSAGE_UNDO_FAILURE
                     value: {ref}
-
-                # we dont know if some succeeded or not,
-                # in doubt, recover the changed to messages to sync with
-                # server
-                @recover target, ref
             else
                 AppDispatcher.dispatch
                     type: ActionTypes.MESSAGE_UNDO_SUCCESS
