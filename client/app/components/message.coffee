@@ -36,6 +36,16 @@ module.exports = React.createClass
         selectedMailboxID      : React.PropTypes.string.isRequired
         useIntents             : React.PropTypes.bool.isRequired
 
+<<<<<<< 1fb49247d04421a6d8909c52d3ae612431f5c226
+=======
+    getInitialState: ->
+        return @getStateFromStores()
+
+    componentWillReceiveProps: (nextProps) ->
+        @setState @getStateFromStores()
+        nextProps
+
+>>>>>>> Clean markup
     getInitialState: ->
         return @getStateFromStores()
 
@@ -231,13 +241,7 @@ module.exports = React.createClass
             selectedMailboxID    : @props.selectedMailboxID
             onDelete             : @onDelete
             onMove               : @onMove
-            onMark               : @onMark
-            onConversationDelete : @onConversationDelete
-            onConversationMark   : @onConversationMark
-            onConversationMove   : @onConversationMove
             ref                  : 'toolbarMessage'
-
-
 
     onDelete: (event) ->
         event.preventDefault()
@@ -262,19 +266,10 @@ module.exports = React.createClass
                 LayoutActionCreator.hideModal()
                 success()
 
-    onConversationDelete: ->
-        conversationID = @props.message.get('conversationID')
-        MessageActionCreator.delete {conversationID}
-
 
     onMark: (flag) ->
         messageID = @props.message.get('id')
         MessageActionCreator.mark {messageID}, flag
-
-
-    onConversationMark: (flag) ->
-        conversationID = @props.message.get('conversationID')
-        MessageActionCreator.mark {conversationID}, flag
 
 
     onMove: (to) ->
@@ -283,6 +278,7 @@ module.exports = React.createClass
         subject = @props.message.get 'subject'
         MessageActionCreator.move {messageID}, from, to
 
+<<<<<<< 1fb49247d04421a6d8909c52d3ae612431f5c226
 
     onConversationMove: (to) ->
         conversationID = @props.message.get('conversationID')
@@ -299,6 +295,8 @@ module.exports = React.createClass
         ContactActionCreator.createContact address
 
 
+=======
+>>>>>>> Clean markup
     displayImages: (event) ->
         event.preventDefault()
         @setState displayImages: true

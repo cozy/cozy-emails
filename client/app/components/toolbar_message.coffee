@@ -2,24 +2,21 @@ React = require 'react'
 
 {nav, div, button, a} = React.DOM
 
-{MessageFlags, FlagsConstants, MessageActions, Tooltips} = require '../constants/app_constants'
+{MessageActions, Tooltips} = require '../constants/app_constants'
 
 RouterGetter = require '../getters/router'
 
-ToolboxActions = React.createFactory require './toolbox_actions'
 ToolboxMove    = React.createFactory require './toolbox_move'
 
 # Shortcuts for buttons classes
 cBtnGroup = 'btn-group btn-group-sm pull-right'
 cBtn      = 'btn btn-default fa'
 
-
 module.exports = React.createClass
     displayName: 'ToolbarMessage'
 
     propTypes:
         message            : React.PropTypes.object.isRequired
-        selectedMailboxID  : React.PropTypes.string.isRequired
         onDelete           : React.PropTypes.func.isRequired
         onMove             : React.PropTypes.func.isRequired
 
