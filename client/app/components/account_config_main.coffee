@@ -1,4 +1,5 @@
 React      = require 'react'
+
 _ = require 'underscore'
 Immutable = require 'immutable'
 
@@ -33,10 +34,11 @@ module.exports = AccountConfigMain = React.createClass
     getInitialState: ->
         @getStateFromStores()
 
-    componentWillReceiveProps: (props) ->
-        _hasErrorAndIsNot = (field, value = '') ->
-            props.errors.get(field) and
-            props.editedAccount.get(field) isnt value
+    componentWillReceiveProps: (nextProps) ->
+        # Define Advanced
+        _hasErrorAndIsNot = (field, value = '') =>
+            nextProps.errors.get(field) and
+            nextProps.editedAccount.get(field) isnt value
 
         imapAdvanced = _hasErrorAndIsNot('imapLogin') or
                         _hasErrorAndIsNot('smtpLogin') or
@@ -44,56 +46,44 @@ module.exports = AccountConfigMain = React.createClass
                         _hasErrorAndIsNot('smtpMethod', 'PLAIN')
 
         @setState @getStateFromStores {imapAdvanced}
+        nextProps
+
+    handleChange: (field, value) ->
+        nextProps = {}
+        value = value.trim() if field in TRIMMEDFIELDS and value.trim
+        nextProps[field] = value
+
+        @setState @getStateFromStores nextProps
+
+        @doDiscovery value if 'login' is field
 
 
-    getStateFromStores: (props={}) ->
+    getStateFromStores: (nextState={}) ->
         {domain} = _getLoginInfos @props?.editedAccount.get('login')
 
-        return {
-            lastDiscovered: domain if domain
-            imapAdvanced: props.imapAdvanced or false
-            smtpAdvanced: props.smtpAdvanced or false
-        }
+        if domain
+            nextState.lastDiscovered = domain
 
+        # Define Ports
+        if nextState.imapPort isnt undefined
+            nextState.imapSSL = value is '993'
+            nextState.imapTLS = false
 
-    makeLinkState: (field) ->
-        cached = (@__cacheLS ?= {})[field]
-        value =  @props.editedAccount.get(field) or ''
-        if cached?.value is value then return cached
-        else return @__cacheLS[field] =
-            value: value
-            requestChange: (value) =>
-                @makeChanges field, value
+        else if nextState.smtpPort isnt undefined
+            nextState.smtpSSL = value is '465'
+            nextState.smtpTLS = value is '587'
 
-    makeChanges: (field, value) ->
-        changes = {}
+        unless nextState.imapManualPort
+            if nextState.imapSSL isnt undefined
+                nextState.imapPort = if nextState.imapSSL then '993' else '143'
 
-        if field in TRIMMEDFIELDS and value.trim
-            value = value.trim()
+        unless nextState.smtpManualPort
+            if nextState.smtpSSL isnt undefined
+                nextState.smtpPort = if nextState.smtpSSL then '465' else '25'
+            else if nextState.smtpTLS isnt undefined
+                nextState.smtpPort = if nextState.smtpTLS then '587' else '25'
 
-        changes[field] = value
-
-        switch field
-            when 'imapPort'
-                changes.imapSSL = value is '993'
-                changes.imapTLS = false
-            when 'smtpPort'
-                changes.smtpSSL = value is '465'
-                changes.smtpTLS = value is '587'
-            when 'imapSSL'
-                unless @state.imapManualPort
-                    changes.imapPort = if value then '993' else '143'
-            when 'smtpSSL'
-                unless @state.smtpManualPort
-                    changes.smtpPort = if value then '465' else '25'
-            when 'smtpTLS'
-                unless @state.smtpManualPort
-                    changes.smtpPort = if value then '587' else '25'
-            when 'login'
-                @doDiscovery value
-
-        return changes
-
+        nextState
 
     buildButtonLabel: ->
         action = if @props.isWaiting then 'saving'
@@ -102,12 +92,16 @@ module.exports = AccountConfigMain = React.createClass
 
         return t "account #{action}"
 
-    buildInput: (field, options = {}) ->
-        options.name ?= field
-        options.key = "account-config-field-#{field}"
-        options.valueLink ?= @makeLinkState field
-        options.error ?= @props.errors?.get field
-        return AccountInput options
+
+    buildInput: (field) ->
+        AccountInput
+            name: field
+            key: "account-config-field-#{field}"
+            valueLink:
+              value: @state[field]
+              requestChange: (value) =>
+                  @handleChange field, value
+            error: @props.errors?.get field
 
     render: ->
         formClass = classNames
@@ -249,5 +243,5 @@ module.exports = AccountConfigMain = React.createClass
     # The target server is guessed by the email given by the user.
     doDiscovery: (login) ->
         {domain} = _getLoginInfos login
-        if domain isnt @state.lastDiscovered
+        if domain?.length > 3 and domain isnt @state.lastDiscovered
             AccountActionCreator.discover domain

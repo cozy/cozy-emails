@@ -15,26 +15,13 @@ module.exports = AccountInput = React.createClass
         LinkedStateMixin
     ]
 
-    propTypes:
-        name: React.PropTypes.string.isRequired
-        error: React.PropTypes.string
+    # Update parent from child
+    # but not child from child (infinite case)
+    shouldComponentUpdate: (nextProps) ->
+        not _.isEmpty _.difference nextProps, @props
 
-        className: React.PropTypes.string
-        onClick: React.PropTypes.func
-        onInput: React.PropTypes.func
-        onBlur: React.PropTypes.func
-        type: React.PropTypes.oneOf [
-            'checkbox', 'textarea', 'email', 'text', 'password'
-        ]
-        valueLink: React.PropTypes.shape
-            value: React.PropTypes.any
-            requestChange: React.PropTypes.func.isRequired
-        options: (props) ->
-            if props.type is 'dropdown'
-                React.PropTypes.object.isRequired.apply this, arguments
-
-
-    getDefaultProps: -> type: 'text'
+    onChange: (event) ->
+        @props.valueLink.requestChange event.target?.value
 
     render: ->
         name = @props.name
@@ -55,14 +42,16 @@ module.exports = AccountInput = React.createClass
                     input
                         id: "mailbox-#{name}"
                         name: "mailbox-#{name}"
-                        checkedLink: @props.valueLink
+                        checkedLink: @props.valueLink.value
+                        onChange: @onChange
                         type: type
                         onClick: @props.onClick
                 else if type is 'textarea'
                     textarea
                         id: "mailbox-#{name}"
                         name: "mailbox-#{name}"
-                        valueLink: @props.valueLink
+                        valueLink: @props.valueLink.value
+                        onChange: @onChange
                         className: 'form-control'
                         placeholder: placeHolder
                         onBlur: @props.onBlur
@@ -71,14 +60,16 @@ module.exports = AccountInput = React.createClass
                     Dropdown
                         id: "mailbox-#{name}"
                         name: "mailbox-#{name}"
-                        valueLink: @props.valueLink
+                        valueLink: @props.valueLink.value
+                        onChange: @onChange
                         options: @props.options
                         allowUndefined: @props.allowUndefined
                 else
                     input
                         id: "mailbox-#{name}"
                         name: "mailbox-#{name}"
-                        valueLink: @props.valueLink
+                        valueLink: @props.valueLink.value
+                        onChange: @onChange
                         type: type
                         className: 'form-control'
                         placeholder: placeHolder
