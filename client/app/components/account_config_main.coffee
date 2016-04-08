@@ -24,13 +24,10 @@ _getLoginInfos = (login) ->
 module.exports = AccountConfigMain = React.createClass
     displayName: 'AccountConfigMain'
 
-    getDefaultProps: ->
-        imapPort: '993'
-        imapSSL: true
-        imapTLS: false
-        smtpPort: '465'
-        smtpSSL: true
-        imapAdvanced: false
+
+    getInitialState: ->
+        {domain} = _getLoginInfos @props?.editedAccount.get('login')
+        @getStateFromStores {domain}
 
 
     getInitialState: ->
