@@ -18,6 +18,7 @@ SMTP_OPTIONS =
     'PLAIN': t("account smtpMethod PLAIN")
 
 GOOGLE_IMAP = ['imap.googlemail.com', 'imap.gmail.com']
+GOOGLE_EMAIL = ['googlemail.com', 'gmail.com']
 
 TRIMMEDFIELDS = ['imapServer', 'imapPort', 'smtpServer', 'smtpPort']
 
@@ -89,6 +90,12 @@ module.exports = AccountConfigMain = React.createClass
         isSmtpTLS = @state?.smtpTLS and nextState.smtpTLS is undefined
         if nextState.smtpTLS or isSmtpTLS
             nextState.smtpPort = '587'
+
+        # Check domain from login
+        if _.isString nextState.domain
+            gmailDomain = _.find GOOGLE_EMAIL, (value) ->
+                -1 < nextState.domain.indexOf value
+            nextState.isGmail = gmailDomain?
 
         nextState
 
