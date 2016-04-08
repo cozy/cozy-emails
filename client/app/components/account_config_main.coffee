@@ -11,6 +11,7 @@ AccountInput  = React.createFactory require './account_config_input'
 AccountActionCreator = require '../actions/account_action_creator'
 
 GOOGLE_EMAIL = ['googlemail.com', 'gmail.com']
+
 TRIMMEDFIELDS = ['imapServer', 'imapPort', 'smtpServer', 'smtpPort']
 
 
@@ -26,8 +27,16 @@ module.exports = AccountConfigMain = React.createClass
 
 
     getInitialState: ->
-        {domain} = _getLoginInfos @props?.editedAccount.get('login')
-        @getStateFromStores {domain}
+        @getStateFromStores
+            action: if @props.isWaiting then 'saving'
+            else if account?.get 'id' then 'save' else 'add'
+            isOauth: account?.get('oauthProvider')?
+            isGmail: account?.get('imapServer') in GOOGLE_IMAP
+            imapPort: '993'
+            imapSSL: true
+            imapTLS: false
+            smtpPort: 465
+            smtpSSL: true
 
 
     getInitialState: ->
@@ -89,6 +98,7 @@ module.exports = AccountConfigMain = React.createClass
         # Overwrite Smtp port if TLS is (ever) selected
         isSmtpTLS = @state?.smtpTLS and nextState.smtpTLS is undefined
         nextState.smtpPort = '587' if nextState.smtpTLS or isSmtpTLS
+
 
         nextState
 
@@ -171,6 +181,7 @@ module.exports = AccountConfigMain = React.createClass
             if @state.imapAdvanced
                 @buildInput 'imapTLS', type: 'checkbox'
 
+
             if @state.imapAdvanced
                 @buildInput 'imapLogin'
 
@@ -196,6 +207,7 @@ module.exports = AccountConfigMain = React.createClass
             if @state.smtpAdvanced
                 @buildInput 'smtpTLS', type: 'checkbox'
 
+
             if @state.smtpAdvanced
                 @buildInput 'smtpMethod',
                     type: 'dropdown'
@@ -207,10 +219,8 @@ module.exports = AccountConfigMain = React.createClass
                     }
                     allowUndefined: true
 
-            if @state.smtpAdvanced
                 @buildInput 'smtpLogin'
 
-            if @state.smtpAdvanced
                 @buildInput 'smtpPassword',
                     type: 'password'
 
