@@ -3,6 +3,8 @@ _        = require 'underscore'
 Polyglot = require 'node-polyglot'
 moment   = require 'moment'
 
+{sendReport} = require './error_manager'
+
 RouterGetter = require '../getters/router'
 
 # FIXME : remove all this from Stores to  RouterGetter
@@ -207,15 +209,7 @@ module.exports = Utils =
 
     # Log message into server logs
     logInfo: (message) ->
-        data =
-            data:
-                type: 'debug'
-                message: message
-        xhr = new XMLHttpRequest()
-        xhr.open 'POST', 'activity', true
-        xhr.setRequestHeader "Content-Type", "application/json;charset=UTF-8"
-        xhr.send JSON.stringify(data)
-        console.info message
+        sendReport 'debug', message
 
 
     # Log every Flux action (only in development environment)

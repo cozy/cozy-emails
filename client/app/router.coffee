@@ -1,3 +1,5 @@
+Backbone = require 'backbone'
+
 RouterActionCreator = require './actions/router_action_creator'
 LayoutActionCreator = require './actions/layout_action_creator'
 AccountActionCreator = require './actions/account_action_creator'

@@ -2,7 +2,6 @@ React      = require 'react'
 classNames = require 'classnames'
 
 {a, h4,  pre, div, button, span, strong, i} = React.DOM
-SocketUtils     = require '../utils/socketio_utils'
 
 LayoutActionCreator = require '../actions/layout_action_creator'
 NotificationActionCreator = require '../actions/notification_action_creator'

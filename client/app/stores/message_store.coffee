@@ -8,7 +8,7 @@ Store = require '../libs/flux/store/store'
 AccountStore = require './account_store'
 RouterStore = require '../stores/router_store'
 
-SocketUtils = require '../utils/socketio_utils'
+{changeRealtimeScope} = require '../utils/realtime_utils'
 {sortByDate} = require '../utils/misc'
 
 {ActionTypes, MessageFlags, MessageActions} = require '../constants/app_constants'
@@ -136,10 +136,10 @@ class MessageStore extends Store
 
                 unless messages.length
                     # either end of list or no messages, we stay open
-                    SocketUtils.changeRealtimeScope mailboxID, EPOCH
+                    changeRealtimeScope mailboxID, EPOCH
 
                 else if (lastdate = _messages.last()?.get 'date')
-                    SocketUtils.changeRealtimeScope mailboxID, lastdate
+                    changeRealtimeScope mailboxID, lastdate
 
                 AppDispatcher.dispatch
                     type: ActionTypes.MESSAGE_FETCH_SUCCESS
