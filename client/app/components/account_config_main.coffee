@@ -100,6 +100,12 @@ module.exports = AccountConfigMain = React.createClass
         nextState.smtpPort = '587' if nextState.smtpTLS or isSmtpTLS
 
 
+        # Check domain from login
+        if _.isString nextState.domain
+            gmailDomain = _.find GOOGLE_EMAIL, (value) ->
+                -1 < nextState.domain.indexOf value
+            nextState.isGmail = gmailDomain?
+
         nextState
 
     componentDidMount: ->
