@@ -16,12 +16,16 @@ module.exports = AccountInput = React.createClass
     ]
 
     # Update parent from child
-    # but not child from child (infinite case)
+    # or child from parent
     shouldComponentUpdate: (nextProps) ->
-        not _.isEmpty _.difference nextProps, @props
+        not _.isEqual nextProps.valueLink.value, @props.valueLink.value
 
     onChange: (event) ->
-        @props.valueLink.requestChange event.target?.value
+        type = event.target.getAttribute 'type'
+        value = event.target.value
+        value = event.target.checked if type in ['checkbox', 'radio']
+
+        @props.valueLink.requestChange value
 
     render: ->
         name = @props.name
@@ -42,25 +46,22 @@ module.exports = AccountInput = React.createClass
                     input
                         id: "mailbox-#{name}"
                         name: "mailbox-#{name}"
-                        checkedLink: @props.valueLink.value
+                        checked: @props.valueLink.value
                         onChange: @onChange
                         type: type
-                        onClick: @props.onClick
                 else if type is 'textarea'
                     textarea
                         id: "mailbox-#{name}"
                         name: "mailbox-#{name}"
-                        valueLink: @props.valueLink.value
+                        value: @props.valueLink.value
                         onChange: @onChange
                         className: 'form-control'
                         placeholder: placeHolder
-                        onBlur: @props.onBlur
-                        onInput: @props.onInput
                 else if type is 'dropdown'
                     Dropdown
                         id: "mailbox-#{name}"
                         name: "mailbox-#{name}"
-                        valueLink: @props.valueLink.value
+                        value: @props.valueLink.value
                         onChange: @onChange
                         options: @props.options
                         allowUndefined: @props.allowUndefined
@@ -68,13 +69,11 @@ module.exports = AccountInput = React.createClass
                     input
                         id: "mailbox-#{name}"
                         name: "mailbox-#{name}"
-                        valueLink: @props.valueLink.value
+                        value: @props.valueLink.value
                         onChange: @onChange
                         type: type
                         className: 'form-control'
                         placeholder: placeHolder
-                        onBlur: @props.onBlur
-                        onInput: @props.onInput
 
             if @props.error
                 ErrorLine text: @props.error
