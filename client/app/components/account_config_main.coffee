@@ -32,7 +32,8 @@ module.exports = AccountConfigMain = React.createClass
     displayName: 'AccountConfigMain'
 
     getInitialState: ->
-        @getStateFromStores()
+        {domain} = _getLoginInfos @props?.editedAccount.get('login')
+        @getStateFromStores {domain}
 
     componentWillReceiveProps: (nextProps) ->
         # Define Advanced
@@ -45,7 +46,11 @@ module.exports = AccountConfigMain = React.createClass
                         _hasErrorAndIsNot('smtpPassword') or
                         _hasErrorAndIsNot('smtpMethod', 'PLAIN')
 
-        @setState @getStateFromStores {imapAdvanced}
+        # getDomain
+        if nextProps?.editedAccount
+            {domain} = _getLoginInfos nextProps.editedAccount.get 'login'
+
+        @setState @getStateFromStores {imapAdvanced, domain}
         nextProps
 
     handleChange: (field, value) ->
@@ -53,17 +58,14 @@ module.exports = AccountConfigMain = React.createClass
         value = value.trim() if field in TRIMMEDFIELDS and value.trim
         nextProps[field] = value
 
-        @setState @getStateFromStores nextProps
+        if 'login' is field
+            {domain} = _getLoginInfos value
+            nextProps.domain = domain
 
-        @doDiscovery value if 'login' is field
+        @setState @getStateFromStores nextProps
 
 
     getStateFromStores: (nextState={}) ->
-        {domain} = _getLoginInfos @props?.editedAccount.get('login')
-
-        if domain
-            nextState.lastDiscovered = domain
-
         # Define Ports
         if nextState.imapPort isnt undefined
             nextState.imapSSL = value is '993'
@@ -84,6 +86,12 @@ module.exports = AccountConfigMain = React.createClass
                 nextState.smtpPort = if nextState.smtpTLS then '587' else '25'
 
         nextState
+
+    componentDidMount: ->
+        @dispatchDiscover()
+
+    componentDidUpdate: ->
+        @dispatchDiscover()
 
     buildButtonLabel: ->
         action = if @props.isWaiting then 'saving'
@@ -239,9 +247,8 @@ module.exports = AccountConfigMain = React.createClass
     toggleIMAPAdvanced: ->
         @setState imapAdvanced: not @state.imapAdvanced
 
-    # Attempt to discover default values depending on target server.
-    # The target server is guessed by the email given by the user.
-    doDiscovery: (login) ->
-        {domain} = _getLoginInfos login
-        if domain?.length > 3 and domain isnt @state.lastDiscovered
-            AccountActionCreator.discover domain
+    dispatchDiscover: ->
+        # Attempt to discover default values depending on target server.
+        # The target server is guessed by the email given by the user.
+        if @state.domain?.length > 3
+            AccountActionCreator.discover @state.domain
