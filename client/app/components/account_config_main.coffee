@@ -18,6 +18,7 @@ SMTP_OPTIONS =
     'PLAIN': t("account smtpMethod PLAIN")
 
 GOOGLE_IMAP = ['imap.googlemail.com', 'imap.gmail.com']
+
 TRIMMEDFIELDS = ['imapServer', 'imapPort', 'smtpServer', 'smtpPort']
 
 
@@ -32,8 +33,16 @@ module.exports = AccountConfigMain = React.createClass
     displayName: 'AccountConfigMain'
 
     getInitialState: ->
-        {domain} = _getLoginInfos @props?.editedAccount.get('login')
-        @getStateFromStores {domain}
+        @getStateFromStores
+            action: if @props.isWaiting then 'saving'
+            else if account?.get 'id' then 'save' else 'add'
+            isOauth: account?.get('oauthProvider')?
+            isGmail: account?.get('imapServer') in GOOGLE_IMAP
+            imapPort: '993'
+            imapSSL: true
+            imapTLS: false
+            smtpPort: 465
+            smtpSSL: true
 
     componentWillReceiveProps: (nextProps) ->
         # Define Advanced
@@ -46,19 +55,16 @@ module.exports = AccountConfigMain = React.createClass
                         _hasErrorAndIsNot('smtpPassword') or
                         _hasErrorAndIsNot('smtpMethod', 'PLAIN')
 
-        # getDomain
-        if nextProps?.editedAccount
-            {domain} = _getLoginInfos nextProps.editedAccount.get 'login'
-
-        @setState @getStateFromStores {imapAdvanced, domain}
+        if nextProps.editedAccount?
+            @setState @getStateFromStores {imapAdvanced}
         nextProps
 
-    handleChange: (field, value) ->
+    handleChange: (name, value) ->
         nextProps = {}
-        value = value.trim() if field in TRIMMEDFIELDS and value.trim
-        nextProps[field] = value
+        value = value.trim() if name in TRIMMEDFIELDS and value.trim
+        nextProps[name] = value
 
-        if 'login' is field
+        if 'login' is name
             {domain} = _getLoginInfos value
             nextProps.domain = domain
 
@@ -66,24 +72,23 @@ module.exports = AccountConfigMain = React.createClass
 
 
     getStateFromStores: (nextState={}) ->
-        # Define Ports
-        if nextState.imapPort isnt undefined
-            nextState.imapSSL = value is '993'
-            nextState.imapTLS = false
+        # Toggle SSL : change ImapPort
+        if nextState.imapSSL is false
+            nextState.imapPort = '143'
+        else if nextState.imapSSL is true
+            nextState.imapPort = '993'
 
-        else if nextState.smtpPort isnt undefined
-            nextState.smtpSSL = value is '465'
-            nextState.smtpTLS = value is '587'
+        # SMTP config
+        isSmtpSSL = @state?.smtpSSL and nextState.smtpSSL is undefined
+        if nextState.smtpSSL or isSmtpSSL
+            nextState.smtpPort = '465'
+        else
+            nextState.smtpPort = '25'
 
-        unless nextState.imapManualPort
-            if nextState.imapSSL isnt undefined
-                nextState.imapPort = if nextState.imapSSL then '993' else '143'
-
-        unless nextState.smtpManualPort
-            if nextState.smtpSSL isnt undefined
-                nextState.smtpPort = if nextState.smtpSSL then '465' else '25'
-            else if nextState.smtpTLS isnt undefined
-                nextState.smtpPort = if nextState.smtpTLS then '587' else '25'
+        # Overwrite Smtp port if TLS is (ever) selected
+        isSmtpTLS = @state?.smtpTLS and nextState.smtpTLS is undefined
+        if nextState.smtpTLS or isSmtpTLS
+            nextState.smtpPort = '587'
 
         nextState
 
@@ -93,23 +98,17 @@ module.exports = AccountConfigMain = React.createClass
     componentDidUpdate: ->
         @dispatchDiscover()
 
-    buildButtonLabel: ->
-        action = if @props.isWaiting then 'saving'
-        else if @props.editedAccount.get('id') then 'save'
-        else 'add'
-
-        return t "account #{action}"
-
-
-    buildInput: (field) ->
-        AccountInput
-            name: field
-            key: "account-config-field-#{field}"
+    buildInput: (name, attributes={}) ->
+        _defaultAttributes =
+            name: name
+            key: "account-config-field-#{name}"
             valueLink:
-              value: @state[field]
+              value: @state[name]
               requestChange: (value) =>
-                  @handleChange field, value
-            error: @props.errors?.get field
+                  @handleChange name, value
+            error: @props.errors?.get name
+
+        AccountInput _.extend {}, _defaultAttributes, attributes
 
     render: ->
         formClass = classNames
@@ -117,38 +116,37 @@ module.exports = AccountConfigMain = React.createClass
             'form-account': true
             'waiting': @props.isWaiting
 
-        isOauth = @props.editedAccount?.get('oauthProvider')?
-
         Form className: formClass,
 
-            if isOauth
+            if @state.isOauth
                 p null, t 'account oauth'
 
             FieldSet text: t('account identifiers'),
                 @buildInput 'label'
                 @buildInput 'name'
-                @buildInput 'login' #, type: 'email'
+                @buildInput 'login'
 
-                unless isOauth
-                    @buildInput 'password', type: 'password'
+            unless @state.isOauth
+                @buildInput 'password', type: 'password'
 
             @buildInput 'accountType', className: 'hidden'
 
             # Display gmail warning if IMAP server is Gmail.
-            if @props.editedAccount.get('imapServer') in GOOGLE_IMAP
+            if @state.isGmail
                 @_renderGMAILSecurity()
-            unless isOauth
+
+            unless @state.isOauth
                 @_renderReceivingServer()
-            unless isOauth
+
+            unless @state.isOauth
                 @_renderSendingServer()
 
             @_renderButtons()
 
     _renderReceivingServer: ->
-        advanced = if @state.imapAdvanced then 'hide' else 'show'
+        className = if @state.imapAdvanced then 'hide' else 'show'
 
         FieldSet text: t('account receiving server'),
-
             @buildInput 'imapServer'
             @buildInput 'imapPort'
             @buildInput 'imapSSL', type: 'checkbox'
@@ -158,15 +156,15 @@ module.exports = AccountConfigMain = React.createClass
                 className: "form-group advanced-imap-toggle",
                 a
                     className: "col-sm-3 col-sm-offset-2 control-label clickable",
-                    onClick: @toggleIMAPAdvanced,
-                    t "account imap #{advanced} advanced"
+                    onClick: => @setState imapAdvanced: not @state.imapAdvanced
+                    t "account imap #{className} advanced"
 
             if @state.imapAdvanced
                 @buildInput 'imapLogin'
 
 
     _renderSendingServer: ->
-        advanced = if @state.smtpAdvanced then 'hide' else 'show'
+        className = if @state.smtpAdvanced then 'hide' else 'show'
         FieldSet text: t('account sending server'),
             @buildInput 'smtpServer'
             @buildInput 'smtpPort'
@@ -176,9 +174,9 @@ module.exports = AccountConfigMain = React.createClass
             div
                 className: "form-group advanced-smtp-toggle",
                 a
-                    className: "col-sm-3 col-sm-offset-2 control-label clickable",
-                    onClick: @toggleSMTPAdvanced,
-                    t "account smtp #{advanced} advanced"
+                    className: "col-sm-3 col-sm-offset-2 control-label clickable"
+                    onClick: => @setState smtpAdvanced: not @state.smtpAdvanced
+                    t "account smtp #{className} advanced"
 
             if @state.smtpAdvanced
                 @buildInput 'smtpMethod',
@@ -186,10 +184,8 @@ module.exports = AccountConfigMain = React.createClass
                     options: SMTP_OPTIONS
                     allowUndefined: true
 
-            if @state.smtpAdvanced
                 @buildInput 'smtpLogin'
 
-            if @state.smtpAdvanced
                 @buildInput 'smtpPassword',
                     type: 'password'
 
@@ -215,37 +211,25 @@ module.exports = AccountConfigMain = React.createClass
         if @props.errors.size is 0
             FieldSet text: t('account actions'),
                 FormButtons null,
+                    # Run form submission process described in parent component.
+                    # Check for errors before.
                     FormButton
-                            class: 'action-save'
-                            contrast: true
-                            icon: 'save'
-                            spinner: @props.isWaiting
-                            onClick: @onSubmit
-                            text: @buildButtonLabel()
+                        class: 'action-save'
+                        contrast: true
+                        icon: 'save'
+                        spinner: @props.isWaiting
+                        onClick: (event) => @props.onSubmit event, false
+                        text: t "account #{@state.action}"
+
+                    # Run form submission process described in parent component. This one
+                    # checks that current parameters are working well.
+                    # Check for errors before.
                     FormButton
-                            class: 'action-check'
-                            spinner: @props.checking
-                            onClick: @onCheck
-                            icon: 'ellipsis-h'
-                            text: t 'account check'
-
-
-    # Run form submission process described in parent component.
-    # Check for errors before.
-    onSubmit: (event) -> @props.onSubmit event, false
-
-    # Run form submission process described in parent component. This one
-    # checks that current parameters are working well.
-    # Check for errors before.
-    onCheck: (event) -> @props.onSubmit event, true
-
-    # Display or not SMTP advanced settings.
-    toggleSMTPAdvanced: ->
-        @setState smtpAdvanced: not @state.smtpAdvanced
-
-    # Display or not IMAP advanced settings.
-    toggleIMAPAdvanced: ->
-        @setState imapAdvanced: not @state.imapAdvanced
+                        class: 'action-check'
+                        spinner: @props.checking
+                        onClick: (event) => @props.onSubmit event, true
+                        icon: 'ellipsis-h'
+                        text: t 'account check'
 
     dispatchDiscover: ->
         # Attempt to discover default values depending on target server.
