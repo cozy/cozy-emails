@@ -152,10 +152,6 @@ module.exports = Utils =
         LayoutActionCreator.displayModal modal
 
 
-    messageUndo: ->
-        MessageActionCreator.undo()
-
-
     simulateUpdate: ->
         window.setInterval ->
             content =

@@ -31,10 +31,6 @@ class MessageStore extends Store
 
     _currentID = null
 
-    _inFlightByRef = {}
-    _inFlightByMessageID = {}
-    _undoable = {}
-
 
     _setCurrentID = (messageID) ->
         return if messageID is _currentID
@@ -42,21 +38,6 @@ class MessageStore extends Store
         _batchFlag {messageID: _currentID}, MessageFlags.SEEN
         _currentID = messageID
 
-    _addInFlight = (request) ->
-        _inFlightByRef[request.ref] = request
-        request.messages.forEach (message) ->
-            id = message.get('id')
-            requests = (_inFlightByMessageID[id] ?= [])
-            requests.push request
-
-    _removeInFlight = (ref) ->
-        request = _inFlightByRef[ref]
-        delete _inFlightByRef[ref]
-        request?.messages.forEach (message) ->
-            id = message.get('id')
-            requests = _inFlightByMessageID[id]
-            _inFlightByMessageID[id] = _.without requests, request
-        return request
 
     # Retrieve a batch of message with various criteria
     # target - is an {Object} with a property messageID or messageIDs or
@@ -266,19 +247,6 @@ class MessageStore extends Store
                     type: ActionTypes.MESSAGE_FLAGS_SUCCESS
                     value: {target, ref, updated, action}
 
-    # Immediately synchronise some messages with the server
-    # Used if one of the action fail
-    _recover = (target, ref) ->
-        XHRUtils.batchFetch target, (err, messages) ->
-            if err
-                AppDispatcher.handleViewAction
-                    type: ActionTypes.MESSAGE_RECOVER_FAILURE
-                    value: {ref}
-            else
-                AppDispatcher.handleViewAction
-                    type: ActionTypes.MESSAGE_RECOVER_SUCCESS
-                    value: {ref}
-
     ###
         Defines here the action handlers.
     ###
@@ -343,16 +311,8 @@ class MessageStore extends Store
             .toOrderedMap()
             @emit 'change'
 
-        handle ActionTypes.MESSAGE_TRASH_REQUEST, ({target, ref}) ->
-            messages = _getMixed target
-            target.accountID = messages[0].get 'accountID'
-            trashBoxID = AccountStore.getSelected().get 'trashMailbox'
-            _addInFlight {type: 'trash', trashBoxID, messages, ref}
-            @emit 'change'
 
-
-        handle ActionTypes.MESSAGE_TRASH_SUCCESS, ({target, updated, ref}) ->
-            _undoable[ref] = _removeInFlight ref
+        handle ActionTypes.MESSAGE_TRASH_SUCCESS, ({updated}) ->
             for message in updated
                 if message._deleted
                     _deleteMessage message
@@ -362,57 +322,16 @@ class MessageStore extends Store
                     _saveMessage message
             @emit 'change'
 
-
-        handle ActionTypes.MESSAGE_FLAGS_SUCCESS, ({target, updated, ref}) ->
-            _removeInFlight ref
+        handle ActionTypes.MESSAGE_FLAGS_SUCCESS, ({updated}) ->
             _saveMessage message for message in updated
             @emit 'change'
 
-        handle ActionTypes.MESSAGE_FLAGS_FAILURE, ({target, ref}) ->
-            # we dont know if some succeeded or not,
-            # in doubt, recover the changed to messages to sync with
-            # server
-            _recover target, ref
-            _removeInFlight ref
-            @emit 'change'
-
-        handle ActionTypes.MESSAGE_FLAGS_FAILURE, ({target, ref}) ->
-            # we dont know if some succeeded or not,
-            # in doubt, recover the changed to messages to sync with
-            # server
-            _recover target, ref
-            _removeInFlight ref
-            @emit 'change'
-
-        handle ActionTypes.MESSAGE_MOVE_REQUEST, ({target, from, to, ref}) ->
-            messages = _getMixed target
-            _addInFlight {type: 'move', from, to, messages, ref}
-            @emit 'change'
-
-        handle ActionTypes.MESSAGE_MOVE_SUCCESS, ({target, updated, ref}) ->
-            _undoable[ref] = _removeInFlight ref
+        handle ActionTypes.MESSAGE_MOVE_SUCCESS, ({updated}) ->
             _saveMessage message for message in updated
             @emit 'change'
 
-        handle ActionTypes.MESSAGE_MOVE_FAILURE, ({target, ref}) ->
-            # we dont know if some succeeded or not,
-            # in doubt, recover the changed to messages to sync with
-            # server
-            _recover target, ref
-            _removeInFlight ref
-            @emit 'change'
-
-        handle ActionTypes.MESSAGE_UNDO_FAILURE, ({target, ref}) ->
-            # we dont know if some succeeded or not,
-            # in doubt, recover the changed to messages to sync with
-            # server
-            _recover target, ref
-            _removeInFlight ref
-            delete _undoable[ref]
-            @emit 'change'
-
-        handle ActionTypes.MESSAGE_FETCH_REQUEST, (param)->
-            _fetchMessage param
+        handle ActionTypes.MESSAGE_FETCH_REQUEST, (payload)->
+            _fetchMessage payload
             @emit 'change'
 
         handle ActionTypes.MESSAGE_FLAGS_REQUEST, ({target, action})->
@@ -501,10 +420,6 @@ class MessageStore extends Store
 
         if conversationID
             return _conversationLength.get conversationID
-
-
-    getUndoableRequest: (ref) ->
-        _undoable[ref]
 
 
 _self = new MessageStore()
