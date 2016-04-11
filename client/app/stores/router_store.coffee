@@ -204,12 +204,15 @@ class RouterStore extends Store
             @emit 'change'
 
         handle ActionTypes.REMOVE_ACCOUNT_SUCCESS, ->
-            _router?.navigate url: ''
+            # FIXME : move AccountStore actions here
+            _action = AccountActions.CREATE
+            @emit 'change'
 
         handle ActionTypes.ADD_ACCOUNT_SUCCESS, ({account, areMailboxesConfigured}) ->
-            accountID = account.id
-            action = if areMailboxesConfigured then MessageActions.SHOW_ALL else AccountActions.EDIT
-            _router?.navigate {accountID, action}
+            # FIXME : move AccountStore actions here
+            _action = if areMailboxesConfigured
+            then MessageActions.SHOW_ALL
+            else AccountActions.EDIT
 
             @emit 'change'
 
