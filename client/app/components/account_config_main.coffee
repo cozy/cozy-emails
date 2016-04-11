@@ -17,32 +17,14 @@ SMTP_OPTIONS =
     'PLAIN': t("account smtpMethod PLAIN")
 
 GOOGLE_EMAIL = ['googlemail.com', 'gmail.com']
-
 TRIMMEDFIELDS = ['imapServer', 'imapPort', 'smtpServer', 'smtpPort']
-
-
-_getLoginInfos = (login) ->
-    index0 = login.indexOf '@'
-    return {
-        alias: login.substring 0, index0
-        domain: login.substring index0 + 1, login.length
-    }
 
 module.exports = AccountConfigMain = React.createClass
     displayName: 'AccountConfigMain'
 
 
     getInitialState: ->
-        @getStateFromStores
-            action: if @props.isWaiting then 'saving'
-            else if account?.get 'id' then 'save' else 'add'
-            isOauth: account?.get('oauthProvider')?
-            isGmail: account?.get('imapServer') in GOOGLE_IMAP
-            imapPort: '993'
-            imapSSL: true
-            imapTLS: false
-            smtpPort: 465
-            smtpSSL: true
+        @getStateFromStores()
 
 
     getInitialState: ->
@@ -167,6 +149,7 @@ module.exports = AccountConfigMain = React.createClass
 
             unless @state.isOauth
                 @_renderSendingServer()
+
 
             @_renderButtons()
 
