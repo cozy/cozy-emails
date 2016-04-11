@@ -47,6 +47,14 @@ class RouterStore extends Store
     getFilter: ->
         _currentFilter
 
+    # FIXME: refactor filtering based on query object (see doc/routes.md
+    #        and router.coffee:_parseQuery)
+    setFilter: (params={}) ->
+
+
+    getModalParams: ->
+        return _modal
+
 
     getURL: (params={}) ->
         action = _getRouteAction params
@@ -200,16 +208,24 @@ class RouterStore extends Store
             @emit 'change'
 
         handle ActionTypes.ADD_ACCOUNT_SUCCESS, ({account, areMailboxesConfigured}) ->
-            # FIXME : move AccountStore actions here
-            _action = if areMailboxesConfigured
-            then MessageActions.SHOW_ALL
-            else AccountActions.EDIT
+            accountID = account.id
+            action = if areMailboxesConfigured then MessageActions.SHOW_ALL else AccountActions.EDIT
+            _router?.navigate {accountID, action}
 
             @emit 'change'
 
 
         handle ActionTypes.MESSAGE_FETCH_SUCCESS, ->
             @emit 'change'
+
+
+        handle ActionTypes.MESSAGE_TRASH_SUCCESS, (params) ->
+            if MessageActions.SHOW is _action
+                if (messageID = params?.next?.get 'id')
+                    _router.navigate @getURL {messageID}
+                else
+                    _action = MessageActions.SHOW_ALL
+                @emit 'change'
 
 
         handle ActionTypes.DISPLAY_MODAL, (params) ->
