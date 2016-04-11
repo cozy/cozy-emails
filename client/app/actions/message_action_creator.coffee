@@ -54,24 +54,6 @@ MessageActionCreator =
             value:
                 messageID: messageID
 
-    fetchConversation: (messageID) ->
-
-        console.log 'FETCH_CONVERSATION'
-        # AppDispatcher.dispatch
-        #     type: ActionTypes.CONVERSATION_FETCH_REQUEST
-        #     value: {conversationID}
-        #
-        # XHRUtils.fetchConversation conversationID, (error, updated) ->
-        #     if error
-        #         AppDispatcher.dispatch
-        #             type: ActionTypes.CONVERSATION_FETCH_FAILURE
-        #             value: {error}
-        #     else
-        #         AppDispatcher.dispatch
-        #             type: ActionTypes.CONVERSATION_FETCH_SUCCESS
-        #             value: {updated}
-
-
     # Immediately synchronise some messages with the server
     # Used if one of the action fail
     recover: (target, ref) ->

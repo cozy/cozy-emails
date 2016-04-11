@@ -151,9 +151,9 @@ class MessageStore extends Store
                     type: ActionTypes.MESSAGE_FETCH_SUCCESS
                     value: {action, nextURL, messageID}
 
-                # Message is not in the result
-                # get next page
-                if messageID and not _messages.toJS()[messageID]
+                # Message doesnt belong to the result
+                # Go fetch next page
+                if messageID and not _messages?.get messageID
                     AppDispatcher.dispatch
                         type: ActionTypes.MESSAGE_FETCH_REQUEST
                         value: {messageID, action: MessageActions.PAGE_NEXT}
@@ -168,7 +168,7 @@ class MessageStore extends Store
             XHRUtils.fetchMessagesByFolder url, callback
 
         else
-            XHRUtils.fetchConversation {messageID, conversationID}, callback
+            XHRUtils.fetchConversation conversationID, callback
 
     _computeMailboxDiff = (oldmsg, newmsg) ->
         return {} unless oldmsg
