@@ -5,20 +5,22 @@ React = require 'react'
 
 LinkedStateMixin = require 'react-addons-linked-state-mixin'
 
-
 # Input used in the account configuration/creation form. An account input can
 # display an error message below it.
 module.exports = AccountInput = React.createClass
     displayName: 'AccountInput'
 
-    mixins: [
-        LinkedStateMixin
-    ]
-
     # Update parent from child
     # or child from parent
     shouldComponentUpdate: (nextProps) ->
-        not _.isEqual nextProps.valueLink.value, @props.valueLink.value
+        # Check props update
+        # excluding valueLink (special case)
+        nextValue = nextProps.valueLink.value
+        unless (hasChanged = nextValue isnt @props.valueLink.value)
+            _props = _.omit @props, 'valueLink'
+            _nextProps = _.omit nextProps, 'valueLink'
+            hasChanged = not _.isEqual _props, _nextProps
+        hasChanged
 
     onChange: (event) ->
         type = event.target.getAttribute 'type'
