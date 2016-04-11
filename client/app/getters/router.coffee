@@ -65,7 +65,7 @@ class RouteGetter
         AccountStore.getSelectedTab()
 
     getModal: ->
-        LayoutStore.getModal()
+        RouterStore.getModalParams()
 
     isFlags: (name) ->
         flags = @getFilter()?.flags or []

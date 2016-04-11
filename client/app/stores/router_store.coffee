@@ -21,6 +21,8 @@ class RouterStore extends Store
     _nextURL = null
     _lastDate = null
 
+    _modal = null
+
     _currentFilter = _defaultFilter =
         sort: '-date'
 
@@ -45,6 +47,14 @@ class RouterStore extends Store
 
     getFilter: ->
         _currentFilter
+
+    # FIXME: refactor filtering based on query object (see doc/routes.md
+    #        and router.coffee:_parseQuery)
+    setFilter: (params={}) ->
+
+
+    getModalParams: ->
+        return _modal
 
 
     getURL: (params={}) ->
@@ -200,11 +210,33 @@ class RouterStore extends Store
             accountID = account.id
             action = if areMailboxesConfigured then MessageActions.SHOW_ALL else AccountActions.EDIT
             _router?.navigate {accountID, action}
+
             @emit 'change'
 
         handle ActionTypes.MESSAGE_FETCH_SUCCESS, ->
             @emit 'change'
 
+<<<<<<< f03a004188fdbefc698d40dd7258bf59bebf65c9
+=======
+
+        handle ActionTypes.MESSAGE_TRASH_SUCCESS, (params) ->
+            if MessageActions.SHOW is _action
+                if (messageID = params?.next?.get 'id')
+                    _router.navigate @getURL {messageID}
+                else
+                    _action = MessageActions.SHOW_ALL
+                @emit 'change'
+
+        handle ActionTypes.DISPLAY_MODAL, (params) ->
+            _modal = params
+            @emit 'change'
+
+        handle ActionTypes.HIDE_MODAL, (value) ->
+            _modal = null
+            @emit 'change'
+
+
+>>>>>>> Fix modal : move into routerStore
 _toCamelCase = (value) ->
     return value.replace /\.(\w)*/gi, (match) ->
         part1 = match.substring 1, 2
