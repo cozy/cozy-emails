@@ -49,37 +49,37 @@ module.exports = LayoutActionCreator =
             type: ActionTypes.CLEAR_TOASTS
             value: null
 
-    updateMessageList: (params) ->
-        {accountID, mailboxID, messageID, query} = params
-        accountID ?= RouterGetter.getAccountID()
-        mailboxID ?= RouterGetter.getMailboxID()
-        messageID ?= RouterGetter.getCurrentMessageID()
-
-        unless accountID
-            # TODO : si pas accountID
-            # alors aller à la page de config
-            console.log 'NO ACCOUNT FOUND'
-            return
-
-        # Select Mailbox
-        AppDispatcher.dispatch
-            type: ActionTypes.SELECT_ACCOUNT
-            value: {accountID, mailboxID}
-
-        # Set message as current
-        AppDispatcher.dispatch
-            type: ActionTypes.MESSAGE_CURRENT
-            value: {messageID}
-
-        if query
-            AppDispatcher.dispatch
-                type: ActionTypes.QUERY_PARAMETER_CHANGED
-                value: {query}
-
-        AppDispatcher.dispatch
-            type: ActionTypes.MESSAGE_FETCH_REQUEST
-            value: {action: MessageActions.SHOW_ALL, messageID}
-
+    # updateMessageList: (params) ->
+    #     {accountID, mailboxID, messageID, query} = params
+    #     accountID ?= RouterGetter.getAccountID()
+    #     mailboxID ?= RouterGetter.getMailboxID()
+    #     messageID ?= RouterGetter.getCurrentMessageID()
+    #
+    #     unless accountID
+    #         # TODO : si pas accountID
+    #         # alors aller à la page de config
+    #         console.log 'NO ACCOUNT FOUND'
+    #         return
+    #
+    #     # Select Mailbox
+    #     AppDispatcher.dispatch
+    #         type: ActionTypes.SELECT_ACCOUNT
+    #         value: {accountID, mailboxID}
+    #
+    #     # Set message as current
+    #     AppDispatcher.dispatch
+    #         type: ActionTypes.MESSAGE_CURRENT
+    #         value: {messageID}
+    #
+    #     if query
+    #         AppDispatcher.dispatch
+    #             type: ActionTypes.QUERY_PARAMETER_CHANGED
+    #             value: {query}
+    #
+    #     AppDispatcher.dispatch
+    #         type: ActionTypes.MESSAGE_FETCH_REQUEST
+    #         value: {action: MessageActions.SHOW_ALL, messageID}
+    #
 
     showSearchResult: (parameters) ->
         {accountID, search} = parameters

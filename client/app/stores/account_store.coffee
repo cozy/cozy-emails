@@ -3,7 +3,9 @@ Immutable = require 'immutable'
 
 Store = require '../libs/flux/store/store'
 
-{ActionTypes} = require '../constants/app_constants'
+RouterGetter = require '../getters/router'
+
+{ActionTypes, AccountActions} = require '../constants/app_constants'
 
 AccountTranslator = require '../utils/translators/account_translator'
 
@@ -161,6 +163,31 @@ class AccountStore extends Store
     ###
     __bindHandlers: (handle) ->
 
+        # handle ActionTypes.SELECT_ACCOUNT, (value) ->
+        handle ActionTypes.ROUTE_CHANGE, (value) ->
+            mailboxID = @getSelectedMailbox()?.get 'id'
+            accountID = @getSelectedOrDefault()?.get 'id'
+
+            if accountID
+                @_setCurrentAccount(_accounts.get(value.accountID) or null)
+            else
+                @_setCurrentAccount(null)
+
+            if mailboxID
+                mailbox = _selectedAccount
+                ?.get('mailboxes')
+                ?.get(value.mailboxID) or null
+                @_setCurrentMailbox mailbox
+            else
+                _clearError()
+                @_setCurrentMailbox null
+
+            if value.action is AccountActions.EDIT and not _tab = params.tab
+                mailboxes = @getSelected()?.get 'mailboxes'
+                _tab = if mailboxes?.size is 0 then 'mailboxes' else 'account'
+
+            @emit 'change'
+
         handle ActionTypes.ADD_ACCOUNT_REQUEST, ({inputValues}) ->
             _newAccountWaiting = true
             @emit 'change'
@@ -189,26 +216,11 @@ class AccountStore extends Store
             _setError error
             @emit 'change'
 
-        handle ActionTypes.EDIT_ACCOUNT_TAB, (params) ->
-            unless (_tab = params.tab)
-                mailboxes = @getSelected()?.get 'mailboxes'
-                _tab = if mailboxes?.size is 0 then 'mailboxes' else 'account'
-            @emit 'change'
-
-        handle ActionTypes.SELECT_ACCOUNT, (value) ->
-            if value?.accountID
-                @_setCurrentAccount(_accounts.get(value.accountID) or null)
-            else
-                @_setCurrentAccount(null)
-            if value?.mailboxID
-                mailbox = _selectedAccount
-                    ?.get('mailboxes')
-                    ?.get(value.mailboxID) or null
-                @_setCurrentMailbox mailbox
-            else
-                _clearError()
-                @_setCurrentMailbox null
-            @emit 'change'
+        # handle ActionTypes.EDIT_ACCOUNT_TAB, (params) ->
+        #     unless (_tab = params.tab)
+        #         mailboxes = @getSelected()?.get 'mailboxes'
+        #         _tab = if mailboxes?.size is 0 then 'mailboxes' else 'account'
+        #     @emit 'change'
 
         handle ActionTypes.EDIT_ACCOUNT_REQUEST, ({inputValues}) ->
             _newAccountWaiting = true

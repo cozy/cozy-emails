@@ -45,13 +45,16 @@ class RouterStore extends Store
         _currentFilter
 
     setFilter: (params={}) ->
-        return if params.query and not (params = _getURLparams params.query)
+        # FIXME: refactor filtering based on query object (see doc/routes.md
+        #        and router.coffee:_parseQuery)
 
-        # Update Filter
-        _currentFilter = _.clone _defaultFilter
-        _.extend _currentFilter, params
-
-        return _currentFilter
+        # return if params.query and not (params = _getURLparams params.query)
+        #
+        # # Update Filter
+        # _currentFilter = _.clone _defaultFilter
+        # _.extend _currentFilter, params
+        #
+        # return _currentFilter
 
     getScrollValue: ->
         _scrollValue
@@ -181,17 +184,20 @@ class RouterStore extends Store
     ###
     __bindHandlers: (handle) ->
 
-        handle ActionTypes.QUERY_PARAMETER_CHANGED, (params) ->
-            _self.setFilter params
-            @emit 'change'
-
         handle ActionTypes.ROUTE_CHANGE, (value) ->
             # We cant display any informations
             # without accounts
-            unless AccountStore.getAll()?.size
-                _action = AccountActions.CREATE
+            if AccountStore.getAll()?.size
+                _action = value.action
             else
-                _action = value
+                _action = AccountActions.CREATE
+
+            if value.action is MessageActions.SHOW_ALL
+                _resetFilter()
+
+            if value.query
+                _self.setFilter value.query
+
             @emit 'change'
 
         handle ActionTypes.ROUTES_INITIALIZE, (router) ->
@@ -218,9 +224,9 @@ class RouterStore extends Store
                 _lastDate = newDate
             @emit 'change'
 
-        handle ActionTypes.SELECT_ACCOUNT, (value) ->
-            _resetFilter()
-            @emit 'change'
+        # handle ActionTypes.SELECT_ACCOUNT, (value) ->
+        #     _resetFilter()
+        #     @emit 'change'
 
         handle ActionTypes.MESSAGE_TRASH_SUCCESS, (params) ->
             if MessageActions.SHOW is _action

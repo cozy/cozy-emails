@@ -8,6 +8,8 @@ Store = require '../libs/flux/store/store'
 AccountStore = require './account_store'
 RouterStore = require '../stores/router_store'
 
+RouterGetter = require '../getters/router'
+
 {changeRealtimeScope} = require '../utils/realtime_utils'
 {sortByDate} = require '../utils/misc'
 
@@ -268,6 +270,22 @@ class MessageStore extends Store
     ###
     __bindHandlers: (handle) ->
 
+        # handle ActionTypes.MESSAGE_FETCH_REQUEST, (param)->
+        #     _fetchMessage param
+        #     @emit 'change'
+        handle ActionTypes.ROUTE_CHANGE, (value) ->
+            if value.action is MessageActions.SHOW_ALL
+                _setCurrentID = AccountStore.getSelectedOrDefault()?.get 'id'
+                messageID = @getCurrentID()
+                _fetchMessage {action: MessageActions.SHOW_ALL, messageID}
+
+            if value.query and RouterStore.isResetFilter()?
+                _messages = _messages.clear()
+
+            _setCurrentID messageID if messageID
+
+            @emit 'change'
+
         handle ActionTypes.RECEIVE_RAW_MESSAGE, (message) ->
             _saveMessage message
             @emit 'change'
@@ -330,10 +348,6 @@ class MessageStore extends Store
         handle ActionTypes.MESSAGE_UNDO_TIMEOUT, ({ref}) ->
             delete _undoable[ref]
 
-        handle ActionTypes.MESSAGE_FETCH_REQUEST, (param)->
-            _fetchMessage param
-            @emit 'change'
-
         handle ActionTypes.MESSAGE_FETCH_FAILURE, ->
             @emit 'change'
 
@@ -348,21 +362,20 @@ class MessageStore extends Store
             #     @fetchConversation conversationID
             @emit 'change'
 
-        handle ActionTypes.QUERY_PARAMETER_CHANGED, ->
-            AppDispatcher.waitFor [RouterStore.dispatchToken]
-            if RouterStore.isResetFilter()?
-                _messages = _messages.clear()
-            @emit 'change'
+        # handle ActionTypes.QUERY_PARAMETER_CHANGED, ->
+        #     AppDispatcher.waitFor [RouterStore.dispatchToken]
+        #     if RouterStore.isResetFilter()?
+        #         _messages = _messages.clear()
+        #     @emit 'change'
 
+        # # FIXME : charger également la conversation
+        # handle ActionTypes.MESSAGE_CURRENT, (param) ->
+        #     _setCurrentID param.messageID
+        #     @emit 'change'
 
-        # FIXME : charger également la conversation
-        handle ActionTypes.MESSAGE_CURRENT, (param) ->
-            _setCurrentID param.messageID
-            @emit 'change'
-
-        handle ActionTypes.SELECT_ACCOUNT, ->
-            _setCurrentID null
-            @emit 'change'
+        # handle ActionTypes.SELECT_ACCOUNT, ->
+        #     _setCurrentID null
+        #     @emit 'change'
 
         handle ActionTypes.RECEIVE_MESSAGE_DELETE, (id) ->
             _deleteMessage {id}

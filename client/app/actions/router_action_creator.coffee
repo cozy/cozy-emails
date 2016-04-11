@@ -8,10 +8,10 @@ RouterStore = require '../stores/router_store'
 
 RouterActionCreator =
 
-    setAction: (value) ->
-        AppDispatcher.dispatch
-            type: ActionTypes.ROUTE_CHANGE
-            value: value
+    # setAction: (value) ->
+    #     AppDispatcher.dispatch
+    #         type: ActionTypes.ROUTE_CHANGE
+    #         value: value
 
 
     getNextPage: ->

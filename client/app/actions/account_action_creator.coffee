@@ -87,10 +87,10 @@ module.exports = AccountActionCreator =
                     type: ActionTypes.REMOVE_ACCOUNT_SUCCESS
                     value: accountID
 
-    selectAccount: (accountID) ->
-        AppDispatcher.dispatch
-            type: ActionTypes.SELECT_ACCOUNT
-            value: {accountID}
+    # selectAccount: (accountID) ->
+    #     AppDispatcher.dispatch
+    #         type: ActionTypes.SELECT_ACCOUNT
+    #         value: {accountID}
 
     saveEditTab: (tab) ->
         AppDispatcher.dispatch
