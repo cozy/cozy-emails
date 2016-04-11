@@ -181,13 +181,6 @@ class NotificationStore extends Store
                 errors: [error]
                 autoclose: true
 
-        # dont display a notification for MESSAGE_RECOVER_SUCCESS
-        handle ActionTypes.MESSAGE_RECOVER_FAILURE, ({target, error}) ->
-            _showNotification
-                message: 'lost server connection'
-                errors: [error]
-                autoclose: true
-
         handle ActionTypes.MESSAGE_FETCH_FAILURE, ({error}) ->
             _showNotification
                 message: 'message fetch failure'
