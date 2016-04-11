@@ -429,7 +429,6 @@ class MessageStore extends Store
             return _conversationLength.get conversationID
 
 
-    # FIXME : move this into RouterStore/RouterGetter
     getUndoableRequest: (ref) ->
         _undoable[ref]
 
