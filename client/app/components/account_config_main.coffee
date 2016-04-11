@@ -234,8 +234,10 @@ module.exports = AccountConfigMain = React.createClass
                     icon: 'ellipsis-h'
                     text: t 'account check'
 
+    # FIXME : discover is dispatched
+    # event when account is removed
     dispatchDiscover: ->
-        # Attempt to discover default values depending on target server.
-        # The target server is guessed by the email given by the user.
-        if @state.domain?.length > 3
-            AccountActionCreator.discover @state.domain
+        # # Attempt to discover default values depending on target server.
+        # # The target server is guessed by the email given by the user.
+        # if @state.domain?.length > 3
+        #     AccountActionCreator.discover @state.domain
