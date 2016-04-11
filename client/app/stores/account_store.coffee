@@ -124,7 +124,7 @@ class AccountStore extends Store
 
             @emit 'change'
 
-        handle ActionTypes.ADD_ACCOUNT_REQUEST, ({inputValues}) ->
+        handle ActionTypes.ADD_ACCOUNT_REQUEST, ({value}) ->
             _newAccountWaiting = true
             @emit 'change'
 
@@ -153,7 +153,7 @@ class AccountStore extends Store
             @emit 'change'
 
 
-        handle ActionTypes.EDIT_ACCOUNT_REQUEST, ({inputValues}) ->
+        handle ActionTypes.EDIT_ACCOUNT_REQUEST, ({value}) ->
             _newAccountWaiting = true
             @emit 'change'
 

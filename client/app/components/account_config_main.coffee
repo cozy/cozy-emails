@@ -10,69 +10,70 @@ classNames = require 'classnames'
 AccountInput  = React.createFactory require './account_config_input'
 AccountActionCreator = require '../actions/account_action_creator'
 
-
 SMTP_OPTIONS =
     'NONE': t("account smtpMethod NONE")
     'CRAM-MD5': t("account smtpMethod CRAM-MD5")
     'LOGIN': t("account smtpMethod LOGIN")
     'PLAIN': t("account smtpMethod PLAIN")
 
-GOOGLE_IMAP = ['imap.googlemail.com', 'imap.gmail.com']
 GOOGLE_EMAIL = ['googlemail.com', 'gmail.com']
-
 TRIMMEDFIELDS = ['imapServer', 'imapPort', 'smtpServer', 'smtpPort']
-
-
-_getLoginInfos = (login) ->
-    index0 = login.indexOf '@'
-    return {
-        alias: login.substring 0, index0
-        domain: login.substring index0 + 1, login.length
-    }
 
 module.exports = AccountConfigMain = React.createClass
     displayName: 'AccountConfigMain'
 
+    getDefaultProps: ->
+        imapPort: '993'
+        imapSSL: true
+        imapTLS: false
+        smtpPort: '465'
+        smtpSSL: true
+        imapAdvanced: false
+
     getInitialState: ->
-        @getStateFromStores
-            action: if @props.isWaiting then 'saving'
-            else if account?.get 'id' then 'save' else 'add'
-            isOauth: account?.get('oauthProvider')?
-            isGmail: account?.get('imapServer') in GOOGLE_IMAP
-            imapPort: '993'
-            imapSSL: true
-            imapTLS: false
-            smtpPort: 465
-            smtpSSL: true
+        @getStateFromStores()
 
     componentWillReceiveProps: (nextProps) ->
-        # Define Advanced
-        _hasErrorAndIsNot = (field, value = '') =>
-            nextProps.errors.get(field) and
-            nextProps.editedAccount.get(field) isnt value
+        @setState @getStateFromStores nextProps
 
-        imapAdvanced = _hasErrorAndIsNot('imapLogin') or
-                        _hasErrorAndIsNot('smtpLogin') or
-                        _hasErrorAndIsNot('smtpPassword') or
-                        _hasErrorAndIsNot('smtpMethod', 'PLAIN')
-
-        if nextProps.editedAccount?
-            @setState @getStateFromStores {imapAdvanced}
-        nextProps
 
     handleChange: (name, value) ->
         nextProps = {}
         value = value.trim() if name in TRIMMEDFIELDS and value.trim
         nextProps[name] = value
-
-        if 'login' is name
-            {domain} = _getLoginInfos value
-            nextProps.domain = domain
-
-        @setState @getStateFromStores nextProps
+        @props.requestChange nextProps
 
 
-    getStateFromStores: (nextState={}) ->
+    getStateFromStores: (nextProps=@props) ->
+        _isError = (field, value = '') ->
+            nextProps.errors.get(field) and
+            nextProps.editedAccount.get(field) isnt value
+
+        # Check domain from login
+        login = nextProps.account?.get 'login'
+        if login and -1 < (index0 = login.indexOf '@')
+            domain = login.substring index0 + 1, login.length
+
+        # isGmail : test login
+        if _.isString domain
+            test = _.find GOOGLE_EMAIL, (value) -> -1 < domain.indexOf value
+            isGmail = test?
+
+        nextState =
+            imapPort:       @props.account.get 'imapPort'
+            imapSSL:        @props.account.get 'imapSSL'
+            smtpPort:       @props.account.get 'smtpPort'
+            smtpSSL:        @props.account.get 'smtpSSL'
+            smtpTLS:        @props.account.get 'smtpTLS'
+            imapPort:       @props.account.get 'imapPort'
+            isOauth:        @props.account.get('oauthProvider')?
+            domain:         domain
+            isGmail:        isGmail
+            imapAdvanced:   _isError('imapLogin') or
+                            _isError('smtpLogin') or
+                            _isError('smtpPassword') or
+                            _isError('smtpMethod', 'PLAIN')
+
         # Toggle SSL : change ImapPort
         if nextState.imapSSL is false
             nextState.imapPort = '143'
@@ -81,21 +82,12 @@ module.exports = AccountConfigMain = React.createClass
 
         # SMTP config
         isSmtpSSL = @state?.smtpSSL and nextState.smtpSSL is undefined
-        if nextState.smtpSSL or isSmtpSSL
-            nextState.smtpPort = '465'
-        else
-            nextState.smtpPort = '25'
+        smtpPort = if nextState.smtpSSL or isSmtpSSL then '465' else '25'
+        nextState.smtpPort = smtpPort
 
         # Overwrite Smtp port if TLS is (ever) selected
         isSmtpTLS = @state?.smtpTLS and nextState.smtpTLS is undefined
-        if nextState.smtpTLS or isSmtpTLS
-            nextState.smtpPort = '587'
-
-        # Check domain from login
-        if _.isString nextState.domain
-            gmailDomain = _.find GOOGLE_EMAIL, (value) ->
-                -1 < nextState.domain.indexOf value
-            nextState.isGmail = gmailDomain?
+        nextState.smtpPort = '587' if nextState.smtpTLS or isSmtpTLS
 
         nextState
 
@@ -106,11 +98,13 @@ module.exports = AccountConfigMain = React.createClass
         @dispatchDiscover()
 
     buildInput: (name, attributes={}) ->
+        value = @state[name]
+        value = @props.account.get(name) if _.isUndefined(value)
         _defaultAttributes =
             name: name
             key: "account-config-field-#{name}"
             valueLink:
-              value: @state[name]
+              value: value
               requestChange: (value) =>
                   @handleChange name, value
             error: @props.errors?.get name
@@ -147,6 +141,7 @@ module.exports = AccountConfigMain = React.createClass
 
             unless @state.isOauth
                 @_renderSendingServer()
+
 
             @_renderButtons()
 
@@ -198,7 +193,7 @@ module.exports = AccountConfigMain = React.createClass
 
     _renderGMAILSecurity: ->
         url = "https://www.google.com/settings/security/lesssecureapps"
-        login = @props.editedAccount.get('login') or t 'the account to connect'
+        login = @props.account.get('login') or t 'the account to connect'
         FieldSet text: t('gmail security tile'),
             p null, t 'gmail security body'
             ul null,
@@ -215,28 +210,29 @@ module.exports = AccountConfigMain = React.createClass
                     t 'gmail security link 2'
 
     _renderButtons: ->
-        if @props.errors.size is 0
-            FieldSet text: t('account actions'),
-                FormButtons null,
-                    # Run form submission process described in parent component.
-                    # Check for errors before.
-                    FormButton
-                        class: 'action-save'
-                        contrast: true
-                        icon: 'save'
-                        spinner: @props.isWaiting
-                        onClick: (event) => @props.onSubmit event, false
-                        text: t "account #{@state.action}"
+        action = if @props.isWaiting then 'saving'
+        else if @props.account?.get 'id' then 'save' else 'add'
+        FieldSet text: t('account actions'),
+            FormButtons null,
+                # Run form submission process described in parent component.
+                # Check for errors before.
+                FormButton
+                    class: 'action-save'
+                    contrast: true
+                    icon: 'save'
+                    spinner: @props.isWaiting
+                    onClick: (event) => @props.onSubmit event, false
+                    text: t "account #{action}"
 
-                    # Run form submission process described in parent component. This one
-                    # checks that current parameters are working well.
-                    # Check for errors before.
-                    FormButton
-                        class: 'action-check'
-                        spinner: @props.checking
-                        onClick: (event) => @props.onSubmit event, true
-                        icon: 'ellipsis-h'
-                        text: t 'account check'
+                # Run form submission process described in parent component. This one
+                # checks that current parameters are working well.
+                # Check for errors before.
+                FormButton
+                    class: 'action-check'
+                    spinner: @props.checking
+                    onClick: (event) => @props.onSubmit event, true
+                    icon: 'ellipsis-h'
+                    text: t 'account check'
 
     dispatchDiscover: ->
         # Attempt to discover default values depending on target server.
