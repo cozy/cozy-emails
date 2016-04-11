@@ -57,37 +57,6 @@ class MessageStore extends Store
             _inFlightByMessageID[id] = _.without requests, request
         return request
 
-    _transformMessageWithRequest = (message, request) ->
-        switch request.type
-            when 'trash'
-                {trashBoxID} = request
-                if _isDraft(message)
-                    message = null
-                else
-                    newMailboxIds = {}
-                    newMailboxIds[trashBoxID] = -1
-                    message = message.set 'mailboxIDs', newMailboxIds
-
-            when 'move'
-                mailboxIDs = message.get('mailboxIDs')
-                {from, to} = request
-                newMailboxIds = {}
-                newMailboxIds[key] = value for key, value of mailboxIDs
-                delete newMailboxIds[from]
-                newMailboxIds[to] ?= -1
-                message = message.set 'mailboxIDs', newMailboxIds
-
-            when 'flag'
-                flags = message.get('flags')
-                {flag, op} = request
-                if op is 'batchAddFlag' and flag not in flags
-                    message = message.set 'flags', flags.concat [flag]
-
-                else if op is 'batchRemoveFlag' and flag in flags
-                    message = message.set 'flags', _.without flags, flag
-
-        return message
-
     # Retrieve a batch of message with various criteria
     # target - is an {Object} with a property messageID or messageIDs or
     #          conversationID or messageIDs
@@ -107,9 +76,6 @@ class MessageStore extends Store
             .toArray()
         else throw new Error 'Wrong Usage : unrecognized target AS.getMixed'
 
-    _isDraft = (message, draftMailbox) ->
-        mailboxIDs = message.get 'mailboxIDs'
-        mailboxIDs[draftMailbox] or MessageFlags.DRAFT in message.get('flags')
 
     _fetchMessage = (params={}) ->
         return if _self.isFetching()
@@ -476,17 +442,6 @@ class MessageStore extends Store
 
         # Change Conversation
         return Immutable.Map getMessage()
-
-    ###*
-    * Get older conversation displayed before current
-    *
-    * @param {Function}  transform
-    *
-    * @return {List}
-    ###
-    getPreviousConversation: (param={}) ->
-        transform = (index) -> ++index
-        @getMessage _.extend param, {transform}
 
     ###*
     * Get earlier conversation displayed after current
