@@ -123,6 +123,7 @@ module.exports = Menu = React.createClass
         # Goto the default mailbox of the account
         action = MessageActions.SHOW_ALL
         accountID = account.get 'id'
+
         mailbox = RouterGetter.getInbox(accountID)
         mailboxID = mailbox?.get 'id'
         mailboxURL = RouterGetter.getURL {action, mailboxID}
