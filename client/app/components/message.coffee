@@ -18,8 +18,6 @@ MessageContent = React.createFactory require './message-content'
 {MessageFlags, MessageActions} = require '../constants/app_constants'
 
 LayoutActionCreator  = require '../actions/layout_action_creator'
-NotificationActionsCreator = require '../actions/notification_action_creator'
-ContactActionCreator = require '../actions/contact_action_creator'
 RouterActionCreator = require '../actions/router_action_creator'
 
 RGXP_PROTOCOL = /:\/\//
@@ -30,7 +28,6 @@ module.exports = React.createClass
 
     propTypes:
         active                 : React.PropTypes.bool
-        key                    : React.PropTypes.string.isRequired
         message                : React.PropTypes.object.isRequired
         selectedMailboxID      : React.PropTypes.string.isRequired
         useIntents             : React.PropTypes.bool.isRequired
