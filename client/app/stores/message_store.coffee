@@ -34,8 +34,6 @@ class MessageStore extends Store
 
     _setCurrentID = (messageID) ->
         return if messageID is _currentID
-
-        _batchFlag {messageID: _currentID}, MessageFlags.SEEN
         _currentID = messageID
 
 
@@ -231,22 +229,6 @@ class MessageStore extends Store
         _conversationLength = _conversationLength.set conversationID, length
 
 
-    _batchFlag = (target, action) ->
-        return unless target?.messageID
-        console.log 'PLOP', target, action
-        timestamp = Date.now()
-        ref = 'batchFlag' + timestamp
-        XHRUtils.batchFlag {target, action}, (error, updated) =>
-            if error
-                AppDispatcher.handleViewAction
-                    type: ActionTypes.MESSAGE_FLAGS_FAILURE
-                    value: {target, ref, error, action}
-            else
-                message.updated = timestamp for message in updated
-                AppDispatcher.handleViewAction
-                    type: ActionTypes.MESSAGE_FLAGS_SUCCESS
-                    value: {target, ref, updated, action}
-
     ###
         Defines here the action handlers.
     ###
@@ -334,9 +316,10 @@ class MessageStore extends Store
             _fetchMessage payload
             @emit 'change'
 
-        handle ActionTypes.MESSAGE_FLAGS_REQUEST, ({target, action})->
-            _batchFlag target, action
+
+        handle ActionTypes.REFRESH_SUCCESS, ->
             @emit 'change'
+
 
         handle ActionTypes.MESSAGE_SEND_SUCCESS, ({message}) ->
             _saveMessage message

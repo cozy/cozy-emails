@@ -19,7 +19,6 @@ MessageContent = React.createFactory require './message-content'
 
 LayoutActionCreator  = require '../actions/layout_action_creator'
 NotificationActionsCreator = require '../actions/notification_action_creator'
-MessageActionCreator = require '../actions/message_action_creator'
 ContactActionCreator = require '../actions/contact_action_creator'
 RouterActionCreator = require '../actions/router_action_creator'
 
@@ -36,16 +35,6 @@ module.exports = React.createClass
         selectedMailboxID      : React.PropTypes.string.isRequired
         useIntents             : React.PropTypes.bool.isRequired
 
-<<<<<<< 1fb49247d04421a6d8909c52d3ae612431f5c226
-=======
-    getInitialState: ->
-        return @getStateFromStores()
-
-    componentWillReceiveProps: (nextProps) ->
-        @setState @getStateFromStores()
-        nextProps
-
->>>>>>> Clean markup
     getInitialState: ->
         return @getStateFromStores()
 
@@ -123,7 +112,7 @@ module.exports = React.createClass
         # flags = message.get('flags').slice()
         # if flags.indexOf(MessageFlags.SEEN) is -1
         #     setTimeout ->
-        #         MessageActionCreator.mark {messageID}, MessageFlags.SEEN
+        #         RouterActionCreator.mark {messageID}, MessageFlags.SEEN
         #     , 1
 
     prepareHTML: (html) ->
@@ -249,7 +238,7 @@ module.exports = React.createClass
 
         success = =>
             # Then remove message
-            MessageActionCreator.delete messageID: @props.message.get 'id'
+            RouterActionCreator.delete messageID: @state.currentMessageID
 
         unless @props.confirmDelete
             success()
@@ -269,34 +258,16 @@ module.exports = React.createClass
 
     onMark: (flag) ->
         messageID = @props.message.get('id')
-        MessageActionCreator.mark {messageID}, flag
+        RouterActionCreator.mark {messageID}, flag
 
 
     onMove: (to) ->
         messageID = @props.message.get('id')
         from = @props.selectedMailboxID
         subject = @props.message.get 'subject'
-        MessageActionCreator.move {messageID}, from, to
-
-<<<<<<< 1fb49247d04421a6d8909c52d3ae612431f5c226
-
-    onConversationMove: (to) ->
-        conversationID = @props.message.get('conversationID')
-        from = @props.selectedMailboxID
-        subject = @props.message.get 'subject'
-        MessageActionCreator.move {conversationID}, from, to
+        RouterActionCreator.move {messageID}, from, to
 
 
-    onCopy: (args) ->
-        NotificationActionsCreator.alertWarning t "app unimplemented"
-
-
-    addAddress: (address) ->
-        ContactActionCreator.createContact address
-
-
-=======
->>>>>>> Clean markup
     displayImages: (event) ->
         event.preventDefault()
         @setState displayImages: true

@@ -5,7 +5,7 @@ React = require 'react'
 
 ToolboxActions = React.createFactory require './toolbox_actions'
 
-MessageActionCreator = require '../actions/message_action_creator'
+RouterActionCreator = require '../actions/router_action_creator'
 
 module.exports = ActionsToolbarMessagesList = React.createClass
     displayName: 'ActionsToolbarMessagesList'
@@ -28,4 +28,4 @@ module.exports = ActionsToolbarMessagesList = React.createClass
 
     onDelete: ->
         messageIDs = @props.selection
-        MessageActionCreator.delete {messageIDs}
+        RouterActionCreator.delete {messageIDs}

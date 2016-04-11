@@ -130,7 +130,7 @@ module.exports = Utils =
             return
 
         deleteMessage = (isModal) ->
-            MessageActionCreator.delete {messageID}
+            RouterActionCreator.delete {messageID}
             RouterActionCreator.navigate action: MessageActions.GROUP_NEXT
 
         settings = SettingsStore.get()

@@ -4,7 +4,7 @@ classNames = require 'classnames'
 
 {div, aside, nav, ul, li, span, a, i, button} = React.DOM
 
-MessageActionCreator = require '../actions/message_action_creator'
+RouterActionCreator = require '../actions/router_action_creator'
 LayoutActionCreator  = require '../actions/layout_action_creator'
 AccountActionCreator = require '../actions/account_action_creator'
 
@@ -97,7 +97,7 @@ module.exports = React.createClass
         data = event.dataTransfer.getData('text')
         {messageID, mailboxID, conversationID} = JSON.parse data
         @setState target: false
-        MessageActionCreator.move {messageID, conversationID}, mailboxID, to
+        RouterActionCreator.move {messageID, conversationID}, mailboxID, to
 
     expungeMailbox: (event) ->
         event.preventDefault()
