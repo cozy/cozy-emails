@@ -73,6 +73,7 @@ class AccountStore extends Store
         # before the account has been saved locally
         return true unless (account = _accounts.get _accountID)?.size
 
+
         mailboxID = data.id
         mailboxes = account.get('mailboxes')
 
@@ -82,6 +83,7 @@ class AccountStore extends Store
 
         if mailbox isnt mailboxes.get mailboxID
             mailboxes = mailboxes.set mailboxID, mailbox
+
 
             # FIXME : is attaching mailboxes to account useless?
             account = account.set 'mailboxes', mailboxes
@@ -110,6 +112,7 @@ class AccountStore extends Store
         account = AccountTranslator.toImmutable rawAccount
         accountID = account.get 'id'
         _accounts = _accounts.set accountID, account
+
 
 
     ###
@@ -215,6 +218,7 @@ class AccountStore extends Store
             return _accounts.find (account) ->
                 account.get('mailboxes').get(mailboxID)
         return _accounts.first()
+
 
 
     getAccountID: ->
