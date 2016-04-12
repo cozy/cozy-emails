@@ -4,8 +4,6 @@ classNames = require 'classnames'
 
 {div, aside, nav, ul, li, span, a, i, button} = React.DOM
 
-RouterGetter = require '../getters/router'
-
 MessageActionCreator = require '../actions/message_action_creator'
 LayoutActionCreator  = require '../actions/layout_action_creator'
 AccountActionCreator = require '../actions/account_action_creator'
@@ -21,9 +19,6 @@ module.exports = MenuMailboxItem = React.createClass
 
     render: ->
         mailboxID = @props.mailbox.get 'id'
-
-        mailboxUrl = RouterGetter.getURL
-            mailboxID: mailboxID
 
         nbTotal  = @props.mailbox.get('nbTotal') or 0
         nbUnread = @props.mailbox.get('nbUnread') or 0
@@ -53,9 +48,10 @@ module.exports = MenuMailboxItem = React.createClass
 
         displayError = @props.displayErrors.bind null, @props.progress
 
+
         li className: classesParent,
             a
-                href: mailboxUrl
+                href: @props.mailboxURL
                 className: "#{classesChild} lv-#{@props.mailbox.get('depth')}"
                 role: 'menuitem'
                 'data-mailbox-id': mailboxID

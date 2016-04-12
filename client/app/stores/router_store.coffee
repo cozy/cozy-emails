@@ -57,8 +57,8 @@ class RouterStore extends Store
         # next conversation : MessageActions.GROUP_NEXT
         # previous conversation : MessageActions.GROUP_PREVIOUS
         action = _getRouteAction params
-        filter = if MessageActions.SHOW_ALL is action
-            _getURIQueryParams params
+        filter = if params.resetFilter and MessageActions.SHOW_ALL is action
+        then _getURIQueryParams params
         else ''
 
         isMessage = !!params.messageID or _.contains action, 'message'

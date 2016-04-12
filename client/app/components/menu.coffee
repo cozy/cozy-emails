@@ -12,7 +12,7 @@ LayoutActionCreator  = require '../actions/layout_action_creator'
 {Tooltips, AccountActions} = require '../constants/app_constants'
 
 
-MessageStore = require '../stores/message_store'
+RouterStore = require '../stores/router_store'
 AccountStore = require '../stores/account_store'
 StoreWatchMixin = require '../mixins/store_watch_mixin'
 
@@ -22,7 +22,7 @@ module.exports = Menu = React.createClass
     displayName: 'Menu'
 
     mixins: [
-        StoreWatchMixin [AccountStore, MessageStore]
+        StoreWatchMixin [AccountStore, RouterStore]
     ]
 
     getStateFromStores: ->
@@ -99,9 +99,6 @@ module.exports = Menu = React.createClass
         props = {
             key: 'account-' + accountID
             isSelected: accountID is RouterGetter.getAccountID()
-            newAccountURL: RouterGetter.getURL
-                action: AccountActions.CREATE
-                accountID: accountID
             configURL: RouterGetter.getURL
                 action: AccountActions.EDIT
                 accountID: accountID
@@ -115,7 +112,7 @@ module.exports = Menu = React.createClass
             key: props.key,
             div className: 'account-title',
                 a
-                    href: props.newAccountURL
+                    href: props.configURL
                     role: 'menuitem'
                     className: 'account ' + className,
                     'data-toggle': 'tooltip'
@@ -162,7 +159,10 @@ module.exports = Menu = React.createClass
                     className: 'list-unstyled mailbox-list',
 
                     @state.mailboxes?.map (mailbox, key) =>
-                            mailboxID = mailbox.get 'id'
+                            mailboxURL = RouterGetter.getURL
+                                mailboxID: (mailboxID = mailbox.get 'id')
+                                resetFilter: true
+
                             MenuMailboxItem
                                 account:           account
                                 mailbox:           mailbox
@@ -171,5 +171,5 @@ module.exports = Menu = React.createClass
                                 refreshes:         @props.refreshes
                                 displayErrors:     @displayErrors
                                 progress:          @props.progress
-                                mailboxUrl:        RouterGetter.getURL {mailboxID}
+                                mailboxURL:        mailboxURL
                         .toArray()
