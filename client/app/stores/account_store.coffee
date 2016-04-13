@@ -75,10 +75,10 @@ class AccountStore extends Store
 
         mailboxID = data.id
         mailboxes = account.get('mailboxes')
-
         mailbox = mailboxes.get(mailboxID) or Immutable.Map()
         for field, value of data
             mailbox = mailbox.set field, value
+
 
         if mailbox isnt mailboxes.get mailboxID
             mailboxes = mailboxes.set mailboxID, mailbox

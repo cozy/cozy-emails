@@ -9,8 +9,8 @@ SelectionGetter = require '../getters/selection'
 RouterGetter = require '../getters/router'
 
 # React Mixins
+MessageStore        = require '../stores/message_store'
 SettingsStore       = require '../stores/settings_store'
-RouterStore         = require '../stores/router_store'
 SelectionStore      = require '../stores/selection_store'
 StoreWatchMixin     = require '../mixins/store_watch_mixin'
 
@@ -23,7 +23,7 @@ module.exports = MessageList = React.createClass
     displayName: 'MessageList'
 
     mixins: [
-        StoreWatchMixin [SelectionStore, RouterStore]
+        StoreWatchMixin [SelectionStore, MessageStore]
     ]
 
     componentDidMount: ->
