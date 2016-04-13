@@ -121,8 +121,6 @@ class MessageStore extends Store
                 messages = if _.isArray(result) then result else result.messages
                 messages?.forEach (message) -> _saveMessage message, timestamp
 
-                # Shortcut to know conversationLength
-                # without loading all massages of the conversation
                 if (conversationLength = result?.conversationLength)
                     for conversationID, length of conversationLength
                         _saveConversationLength conversationID, length
@@ -135,7 +133,7 @@ class MessageStore extends Store
 
                 AppDispatcher.dispatch
                     type: ActionTypes.MESSAGE_FETCH_SUCCESS
-                    value: {action, nextURL, messageID}
+                    value: {action, result, messageID}
 
                 # Message doesnt belong to the result
                 # Go fetch next page
