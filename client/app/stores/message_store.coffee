@@ -125,9 +125,16 @@ class MessageStore extends Store
                 # Message doesnt belong to the result
                 # Go fetch next page
                 if messageID and not _messages?.get messageID
+<<<<<<< dee7fe3ab3d6287073b776818b61be92f601753a
                     AppDispatcher.dispatch
                         type: ActionTypes.MESSAGE_FETCH_REQUEST
                         value: {messageID, action: MessageActions.PAGE_NEXT}
+=======
+                    action = MessageActions.PAGE_NEXT
+                    AppDispatcher.handleViewAction
+                        type: ActionTypes.MESSAGE_FETCH_REQUEST
+                        value: {action, messageID}
+>>>>>>> MessageStore : emit FETCH_REQUEST to fetch messages
 
         if action is MessageActions.PAGE_NEXT
             messages = _currentMessages
@@ -314,11 +321,8 @@ class MessageStore extends Store
         handle ActionTypes.MESSAGE_FETCH_FAILURE, ->
             @emit 'change'
 
-
         handle ActionTypes.MESSAGE_SEND_SUCCESS, ({message, action}) ->
             _saveMessage message
-            # if conversationID and action in ['UNMOUNT', 'MESSAGE_SEND_REQUEST']
-            #     @fetchConversation conversationID
             @emit 'change'
 
 
@@ -371,7 +375,10 @@ class MessageStore extends Store
 
             # If missing messages, get them
             if conversation?.size isnt @getConversationLength {conversationID}
-                _fetchMessage {messageID, conversationID, action: MessageActions.SHOW}
+                action = MessageActions.SHOW
+                AppDispatcher.handleViewAction
+                    type: ActionTypes.MESSAGE_FETCH_REQUEST
+                    value: {messageID, conversationID, action}
 
             # Return loaded messages
             return conversation
