@@ -80,11 +80,12 @@ class AccountStore extends Store
             _serverAccountErrorByField = Immutable.Map "unknown": error
 
 
-    setMailbox = (accountID, mailboxID, data) ->
+    _setMailbox = (data) ->
         # on account creation, sometime socket send mailboxes updates
         # before the account has been saved locally
-        return true unless (account = _accounts.get accountID)
+        return true unless (account = _accounts.get _accountID)
 
+        mailboxID = data.id
         mailboxes = account.get('mailboxes')
         mailbox = mailboxes.get(mailboxID) or Immutable.Map()
         more = _mailboxesCounters.get(mailboxID) or Immutable.Map()
@@ -97,11 +98,11 @@ class AccountStore extends Store
         for field of CHANGEBOXFIELDS when more.get(field) isnt data[field]
             more = more.set field, data[field]
 
-        if more isnt _mailboxesCounters.get boxID
-            _mailboxesCounters.set boxID, more
+        if more isnt _mailboxesCounters.get mailboxID
+            _mailboxesCounters.set mailboxID, more
 
-        if mailbox isnt mailboxes.get boxID
-            mailboxes = mailboxes.set boxID, mailbox
+        if mailbox isnt mailboxes.get mailboxID
+            mailboxes = mailboxes.set mailboxID, mailbox
             account = account.set 'mailboxes', mailboxes
             _accounts = _accounts.set accountID, account
 
@@ -134,15 +135,16 @@ class AccountStore extends Store
 
 
     _setCurrentAccount = (accountID, mailboxID) ->
-        accountID ?= @getDefault().get 'id'
+        accountID ?= _self.getDefault().get 'id'
         _accountID = accountID
 
-        mailboxID ?= @getDefaultMailbox().get 'id'
+        mailboxID ?= _self.getDefaultMailbox().get 'id'
         _mailboxID = mailboxID
 
     _onAccountUpdated: (rawAccount) ->
         account = AccountTranslator.toImmutable rawAccount
         accountID = account.get 'id'
+
         _accounts = _accounts.set accountID, account
         _setCurrentAccount accountID
 
@@ -228,6 +230,7 @@ class AccountStore extends Store
         handle ActionTypes.MAILBOX_UPDATE_SUCCESS, (rawAccount) ->
             @_onAccountUpdated rawAccount
             @emit 'change'
+
         handle ActionTypes.MAILBOX_DELETE_SUCCESS, (rawAccount) ->
             @_onAccountUpdated rawAccount
             @emit 'change'
@@ -243,7 +246,11 @@ class AccountStore extends Store
             @emit 'change'
 
         handle ActionTypes.RECEIVE_MAILBOX_UPDATE, (mailbox) ->
-            setMailbox mailbox.accountID, mailbox.id, mailbox
+            _setMailbox mailbox
+            @emit 'change'
+
+        handle ActionTypes.REFRESH_SUCCESS, ({accountID, mailboxID}) ->
+            _setCurrentAccount accountID, mailboxID
             @emit 'change'
 
         handle ActionTypes.RECEIVE_REFRESH_NOTIF, (data) ->
@@ -395,5 +402,4 @@ class AccountStore extends Store
 
 
 
-
-module.exports = new AccountStore()
+module.exports = _self = new AccountStore()
