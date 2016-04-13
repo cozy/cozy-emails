@@ -219,7 +219,6 @@ class AccountStore extends Store
         return _accounts.first()
 
 
-
     getAccountID: ->
         return @getDefault()?.get 'id' unless _accountID
         return _accountID
@@ -228,6 +227,11 @@ class AccountStore extends Store
     getMailboxID: ->
         return @getDefault()?.get 'inboxMailbox' unless _mailboxID
         return _mailboxID
+
+
+    getAccountID: ->
+        return @getDefault()?.get 'id' unless _accountID
+        return _accountID
 
 
     getSelected: ->
