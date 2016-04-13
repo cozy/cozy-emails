@@ -2,36 +2,28 @@ Immutable = require 'immutable'
 React     = require 'react'
 ReactDOM  = require 'react-dom'
 
-{div, section, p, ul, li, a, span, i, button, input, img} = React.DOM
+{div, section, p, a} = React.DOM
 DomUtils = require '../utils/dom_utils'
 
 SelectionGetter = require '../getters/selection'
 RouterGetter = require '../getters/router'
 
 # React Mixins
-SettingsStore        = require '../stores/settings_store'
-MessageStore        = require '../stores/message_store'
-LayoutStore          = require '../stores/layout_store'
-RouterStore = require '../stores/router_store'
-
-SelectionStore       = require '../stores/selection_store'
-StoreWatchMixin      = require '../mixins/store_watch_mixin'
+SettingsStore       = require '../stores/settings_store'
+RouterStore         = require '../stores/router_store'
+SelectionStore      = require '../stores/selection_store'
+StoreWatchMixin     = require '../mixins/store_watch_mixin'
 
 RouterActionCreator = require '../actions/router_action_creator'
 
-{Spinner, Progress} = require('./basic_components').factories
-MessageListLoader   = React.createFactory require './message-list-loader'
 ToolbarMessagesList = React.createFactory require './toolbar_messageslist'
 MessageListBody     = React.createFactory require './message-list-body'
-
-{MessageFilter} = require '../constants/app_constants'
-
 
 module.exports = MessageList = React.createClass
     displayName: 'MessageList'
 
     mixins: [
-        StoreWatchMixin [SelectionStore, MessageStore]
+        StoreWatchMixin [SelectionStore, RouterStore]
     ]
 
     componentDidMount: ->
