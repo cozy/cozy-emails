@@ -14,6 +14,7 @@ AccountConfig   = React.createFactory require './account_config'
 Compose         = React.createFactory require './compose'
 
 # React Mixins
+LayoutStore          = require '../stores/layout_store'
 MessageStore         = require '../stores/message_store'
 RouterStore          = require '../stores/router_store'
 SettingsStore        = require '../stores/settings_store'
@@ -39,7 +40,7 @@ Application = React.createClass
 
     mixins: [
         TooltipRefesherMixin
-        StoreWatchMixin [SettingsStore, RefreshesStore, RouterStore, MessageStore]
+        StoreWatchMixin [SettingsStore, RefreshesStore, RouterStore, MessageStore, LayoutStore]
     ]
 
     getStateFromStores: (props) ->
