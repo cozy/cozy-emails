@@ -74,9 +74,8 @@ class MessageStore extends Store
             .toArray()
         else throw new Error 'Wrong Usage : unrecognized target AS.getMixed'
 
-
     isAllLoaded: ->
-        AccountStore.getMailbox().get('nbTotal') is _currentMessages?.size
+        AccountStore.getMailbox().get('nbTotal') is _messages?.size
 
     _fetchMessage = (params={}) ->
 
@@ -100,22 +99,22 @@ class MessageStore extends Store
                     for conversationID, length of conversationLength
                         _saveConversationLength conversationID, length
 
-                AppDispatcher.dispatch
-                    type: ActionTypes.MESSAGE_FETCH_SUCCESS
-                    value: {action, result, messageID}
-
-                # Message doesnt belong to the result
-                # Go fetch next page
+                # Message should belong to the result
+                # If not : go fetch next messages
                 if not _self.isAllLoaded() and messageID and
                         not _messages?.get messageID
                     action = MessageActions.PAGE_NEXT
                     AppDispatcher.handleViewAction
                         type: ActionTypes.MESSAGE_FETCH_REQUEST
-                        value: {action, messageID}
+                        value: {action, messageID, mailboxID}
+                else
+                    AppDispatcher.handleViewAction
+                        type: ActionTypes.MESSAGE_FETCH_SUCCESS
+                        value: {action, messages, messageID, mailboxID}
 
         if action is MessageActions.PAGE_NEXT
             action = MessageActions.SHOW_ALL
-            messages = _currentMessages
+            messages = _messages
             url = RouterStore.getNextURL {action, messages, messageID}
             XHRUtils.fetchMessagesByFolder url, callback
 
@@ -188,6 +187,16 @@ class MessageStore extends Store
 
         handle ActionTypes.MESSAGE_FETCH_REQUEST, (params) ->
             _fetchMessage params
+            @emit 'change'
+
+
+        handle ActionTypes.MESSAGE_FETCH_SUCCESS, ({messages, mailboxID}) ->
+            unless messages
+                # either end of list or no messages, we stay open
+                SocketUtils.changeRealtimeScope mailboxID, EPOCH
+
+            else if (lastdate = _messages.last()?.get 'date')
+                SocketUtils.changeRealtimeScope mailboxID, lastdate
             @emit 'change'
 
 
@@ -311,9 +320,7 @@ class MessageStore extends Store
             # If missing messages, get them
             if conversation?.size isnt @getConversationLength {conversationID}
                 action = MessageActions.SHOW
-                AppDispatcher.handleViewAction
-                    type: ActionTypes.MESSAGE_FETCH_REQUEST
-                    value: {messageID, conversationID, action}
+                _fetchMessage {messageID, conversationID, action}
 
             # Return loaded messages
             return conversation
