@@ -100,6 +100,11 @@ module.exports = React.createClass
         @setState target: false
         MessageActionCreator.move {messageID, conversationID}, mailboxID, to
 
+    onClickMailbox: (event) ->
+        event?.preventDefault()
+        mailboxID =  @props.mailbox.get('id')
+        MessageActionCreator.refreshMailbox {mailboxID}
+
     expungeMailbox: (event) ->
         event.preventDefault()
         LayoutActionCreator.displayModal
