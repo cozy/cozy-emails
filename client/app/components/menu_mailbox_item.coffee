@@ -8,7 +8,7 @@ MessageActionCreator = require '../actions/message_action_creator'
 LayoutActionCreator  = require '../actions/layout_action_creator'
 AccountActionCreator = require '../actions/account_action_creator'
 
-{SpecialBoxIcons, Tooltips} = require '../constants/app_constants'
+{Tooltips} = require '../constants/app_constants'
 
 
 module.exports = MenuMailboxItem = React.createClass
@@ -17,64 +17,59 @@ module.exports = MenuMailboxItem = React.createClass
     getInitialState: ->
         return target: false
 
+    getDefaultProps: ->
+        return {
+            icon: {
+                label: null
+                value: 'fa-folder-o'
+            }
+        }
+
+    getTitle: ->
+        title = t "menu mailbox total", @props.total
+        if @props.unread
+            title += " #{t "menu mailbox unread", @props.unread}"
+        if @props.recent
+            title += " #{t "menu mailbox new", @props.recent}"
+        return title
+
     render: ->
-        mailboxID = @props.mailbox.get 'id'
-
-        nbTotal  = @props.mailbox.get('nbTotal') or 0
-        nbUnread = @props.mailbox.get('nbUnread') or 0
-        nbRecent = @props.mailbox.get('nbRecent') or 0
-        title    = t "menu mailbox total", nbTotal
-        if nbUnread > 0
-            title += " #{t "menu mailbox unread", nbUnread}"
-        if nbRecent > 0
-            title += " #{t "menu mailbox new", nbRecent}"
-
-        mailboxIcon = 'fa-folder-o'
-        specialMailbox = false
-        for attrib, icon of SpecialBoxIcons
-            if @props.account.get(attrib) is mailboxID
-                mailboxIcon = icon
-                specialMailbox = attrib
-
         classesParent = classNames
             active: @props.isActive
             target: @state.target
 
         classesChild = classNames
             target:  @state.target
-            special: specialMailbox
-            news:    nbRecent > 0
-        classesChild += " #{specialMailbox}" if specialMailbox
+            special: @props.icon.label
+            news:    @props.recent > 0
 
         displayError = @props.displayErrors.bind null, @props.progress
 
-
         li className: classesParent,
             a
-                href: @props.mailboxURL
-                className: "#{classesChild} lv-#{@props.mailbox.get('depth')}"
+                href: @props.url
+                className: "#{classesChild} lv-#{@props.depth}"
                 role: 'menuitem'
-                'data-mailbox-id': mailboxID
+                'data-mailbox-id': @props.mailboxID
                 onDragEnter: @onDragEnter
                 onDragLeave: @onDragLeave
                 onDragOver: @onDragOver
                 onDrop: (e) =>
-                    @onDrop e, mailboxID
-                title: title
+                    @onDrop e, @props.mailboxID
+                title: @getTitle()
                 'data-toggle': 'tooltip'
                 'data-placement' : 'right'
                 key: @props.key,
-                    # Something must be rethought about the icon
-                    i className: 'fa ' + mailboxIcon
+                    i className: 'fa ' + @props.icon.value
                     span
                         className: 'item-label',
-                        "#{@props.mailbox.get 'label'}"
+                        "#{@props.label}"
 
                 if @props.progress?.get('errors').length
                     span className: 'refresh-error', onClick: displayError,
                         i className: 'fa fa-warning', null
 
-            if @props.account.get('trashMailbox') is mailboxID
+            if 'trashMailbox' is @props.icon?.label
                 button
                     className:                'menu-subaction'
                     'aria-describedby':       Tooltips.EXPUNGE_MAILBOX
@@ -83,8 +78,8 @@ module.exports = MenuMailboxItem = React.createClass
 
                     span className: 'fa fa-recycle'
 
-            if not @props.progress and nbUnread and nbUnread > 0
-                span className: 'badge', nbUnread
+            if not @props.progress and @props.unread
+                span className: 'badge', @props.unread
 
 
     onDragEnter: (e) ->
@@ -114,5 +109,5 @@ module.exports = MenuMailboxItem = React.createClass
             action      : =>
                 LayoutActionCreator.hideModal()
                 AccountActionCreator.mailboxExpunge
-                    accountID: @props.account.get 'id'
-                    mailboxID: @props.mailbox.get 'id'
+                    accountID: @props.accountID
+                    mailboxID: @props.mailboxID

@@ -17,6 +17,7 @@ AccountStore = require '../stores/account_store'
 StoreWatchMixin = require '../mixins/store_watch_mixin'
 
 RouterGetter = require '../getters/router'
+IconGetter = require '../getters/icon'
 
 module.exports = Menu = React.createClass
     displayName: 'Menu'
@@ -164,12 +165,17 @@ module.exports = Menu = React.createClass
                                 resetFilter: true
 
                             MenuMailboxItem
-                                account:           account
-                                mailbox:           mailbox
-                                key:               'mailbox-item-' + key
-                                isActive:          @props.mailboxID is mailbox.get 'id'
-                                refreshes:         @props.refreshes
-                                displayErrors:     @displayErrors
-                                progress:          props.progress
-                                mailboxURL:        mailboxURL
+                                key:            'mailbox-item-' + key
+                                accountID:      account.get 'id'
+                                mailboxID:      mailboxID
+                                label:          mailbox.get 'label'
+                                depth:          mailbox.get 'depth'
+                                isActive:       @props.mailboxID is mailboxID
+                                displayErrors:  @displayErrors
+                                progress:       props.progress
+                                url:            mailboxURL
+                                total:          mailbox.get 'nbTotal'
+                                unread:         mailbox.get 'nbUnread'
+                                recent:         mailbox.get 'nbRecent'
+                                icon:           IconGetter.getMailboxIcon account, mailboxID
                         .toArray()
