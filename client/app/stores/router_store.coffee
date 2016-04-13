@@ -160,7 +160,6 @@ class RouterStore extends Store
         if query.length then "?#{query.join '&'}" else ""
 
 
-
     _setFilter = (query) ->
         # Update Filter
         _currentFilter = _.clone _defaultFilter
