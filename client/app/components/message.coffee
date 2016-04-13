@@ -247,11 +247,7 @@ module.exports = React.createClass
             # Then remove message
             MessageActionCreator.delete messageID: @props.message.get 'id'
 
-            # Goto to next conversation
-            RouterActionCreator.navigate action: MessageActions.GROUP_NEXT
-
-        needConfirmation = SettingsStore.get().get('messageConfirmDelete')
-        unless needConfirmation
+        unless @props.confirmDelete
             success()
             return
 

@@ -43,7 +43,7 @@ module.exports = React.createClass
         accounts = AccountStore.getAll()
         accountID = RouterGetter.getAccountID()
         messageID = message.get 'id'
-        return Message
+        Message
             ref                 : 'message'
             key                 : 'message-' + messageID
             message             : message
@@ -54,6 +54,7 @@ module.exports = React.createClass
             trashMailbox        : accounts[accountID]?.trashMailbox
             displayHTML         : SettingsStore.get 'messageDisplayHTML'
             displayImages       : SettingsStore.get 'messageDisplayImages'
+            confirmDelete       : SettingsStore.get 'messageConfirmDelete'
 
     render: ->
         unless @state.conversation?.length
