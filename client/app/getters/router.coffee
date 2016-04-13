@@ -13,8 +13,8 @@ _ = require 'lodash'
 
 class RouteGetter
 
-    getNextURL: ->
-        RouterStore.getNextURL()
+    hasNextPage: ->
+        not MessageStore.isAllLoaded()
 
     getURL: (params) ->
         RouterStore.getURL params

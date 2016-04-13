@@ -38,7 +38,7 @@ module.exports = MessageList = React.createClass
             isAllSelected   : SelectionGetter.isAllSelected()
             selection       : SelectionGetter.getSelection messages
             messages        : messages
-            hasNextPage     : !!RouterGetter.getNextURL()
+            hasNextPage     : RouterGetter.hasNextPage()
         }
 
     render: ->

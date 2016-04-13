@@ -22,7 +22,7 @@ class RouterStore extends Store
     _lastDate = null
 
     _currentFilter = _defaultFilter =
-        sort: '-'
+        sort: '-date'
 
         flags: null
 
@@ -85,10 +85,9 @@ class RouterStore extends Store
                 params[param] or match
             return prefix + url.replace(/\(\?:query\)$/, filter)
 
-        return '/' + filter
-
-    getNextURL: ->
-        return _nextURL
+    getNextURL: ({messages}) ->
+        filter = pageAfter: messages?.last()?.get 'date'
+        return @getCurrentURL {filter}
 
     getCurrentURL: (options={}) ->
         params = _.extend {isServer: true}, options
@@ -144,24 +143,12 @@ class RouterStore extends Store
                 (result = {}).flags = flags
         return result
 
-    _getURIQueryParams = (params) ->
-        filters = _self.getFilter()
-        isServer = params.isServer
-        params = _.extend {}, filters, params?.filter
-        result = ''
-
-        if isServer
-            params.sort = "#{params.sort}date"
-            _.each params, (value, key) ->
-                if value and value isnt 'undefined'
-                    start = unless result.length then '/?' else '&'
-                    result += start + key + '=' + encodeURIComponent(value)
-        else
-            _.each params, (value, key) ->
-                if value and value isnt 'undefined' and _defaultFilter[key] isnt value
-                    start = unless result.length then '/?' else '&'
-                    result += start + key + '=' + value
-        result
+    _getURIQueryParams = ->
+        filters = _.filter _self.getFilter(), (value, key) ->
+            value? and _defaultFilter[key] isnt value
+        query = _.map filters, (value, key) ->
+            return key + '=' + encodeURIComponent(value)
+        if query.length then "/?#{query.join '&'}" else ""
 
     _resetFilter = ->
         _currentFilter = _defaultFilter
@@ -206,17 +193,8 @@ class RouterStore extends Store
             _router?.navigate {accountID, action}
             @emit 'change'
 
-        handle ActionTypes.MESSAGE_FETCH_SUCCESS, (params) ->
-            newDate = params.nextURL?.match(/pageAfter=[\w-%.]*&*/gi)
-            newDate = newDate?[0].split('=')[1]
-
-            # PageAfter should get older Messages
-            # if not do not change _nextPage
-            if not _lastDate or _lastDate > newDate
-                _nextURL = params.nextURL
-                _lastDate = newDate
+        handle ActionTypes.MESSAGE_FETCH_SUCCESS, ->
             @emit 'change'
-
 
         handle ActionTypes.MESSAGE_TRASH_SUCCESS, (params) ->
             if MessageActions.SHOW is _action
@@ -225,6 +203,12 @@ class RouterStore extends Store
                 else
                     _action = MessageActions.SHOW_ALL
                 @emit 'change'
+
+        handle ActionTypes.REFRESH_SUCCESS, ({mailboxID, accountID}) ->
+            # Update URL after refresh,
+            # Views are updated but not URL
+            _router.navigate @getCurrentURL()
+            @emit 'change'
 
 _toCamelCase = (value) ->
     return value.replace /\.(\w)*/gi, (match) ->

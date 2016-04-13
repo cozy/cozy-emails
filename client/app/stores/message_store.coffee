@@ -25,6 +25,7 @@ class MessageStore extends Store
     ###
 
     _messages = Immutable.OrderedMap()
+    _messagesLength = null
     _conversationLength = Immutable.Map()
 
     _currentMessages = Immutable.OrderedMap()
@@ -77,6 +78,10 @@ class MessageStore extends Store
         else throw new Error 'Wrong Usage : unrecognized target AS.getMixed'
 
 
+    isAllLoaded: ->
+        _messagesLength is _messages?.size
+
+
     _fetchMessage = (params={}) ->
         return if _self.isFetching()
 
@@ -94,13 +99,13 @@ class MessageStore extends Store
                     type: ActionTypes.MESSAGE_FETCH_FAILURE
                     value: {error, mailboxID}
             else
-
-                nextURL = result?.links?.next
-
                 # This prevent to override local updates
                 # with older ones from server
                 messages = if _.isArray(result) then result else result.messages
                 messages?.forEach (message) -> _saveMessage message, timestamp
+
+                # Save total Mesasges size
+                _messagesLength = result?.count
 
                 if (conversationLength = result?.conversationLength)
                     for conversationID, length of conversationLength
@@ -115,7 +120,7 @@ class MessageStore extends Store
 
                 AppDispatcher.dispatch
                     type: ActionTypes.MESSAGE_FETCH_SUCCESS
-                    value: {action, nextURL, messageID}
+                    value: {action, result, messageID}
 
                 # Message doesnt belong to the result
                 # Go fetch next page
@@ -125,7 +130,8 @@ class MessageStore extends Store
                         value: {messageID, action: MessageActions.PAGE_NEXT}
 
         if action is MessageActions.PAGE_NEXT
-            url = RouterStore.getNextURL()
+            messages = _currentMessages
+            url = RouterStore.getNextURL {messages}
             XHRUtils.fetchMessagesByFolder url, callback
 
         else if action is MessageActions.SHOW_ALL
