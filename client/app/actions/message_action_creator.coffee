@@ -102,7 +102,6 @@ MessageActionCreator =
 
         # send request
         ts = Date.now()
-        next = MessageStore.getNextConversation()
         XHRUtils.batchDelete target, (error, updated) =>
             if error
                 AppDispatcher.dispatch
@@ -118,7 +117,7 @@ MessageActionCreator =
             msg.updated = ts for msg in updated
             AppDispatcher.dispatch
                 type: ActionTypes.MESSAGE_TRASH_SUCCESS
-                value: {target, ref, updated, next}
+                value: {target, ref, updated}
 
     move: (target, from, to, callback) ->
         ref = refCounter++

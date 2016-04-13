@@ -247,12 +247,13 @@ class MessageStore extends Store
             _addInFlight {type: 'trash', trashBoxID, messages, ref}
             @emit 'change'
 
-        handle ActionTypes.MESSAGE_TRASH_SUCCESS, ({target, updated, ref, next}) ->
+        handle ActionTypes.MESSAGE_TRASH_SUCCESS, ({target, updated, ref}) ->
             _undoable[ref] = _removeInFlight ref
             for message in updated
                 if message._deleted
                     _deleteMessage message
-                    _setCurrentID next?.get('id')
+                    if (nextMessage = @getNextConversation())?.size
+                        _setCurrentID nextMessage?.get 'id'
                 else
                     _saveMessage message
             @emit 'change'

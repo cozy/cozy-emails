@@ -201,12 +201,10 @@ class RouterStore extends Store
         handle ActionTypes.MESSAGE_FETCH_SUCCESS, ->
             @emit 'change'
 
-        handle ActionTypes.MESSAGE_TRASH_SUCCESS, (params) ->
-            if MessageActions.SHOW is _action
-                if (messageID = params?.next?.get 'id')
-                    _router.navigate @getURL {messageID}
-                else
-                    _action = MessageActions.SHOW_ALL
+        handle ActionTypes.MESSAGE_TRASH_SUCCESS, ->
+            messageID = MessageStore.getCurrentID()
+            if MessageActions.SHOW is _action and not messageID
+                _action = MessageActions.SHOW_ALL
                 @emit 'change'
 
 _toCamelCase = (value) ->
