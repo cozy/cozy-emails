@@ -40,7 +40,7 @@ Application = React.createClass
 
     mixins: [
         TooltipRefesherMixin
-        StoreWatchMixin [SettingsStore, RefreshesStore, RouterStore, MessageStore]
+        StoreWatchMixin [SettingsStore, RefreshesStore, RouterStore]
     ]
 
     getStateFromStores: ->
@@ -50,10 +50,6 @@ Application = React.createClass
             if settings.isCompact then "layout-compact"
             "layout-preview-#{settings.previewSize}"].join(' ')
 
-        # FIXME : faire un force refresh
-        # à chaque strt de l'application (?)
-        # FIXME : décalage entre mailbox.get('nbUnread') et
-        # les messages non lus dans l'interface
         mailbox = RouterGetter.getCurrentMailbox()
         return {
             mailboxID       : mailbox.get 'id'
@@ -68,7 +64,6 @@ Application = React.createClass
             inReplyTo       : RouterGetter.getReplyMessage messageID
             currentSearch   : RouterGetter.getSearch()
             modal           : RouterGetter.getModal()
-            nextURL         : RouterGetter.getNextURL()
             className       : className
         }
 
