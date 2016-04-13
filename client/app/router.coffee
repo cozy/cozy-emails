@@ -29,7 +29,7 @@ class Router extends Backbone.Router
         'mailbox/:mailboxID/:messageID/reply':     'messageReply'
         'mailbox/:mailboxID/:messageID/reply-all': 'messageReplyAll'
         'mailbox/:mailboxID/:messageID(?:query)':  'messageShow'
-        '':                                        'defaultMailbox'
+        '':                                        'firstInbox'
 
 
     initialize: ->
