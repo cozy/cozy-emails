@@ -2,12 +2,8 @@ React = require 'react'
 
 {aside, i, button} = React.DOM
 
-FiltersToolbarMessagesList = React.createFactory require './toolbar_messageslist_filters'
 ActionsToolbarMessagesList = React.createFactory require './toolbar_messageslist_actions'
-
 LayoutActionCreator = require '../actions/layout_action_creator'
-RouterActionCreator = require '../actions/router_action_creator'
-
 
 module.exports = ToolbarMessagesList = React.createClass
     displayName: 'ToolbarMessagesList'
@@ -35,8 +31,3 @@ module.exports = ToolbarMessagesList = React.createClass
                     messages:             @props.messages
                     selection:            @props.selection
                     isAllSelected:        @props.isAllSelected
-            else
-                FiltersToolbarMessagesList
-                    accountID: @props.accountID
-                    mailboxID: @props.mailboxID
-                    filter: @props.filter
