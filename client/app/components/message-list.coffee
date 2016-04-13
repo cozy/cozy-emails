@@ -9,8 +9,8 @@ SelectionGetter = require '../getters/selection'
 RouterGetter = require '../getters/router'
 
 # React Mixins
+MessageStore        = require '../stores/message_store'
 SettingsStore       = require '../stores/settings_store'
-RouterStore         = require '../stores/router_store'
 SelectionStore      = require '../stores/selection_store'
 StoreWatchMixin     = require '../mixins/store_watch_mixin'
 
@@ -23,7 +23,7 @@ module.exports = MessageList = React.createClass
     displayName: 'MessageList'
 
     mixins: [
-        StoreWatchMixin [SelectionStore, RouterStore]
+        StoreWatchMixin [SelectionStore, MessageStore]
     ]
 
     componentDidMount: ->
@@ -58,34 +58,31 @@ module.exports = MessageList = React.createClass
                 isAllSelected: @state.isAllSelected
 
             # Message List
-            if @state.isLoading?
-                p className: 'listFetching list-loading', t 'list fetching'
+            unless @props.messages.size
+                p
+                    className: 'list-empty'
+                    ref: 'listEmpty'
+                    RouterGetter.getEmptyMessage()
             else
-                unless @props.messages.size
-                    p
-                        className: 'list-empty'
-                        ref: 'listEmpty'
-                        RouterGetter.getEmptyMessage()
-                else
-                    div
-                        className: 'main-content'
-                        ref: 'scrollable',
+                div
+                    className: 'main-content'
+                    ref: 'scrollable',
 
-                        MessageListBody
-                            messages: @props.messages
-                            accountID: @props.accountID
-                            mailboxID: @props.mailboxID
-                            selection: @state.selection
-                            ref: 'listBody'
+                    MessageListBody
+                        messages: @props.messages
+                        accountID: @props.accountID
+                        mailboxID: @props.mailboxID
+                        selection: @state.selection
+                        ref: 'listBody'
 
-                        if @state.hasNextPage
-                            a
-                                className: 'more-messages'
-                                onClick: @loadMoreMessage,
-                                ref: 'nextPage',
-                                t 'list next page'
-                        else
-                            p ref: 'listEnd', t 'list end'
+                    if @state.hasNextPage
+                        a
+                            className: 'more-messages'
+                            onClick: @loadMoreMessage,
+                            ref: 'nextPage',
+                            t 'list next page'
+                    else
+                        p ref: 'listEnd', t 'list end'
 
     loadMoreMessage: ->
         RouterActionCreator.getNextPage()

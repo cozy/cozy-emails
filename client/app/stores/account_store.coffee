@@ -21,7 +21,6 @@ class AccountStore extends Store
         Defines private variables here.
     ###
 
-    _accountsUnread = Immutable.Map()
     # Creates an OrderedMap of accounts
     # this map will contains the base information for an account
     _accounts = Immutable.Iterable window.accounts
@@ -34,13 +33,9 @@ class AccountStore extends Store
         .mapKeys (_, account) -> account.id
 
         # makes account object an immutable Map
-        .map (account) ->
-            _accountsUnread.set account.id, account.totalUnread
-            return AccountTranslator.toImmutable account
+        .map (account) -> AccountTranslator.toImmutable account
 
         .toOrderedMap()
-
-    _mailboxesCounters = Immutable.Map()
 
     _accountID = null
     _mailboxID = null
@@ -49,8 +44,6 @@ class AccountStore extends Store
     _newAccountChecking = false
 
     _serverAccountErrorByField = Immutable.Map()
-
-    _emitTimeout = null
 
     _tab = null
 
@@ -88,18 +81,11 @@ class AccountStore extends Store
         mailboxID = data.id
         mailboxes = account.get('mailboxes')
         mailbox = mailboxes.get(mailboxID) or Immutable.Map()
-        more = _mailboxesCounters.get(mailboxID) or Immutable.Map()
 
         data.weight = mailbox.get 'weight' if mailbox.get 'weight'
 
         for field of STATICBOXFIELDS when mailbox.get(field) isnt data[field]
             mailbox = mailbox.set field, data[field]
-
-        for field of CHANGEBOXFIELDS when more.get(field) isnt data[field]
-            more = more.set field, data[field]
-
-        if more isnt _mailboxesCounters.get mailboxID
-            _mailboxesCounters.set mailboxID, more
 
         if mailbox isnt mailboxes.get mailboxID
             mailboxes = mailboxes.set mailboxID, mailbox
@@ -115,23 +101,6 @@ class AccountStore extends Store
             if mb1.get 'label' < mb2.get 'label' then return 1
             else if mb1.get 'label' > mb2.get 'label' then return -1
             else return 0
-
-
-    _applyMailboxDiff: (accountID, diff) ->
-        for boxID, deltas of diff when deltas.nbTotal + deltas.nbUnread
-            counters = _mailboxesCounters.get(boxID) or Immutable.Map()
-            _mailboxesCounters.set boxID, counters.merge
-                nbTotal: counters.get('nbTotal') + deltas.nbTotal
-                nbUnread: counters.get('nbUnread') + deltas.nbUnread
-
-        diffTotalUnread = diff[accountID]?.nbUnread or 0
-        if diffTotalUnread
-
-            total = _accountsUnread.get(accountID) + diffTotalUnread
-            _accountsUnread = _accountsUnread.set accountID, total
-
-        clearTimeout _emitTimeout
-        _emitTimeout = setTimeout (=> @emit 'change'), 1
 
 
     _setCurrentAccount = (accountID, mailboxID) ->
@@ -250,10 +219,6 @@ class AccountStore extends Store
 
         handle ActionTypes.REFRESH_SUCCESS, ({accountID, mailboxID}) ->
             _setCurrentAccount accountID, mailboxID
-            @emit 'change'
-
-        handle ActionTypes.RECEIVE_REFRESH_NOTIF, (data) ->
-            _accountsUnread.set data.accountID, data.totalUnread
             @emit 'change'
 
 

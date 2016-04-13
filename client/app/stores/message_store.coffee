@@ -30,8 +30,6 @@ class MessageStore extends Store
 
     _currentMessages = Immutable.OrderedMap()
 
-    _fetching = 0
-
     _currentID = null
 
     _inFlightByRef = {}
@@ -83,17 +81,13 @@ class MessageStore extends Store
 
 
     _fetchMessage = (params={}) ->
-        return if _self.isFetching()
 
         {messageID, conversationID, action} = params
         mailboxID = AccountStore.getMailboxID()
         action ?= MessageActions.SHOW_ALL
         timestamp = Date.now()
 
-        _fetching++
-
         callback = (error, result) ->
-            _fetching--
             if error?
                 AppDispatcher.dispatch
                     type: ActionTypes.MESSAGE_FETCH_FAILURE
@@ -150,46 +144,6 @@ class MessageStore extends Store
         else
             XHRUtils.fetchConversation conversationID, callback
 
-    _computeMailboxDiff = (oldmsg, newmsg) ->
-        return {} unless oldmsg
-        changed = false
-
-        wasRead = MessageFlags.SEEN in oldmsg.get 'flags'
-        isRead = MessageFlags.SEEN in newmsg.get 'flags'
-
-        accountID = newmsg.get 'accountID'
-        oldboxes = Object.keys oldmsg.get 'mailboxIDs'
-        newboxes = Object.keys newmsg.get 'mailboxIDs'
-
-        out = {}
-        added = _.difference(newboxes, oldboxes)
-        added.forEach (boxid) ->
-            changed = true
-            out[boxid] = nbTotal: +1, nbUnread: if isRead then 0 else +1
-
-        removed = _.difference oldboxes, newboxes
-        removed.forEach (boxid) ->
-            changed = true
-            out[boxid] = nbTotal: -1, nbUnread: if wasRead then -1 else 0
-
-        stayed = _.intersection oldboxes, newboxes
-        deltaUnread = if wasRead and not isRead then +1
-        else if not wasRead and isRead then -1
-        else 0
-
-        if deltaUnread isnt 0
-            changed = true
-
-        out[accountID] = nbUnread: deltaUnread
-
-        stayed.forEach (boxid) ->
-            out[boxid] = nbTotal: 0, nbUnread: deltaUnread
-
-        if changed
-            return out
-        else
-            return false
-
     _saveMessage = (message, timestamp) ->
         oldmsg = _messages.get message.id
         updated = oldmsg?.get 'updated'
@@ -222,9 +176,6 @@ class MessageStore extends Store
                 """
 
             _messages = _messages.set message.id, messageMap
-
-            if message.accountID? and (diff = _computeMailboxDiff oldmsg, messageMap)
-                AccountStore._applyMailboxDiff message.accountID, diff
 
     _deleteMessage = (message) ->
         _messages = _messages.remove message.id
@@ -467,9 +418,6 @@ class MessageStore extends Store
     getNextConversation: (params={}) ->
         transform = (index) -> --index
         @getMessage _.extend params, {transform}
-
-    isFetching: ->
-        return _fetching > 0
 
     # FIXME : move this into RouterStore/RouterGetter
     getUndoableRequest: (ref) ->

@@ -35,7 +35,6 @@ module.exports = React.createClass
 
     getStateFromStores: ->
         return {
-            isLoading: RouterGetter.isLoading()
             message: RouterGetter.getMessage()
             conversation: RouterGetter.getConversation()
         }

@@ -53,9 +53,6 @@ class RouteGetter
             previewSize: LayoutStore.getPreviewSize()
         }
 
-    isLoading: ->
-        MessageStore.isFetching()
-
     getProgress: (accountID) ->
         RefreshesStore.getRefreshing().get accountID
 
