@@ -107,10 +107,7 @@ class MessageStore extends Store
         action ?= MessageActions.SHOW_ALL
         timestamp = Date.now()
 
-        _fetching++
-
         callback = (error, result) ->
-            _fetching--
             if error?
                 AppDispatcher.dispatch
                     type: ActionTypes.MESSAGE_FETCH_FAILURE
@@ -161,6 +158,7 @@ class MessageStore extends Store
 
         else
             XHRUtils.fetchConversation conversationID, callback
+
 
     _computeMailboxDiff = (oldmsg, newmsg) ->
         return {} unless oldmsg
