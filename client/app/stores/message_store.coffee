@@ -6,7 +6,7 @@ AppDispatcher = require '../app_dispatcher'
 
 Store = require '../libs/flux/store/store'
 AccountStore = require './account_store'
-RouterStore = require '../stores/router_store'
+RouterStore = require './router_store'
 
 RouterGetter = require '../getters/router'
 

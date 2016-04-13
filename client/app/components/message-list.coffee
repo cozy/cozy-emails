@@ -33,9 +33,10 @@ module.exports = MessageList = React.createClass
         @_initScroll()
 
     getStateFromStores: (props={}) ->
+        messages = props.messages or @props.messages
         return {
             isAllSelected   : SelectionGetter.isAllSelected()
-            selection       : SelectionGetter.getSelection props.messages
+            selection       : SelectionGetter.getSelection messages
             hasNextPage     : RouterGetter.hasNextPage()
         }
 

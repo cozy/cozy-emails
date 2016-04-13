@@ -201,12 +201,6 @@ class RouterStore extends Store
         handle ActionTypes.MESSAGE_FETCH_SUCCESS, ->
             @emit 'change'
 
-        handle ActionTypes.MESSAGE_TRASH_SUCCESS, ->
-            messageID = MessageStore.getCurrentID()
-            if MessageActions.SHOW is _action and not messageID
-                _action = MessageActions.SHOW_ALL
-                @emit 'change'
-
 _toCamelCase = (value) ->
     return value.replace /\.(\w)*/gi, (match) ->
         part1 = match.substring 1, 2
