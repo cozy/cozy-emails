@@ -13,13 +13,6 @@ RouterActionCreator = require '../actions/router_action_creator'
 module.exports = ToolbarMessagesList = React.createClass
     displayName: 'ToolbarMessagesList'
 
-    propTypes:
-        accountID:            React.PropTypes.string
-        mailboxID:            React.PropTypes.string
-        messages:             React.PropTypes.object.isRequired
-        selection:            React.PropTypes.array.isRequired
-        isAllSelected:        React.PropTypes.bool.isRequired
-
     selectAll: ->
         LayoutActionCreator.selectAll()
 
@@ -39,7 +32,6 @@ module.exports = ToolbarMessagesList = React.createClass
 
             if @props.selection?.length
                 ActionsToolbarMessagesList
-                    settings:             @props.settings
                     mailboxID:            @props.mailboxID
                     messages:             @props.messages
                     selection:            @props.selection

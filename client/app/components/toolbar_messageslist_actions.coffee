@@ -13,12 +13,6 @@ RouterActionCreator = require '../actions/router_action_creator'
 module.exports = ActionsToolbarMessagesList = React.createClass
     displayName: 'ActionsToolbarMessagesList'
 
-    propTypes:
-        settings:             React.PropTypes.object.isRequired
-        mailboxID:            React.PropTypes.string.isRequired
-        messages:             React.PropTypes.object.isRequired
-        selection:            React.PropTypes.array.isRequired
-
     render: ->
         div role: 'group',
             button

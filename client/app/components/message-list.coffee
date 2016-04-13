@@ -51,7 +51,6 @@ module.exports = MessageList = React.createClass
             ToolbarMessagesList
                 ref: 'messageList-toolbar'
                 key: 'messageList-toolbar-' + @state.selection?.length
-                settings: SettingsStore.get()
                 accountID: @props.accountID
                 mailboxID: @props.mailboxID
                 messages: @props.messages
