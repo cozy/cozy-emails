@@ -3,6 +3,7 @@ React = require 'react'
 {aside, i, button} = React.DOM
 
 ActionsToolbarMessagesList = React.createFactory require './toolbar_messageslist_actions'
+
 LayoutActionCreator = require '../actions/layout_action_creator'
 
 module.exports = ToolbarMessagesList = React.createClass
