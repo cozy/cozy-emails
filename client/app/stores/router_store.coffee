@@ -29,6 +29,7 @@ class RouterStore extends Store
         value: null
         before: null
         after: null
+        pageAfter: null
 
     getRouter: ->
         return _router
@@ -53,11 +54,9 @@ class RouterStore extends Store
         _scrollValue
 
     getURL: (params={}) ->
-        # FIXME : prendre en compte ici le cas
-        # next conversation : MessageActions.GROUP_NEXT
-        # previous conversation : MessageActions.GROUP_PREVIOUS
         action = _getRouteAction params
-        filter = if params.resetFilter and MessageActions.SHOW_ALL is action
+
+        filter = if params.resetFilter
         then _getURIQueryParams params
         else ''
 
@@ -143,11 +142,14 @@ class RouterStore extends Store
                 (result = {}).flags = flags
         return result
 
-    _getURIQueryParams = ->
-        filters = _.filter _self.getFilter(), (value, key) ->
-            value? and _defaultFilter[key] isnt value
-        query = _.map filters, (value, key) ->
-            return key + '=' + encodeURIComponent(value)
+    _getURIQueryParams = (params={}) ->
+        filters = _.extend {}, _self.getFilter()
+        _.extend filters, params.filter if params.filter
+
+        query = _.compact _.map filters, (value, key) ->
+            if value? and _defaultFilter[key] isnt value
+                return key + '=' + encodeURIComponent(value)
+
         if query.length then "/?#{query.join '&'}" else ""
 
     _resetFilter = ->
