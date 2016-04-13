@@ -313,7 +313,10 @@ class MessageStore extends Store
             _addInFlight {type: 'trash', trashBoxID, messages, ref}
             @emit 'change'
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> 550d9ee... Do not use _router.navigate
         handle ActionTypes.MESSAGE_TRASH_SUCCESS, ({target, updated, ref}) ->
             _undoable[ref] = _removeInFlight ref
             for message in updated
