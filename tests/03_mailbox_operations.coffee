@@ -26,22 +26,6 @@ describe 'Mailbox fetching', ->
             if totalFound is count then callback null, totalFound
             else callback new Error 'total & count doesnt match'
 
-
-    it "When I follow the next links", (done) ->
-        testNextLinks "/mailbox/#{store.inboxID}",
-            (messages) ->
-                readCount += messages
-                            .filter (m) -> '\\Seen' in m.flags
-                            .length
-
-                flaggedCount += messages
-                            .filter (m) -> '\\Flagged' in m.flags
-                            .length
-
-            (err, total) ->
-                inboxCount = total
-                done err
-
     it "When I get a mailbox (filter by flag)", (done) ->
         testNextLinks "/mailbox/#{store.inboxID}?flag=seen", (err, total) ->
                 total.should.equal readCount
