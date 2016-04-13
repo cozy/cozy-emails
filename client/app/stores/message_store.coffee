@@ -249,7 +249,6 @@ class MessageStore extends Store
         Defines here the action handlers.
     ###
     __bindHandlers: (handle) ->
-
         handle ActionTypes.ROUTE_CHANGE, (value) ->
             {messageID} = value
             _setCurrentID messageID
