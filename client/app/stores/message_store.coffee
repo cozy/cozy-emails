@@ -142,9 +142,11 @@ class MessageStore extends Store
                         type: ActionTypes.MESSAGE_FETCH_REQUEST
                         value: {action, messageID, mailboxID}
                 else
-                    AppDispatcher.dispatch
-                        type: ActionTypes.MESSAGE_FETCH_SUCCESS
-                        value: {action, messages, messageID, mailboxID}
+                    action = MessageActions.PAGE_NEXT
+                    AppDispatcher.handleViewAction
+                        type: ActionTypes.MESSAGE_FETCH_REQUEST
+                        value: {action, messageID}
+
 
         if action is MessageActions.PAGE_NEXT
             action = MessageActions.SHOW_ALL
