@@ -25,7 +25,6 @@ class MessageStore extends Store
     ###
 
     _messages = Immutable.OrderedMap()
-    _messagesLength = null
     _conversationLength = Immutable.Map()
 
     _currentMessages = Immutable.OrderedMap()
@@ -77,8 +76,7 @@ class MessageStore extends Store
 
 
     isAllLoaded: ->
-        _messagesLength is _messages?.size
-
+        AccountStore.getMailbox().get('nbTotal') is _currentMessages?.size
 
     _fetchMessage = (params={}) ->
 
@@ -98,19 +96,9 @@ class MessageStore extends Store
                 messages = if _.isArray(result) then result else result.messages
                 messages?.forEach (message) -> _saveMessage message, timestamp
 
-                # Save total Mesasges size
-                _messagesLength = result?.count
-
                 if (conversationLength = result?.conversationLength)
                     for conversationID, length of conversationLength
                         _saveConversationLength conversationID, length
-
-                unless messages
-                    # either end of list or no messages, we stay open
-                    changeRealtimeScope mailboxID, EPOCH
-
-                else if (lastdate = _messages.last()?.get 'date')
-                    changeRealtimeScope mailboxID, lastdate
 
                 AppDispatcher.dispatch
                     type: ActionTypes.MESSAGE_FETCH_SUCCESS
@@ -118,17 +106,12 @@ class MessageStore extends Store
 
                 # Message doesnt belong to the result
                 # Go fetch next page
-                if messageID and not _messages?.get messageID
-<<<<<<< dee7fe3ab3d6287073b776818b61be92f601753a
-                    AppDispatcher.dispatch
-                        type: ActionTypes.MESSAGE_FETCH_REQUEST
-                        value: {messageID, action: MessageActions.PAGE_NEXT}
-=======
+                if not _self.isAllLoaded() and messageID and
+                        not _messages?.get messageID
                     action = MessageActions.PAGE_NEXT
                     AppDispatcher.handleViewAction
                         type: ActionTypes.MESSAGE_FETCH_REQUEST
                         value: {action, messageID}
->>>>>>> MessageStore : emit FETCH_REQUEST to fetch messages
 
         if action is MessageActions.PAGE_NEXT
             action = MessageActions.SHOW_ALL
