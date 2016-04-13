@@ -135,10 +135,7 @@ class AccountStore extends Store
 
 
     _setCurrentAccount = (accountID, mailboxID) ->
-        accountID ?= _self.getDefault().get 'id'
         _accountID = accountID
-
-        mailboxID ?= _self.getDefaultMailbox().get 'id'
         _mailboxID = mailboxID
 
     _onAccountUpdated: (rawAccount) ->
@@ -207,9 +204,11 @@ class AccountStore extends Store
             _setError error
             @emit 'change'
 
+
         handle ActionTypes.EDIT_ACCOUNT_REQUEST, ({inputValues}) ->
             _newAccountWaiting = true
             @emit 'change'
+
 
         handle ActionTypes.EDIT_ACCOUNT_SUCCESS, ({rawAccount}) ->
             _newAccountWaiting = false
@@ -269,9 +268,6 @@ class AccountStore extends Store
         cachedTransform AccountStore, 'all-mailboxes', _accounts, ->
             _accounts.flatMap (account) -> account.get 'mailboxes'
 
-    getMailboxCounters: ->
-        return _mailboxesCounters
-
     getSelectedTab: ->
         return _tab
 
@@ -287,9 +283,8 @@ class AccountStore extends Store
         return _accounts.first() or null
 
 
-    getDefaultMailbox: (accountID) ->
-        account = _accounts.get(accountID) or @getDefault()
-        return null unless account
+    _getDefaultMailbox = ->
+        return null unless (account = @getDefault())
 
         mailboxes = account.get('mailboxes')
         mailbox = mailboxes.filter (mailbox) ->
@@ -304,43 +299,28 @@ class AccountStore extends Store
             return if defaultID then mailboxes.get defaultID
             else mailboxes.first()
 
-    hasConversationEnabled: (mailboxID) ->
-        # don't display conversations in Trash and Draft folders
-        mailboxID not in [
-            _accounts.get(_accountID)?.get('trashMailbox')
-            _accounts.get(_accountID)?.get('draftMailbox')
-            _accounts.get(_accountID)?.get('junkMailbox')
-        ]
 
+    getAccountID: ->
+        return @getDefault()?.get 'id' unless _accountID
+        return _accountID
+
+    getMailboxID: ->
+        _mailboxID
 
     getSelected: ->
-        _accounts.get(_accountID)
+        _accounts.get(_accountID) or @getDefault()
 
-    getSelectedOrDefault: ->
-        @getSelected() or @getDefault()
-
-    getSelectedMailboxes: ->
+    getAllMailboxes: ->
         if _accountID?
             return _accounts.get(_accountID)
                 .get('mailboxes')
                 .sort(_mailboxSort)
 
-    getSelectedMailbox: (selectedID) ->
-        if (mailboxes = @getSelectedMailboxes())?.size
+    getMailbox: (selectedID) ->
+        if (mailboxes = @getAllMailboxes())?.size
             selectedID ?= _mailboxID
             return mailboxes.get selectedID
-        return @getDefaultMailbox()
-
-    getSelectedFavorites: ->
-        if (mailboxes = @getSelectedMailboxes())
-            if (ids = _accounts.get(_accountID)?.get('favorites'))?
-                mailboxes = mailboxes
-                    .filter (box, key) -> key in ids
-                    .toOrderedMap()
-            else
-                mailboxes = mailboxes.toOrderedMap()
-            mailboxes = mailboxes.sort _mailboxSort
-        return mailboxes
+        return _getDefaultMailbox()
 
 
     getErrors: -> _serverAccountErrorByField
@@ -354,51 +334,6 @@ class AccountStore extends Store
 
     isWaiting: -> return _newAccountWaiting
     isChecking: -> return _newAccountChecking
-
-    # Select the "best" mailbox among a list of candidates
-    # prefer in order inbox, favorites, or first of list
-    pickBestBox: (accountID, candidates) ->
-        account = _accounts.get accountID
-        favorites = account?.get('favorites') or []
-        inFavorites = _.intersection candidates, favorites
-
-        if account and account.get('inboxMailbox') of candidates
-            mailboxID = account.get('inboxMailbox')
-        else if inFavorites.length
-            mailboxID = inFavorites[0]
-        else
-            mailboxID = candidates[0]
-
-        return mailboxID
-
-    getMailboxRole: (account, mailboxID) ->
-        for role in ['trashMailbox','draftMailbox','junkMailbox']
-            if mailboxID is account.get role
-                return role
-
-        return null
-
-
-    makeEmptyAccount: ->
-        account = {}
-        account.label = ''
-        account.login = ''
-        account.password = ''
-        account.imapServer = ''
-        account.imapLogin = ''
-        account.smtpServer = ''
-        account.label = ''
-        account.id = null
-        account.smtpPort = 465
-        account.smtpSSL = true
-        account.smtpTLS = false
-        account.smtpMethod = 'PLAIN'
-        account.imapPort = 993
-        account.imapSSL = true
-        account.imapTLS = false
-        account.accountType = 'IMAP'
-        account.favoriteMailboxes = null
-        return Immutable.Map account
 
 
 

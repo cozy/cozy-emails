@@ -107,8 +107,8 @@ class RouteGetter
     isCurrentConversation: (conversationID) ->
         conversationID is @getCurrentMessage()?.get 'conversationID'
 
-    getCurrentMailbox: (id) ->
-        AccountStore.getSelectedMailbox id
+    getCurrentMailbox: (mailboxID) ->
+        AccountStore.getMailbox mailboxID
 
     getAccounts: ->
         accountID = @getAccountID()
@@ -120,19 +120,19 @@ class RouteGetter
             return 0
 
     getAccountSignature: ->
-        AccountStore.getSelectedOrDefault()?.get 'signature'
+        AccountStore.getSelected()?.get 'signature'
 
     getAccountID: ->
-        AccountStore.getSelectedOrDefault()?.get 'id'
+        AccountStore.getAccountID()
 
     getMailboxID: ->
-        @getCurrentMailbox()?.get 'id'
+        AccountStore.getMailboxID()
 
     getLogin: ->
         @getCurrentMailbox()?.get 'login'
 
     getMailboxes: ->
-        AccountStore.getSelectedMailboxes()
+        AccountStore.getAllMailboxes()
 
     getTags: (message) ->
         mailboxID = @getMailboxID()

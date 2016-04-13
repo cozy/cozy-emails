@@ -164,8 +164,8 @@ module.exports = Utils =
         AppDispatcher = require '../app_dispatcher'
         window.setInterval ->
             content =
-                "accountID": AccountStore.getDefault()?.get('id'),
-                "id": AccountStore.getDefaultMailbox()?.get('id'),
+                "accountID": AccountStore.getAccountID()
+                "id": AccountStore.getMailboxID()
                 "label": "INBOX",
                 "path": "INBOX",
                 "tree": ["INBOX"],

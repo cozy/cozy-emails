@@ -66,7 +66,7 @@ module.exports = GlobalSearchBar = React.createClass
         .toOrderedMap()
         .set 'all', t 'search all accounts'
 
-        accountID = AccountStore.getSelected()?.get('id') or 'all'
+        accountID = AccountStore.getAccountID() or 'all'
         search = SearchStore.getCurrentSearch()
 
         return {accounts, search, accountID}

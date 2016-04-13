@@ -62,15 +62,15 @@ class RouterStore extends Store
 
         isMessage = !!params.messageID or _.contains action, 'message'
         if isMessage and not params.mailboxID
-            params.mailboxID = AccountStore.getSelectedMailbox()?.get 'id'
+            params.mailboxID = AccountStore.getMailboxID()
 
         isMailbox = _.contains action, 'mailbox'
         if isMailbox and not params.mailboxID
-            params.mailboxID = AccountStore.getSelected()?.get 'id'
+            params.mailboxID = AccountStore.getMailboxID()
 
         isAccount = _.contains action, 'account'
         if isAccount and not params.accountID
-            params.accountID = AccountStore.getSelectedOrDefault()?.get 'id'
+            params.accountID = AccountStore.getAccountID()
         if isAccount and not params.tab
             params.tab = 'account'
 
@@ -94,7 +94,7 @@ class RouterStore extends Store
     getCurrentURL: (options={}) ->
         params = _.extend {isServer: true}, options
         params.action = @getAction() unless params.action
-        params.mailboxID = AccountStore.getSelectedMailbox()?.get('id')
+        params.mailboxID = AccountStore.getMailboxID()
         return @getURL params
 
     _getRouteAction = (params) ->

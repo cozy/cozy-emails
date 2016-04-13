@@ -76,8 +76,7 @@ MessageActionCreator =
             type: ActionTypes.REFRESH_REQUEST
             value: {mailboxID}
 
-        account = AccountStore.getSelected()
-        accountID = account.get 'id'
+        accountID = AccountStore.getAccountID()
         options = deep: true
 
         XHRUtils.refreshMailbox mailboxID, options, (error, updated) ->

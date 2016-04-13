@@ -86,7 +86,7 @@ class MessageStore extends Store
         return if _self.isFetching()
 
         {messageID, conversationID, action} = params
-        mailboxID = AccountStore.getSelectedMailbox()?.get 'id'
+        mailboxID = AccountStore.getMailboxID()
         action ?= MessageActions.SHOW_ALL
         timestamp = Date.now()
 
@@ -143,7 +143,7 @@ class MessageStore extends Store
             XHRUtils.fetchMessagesByFolder url, callback
 
         else if action is MessageActions.SHOW_ALL
-            mailboxID = AccountStore.getSelectedMailbox()?.get 'id'
+            mailboxID = AccountStore.getMailboxID()
             url = RouterStore.getCurrentURL {action, mailboxID}
             XHRUtils.fetchMessagesByFolder url, callback
 
