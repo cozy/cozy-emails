@@ -84,6 +84,7 @@ module.exports = MessageList = React.createClass
                     else
                         p ref: 'listEnd', t 'list end'
 
+
     loadMoreMessage: ->
         RouterActionCreator.getNextPage()
 
