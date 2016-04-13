@@ -84,9 +84,12 @@ class RouterStore extends Store
                 params[param] or match
             return prefix + url.replace(/\(\?:query\)$/, filter)
 
-    getNextURL: ({messages}) ->
-        filter = pageAfter: messages?.last()?.get 'date'
-        return @getCurrentURL {filter}
+    getNextURL: (params={}) ->
+        pageAfter = params.messages?.last()?.get 'date'
+        delete params.messages
+        params.filter = {} unless params.filter?
+        params.filter.pageAfter = pageAfter
+        return @getCurrentURL params
 
     getCurrentURL: (options={}) ->
         params = _.extend {isServer: true}, options

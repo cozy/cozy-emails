@@ -137,8 +137,9 @@ class MessageStore extends Store
 >>>>>>> MessageStore : emit FETCH_REQUEST to fetch messages
 
         if action is MessageActions.PAGE_NEXT
+            action = MessageActions.SHOW_ALL
             messages = _currentMessages
-            url = RouterStore.getNextURL {messages}
+            url = RouterStore.getNextURL {action, messages, messageID}
             XHRUtils.fetchMessagesByFolder url, callback
 
         else if action is MessageActions.SHOW_ALL
