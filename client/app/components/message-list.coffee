@@ -32,12 +32,10 @@ module.exports = MessageList = React.createClass
     componentDidUpdate: ->
         @_initScroll()
 
-    getStateFromStores: ->
-        messages = RouterGetter.getMessagesToDisplay @props.mailboxID
+    getStateFromStores: (props={}) ->
         return {
             isAllSelected   : SelectionGetter.isAllSelected()
-            selection       : SelectionGetter.getSelection messages
-            messages        : messages
+            selection       : SelectionGetter.getSelection props.messages
             hasNextPage     : RouterGetter.hasNextPage()
         }
 
@@ -55,7 +53,7 @@ module.exports = MessageList = React.createClass
                 settings: SettingsStore.get()
                 accountID: @props.accountID
                 mailboxID: @props.mailboxID
-                messages: @state.messages
+                messages: @props.messages
                 selection: @state.selection
                 isAllSelected: @state.isAllSelected
 
@@ -63,7 +61,7 @@ module.exports = MessageList = React.createClass
             if @state.isLoading?
                 p className: 'listFetching list-loading', t 'list fetching'
             else
-                unless @state.messages.size
+                unless @props.messages.size
                     p
                         className: 'list-empty'
                         ref: 'listEmpty'
@@ -74,7 +72,7 @@ module.exports = MessageList = React.createClass
                         ref: 'scrollable',
 
                         MessageListBody
-                            messages: @state.messages
+                            messages: @props.messages
                             accountID: @props.accountID
                             mailboxID: @props.mailboxID
                             selection: @state.selection

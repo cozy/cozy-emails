@@ -1,24 +1,23 @@
 require '../styles/application.styl'
 
 React = require 'react'
-{div, section, main, p, span, a, i, strong, form, input, button} = React.DOM
+{div, section, main} = React.DOM
 
 # React components
-Menu           = React.createFactory require './menu'
-Modal          = React.createFactory require './modal'
-ToastContainer = React.createFactory require './toast_container'
-Tooltips       = React.createFactory require './tooltips-manager'
-MessageList    = React.createFactory require './message-list'
-Conversation   = React.createFactory require './conversation'
-AccountConfig  = React.createFactory require './account_config'
-Compose        = React.createFactory require './compose'
-classNames = require 'classnames'
+Menu            = React.createFactory require './menu'
+Modal           = React.createFactory require './modal'
+ToastContainer  = React.createFactory require './toast_container'
+Tooltips        = React.createFactory require './tooltips-manager'
+MessageList     = React.createFactory require './message-list'
+Conversation    = React.createFactory require './conversation'
+AccountConfig   = React.createFactory require './account_config'
+Compose         = React.createFactory require './compose'
 
 # React Mixins
 MessageStore         = require '../stores/message_store'
 RouterStore          = require '../stores/router_store'
 SettingsStore        = require '../stores/settings_store'
-RefreshesStore = require '../stores/refreshes_store'
+RefreshesStore       = require '../stores/refreshes_store'
 StoreWatchMixin      = require '../mixins/store_watch_mixin'
 TooltipRefesherMixin = require '../mixins/tooltip_refresher_mixin'
 
@@ -40,10 +39,10 @@ Application = React.createClass
 
     mixins: [
         TooltipRefesherMixin
-        StoreWatchMixin [SettingsStore, RefreshesStore, RouterStore]
+        StoreWatchMixin [SettingsStore, RefreshesStore, RouterStore, MessageStore]
     ]
 
-    getStateFromStores: ->
+    getStateFromStores: (props) ->
         settings = RouterGetter.getLayoutSettings()
         className = ['layout'
             "layout-#{settings.disposition}"
@@ -52,19 +51,17 @@ Application = React.createClass
 
         mailbox = RouterGetter.getCurrentMailbox()
         return {
-            mailboxID       : mailbox.get 'id'
+            mailboxID       : (mailboxID = mailbox.get 'id')
             nbTotal         : mailbox.get('nbTotal') or 0
             nbUnread        : mailbox.get('nbUnread') or 0
             nbRecent        : mailbox.get('nbRecent') or 0
             accountID       : RouterGetter.getAccountID()
             messageID       : (messageID = RouterGetter.getCurrentMessageID())
-            message         : RouterGetter.getCurrentMessage()
             action          : RouterGetter.getAction()
             isEditable      : RouterGetter.isEditable()
-            inReplyTo       : RouterGetter.getReplyMessage messageID
-            currentSearch   : RouterGetter.getSearch()
             modal           : RouterGetter.getModal()
             className       : className
+            messages        : RouterGetter.getMessagesToDisplay mailboxID
         }
 
     render: ->
@@ -96,8 +93,8 @@ Application = React.createClass
                             key                  : @state.action + '-' + @state.messageID
                             id                   : @state.messageID
                             action               : @state.action
-                            message              : @state.message
-                            inReplyTo            : @state.inReplyTo
+                            message              : RouterGetter.getCurrentMessage()
+                            inReplyTo            : RouterGetter.getReplyMessage @state.messageID
                             settings             : SettingsStore.get()
                             account              : RouterGetter.getAccounts().get(@state.accountID)
 
@@ -110,6 +107,7 @@ Application = React.createClass
                                 accountID   : @state.accountID
                                 mailboxID   : @state.mailboxID
                                 messageID   : @state.messageID
+                                messages    : @state.messages
 
                             if @state.action is MessageActions.SHOW
                                 Conversation
