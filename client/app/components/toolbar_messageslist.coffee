@@ -4,7 +4,6 @@ React = require 'react'
 
 FiltersToolbarMessagesList = React.createFactory require './toolbar_messageslist_filters'
 ActionsToolbarMessagesList = React.createFactory require './toolbar_messageslist_actions'
-SearchBar                  = React.createFactory require './search_bar'
 
 LayoutActionCreator = require '../actions/layout_action_creator'
 RouterActionCreator = require '../actions/router_action_creator'
@@ -41,5 +40,3 @@ module.exports = ToolbarMessagesList = React.createClass
                     accountID: @props.accountID
                     mailboxID: @props.mailboxID
                     filter: @props.filter
-
-            SearchBar()
