@@ -73,7 +73,6 @@ class AccountStore extends Store
         # before the account has been saved locally
         return true unless (account = _accounts.get _accountID)?.size
 
-
         mailboxID = data.id
         mailboxes = account.get('mailboxes')
 
@@ -89,7 +88,6 @@ class AccountStore extends Store
             account = account.set 'mailboxes', mailboxes
 
             _accounts = _accounts.set _accountID, account
-
 
     _mailboxSort = (mb1, mb2) ->
         w1 = mb1.get 'weight'
@@ -111,6 +109,7 @@ class AccountStore extends Store
     _updateAccount = (rawAccount) ->
         account = AccountTranslator.toImmutable rawAccount
         accountID = account.get 'id'
+
         _accounts = _accounts.set accountID, account
 
 
@@ -258,7 +257,6 @@ class AccountStore extends Store
 
     isWaiting: -> return _newAccountWaiting
     isChecking: -> return _newAccountChecking
-
 
 
 module.exports = _self = new AccountStore()
