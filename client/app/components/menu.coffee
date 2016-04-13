@@ -170,6 +170,6 @@ module.exports = Menu = React.createClass
                                 isActive:          @props.mailboxID is mailbox.get 'id'
                                 refreshes:         @props.refreshes
                                 displayErrors:     @displayErrors
-                                progress:          @props.progress
+                                progress:          props.progress
                                 mailboxURL:        mailboxURL
                         .toArray()
