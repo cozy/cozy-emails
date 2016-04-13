@@ -235,7 +235,6 @@ class RouterStore extends Store
             _router.navigate @getCurrentURL()
             @emit 'change'
 
-
 _toCamelCase = (value) ->
     return value.replace /\.(\w)*/gi, (match) ->
         part1 = match.substring 1, 2
