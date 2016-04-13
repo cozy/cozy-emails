@@ -2,9 +2,11 @@ Backbone = require 'backbone'
 React    = require 'react'
 ReactDOM = require 'react-dom'
 
-RouterActionCreator  = require './actions/router_action_creator'
-LayoutActionCreator  = require './actions/layout_action_creator'
-AccountActionCreator = require './actions/account_action_creator'
+# RouterActionCreator  = require './actions/router_action_creator'
+# LayoutActionCreator  = require './actions/layout_action_creator'
+# AccountActionCreator = require './actions/account_action_creator'
+
+AccountStore = require './stores/account_store'
 
 AppDispatcher = require './app_dispatcher'
 
@@ -32,7 +34,7 @@ class Router extends Backbone.Router
         'mailbox/:mailboxID/:messageID/reply-all': 'messageReplyAll'
         'mailbox/:mailboxID/:messageID(?:query)':  'messageShow'
         # FIXME: set redirect to inbox of first account
-        # '(?:query)':                               'messageList'
+        '':                                        'firstInbox'
 
 
     initialize: ->
@@ -46,6 +48,11 @@ class Router extends Backbone.Router
 
         # Display application
         _displayApplication()
+
+
+    firstInbox: ->
+        mailboxID = AccountStore.getDefault().get('id')
+        @navigate "mailbox/#{mailboxID}", trigger: true
 
 
     accountNew: ->
