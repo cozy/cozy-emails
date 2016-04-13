@@ -45,7 +45,6 @@ module.exports = MenuMailboxItem = React.createClass
 
         displayError = @props.displayErrors.bind null, @props.progress
 
-
         li className: classesParent,
             a
                 href: @props.url
