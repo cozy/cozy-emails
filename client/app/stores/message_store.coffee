@@ -78,7 +78,6 @@ class MessageStore extends Store
         total = AccountStore.getMailbox()?.get('nbTotal')
         total is _currentMessages?.size
 
-
     # Refresh Emails from Server
     # This is a read data pattern
     # ActionCreator is a write data pattern
@@ -142,7 +141,11 @@ class MessageStore extends Store
                     action = MessageActions.PAGE_NEXT
                     AppDispatcher.handleViewAction
                         type: ActionTypes.MESSAGE_FETCH_REQUEST
-                        value: {action, messageID}
+                        value: {action, messageID, mailboxID}
+                else
+                    AppDispatcher.handleViewAction
+                        type: ActionTypes.MESSAGE_FETCH_SUCCESS
+                        value: {action, messages, messageID, mailboxID}
 
 
         if action is MessageActions.PAGE_NEXT
@@ -272,6 +275,16 @@ class MessageStore extends Store
 
         handle ActionTypes.MESSAGE_FETCH_REQUEST, (params) ->
             _fetchMessage params
+            @emit 'change'
+
+
+        handle ActionTypes.MESSAGE_FETCH_SUCCESS, ({messages, mailboxID}) ->
+            unless messages
+                # either end of list or no messages, we stay open
+                SocketUtils.changeRealtimeScope mailboxID, EPOCH
+
+            else if (lastdate = _messages.last()?.get 'date')
+                SocketUtils.changeRealtimeScope mailboxID, lastdate
             @emit 'change'
 
 
