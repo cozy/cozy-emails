@@ -209,12 +209,6 @@ class RouterStore extends Store
                     _action = MessageActions.SHOW_ALL
                 @emit 'change'
 
-        handle ActionTypes.REFRESH_SUCCESS, ({mailboxID, accountID}) ->
-            # Update URL after refresh,
-            # Views are updated but not URL
-            _router.navigate @getCurrentURL()
-            @emit 'change'
-
 _toCamelCase = (value) ->
     return value.replace /\.(\w)*/gi, (match) ->
         part1 = match.substring 1, 2

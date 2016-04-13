@@ -52,7 +52,6 @@ module.exports = MenuMailboxItem = React.createClass
         li className: classesParent,
             a
                 href: @props.mailboxURL
-                onClick: @onClickMailbox
                 className: "#{classesChild} lv-#{@props.mailbox.get('depth')}"
                 role: 'menuitem'
                 'data-mailbox-id': mailboxID
@@ -104,11 +103,6 @@ module.exports = MenuMailboxItem = React.createClass
         {messageID, mailboxID, conversationID} = JSON.parse data
         @setState target: false
         MessageActionCreator.move {messageID, conversationID}, mailboxID, to
-
-    onClickMailbox: (event) ->
-        event?.preventDefault()
-        mailboxID =  @props.mailbox.get('id')
-        MessageActionCreator.refreshMailbox {mailboxID}
 
     expungeMailbox: (event) ->
         event.preventDefault()

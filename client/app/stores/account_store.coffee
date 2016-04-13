@@ -217,10 +217,6 @@ class AccountStore extends Store
             _setMailbox mailbox
             @emit 'change'
 
-        handle ActionTypes.REFRESH_SUCCESS, ({accountID, mailboxID}) ->
-            _setCurrentAccount accountID, mailboxID
-            @emit 'change'
-
 
     ###
         Public API

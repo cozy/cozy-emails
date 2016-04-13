@@ -77,8 +77,29 @@ class MessageStore extends Store
     isAllLoaded: ->
         AccountStore.getMailbox().get('nbTotal') is _messages?.size
 
-    _fetchMessage = (params={}) ->
 
+    # Refresh Emails from Server
+    # This is a read data pattern
+    # ActionCreator is a write data pattern
+    _refreshMessage = (params={}) ->
+        {mailboxID} = params
+        deep = true
+
+        XHRUtils.refreshMailbox mailboxID, {deep}, (error, updated) ->
+            if error?
+                AppDispatcher.dispatch
+                    type: ActionTypes.REFRESH_FAILURE
+                    value: {mailboxID, error}
+            else
+                AppDispatcher.dispatch
+                    type: ActionTypes.REFRESH_SUCCESS
+                    value: {mailboxID, updated}
+
+
+    # Get Emails from Server
+    # This is a read data pattern
+    # ActionCreator is a write data pattern
+    _fetchMessage = (params={}) ->
         {messageID, conversationID, action} = params
         mailboxID = AccountStore.getMailboxID()
         action ?= MessageActions.SHOW_ALL
@@ -171,16 +192,16 @@ class MessageStore extends Store
     ###
     __bindHandlers: (handle) ->
 
-        handle ActionTypes.ROUTE_CHANGE, (value) ->
-            if value.action is MessageActions.SHOW_ALL
-                _setCurrentID = AccountStore.getSelectedOrDefault()?.get 'id'
-                messageID = @getCurrentID()
-                _fetchMessage {action: MessageActions.SHOW_ALL, messageID}
+        handle ActionTypes.ROUTE_CHANGE, (payload) ->
+            {action, mailboxID, messageID} = payload
 
-            if value.query and RouterStore.isResetFilter()?
-                _messages = _messages.clear()
+            # Update currentMessageID
+            _setCurrentID messageID
 
-            _setCurrentID messageID if messageID
+            # Get messageList for 1rst panel
+            if action in [MessageActions.SHOW_ALL, MessageActions.SHOW]
+                _refreshMailbox payload
+                _fetchMessage payload
 
             @emit 'change'
 
@@ -265,7 +286,10 @@ class MessageStore extends Store
         handle ActionTypes.MESSAGE_FETCH_FAILURE, ->
             @emit 'change'
 
-        handle ActionTypes.MESSAGE_SEND_SUCCESS, ({message, action}) ->
+        handle ActionTypes.REFRESH_SUCCESS, ->
+            @emit 'change'
+
+        handle ActionTypes.MESSAGE_SEND_SUCCESS, ({message}) ->
             _saveMessage message
             @emit 'change'
 
