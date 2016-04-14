@@ -117,6 +117,8 @@ class MessageStore extends Store
                 messages = if _.isArray(result) then result else result.messages
                 messages?.forEach (message) -> _saveMessage message, timestamp
 
+                # Shortcut to know conversationLength
+                # withount loading all massages of the conversation
                 if (conversationLength = result?.conversationLength)
                     for conversationID, length of conversationLength
                         _saveConversationLength conversationID, length

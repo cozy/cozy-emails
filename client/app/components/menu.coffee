@@ -113,7 +113,6 @@ module.exports = Menu = React.createClass
             total:          total
             unread:         unread
             recent:         recent
-
             icon:           IconGetter.getMailboxIcon {type}
 
     # renders a single account and its submenu
