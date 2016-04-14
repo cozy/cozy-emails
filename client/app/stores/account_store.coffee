@@ -11,9 +11,6 @@ AccountTranslator = require '../utils/translators/account_translator'
 
 cachedTransform = require '../libs/cached_transform'
 
-STATICBOXFIELDS = ['id', 'accountID', 'label', 'tree', 'weight']
-CHANGEBOXFIELDS = ['lastSync', 'nbTotal', 'nbUnread', 'nbRecent']
-
 class AccountStore extends Store
 
     ###
@@ -80,17 +77,19 @@ class AccountStore extends Store
 
         mailboxID = data.id
         mailboxes = account.get('mailboxes')
+
         mailbox = mailboxes.get(mailboxID) or Immutable.Map()
+        for field, value of data
+            mailbox = mailbox.set field, value
 
-        data.weight = mailbox.get 'weight' if mailbox.get 'weight'
-
-        for field of STATICBOXFIELDS when mailbox.get(field) isnt data[field]
-            mailbox = mailbox.set field, data[field]
-
+        # TODO : 
         if mailbox isnt mailboxes.get mailboxID
             mailboxes = mailboxes.set mailboxID, mailbox
+
+            # FIXME : is attaching mailboxes to account useless?
             account = account.set 'mailboxes', mailboxes
-            _accounts = _accounts.set accountID, account
+
+            _accounts = _accounts.set _accountID, account
 
     _mailboxSort = (mb1, mb2) ->
         w1 = mb1.get 'weight'

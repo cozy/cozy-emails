@@ -186,6 +186,7 @@ module.exports =
         junkMailbox: 'fa-fire'
         allMailbox: 'fa-archive'
         unreadMailbox: 'fa-eye'
+        flaggedMailbox: 'fa-star'
 
     Tooltips:
         REPLY                       : 'TOOLTIP_REPLY'
