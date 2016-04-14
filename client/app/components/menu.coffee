@@ -9,8 +9,7 @@ classNames = require 'classnames'
 colorhash = require '../utils/colorhash'
 
 LayoutActionCreator  = require '../actions/layout_action_creator'
-{Tooltips, AccountActions} = require '../constants/app_constants'
-
+{MessageFilter, Tooltips, AccountActions} = require '../constants/app_constants'
 
 RouterStore = require '../stores/router_store'
 AccountStore = require '../stores/account_store'
@@ -92,6 +91,31 @@ module.exports = Menu = React.createClass
                     'data-tooltip-direction': 'top'
                     onClick: -> Mousetrap.trigger '?'
 
+    renderMailboxesFlags: (params={}) ->
+        {flags, type, progress, slug} = params
+
+        accountID = RouterGetter.getAccountID()
+        mailbox = RouterGetter.getInbox()
+        mailboxID = mailbox.get 'id'
+        mailboxURL = RouterGetter.getURL
+            mailboxID: mailboxID
+            filter: {flags}
+
+        MenuMailboxItem
+            accountID:      accountID
+            mailboxID:      mailboxID
+            label:          t "mailbox title #{slug}"
+            key:            "mailbox-item-#{slug}"
+            depth:          0
+            url:            mailboxURL
+            isActive:       RouterGetter.isCurrentURL mailboxURL
+            displayErrors:  @displayErrors
+            progress:       progress
+            total:          mailbox.get 'nbTotal'
+            unread:         mailbox.get 'nbUnread'
+            recent:         mailbox.get 'nbRecent'
+            icon:           IconGetter.getMailboxIcon {type}
+
     # renders a single account and its submenu
     # FIXME : make a component for this
     renderMailBoxes: (account) ->
@@ -170,12 +194,18 @@ module.exports = Menu = React.createClass
                                 mailboxID:      mailboxID
                                 label:          mailbox.get 'label'
                                 depth:          mailbox.get 'depth'
-                                isActive:       @props.mailboxID is mailboxID
+                                isActive:       RouterGetter.isCurrentURL mailboxURL
                                 displayErrors:  @displayErrors
                                 progress:       props.progress
                                 url:            mailboxURL
                                 total:          mailbox.get 'nbTotal'
                                 unread:         mailbox.get 'nbUnread'
                                 recent:         mailbox.get 'nbRecent'
-                                icon:           IconGetter.getMailboxIcon account, mailboxID
+                                icon:           IconGetter.getMailboxIcon {account, mailboxID}
                         .toArray()
+
+                    @renderMailboxesFlags
+                        type: 'unreadMailbox'
+                        flags: MessageFilter.UNSEEN
+                        progress: props.progress
+                        slug: 'unread'

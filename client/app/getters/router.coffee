@@ -16,6 +16,11 @@ class RouteGetter
     hasNextPage: ->
         not MessageStore.isAllLoaded()
 
+    isCurrentURL: (url) ->
+        isServer = false
+        currentURL = RouterStore.getCurrentURL {isServer}
+        currentURL is url
+
     getURL: (params) ->
         RouterStore.getURL params
 
@@ -106,6 +111,10 @@ class RouteGetter
 
     getCurrentMailbox: (mailboxID) ->
         AccountStore.getMailbox mailboxID
+
+    getInbox: ->
+        AccountStore.getAllMailboxes()?.find (mailbox) ->
+            'INBOX' is mailbox.get 'label'
 
     getAccounts: ->
         accountID = @getAccountID()

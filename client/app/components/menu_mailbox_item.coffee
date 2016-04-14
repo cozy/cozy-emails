@@ -20,7 +20,7 @@ module.exports = MenuMailboxItem = React.createClass
     getDefaultProps: ->
         return {
             icon: {
-                label: null
+                type: null
                 value: 'fa-folder-o'
             }
         }
@@ -40,7 +40,7 @@ module.exports = MenuMailboxItem = React.createClass
 
         classesChild = classNames
             target:  @state.target
-            special: @props.icon.label
+            special: @props.icon.type
             news:    @props.recent > 0
 
         displayError = @props.displayErrors.bind null, @props.progress
@@ -69,7 +69,7 @@ module.exports = MenuMailboxItem = React.createClass
                     span className: 'refresh-error', onClick: displayError,
                         i className: 'fa fa-warning', null
 
-            if 'trashMailbox' is @props.icon?.label
+            if 'trashMailbox' is @props.icon?.type
                 button
                     className:                'menu-subaction'
                     'aria-describedby':       Tooltips.EXPUNGE_MAILBOX

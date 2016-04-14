@@ -185,6 +185,7 @@ module.exports =
         trashMailbox: 'fa-trash-o'
         junkMailbox: 'fa-fire'
         allMailbox: 'fa-archive'
+        unreadMailbox: 'fa-eye'
 
     Tooltips:
         REPLY                       : 'TOOLTIP_REPLY'
