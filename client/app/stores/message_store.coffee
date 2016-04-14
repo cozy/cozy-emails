@@ -75,7 +75,7 @@ class MessageStore extends Store
         else throw new Error 'Wrong Usage : unrecognized target AS.getMixed'
 
     isAllLoaded: ->
-        AccountStore.getMailbox().get('nbTotal') is _messages?.size
+        AccountStore.getMailbox().get('nbTotal') is _currentMessages?.size
 
 
     # Refresh Emails from Server
