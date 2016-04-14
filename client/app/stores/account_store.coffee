@@ -75,15 +75,26 @@ class AccountStore extends Store
 
         mailboxID = data.id
         mailboxes = account.get('mailboxes')
+<<<<<<< HEAD
         mailbox = mailboxes.get(mailboxID) or Immutable.Map()
         for field, value of data
             mailbox = mailbox.set field, value
 
+=======
 
+        mailbox = mailboxes.get(mailboxID) or Immutable.Map()
+        for field, value of data
+            mailbox = mailbox.set field, value
+>>>>>>> e61b489... Add Flagged mailbox
+
+        # TODO :
         if mailbox isnt mailboxes.get mailboxID
             mailboxes = mailboxes.set mailboxID, mailbox
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> e61b489... Add Flagged mailbox
             # FIXME : is attaching mailboxes to account useless?
             account = account.set 'mailboxes', mailboxes
 
