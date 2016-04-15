@@ -237,12 +237,11 @@ class AccountStore extends Store
             .sort _mailboxSort
 
     getSelectedMailboxes: (accountID) ->
-        account = _accounts.get accountID
-        account ?= _selectedAccount
-        return account?.get('mailboxes').sort(_mailboxSort)
+        accountID ?= _selectedAccount?.get('id')
+        _accounts.get(accountID)?.get('mailboxes')
+            .sort(_mailboxSort)
 
     getSelectedMailbox: (accountID) ->
-        accountID ?= _selectedAccount.get('id')
         mailboxes = @getSelectedMailboxes(accountID)
         return mailboxes?.first() or @getSelectedOrDefault()
 
