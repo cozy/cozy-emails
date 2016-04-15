@@ -30,8 +30,10 @@ module.exports = AccountConfigMain = React.createClass
         smtpSSL: true
         imapAdvanced: false
 
+
     getInitialState: ->
         @getStateFromStores()
+
 
     componentWillReceiveProps: (nextProps) ->
         @setState @getStateFromStores nextProps
@@ -94,8 +96,10 @@ module.exports = AccountConfigMain = React.createClass
     componentDidMount: ->
         @dispatchDiscover()
 
+
     componentDidUpdate: ->
         @dispatchDiscover()
+
 
     buildInput: (name, attributes={}) ->
         value = @state[name]
@@ -108,8 +112,8 @@ module.exports = AccountConfigMain = React.createClass
               requestChange: (value) =>
                   @handleChange name, value
             error: @props.errors?.get name
-
         AccountInput _.extend {}, _defaultAttributes, attributes
+
 
     render: ->
         formClass = classNames
@@ -132,7 +136,8 @@ module.exports = AccountConfigMain = React.createClass
 
             @buildInput 'accountType', className: 'hidden'
 
-            # Display gmail warning if IMAP server is Gmail.
+            # Display gmail warning
+            # if IMAP server is Gmail.
             if @state.isGmail
                 @_renderGMAILSecurity()
 
@@ -142,17 +147,14 @@ module.exports = AccountConfigMain = React.createClass
             unless @state.isOauth
                 @_renderSendingServer()
 
-
             @_renderButtons()
+
 
     _renderReceivingServer: ->
         className = if @state.imapAdvanced then 'hide' else 'show'
 
         FieldSet text: t('account receiving server'),
             @buildInput 'imapServer'
-            @buildInput 'imapPort'
-            @buildInput 'imapSSL', type: 'checkbox'
-            @buildInput 'imapTLS', type: 'checkbox'
 
             div
                 className: "form-group advanced-imap-toggle",
@@ -162,6 +164,15 @@ module.exports = AccountConfigMain = React.createClass
                     t "account imap #{className} advanced"
 
             if @state.imapAdvanced
+                @buildInput 'imapPort'
+
+            if @state.imapAdvanced
+                @buildInput 'imapSSL', type: 'checkbox'
+
+            if @state.imapAdvanced
+                @buildInput 'imapTLS', type: 'checkbox'
+
+            if @state.imapAdvanced
                 @buildInput 'imapLogin'
 
 
@@ -169,9 +180,6 @@ module.exports = AccountConfigMain = React.createClass
         className = if @state.smtpAdvanced then 'hide' else 'show'
         FieldSet text: t('account sending server'),
             @buildInput 'smtpServer'
-            @buildInput 'smtpPort'
-            @buildInput 'smtpSSL', type: 'checkbox'
-            @buildInput 'smtpTLS', type: 'checkbox'
 
             div
                 className: "form-group advanced-smtp-toggle",
@@ -181,15 +189,27 @@ module.exports = AccountConfigMain = React.createClass
                     t "account smtp #{className} advanced"
 
             if @state.smtpAdvanced
+                @buildInput 'smtpPort'
+
+            if @state.smtpAdvanced
+                @buildInput 'smtpSSL', type: 'checkbox'
+
+            if @state.smtpAdvanced
+                @buildInput 'smtpTLS', type: 'checkbox'
+
+            if @state.smtpAdvanced
                 @buildInput 'smtpMethod',
                     type: 'dropdown'
                     options: SMTP_OPTIONS
                     allowUndefined: true
 
+            if @state.smtpAdvanced
                 @buildInput 'smtpLogin'
 
+            if @state.smtpAdvanced
                 @buildInput 'smtpPassword',
                     type: 'password'
+
 
     _renderGMAILSecurity: ->
         url = "https://www.google.com/settings/security/lesssecureapps"
@@ -208,6 +228,7 @@ module.exports = AccountConfigMain = React.createClass
                     target: '_blank'
                     href: 'https://accounts.google.com/DisplayUnlockCaptcha'
                     t 'gmail security link 2'
+
 
     _renderButtons: ->
         action = if @props.isWaiting then 'saving'
@@ -233,6 +254,7 @@ module.exports = AccountConfigMain = React.createClass
                     onClick: (event) => @props.onSubmit event, true
                     icon: 'ellipsis-h'
                     text: t 'account check'
+
 
     # FIXME : discover is dispatched
     # event when account is removed
