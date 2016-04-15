@@ -119,13 +119,7 @@ class RouteGetter
             'INBOX' is mailbox.get 'label'
 
     getAccounts: ->
-        accountID = @getAccountID()
-        AccountStore.getAll().sort (account1, account2) ->
-            if accountID is account1.get('id')
-                return -1
-            if accountID is account2.get('id')
-                return 1
-            return 0
+        AccountStore.getAll()
 
     getAccountSignature: ->
         AccountStore.getSelected()?.get 'signature'
