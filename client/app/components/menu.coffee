@@ -9,11 +9,15 @@ classNames = require 'classnames'
 colorhash = require '../utils/colorhash'
 
 LayoutActionCreator  = require '../actions/layout_action_creator'
+<<<<<<< dfd2af7ea66bc5a5ca79040000fe620820bc9c3e
 {MessageFilter, Tooltips, AccountActions} = require '../constants/app_constants'
 
 RouterStore = require '../stores/router_store'
 AccountStore = require '../stores/account_store'
 StoreWatchMixin = require '../mixins/store_watch_mixin'
+=======
+{Tooltips, AccountActions, MessageActions} = require '../constants/app_constants'
+>>>>>>> mailboxLink should redirect to the appropriate mailbox (not account adit)
 
 RouterGetter = require '../getters/router'
 IconGetter = require '../getters/icon'
@@ -117,9 +121,18 @@ module.exports = Menu = React.createClass
     # renders a single account and its submenu
     # TODO : make a component for this
     renderMailBoxes: (account) ->
+        # Goto the default mailbox of the account
+        action = MessageActions.SHOW_ALL
+        accountID = account.get 'id'
+        mailbox = RouterGetter.getCurrentMailbox(accountID)
+        mailboxID = mailbox?.get 'id'
+        mailboxURL = RouterGetter.getURL {action, mailboxID}
+
         props = {
-            key: 'account-' + (accountID = account.get 'id')
+            key: 'account-' + accountID
             isSelected: accountID is RouterGetter.getAccountID()
+            mailboxes: RouterGetter.getMailboxes()
+            mailboxURL: mailboxURL
             configURL: RouterGetter.getURL
                 action: AccountActions.EDIT
                 accountID: accountID
@@ -133,7 +146,7 @@ module.exports = Menu = React.createClass
             key: props.key,
             div className: 'account-title',
                 a
-                    href: props.configURL
+                    href: props.mailboxURL
                     role: 'menuitem'
                     className: 'account ' + className,
                     'data-toggle': 'tooltip'

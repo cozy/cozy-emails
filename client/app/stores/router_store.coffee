@@ -216,19 +216,10 @@ class RouterStore extends Store
 
             @emit 'change'
 
+
         handle ActionTypes.MESSAGE_FETCH_SUCCESS, ->
             @emit 'change'
 
-<<<<<<< f03a004188fdbefc698d40dd7258bf59bebf65c9
-=======
-
-        handle ActionTypes.MESSAGE_TRASH_SUCCESS, (params) ->
-            if MessageActions.SHOW is _action
-                if (messageID = params?.next?.get 'id')
-                    _router.navigate @getURL {messageID}
-                else
-                    _action = MessageActions.SHOW_ALL
-                @emit 'change'
 
         handle ActionTypes.DISPLAY_MODAL, (params) ->
             _modal = params
@@ -239,7 +230,6 @@ class RouterStore extends Store
             @emit 'change'
 
 
->>>>>>> Fix modal : move into routerStore
 _toCamelCase = (value) ->
     return value.replace /\.(\w)*/gi, (match) ->
         part1 = match.substring 1, 2
