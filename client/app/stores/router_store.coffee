@@ -186,7 +186,12 @@ class RouterStore extends Store
             @emit 'change'
 
         handle ActionTypes.ROUTE_CHANGE, (value) ->
-            _action = value
+            # We cant display any informations
+            # without accounts
+            unless AccountStore.getAll()?.size
+                _action = AccountActions.CREATE
+            else
+                _action = value
             @emit 'change'
 
         handle ActionTypes.ROUTES_INITIALIZE, (router) ->
