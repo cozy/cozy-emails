@@ -148,10 +148,6 @@ module.exports = Menu = React.createClass
                             className: 'account-details',
                                 span
                                     'data-account-id': props.key,
-                                    className: 'item-label display-label'
-                                    account.get 'label'
-                                span
-                                    'data-account-id': props.key,
                                     className: 'item-label display-login'
                                     account.get 'login'
 
