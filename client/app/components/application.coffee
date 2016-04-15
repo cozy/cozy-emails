@@ -19,6 +19,7 @@ MessageStore         = require '../stores/message_store'
 RouterStore          = require '../stores/router_store'
 SettingsStore        = require '../stores/settings_store'
 RefreshesStore       = require '../stores/refreshes_store'
+AccountStore         = require '../stores/account_store'
 StoreWatchMixin      = require '../mixins/store_watch_mixin'
 TooltipRefesherMixin = require '../mixins/tooltip_refresher_mixin'
 
@@ -40,7 +41,7 @@ Application = React.createClass
 
     mixins: [
         TooltipRefesherMixin
-        StoreWatchMixin [SettingsStore, RefreshesStore, RouterStore, MessageStore, LayoutStore]
+        StoreWatchMixin [SettingsStore, RefreshesStore, RouterStore, MessageStore, LayoutStore, AccountStore]
     ]
 
     getStateFromStores: (props) ->
