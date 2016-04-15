@@ -66,6 +66,12 @@ Application = React.createClass
         }
 
     render: ->
+        action = MessageActions.CREATE
+        composeURL = RouterGetter.getURL {action}
+
+        action = AccountActions.CREATE
+        newAccountURL = RouterGetter.getURL {action}
+
         div className: @state.className,
 
             div className: 'app',
@@ -75,8 +81,8 @@ Application = React.createClass
                     accountID       : @state.accountID
                     mailboxID       : @state.mailboxID
                     accounts        : RouterGetter.getAccounts().toArray()
-                    composeURL      : RouterGetter.getURL action: MessageActions.CREATE
-                    newAccountURL   : RouterGetter.getURL action: AccountActions.CREATE
+                    composeURL      : composeURL
+                    newAccountURL   : newAccountURL
 
                 main
                     className: @props.layout

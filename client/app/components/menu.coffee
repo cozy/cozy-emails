@@ -117,9 +117,8 @@ module.exports = Menu = React.createClass
     # renders a single account and its submenu
     # TODO : make a component for this
     renderMailBoxes: (account) ->
-        accountID = account.get 'id'
         props = {
-            key: 'account-' + accountID
+            key: 'account-' + (accountID = account.get 'id')
             isSelected: accountID is RouterGetter.getAccountID()
             configURL: RouterGetter.getURL
                 action: AccountActions.EDIT
@@ -151,24 +150,13 @@ module.exports = Menu = React.createClass
                                     className: 'item-label display-login'
                                     account.get 'login'
 
-                    if props.progress?.get('errors')?.size
-                        span className: 'refresh-error',
-                            i
-                                className: 'fa warning',
-                                onClick: @displayErrors,
-                                props.progress
-
-                if props.isSelected
-                    a
-                        href: props.configURL
-                        className: 'mailbox-config menu-subaction',
-                        i
-                            'className': 'fa fa-cog'
-                            'aria-describedby': Tooltips.ACCOUNT_PARAMETERS
-                            'data-tooltip-direction': 'right'
-
-                if props.nbUnread > 0 and not props.progress
-                    span className: 'badge', props.nbUnread
+                a
+                    href: props.configURL
+                    className: 'mailbox-config menu-subaction',
+                    i
+                        'className': 'fa fa-cog'
+                        'aria-describedby': Tooltips.ACCOUNT_PARAMETERS
+                        'data-tooltip-direction': 'right'
 
             if props.isSelected
                 ul
