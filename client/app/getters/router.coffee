@@ -147,8 +147,6 @@ class RouteGetter
                 unless (isEqual or isGlobal)
                     return mailbox?.get 'label'
 
-    # TODO : move this into getter
-    # this has nothing to do with store
     getEmptyMessage: ->
         filter = @getFilter()
         if @isFlags 'UNSEEN', filter.flags
