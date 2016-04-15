@@ -231,23 +231,20 @@ class AccountStore extends Store
     getSelected: ->
         return _accounts.get _accountID
 
-<<<<<<< dfd2af7ea66bc5a5ca79040000fe620820bc9c3e
-
     getAllMailboxes: ->
         return _accounts.get @getAccountID()
             .get 'mailboxes'
             .sort _mailboxSort
 
-=======
     getSelectedMailboxes: (accountID) ->
-        account = _accounts.get accountID if accountID
+        account = _accounts.get accountID
         account ?= _selectedAccount
         return account?.get('mailboxes').sort(_mailboxSort)
 
     getSelectedMailbox: (accountID) ->
-        if (mailboxes = @getSelectedMailboxes(accountID))?.size
-            return mailboxes.first()
-        return @getDefaultMailbox()
+        accountID ?= _selectedAccount.get('id')
+        mailboxes = @getSelectedMailboxes(accountID)
+        return mailboxes?.first() or @getSelectedOrDefault()
 
     getSelectedFavorites: ->
         if (mailboxes = @getSelectedMailboxes())
