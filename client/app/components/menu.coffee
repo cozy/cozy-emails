@@ -115,7 +115,7 @@ module.exports = Menu = React.createClass
             icon:           IconGetter.getMailboxIcon {type}
 
     # renders a single account and its submenu
-    # FIXME : make a component for this
+    # TODO : make a component for this
     renderMailBoxes: (account) ->
         accountID = account.get 'id'
         props = {
@@ -142,8 +142,7 @@ module.exports = Menu = React.createClass
                     'data-placement' : 'right',
                         i
                             className: 'avatar'
-                            style:
-                                backgroundColor: props.color
+                            style: backgroundColor: props.color
                             account.get('label')[0]
                         div
                             className: 'account-details',
