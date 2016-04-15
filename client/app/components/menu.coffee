@@ -7,13 +7,12 @@ MenuMailboxItem = React.createFactory require './menu_mailbox_item'
 
 classNames = require 'classnames'
 colorhash = require '../utils/colorhash'
+{MessageFilter, Tooltips, AccountActions, MessageActions} = require '../constants/app_constants'
 
 LayoutActionCreator  = require '../actions/layout_action_creator'
-{MessageFilter, Tooltips, AccountActions, MessageActions} = require '../constants/app_constants'
 
 RouterStore = require '../stores/router_store'
 AccountStore = require '../stores/account_store'
-StoreWatchMixin = require '../mixins/store_watch_mixin'
 StoreWatchMixin = require '../mixins/store_watch_mixin'
 
 RouterGetter = require '../getters/router'
@@ -127,7 +126,7 @@ module.exports = Menu = React.createClass
         mailboxURL = RouterGetter.getURL {action, mailboxID}
 
         props = {
-            key: 'account-' + (accountID = account.get 'id')
+            key: 'account-' + accountID
             isSelected: accountID is RouterGetter.getAccountID()
             mailboxes: RouterGetter.getMailboxes()
             mailboxURL: mailboxURL
