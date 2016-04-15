@@ -17,6 +17,7 @@ module.exports = AccountConfigMain = React.createClass
     displayName: 'AccountConfigMain'
 
 
+
     getInitialState: ->
         @getStateFromStores()
 
@@ -144,7 +145,6 @@ module.exports = AccountConfigMain = React.createClass
             unless @state.isOauth
                 @_renderSendingServer()
 
-
             @_renderButtons()
 
 
@@ -169,7 +169,6 @@ module.exports = AccountConfigMain = React.createClass
 
             if @state.imapAdvanced
                 @buildInput 'imapTLS', type: 'checkbox'
-
 
             if @state.imapAdvanced
                 @buildInput 'imapLogin'
@@ -196,7 +195,6 @@ module.exports = AccountConfigMain = React.createClass
             if @state.smtpAdvanced
                 @buildInput 'smtpTLS', type: 'checkbox'
 
-
             if @state.smtpAdvanced
                 @buildInput 'smtpMethod',
                     type: 'dropdown'
@@ -208,8 +206,10 @@ module.exports = AccountConfigMain = React.createClass
                     }
                     allowUndefined: true
 
+            if @state.smtpAdvanced
                 @buildInput 'smtpLogin'
 
+            if @state.smtpAdvanced
                 @buildInput 'smtpPassword',
                     type: 'password'
 
