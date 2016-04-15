@@ -75,30 +75,15 @@ class AccountStore extends Store
 
         mailboxID = data.id
         mailboxes = account.get('mailboxes')
-<<<<<<< HEAD
         mailbox = mailboxes.get(mailboxID) or Immutable.Map()
         for field, value of data
             mailbox = mailbox.set field, value
 
-=======
-
-        mailbox = mailboxes.get(mailboxID) or Immutable.Map()
-        for field, value of data
-            mailbox = mailbox.set field, value
->>>>>>> e61b489... Add Flagged mailbox
-
-        # TODO :
-        if mailbox isnt mailboxes.get mailboxID
-            mailboxes = mailboxes.set mailboxID, mailbox
-
-<<<<<<< HEAD
-
-=======
->>>>>>> e61b489... Add Flagged mailbox
             # FIXME : is attaching mailboxes to account useless?
             account = account.set 'mailboxes', mailboxes
 
             _accounts = _accounts.set _accountID, account
+
 
     _mailboxSort = (mb1, mb2) ->
         w1 = mb1.get 'weight'
@@ -229,7 +214,6 @@ class AccountStore extends Store
                 account.get('mailboxes').get(mailboxID)
         return _accounts.first()
 
-
     getAccountID: ->
         return @getDefault()?.get 'id' unless _accountID
         return _accountID
@@ -244,6 +228,12 @@ class AccountStore extends Store
         return @getDefault()?.get 'id' unless _accountID
         return _accountID
 
+<<<<<<< HEAD
+=======
+    getMailboxID: ->
+        return @getDefault()?.get 'inboxMailbox' unless _mailboxID
+        return _mailboxID
+>>>>>>> b93fd76... FIX : no mailboxID into URL usecase
 
     getSelected: ->
         return _accounts.get _accountID
