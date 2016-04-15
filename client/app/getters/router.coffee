@@ -139,14 +139,16 @@ class RouteGetter
     getTags: (message) ->
         mailboxID = @getMailboxID()
         mailboxesIDs = Object.keys message.get 'mailboxIDs'
-        result = mailboxesIDs.map (id) =>
+        return _.uniq _.compact mailboxesIDs.map (id) =>
             if (mailbox = @getCurrentMailbox id)
-                isGlobal = MailboxFlags.ALL in mailbox.get 'attribs'
+                attribs = mailbox.get('attribs') or []
+                isGlobal = MailboxFlags.ALL in attribs
                 isEqual = mailboxID is id
                 unless (isEqual or isGlobal)
                     return mailbox?.get 'label'
-        _.uniq _.compact result
 
+    # TODO : move this into getter
+    # this has nothing to do with store
     getEmptyMessage: ->
         filter = @getFilter()
         if @isFlags 'UNSEEN', filter.flags
