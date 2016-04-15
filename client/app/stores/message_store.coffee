@@ -83,6 +83,7 @@ class MessageStore extends Store
     # ActionCreator is a write data pattern
     _refreshMessage = (params={}) ->
         {mailboxID} = params
+        mailboxID ?= AccountStore.getMailboxID()
         deep = true
 
         XHRUtils.refreshMailbox mailboxID, {deep}, (error, updated) ->

@@ -82,7 +82,6 @@ class AccountStore extends Store
         for field, value of data
             mailbox = mailbox.set field, value
 
-        # TODO : 
         if mailbox isnt mailboxes.get mailboxID
             mailboxes = mailboxes.set mailboxID, mailbox
 
@@ -244,7 +243,7 @@ class AccountStore extends Store
 
 
     _getDefaultMailbox = ->
-        return null unless (account = @getDefault())
+        return null unless (account = _self.getDefault())
 
         mailboxes = account.get('mailboxes')
         mailbox = mailboxes.filter (mailbox) ->
@@ -265,7 +264,8 @@ class AccountStore extends Store
         return _accountID
 
     getMailboxID: ->
-        _mailboxID
+        return @getDefault()?.get 'inboxMailbox' unless _mailboxID
+        return _mailboxID
 
     getSelected: ->
         _accounts.get(_accountID) or @getDefault()

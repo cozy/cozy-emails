@@ -71,24 +71,6 @@ MessageActionCreator =
                     type: ActionTypes.MESSAGE_RECOVER_SUCCESS
                     value: {ref}
 
-    refreshMailbox: ({mailboxID}) ->
-        AppDispatcher.dispatch
-            type: ActionTypes.REFRESH_REQUEST
-            value: {mailboxID}
-
-        accountID = AccountStore.getAccountID()
-        options = deep: true
-
-        XHRUtils.refreshMailbox mailboxID, options, (error, updated) ->
-            if error?
-                AppDispatcher.dispatch
-                    type: ActionTypes.REFRESH_FAILURE
-                    value: {mailboxID, accountID, error}
-            else
-                AppDispatcher.dispatch
-                    type: ActionTypes.REFRESH_SUCCESS
-                    value: {mailboxID, accountID, updated}
-
 
     # Delete message(s)
     # target:

@@ -95,8 +95,9 @@ module.exports = Menu = React.createClass
         {flags, type, progress, slug} = params
 
         accountID = RouterGetter.getAccountID()
-        mailbox = RouterGetter.getInbox()
-        mailboxID = mailbox.get 'id'
+        mailboxID = RouterGetter.getMailboxID()
+        mailbox = RouterGetter.getCurrentMailbox mailboxID
+
         mailboxURL = RouterGetter.getURL
             mailboxID: mailboxID
             filter: {flags}
@@ -104,9 +105,9 @@ module.exports = Menu = React.createClass
         # No way to get this data for flagged email
         # TODO : make a patch here:
         # https://github.com/cozy/cozy-emails/blob/master/server/models/requests.coffee#L50-L52
-        total = if 'flagged' isnt slug then mailbox.get('nbTotal') else 0
-        unread = if 'flagged' isnt slug then mailbox.get('nbUnread') else 0
-        recent = if 'flagged' isnt slug then mailbox.get('nbRecent') else 0
+        total = if 'flagged' isnt slug then mailbox?.get('nbTotal') else 0
+        unread = if 'flagged' isnt slug then mailbox?.get('nbUnread') else 0
+        recent = if 'flagged' isnt slug then mailbox?.get('nbRecent') else 0
 
         MenuMailboxItem
             accountID:      accountID
