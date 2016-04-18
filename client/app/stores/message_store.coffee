@@ -196,10 +196,8 @@ class MessageStore extends Store
     ###
     __bindHandlers: (handle) ->
 
-        handle ActionTypes.ROUTE_CHANGE, (payload) ->
-            {action, mailboxID, messageID} = payload
-
-            # Update currentMessageID
+        handle ActionTypes.ROUTE_CHANGE, (value) ->
+            {messageID} = value
             _setCurrentID messageID
 
             # Get messageList for 1rst panel
@@ -287,9 +285,6 @@ class MessageStore extends Store
             delete _undoable[ref]
 
         handle ActionTypes.MESSAGE_FETCH_FAILURE, ->
-            @emit 'change'
-
-        handle ActionTypes.REFRESH_SUCCESS, ->
             @emit 'change'
 
         handle ActionTypes.MESSAGE_SEND_SUCCESS, ({message}) ->
