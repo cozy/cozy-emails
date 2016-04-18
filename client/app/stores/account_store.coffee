@@ -228,12 +228,6 @@ class AccountStore extends Store
         return @getDefault()?.get 'id' unless _accountID
         return _accountID
 
-<<<<<<< HEAD
-=======
-    getMailboxID: ->
-        return @getDefault()?.get 'inboxMailbox' unless _mailboxID
-        return _mailboxID
->>>>>>> b93fd76... FIX : no mailboxID into URL usecase
 
     getSelected: ->
         return _accounts.get _accountID
