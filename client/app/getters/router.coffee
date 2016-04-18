@@ -71,9 +71,9 @@ class RouteGetter
         flags = @getFilter()?.flags or []
         MessageFilter[name] is flags or MessageFilter[name] in flags
 
-    getMessagesToDisplay: (mailboxID) ->
+    getMessagesList: (mailboxID) ->
         mailboxID ?= @getMailboxID()
-        messages = MessageStore.getMessagesToDisplay mailboxID
+        messages = MessageStore.getMessagesList mailboxID
 
         # We dont filter for type from and dest because it is
         # complicated by collation and name vs address.
@@ -91,7 +91,7 @@ class RouteGetter
         messages.sort sortByDate filter.order
 
     getMessage: (messageID) ->
-        MessageStore.getMessage messageID
+        MessageStore.getByID messageID
 
     getConversationLength: ({messageID, conversationID}) ->
         MessageStore.getConversationLength {messageID, conversationID}

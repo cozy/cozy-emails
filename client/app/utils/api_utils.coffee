@@ -15,14 +15,14 @@ RouterStore  = require '../stores/router_store'
 SettingsStore = require '../stores/settings_store'
 LayoutActionCreator  = require '../actions/layout_action_creator'
 MessageActionCreator = require '../actions/message_action_creator'
-RouterActionCreator  = require '../actions/layout_action_creator'
+RouterActionCreator  = require '../actions/router_action_creator'
 NotificationActionsCreator = require '../actions/notification_action_creator'
 
 {MessageActions, AccountActions} = require '../constants/app_constants'
 
 
 onMessageList = ->
-    return RouterStore.getAction() is MessageActions.SHOW_ALL
+    return RouterStore.getAction() in [MessageActions.SHOW_ALL, MessageActions.SHOW]
 
 
 module.exports = Utils =
@@ -98,9 +98,15 @@ module.exports = Utils =
             type: ActionTypes.SETTINGS_UPDATE_SUCCESS
             value: settings
 
-    messageNavigate: (direction, inConv) ->
-        return unless onMessageList()
-        RouterActionCreator.navigate action: MessageActions.GROUP_NEXT
+    # top/bottom navigation
+    # `top` key     -> direction is prev
+    # `bottom` key  -> direction is next
+    messageNavigate: (direction) ->
+        if 'prev' is direction
+            messageID = MessageStore.getNextConversation()?.get 'id'
+        else
+            messageID = MessageStore.getPreviousConversation()?.get 'id'
+        RouterActionCreator.navigate {messageID}
 
 
     messageSetCurrent: (message) ->

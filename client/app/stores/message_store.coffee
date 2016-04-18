@@ -321,6 +321,7 @@ class MessageStore extends Store
         return _currentID
 
     getByID: (messageID) ->
+        messageID ?= _currentID
         _messages.get messageID
 
     _getCurrentConversations = (mailboxID) ->
@@ -332,7 +333,7 @@ class MessageStore extends Store
             return inMailbox and not exist
         .toList()
 
-    getMessagesToDisplay: (mailboxID) ->
+    getMessagesList: (mailboxID) ->
         _currentMessages = _getCurrentConversations(mailboxID)?.toOrderedMap()
         return _currentMessages
 
@@ -353,6 +354,17 @@ class MessageStore extends Store
             # Return loaded messages
             return conversation
 
+
+    getNextConversation: ->
+        index = _currentMessages.keyOf @getByID()
+        return _currentMessages.get --index
+
+
+    getPreviousConversation: ->
+        index = _currentMessages.keyOf @getByID()
+        return _currentMessages.get ++index
+
+
     getConversationLength: ({messageID, conversationID}) ->
         unless conversationID
             messageID ?= @getCurrentID()
@@ -362,80 +374,6 @@ class MessageStore extends Store
         if conversationID
             return _conversationLength.get conversationID
 
-
-
-    ###*
-    * Get Conversation
-    *
-    * If none parameters    return current conversation
-    * @param.transform      return the list index needed
-    * @param.type="message" return the closest message
-    *                       instead of conversation
-    *
-    * @param {String}   type
-    * @param {Function} transform
-    *
-    * @return {List}
-    ###
-    getMessage: (param={}) ->
-        # FIXME : vérifier les params rentrant
-        # ne passer que par messageID si possible
-        {messageID, conversationID, messages, conversationIDs} = param
-
-        messages ?= _currentMessages
-
-        # In this case, we just want
-        # next/previous message from a selection
-        # then remove selected messages from the list
-        if conversationIDs?
-            conversationID = conversationIDs[0]
-            messages = messages
-                .filter (message) ->
-                    id = message.get 'conversationID'
-                    index = conversationIDs.indexOf id
-                    return index is -1
-                .toList()
-
-        unless conversationID
-            messageID ?= @getCurrentID()
-            message = @getByID messageID
-            conversationID = message?.get 'conversationID'
-
-        # If no specific action is precised
-        # return contextual conversations
-        unless _.isFunction param.transform
-            return @getByID messageID
-
-        getMessage = =>
-            _getMessage = (index) ->
-                index0 = param.transform index
-                messages?.get(index0)
-
-            # Get next Conversation not next message
-            # `messages` is the list of all messages not conversations
-            # TODO : regroup message by its conversationID
-            # and use messages.find instead with a simple test
-            # FIXME : inconsistency between the 2 results, see why?
-            index0 = messages.toArray().findIndex (message, index) ->
-                isSameMessage = conversationID is message?.get 'conversationID'
-                isNextSameConversation = _getMessage(index)?.get('conversationID') isnt conversationID
-                return isSameMessage and isNextSameConversation
-
-            _getMessage(index0)
-
-        # Change Conversation
-        return Immutable.Map getMessage()
-
-    ###*
-    * Get earlier conversation displayed after current
-    *
-    * @param {Function}  transform
-    *
-    * @return {List}
-    ###
-    getNextConversation: (params={}) ->
-        transform = (index) -> --index
-        @getMessage _.extend params, {transform}
 
     # FIXME : move this into RouterStore/RouterGetter
     getUndoableRequest: (ref) ->

@@ -62,7 +62,7 @@ Application = React.createClass
             isEditable      : RouterGetter.isEditable()
             modal           : RouterGetter.getModal()
             className       : className
-            messages        : RouterGetter.getMessagesToDisplay mailboxID
+            messages        : RouterGetter.getMessagesList mailboxID
         }
 
     render: ->
