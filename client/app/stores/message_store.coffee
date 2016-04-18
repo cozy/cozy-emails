@@ -283,6 +283,12 @@ class MessageStore extends Store
 
             @emit 'change'
 
+
+        handle ActionTypes.MESSAGE_FETCH_REQUEST, (params) ->
+            _fetchMessage params
+            @emit 'change'
+
+
         handle ActionTypes.RECEIVE_RAW_MESSAGE, (message) ->
             _saveMessage message
             @emit 'change'
