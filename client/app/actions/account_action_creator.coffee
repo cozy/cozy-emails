@@ -87,6 +87,7 @@ module.exports = AccountActionCreator =
                     type: ActionTypes.REMOVE_ACCOUNT_SUCCESS
                     value: accountID
 
+
     discover: (domain) ->
         AppDispatcher.handleViewAction
             type: ActionTypes.DISCOVER_REQUEST
@@ -100,6 +101,7 @@ module.exports = AccountActionCreator =
                 AppDispatcher.handleViewAction
                     type: ActionTypes.DISCOVER_SUCCESS
                     value: {domain, provider}
+
 
     saveEditTab: (tab) ->
         AppDispatcher.dispatch

@@ -49,6 +49,7 @@ module.exports = LayoutActionCreator =
             type: ActionTypes.CLEAR_TOASTS
             value: null
 
+
     showSearchResult: (parameters) ->
         {accountID, search} = parameters
 
@@ -59,6 +60,7 @@ module.exports = LayoutActionCreator =
         AppDispatcher.dispatch
             type: ActionTypes.SEARCH_PARAMETER_CHANGED
             value: {accountID, search}
+
 
     saveMessage: (params) ->
         {accountID, mailboxID, messageID} = params
