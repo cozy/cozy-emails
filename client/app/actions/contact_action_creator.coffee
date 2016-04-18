@@ -17,7 +17,7 @@ module.exports = ContactActionCreator =
         activity = new Activity options
 
         activity.onsuccess = ->
-            AppDispatcher.handleViewAction
+            AppDispatcher.dispatch
                 type: ActionTypes.RECEIVE_RAW_CONTACT_RESULTS
                 value: @result
 
@@ -26,7 +26,7 @@ module.exports = ContactActionCreator =
 
 
     searchContactLocal: (query) ->
-        AppDispatcher.handleViewAction
+        AppDispatcher.dispatch
             type: ActionTypes.CONTACT_LOCAL_SEARCH
             value: query
 
@@ -41,7 +41,7 @@ module.exports = ContactActionCreator =
         activity = new Activity options
 
         activity.onsuccess = (err, res) ->
-            AppDispatcher.handleViewAction
+            AppDispatcher.dispatch
                 type: ActionTypes.RECEIVE_RAW_CONTACT_RESULTS
                 value: @result
 

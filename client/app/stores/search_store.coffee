@@ -43,17 +43,17 @@ class SearchStore extends Store
     _fetchSearchResults = ->
         url = _getNextURL _currentSearch
 
-        AppDispatcher.handleViewAction
+        AppDispatcher.dispatch
             type: ActionTypes.SEARCH_REQUEST
             value: {search: _currentSearch}
 
         XHRUtils.search url, (error, searchResults) ->
             if error?
-                AppDispatcher.handleViewAction
+                AppDispatcher.dispatch
                     type: ActionTypes.SEARCH_FAILURE
                     value: {error}
             else
-                AppDispatcher.handleViewAction
+                AppDispatcher.dispatch
                     type: ActionTypes.SEARCH_SUCCESS
                         value: {searchResults}
 
@@ -62,9 +62,13 @@ class SearchStore extends Store
     ###
     __bindHandlers: (handle) ->
 
-        handle ActionTypes.QUERY_PARAMETER_CHANGED, ->
-            _resetSearch()
-            @emit 'change'
+        handle ActionTypes.ROUTE_CHANGE, (params = {}) ->
+            {query} = params
+
+            if query
+                _resetSearch()
+                @emit 'change'
+
 
         handle ActionTypes.SEARCH_PARAMETER_CHANGED, ({search, accountID}) ->
             if search isnt _currentSearch or accountID isnt _currentSearchAccountID

@@ -3,6 +3,8 @@ _        = require 'underscore'
 Polyglot = require 'node-polyglot'
 moment   = require 'moment'
 
+{sendReport} = require './error_manager'
+
 RouterGetter = require '../getters/router'
 
 # FIXME : remove all this from Stores to  RouterGetter
@@ -92,7 +94,7 @@ module.exports = Utils =
                 settings[k] = v
         else
             settings[key] = value
-        AppDispatcher.handleViewAction
+        AppDispatcher.dispatch
             type: ActionTypes.SETTINGS_UPDATE_SUCCESS
             value: settings
 
@@ -157,11 +159,6 @@ module.exports = Utils =
         MessageActionCreator.undo()
 
 
-    customEvent: (name, data) ->
-        domEvent = new CustomEvent name, detail: data
-        window.dispatchEvent domEvent
-
-
     simulateUpdate: ->
 
         AppDispatcher = require '../app_dispatcher'
@@ -182,7 +179,7 @@ module.exports = Utils =
                 "nbRecent": 5,
                 "weight": 1000,
                 "depth": 0
-            AppDispatcher.handleServerAction
+            AppDispatcher.dispatch
                 type: 'RECEIVE_MAILBOX_UPDATE'
                 value: content
         , 5000
@@ -212,15 +209,7 @@ module.exports = Utils =
 
     # Log message into server logs
     logInfo: (message) ->
-        data =
-            data:
-                type: 'debug'
-                message: message
-        xhr = new XMLHttpRequest()
-        xhr.open 'POST', 'activity', true
-        xhr.setRequestHeader "Content-Type", "application/json;charset=UTF-8"
-        xhr.send JSON.stringify(data)
-        console.info message
+        sendReport 'debug', message
 
 
     # Log every Flux action (only in development environment)

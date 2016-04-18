@@ -44,14 +44,10 @@ class RouterStore extends Store
     getFilter: ->
         _currentFilter
 
+    # FIXME: refactor filtering based on query object (see doc/routes.md
+    #        and router.coffee:_parseQuery)
     setFilter: (params={}) ->
-        return if params.query and not (params = _getURLparams params.query)
 
-        # Update Filter
-        _currentFilter = _.clone _defaultFilter
-        _.extend _currentFilter, params
-
-        return _currentFilter
 
     getScrollValue: ->
         _scrollValue
@@ -61,17 +57,19 @@ class RouterStore extends Store
         # next conversation : MessageActions.GROUP_NEXT
         # previous conversation : MessageActions.GROUP_PREVIOUS
         action = _getRouteAction params
-        filter = if MessageActions.SHOW_ALL is action then _getURIQueryParams params else ''
+        filter = if MessageActions.SHOW_ALL is action
+            _getURIQueryParams params
+        else ''
 
-        isMessage = !!params.messageID or -1 < action.indexOf 'message'
+        isMessage = !!params.messageID or _.contains action, 'message'
         if isMessage and not params.mailboxID
             params.mailboxID = AccountStore.getSelectedMailbox()?.get 'id'
 
-        isMailbox = -1 < action.indexOf 'mailbox'
+        isMailbox = _.contains action, 'mailbox'
         if isMailbox and not params.mailboxID
             params.mailboxID = AccountStore.getSelected()?.get 'id'
 
-        isAccount = -1 < action.indexOf 'account'
+        isAccount = _.contains action, 'account'
         if isAccount and not params.accountID
             params.accountID = AccountStore.getSelectedOrDefault()?.get 'id'
         if isAccount and not params.tab
@@ -84,10 +82,8 @@ class RouterStore extends Store
                 # Get Route pattern of action
                 # Replace param name by its value
                 param = match.substring 1, match.length
-                params[param]
-
-            # console.log 'getURL', action, prefix + url.replace(/\/\*$/, '')
-            return prefix + url.replace(/\/\*$/, '') + filter
+                params[param] or match
+            return prefix + url.replace(/\(\?:query\)$/, filter)
 
         return '/' + filter
 
@@ -181,17 +177,20 @@ class RouterStore extends Store
     ###
     __bindHandlers: (handle) ->
 
-        handle ActionTypes.QUERY_PARAMETER_CHANGED, (params) ->
-            _self.setFilter params
-            @emit 'change'
-
         handle ActionTypes.ROUTE_CHANGE, (value) ->
             # We cant display any informations
             # without accounts
-            unless AccountStore.getAll()?.size
-                _action = AccountActions.CREATE
+            if AccountStore.getAll()?.size
+                _action = value.action
             else
-                _action = value
+                _action = AccountActions.CREATE
+
+            if value.action is MessageActions.SHOW_ALL
+                _resetFilter()
+
+            if value.query
+                _self.setFilter value.query
+
             @emit 'change'
 
         handle ActionTypes.ROUTES_INITIALIZE, (router) ->
@@ -218,9 +217,6 @@ class RouterStore extends Store
                 _lastDate = newDate
             @emit 'change'
 
-        handle ActionTypes.SELECT_ACCOUNT, (value) ->
-            _resetFilter()
-            @emit 'change'
 
         handle ActionTypes.MESSAGE_TRASH_SUCCESS, (params) ->
             if MessageActions.SHOW is _action
