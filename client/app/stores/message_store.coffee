@@ -386,6 +386,7 @@ class MessageStore extends Store
         return _currentID
 
     getByID: (messageID) ->
+        messageID ?= _currentID
         _messages.get messageID
 
     _getCurrentConversations = (mailboxID) ->
@@ -443,6 +444,7 @@ class MessageStore extends Store
 
     getUndoableRequest: (ref) ->
         _undoable[ref]
+
 
 _self = new MessageStore()
 
