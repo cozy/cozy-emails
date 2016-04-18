@@ -270,9 +270,6 @@ class MessageStore extends Store
     ###
     __bindHandlers: (handle) ->
 
-        # handle ActionTypes.MESSAGE_FETCH_REQUEST, (param)->
-        #     _fetchMessage param
-        #     @emit 'change'
         handle ActionTypes.ROUTE_CHANGE, (value) ->
             if value.action is MessageActions.SHOW_ALL
                 _setCurrentID = AccountStore.getSelectedOrDefault()?.get 'id'
@@ -351,10 +348,6 @@ class MessageStore extends Store
         handle ActionTypes.MESSAGE_FETCH_FAILURE, ->
             @emit 'change'
 
-        # handle ActionTypes.CONVERSATION_FETCH_SUCCESS, ({updated}) ->
-        #     for message in updated
-        #         _saveMessage message
-        #     @emit 'change'
 
         handle ActionTypes.MESSAGE_SEND_SUCCESS, ({message, action}) ->
             _saveMessage message
@@ -362,20 +355,6 @@ class MessageStore extends Store
             #     @fetchConversation conversationID
             @emit 'change'
 
-        # handle ActionTypes.QUERY_PARAMETER_CHANGED, ->
-        #     AppDispatcher.waitFor [RouterStore.dispatchToken]
-        #     if RouterStore.isResetFilter()?
-        #         _messages = _messages.clear()
-        #     @emit 'change'
-
-        # # FIXME : charger également la conversation
-        # handle ActionTypes.MESSAGE_CURRENT, (param) ->
-        #     _setCurrentID param.messageID
-        #     @emit 'change'
-
-        # handle ActionTypes.SELECT_ACCOUNT, ->
-        #     _setCurrentID null
-        #     @emit 'change'
 
         handle ActionTypes.RECEIVE_MESSAGE_DELETE, (id) ->
             _deleteMessage {id}

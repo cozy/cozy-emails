@@ -2,10 +2,6 @@ Backbone = require 'backbone'
 React    = require 'react'
 ReactDOM = require 'react-dom'
 
-# RouterActionCreator  = require './actions/router_action_creator'
-# LayoutActionCreator  = require './actions/layout_action_creator'
-# AccountActionCreator = require './actions/account_action_creator'
-
 AccountStore = require './stores/account_store'
 
 AppDispatcher = require './app_dispatcher'
@@ -33,8 +29,7 @@ class Router extends Backbone.Router
         'mailbox/:mailboxID/:messageID/reply':     'messageReply'
         'mailbox/:mailboxID/:messageID/reply-all': 'messageReplyAll'
         'mailbox/:mailboxID/:messageID(?:query)':  'messageShow'
-        # FIXME: set redirect to inbox of first account
-        '':                                        'firstInbox'
+        '':                                        'defaultMailbox'
 
 
     initialize: ->
@@ -50,63 +45,44 @@ class Router extends Backbone.Router
         _displayApplication()
 
 
-    firstInbox: ->
+    defaultMailbox: ->
         mailboxID = AccountStore.getDefault().get('id')
         @navigate "mailbox/#{mailboxID}", trigger: true
 
 
     accountNew: ->
-        # RouterActionCreator.setAction AccountActions.CREATE
-        # AccountActionCreator.selectAccount()
         _dispatch {action: AccountActions.CREATE}
 
 
     accountEdit: (accountID, tab) ->
-        # RouterActionCreator.setAction AccountActions.EDIT
-        # AccountActionCreator.saveEditTab tab
-        # AccountActionCreator.selectAccount accountID
         _dispatch {action: AccountActions.EDIT, accountID, tab}
 
 
     messageList: (mailboxID, query) ->
-        # RouterActionCreator.setAction MessageActions.SHOW_ALL
-        # LayoutActionCreator.updateMessageList {mailboxID, query}
         _dispatch {action: MessageActions.SHOW_ALL, mailboxID}, query
 
 
     messageShow: (mailboxID, messageID, query) ->
-        # RouterActionCreator.setAction MessageActions.SHOW
-        # LayoutActionCreator.updateMessageList {mailboxID, messageID, query}
         _dispatch {action: MessageActions.SHOW, mailboxID, messageID}, query
 
 
     messageEdit: (mailboxID, messageID) ->
-        # RouterActionCreator.setAction MessageActions.EDIT
-        # LayoutActionCreator.saveMessage {mailboxID, messageID}
         _dispatch {action: MessageActions.EDIT, mailboxID, messageID}
 
 
     messageNew: (mailboxID) ->
-        # RouterActionCreator.setAction MessageActions.CREATE
-        # LayoutActionCreator.saveMessage {mailboxID}
         _dispatch {action: MessageActions.CREATE, mailboxID}
 
 
     messageForward: (mailboxID, messageID) ->
-        # RouterActionCreator.setAction MessageActions.FORWARD
-        # LayoutActionCreator.saveMessage {mailboxID, messageID}
         _dispatch {action: MessageActions.FORWARD, mailboxID}
 
 
     messageReply: (mailboxID, messageID) ->
-        # RouterActionCreator.setAction MessageActions.REPLY
-        # LayoutActionCreator.saveMessage {mailboxID, messageID}
         _dispatch {action: MessageActions.REPLY, mailboxID}
 
 
     messageReplyAll: (mailboxID, messageID) ->
-        # RouterActionCreator.setAction MessageActions.REPLY_ALL
-        # LayoutActionCreator.saveMessage {mailboxID, messageID}
         _dispatch {action: MessageActions.REPLY_ALL, mailboxID}
 
 

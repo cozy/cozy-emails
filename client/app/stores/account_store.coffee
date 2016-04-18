@@ -216,11 +216,6 @@ class AccountStore extends Store
             _setError error
             @emit 'change'
 
-        # handle ActionTypes.EDIT_ACCOUNT_TAB, (params) ->
-        #     unless (_tab = params.tab)
-        #         mailboxes = @getSelected()?.get 'mailboxes'
-        #         _tab = if mailboxes?.size is 0 then 'mailboxes' else 'account'
-        #     @emit 'change'
 
         handle ActionTypes.EDIT_ACCOUNT_REQUEST, ({inputValues}) ->
             _newAccountWaiting = true

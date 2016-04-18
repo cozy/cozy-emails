@@ -44,17 +44,10 @@ class RouterStore extends Store
     getFilter: ->
         _currentFilter
 
+    # FIXME: refactor filtering based on query object (see doc/routes.md
+    #        and router.coffee:_parseQuery)
     setFilter: (params={}) ->
-        # FIXME: refactor filtering based on query object (see doc/routes.md
-        #        and router.coffee:_parseQuery)
 
-        # return if params.query and not (params = _getURLparams params.query)
-        #
-        # # Update Filter
-        # _currentFilter = _.clone _defaultFilter
-        # _.extend _currentFilter, params
-        #
-        # return _currentFilter
 
     getScrollValue: ->
         _scrollValue
@@ -224,9 +217,6 @@ class RouterStore extends Store
                 _lastDate = newDate
             @emit 'change'
 
-        # handle ActionTypes.SELECT_ACCOUNT, (value) ->
-        #     _resetFilter()
-        #     @emit 'change'
 
         handle ActionTypes.MESSAGE_TRASH_SUCCESS, (params) ->
             if MessageActions.SHOW is _action

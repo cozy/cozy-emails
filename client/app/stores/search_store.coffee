@@ -62,10 +62,13 @@ class SearchStore extends Store
     ###
     __bindHandlers: (handle) ->
 
-        handle ActionTypes.ROUTE_CHANGE, (value) ->
-            if value.query
+        handle ActionTypes.ROUTE_CHANGE, (params = {}) ->
+            {query} = params
+
+            if query
                 _resetSearch()
                 @emit 'change'
+
 
         handle ActionTypes.SEARCH_PARAMETER_CHANGED, ({search, accountID}) ->
             if search isnt _currentSearch or accountID isnt _currentSearchAccountID
