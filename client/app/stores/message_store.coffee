@@ -216,7 +216,11 @@ class MessageStore extends Store
             lastdate = _messages.last()?.get 'date'
             before = unless messages then EPOCH else lastdate
             changeRealtimeScope {mailboxID, before}
+            @emit 'change'
 
+
+        handle ActionTypes.MESSAGE_FETCH_REQUEST, (params) ->
+            _fetchMessage params
             @emit 'change'
 
 
