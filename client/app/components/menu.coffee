@@ -53,13 +53,6 @@ module.exports = Menu = React.createClass
             role: 'menubar'
             'aria-expanded': true,
 
-            if @props.accounts.length
-                a
-                    href: @props.composeURL
-                    className: 'compose-action btn btn-cozy',
-                        i className: 'fa fa-pencil'
-                        span className: 'item-label', " #{t 'menu compose'}"
-
             nav className: 'mainmenu',
                 if @props?.search and not @props.accountID
                     div className: 'active',
