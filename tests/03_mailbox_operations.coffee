@@ -7,11 +7,9 @@ describe 'Mailbox fetching', ->
     inboxCount = 0
     readCount = 0
 
-
     testResultLength = (first, iterator, callback) ->
         [iterator, callback] = [null, iterator] unless callback
         totalFound = null
-
         step = (link, callback) ->
             client.get link, (err, res, body) ->
                 return callback err if err
