@@ -27,8 +27,6 @@ class LayoutStore extends Store
 
     _listModeCompact = false
 
-    _modal  = null
-
 
     ###
         Defines here the action handlers.
@@ -50,14 +48,6 @@ class LayoutStore extends Store
                 _previewSize = 80 if _previewSize > 80
             else
                 _previewSize = 50
-            @emit 'change'
-
-        handle ActionTypes.DISPLAY_MODAL, (value) ->
-            _modal = value
-            @emit 'change'
-
-        handle ActionTypes.HIDE_MODAL, (value) ->
-            _modal = null
             @emit 'change'
 
         handle ActionTypes.FOCUS, (path) ->
@@ -96,10 +86,6 @@ class LayoutStore extends Store
 
     getFocus: ->
         return _focus
-
-
-    getModal: ->
-        return _modal
 
 
     isShown: ->

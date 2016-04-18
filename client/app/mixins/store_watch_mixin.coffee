@@ -14,10 +14,10 @@ module.exports = StoreWatchMixin = (stores) ->
 
     # Build initial state from store values.
     getInitialState: ->
-        return @getStateFromStores()
+        return @getStateFromStores @props
 
     componentWillReceiveProps: (nextProps={}) ->
-        @setState @getStateFromStores()
+        @setState @getStateFromStores nextProps
         nextProps
 
     # Update state with store values

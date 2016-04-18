@@ -46,14 +46,24 @@ module.exports.create = (req, res, next) ->
                     name: "Unknown activity name",
                     error: true
         when 'error'
-            log.error activity.data
-            log.error activity.data.error?.stack
+            # Browser errors sent contains `stack`, otherwise it's a
+            # `console.error` message to parse
+            if activity.data.error?.stack
+                log.error activity.data
+                log.error activity.data.error?.stack
+            else
+                log.error JSON.parse activity.data.error.msg
+            res.send 'ok'
+        when 'warn'
+            log.warn activity.data.msg
+            res.send 'ok'
+        when 'info', 'log'
+            log.info activity.data.msg
             res.send 'ok'
         when 'debug'
-            log.info activity.data.message
+            log.debug activity.data.msg
             res.send 'ok'
         else
             res.status(400).send
                 name: "Unknown activity data type",
                 error: true
-

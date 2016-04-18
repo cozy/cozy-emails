@@ -26,5 +26,10 @@ NotificationActionCreator =
             level: AlertLevel.ERROR
             autoclose: true
 
+    taskDelete: (id) ->
+        AppDispatcher.dispatch
+            type: ActionTypes.RECEIVE_TASK_DELETE
+            value: id
+
 
 module.exports = NotificationActionCreator

@@ -9,13 +9,32 @@ classNames = require 'classnames'
 colorhash = require '../utils/colorhash'
 
 LayoutActionCreator  = require '../actions/layout_action_creator'
-{Tooltips, AccountActions} = require '../constants/app_constants'
+{MessageFilter, Tooltips, AccountActions, MessageActions} = require '../constants/app_constants'
+
+RouterStore = require '../stores/router_store'
+AccountStore = require '../stores/account_store'
+StoreWatchMixin = require '../mixins/store_watch_mixin'
 
 RouterGetter = require '../getters/router'
+IconGetter = require '../getters/icon'
 
 module.exports = Menu = React.createClass
     displayName: 'Menu'
 
+    mixins: [
+        StoreWatchMixin [AccountStore, RouterStore]
+    ]
+
+    getStateFromStores: ->
+        # FIXME : mettre ici le nb de messages non lu
+        # de la mailbox courante
+        return {
+            mailboxes: RouterGetter.getMailboxes()
+        }
+
+    # FIXME : déplacer ça dans ModalStore
+    # et dispatcher un DISPLAY_MODAL
+    # via un ModalActionCreator
     displayErrors: (refreshee) ->
         errors = refreshee.get 'errors'
         modal =
@@ -33,13 +52,6 @@ module.exports = Menu = React.createClass
         aside
             role: 'menubar'
             'aria-expanded': true,
-
-            if @props.accounts.length
-                a
-                    href: @props.composeURL
-                    className: 'compose-action btn btn-cozy',
-                        i className: 'fa fa-pencil'
-                        span className: 'item-label', " #{t 'menu compose'}"
 
             nav className: 'mainmenu',
                 if @props?.search and not @props.accountID
@@ -72,18 +84,51 @@ module.exports = Menu = React.createClass
                     'data-tooltip-direction': 'top'
                     onClick: -> Mousetrap.trigger '?'
 
+    renderMailboxesFlags: (params={}) ->
+        {flags, type, progress, slug} = params
+
+        mailbox = RouterGetter.getInbox()
+        mailboxURL = RouterGetter.getURL
+            mailboxID: (mailboxID = mailbox.get 'id')
+            filter: {flags}
+
+        # No way to get this data for flagged email
+        # TODO : make a patch here:
+        # https://github.com/cozy/cozy-emails/blob/master/server/models/requests.coffee#L50-L52
+        total = if 'flagged' isnt slug then mailbox?.get('nbTotal') else 0
+        unread = if 'flagged' isnt slug then mailbox?.get('nbUnread') else 0
+        recent = if 'flagged' isnt slug then mailbox?.get('nbRecent') else 0
+
+        MenuMailboxItem
+            accountID:      RouterGetter.getAccountID()
+            mailboxID:      mailboxID
+            label:          t "mailbox title #{slug}"
+            key:            "mailbox-item-#{slug}"
+            depth:          0
+            url:            mailboxURL
+            isActive:       RouterGetter.isCurrentURL mailboxURL
+            displayErrors:  @displayErrors
+            progress:       progress
+            total:          total
+            unread:         unread
+            recent:         recent
+            icon:           IconGetter.getMailboxIcon {type}
+
     # renders a single account and its submenu
-    # FIXME : make a component for this
+    # TODO : make a component for this
     renderMailBoxes: (account) ->
+        # Goto the default mailbox of the account
+        action = MessageActions.SHOW_ALL
         accountID = account.get 'id'
+        mailbox = RouterGetter.getInbox(accountID)
+        mailboxID = mailbox?.get 'id'
+        mailboxURL = RouterGetter.getURL {action, mailboxID}
 
         props = {
             key: 'account-' + accountID
             isSelected: accountID is RouterGetter.getAccountID()
             mailboxes: RouterGetter.getMailboxes()
-            newAccountURL: RouterGetter.getURL
-                action: AccountActions.CREATE
-                accountID: accountID
+            mailboxURL: mailboxURL
             configURL: RouterGetter.getURL
                 action: AccountActions.EDIT
                 accountID: accountID
@@ -97,7 +142,7 @@ module.exports = Menu = React.createClass
             key: props.key,
             div className: 'account-title',
                 a
-                    href: props.newAccountURL
+                    href: props.mailboxURL
                     role: 'menuitem'
                     className: 'account ' + className,
                     'data-toggle': 'tooltip'
@@ -105,51 +150,57 @@ module.exports = Menu = React.createClass
                     'data-placement' : 'right',
                         i
                             className: 'avatar'
-                            style:
-                                backgroundColor: props.color
+                            style: backgroundColor: props.color
                             account.get('label')[0]
                         div
                             className: 'account-details',
                                 span
                                     'data-account-id': props.key,
-                                    className: 'item-label display-label'
-                                    account.get 'label'
-                                span
-                                    'data-account-id': props.key,
                                     className: 'item-label display-login'
                                     account.get 'login'
 
-                    if props.progress?.get('errors')?.size
-                        span className: 'refresh-error',
-                            i
-                                className: 'fa warning',
-                                onClick: @displayErrors,
-                                props.progress
-
-                if props.isSelected
-                    a
-                        href: props.configURL
-                        className: 'mailbox-config menu-subaction',
-                        i
-                            'className': 'fa fa-cog'
-                            'aria-describedby': Tooltips.ACCOUNT_PARAMETERS
-                            'data-tooltip-direction': 'right'
-
-                if props.nbUnread > 0 and not props.progress
-                    span className: 'badge', props.nbUnread
+                a
+                    href: props.configURL
+                    className: 'mailbox-config menu-subaction',
+                    i
+                        'className': 'fa fa-cog'
+                        'aria-describedby': Tooltips.ACCOUNT_PARAMETERS
+                        'data-tooltip-direction': 'right'
 
             if props.isSelected
                 ul
                     role: 'group'
                     className: 'list-unstyled mailbox-list',
 
-                    props.mailboxes?.map (mailbox, key) =>
+                    @state.mailboxes?.map (mailbox, key) =>
+                            mailboxURL = RouterGetter.getURL
+                                mailboxID: (mailboxID = mailbox.get 'id')
+                                resetFilter: true
+
                             MenuMailboxItem
-                                account:           account
-                                mailbox:           mailbox
-                                key:               'mailbox-item-' + key
-                                isActive:          @props.mailboxID is mailbox.get 'id'
-                                refreshes:         @props.refreshes
-                                displayErrors:     @displayErrors
-                                progress:          @props.progress
+                                key:            'mailbox-item-' + key
+                                accountID:      account.get 'id'
+                                mailboxID:      mailboxID
+                                label:          mailbox.get 'label'
+                                depth:          mailbox.get 'depth'
+                                isActive:       RouterGetter.isCurrentURL mailboxURL
+                                displayErrors:  @displayErrors
+                                progress:       props.progress
+                                url:            mailboxURL
+                                total:          mailbox.get 'nbTotal'
+                                unread:         mailbox.get 'nbUnread'
+                                recent:         mailbox.get 'nbRecent'
+                                icon:           IconGetter.getMailboxIcon {account, mailboxID}
                         .toArray()
+
+                    @renderMailboxesFlags
+                        type: 'unreadMailbox'
+                        flags: MessageFilter.UNSEEN
+                        progress: props.progress
+                        slug: 'unread'
+
+                    @renderMailboxesFlags
+                        type: 'flaggedMailbox'
+                        flags: MessageFilter.FLAGGED
+                        progress: props.progress
+                        slug: 'flagged'

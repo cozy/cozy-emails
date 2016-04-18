@@ -7,19 +7,19 @@ RouterStore = require '../stores/router_store'
 
 module.exports = AccountActionCreator =
 
-    create: (inputValues, afterCreation) ->
-        AppDispatcher.handleViewAction
+    create: (value) ->
+        AppDispatcher.dispatch
             type: ActionTypes.ADD_ACCOUNT_REQUEST
-            value: {inputValues}
+            value: {value}
 
-        XHRUtils.createAccount inputValues, (error, account) ->
+        XHRUtils.createAccount value, (error, account) ->
             if error?
-                AppDispatcher.handleViewAction
+                AppDispatcher.dispatch
                     type: ActionTypes.ADD_ACCOUNT_FAILURE
                     value: {error}
 
             else if not account?
-                AppDispatcher.handleViewAction
+                AppDispatcher.dispatch
                     type: ActionTypes.ADD_ACCOUNT_FAILURE
                     value: {error: 'no account returned from create'}
 
@@ -30,112 +30,123 @@ module.exports = AccountActionCreator =
                                          account.draftMailbox? and \
                                          account.trashMailbox?
 
-                AppDispatcher.handleViewAction
+                AppDispatcher.dispatch
                     type: ActionTypes.ADD_ACCOUNT_SUCCESS
                     value: {account, areMailboxesConfigured}
 
-    edit: (inputValues, accountID) ->
-        newAccount = AccountStore.getByID(accountID).mergeDeep inputValues
+    edit: ({value, accountID}) ->
+        newAccount = AccountStore.getByID(accountID).mergeDeep value
 
-        AppDispatcher.handleViewAction
+        AppDispatcher.dispatch
             type: ActionTypes.EDIT_ACCOUNT_REQUEST
-            value: {inputValues, newAccount}
+            value: {value, newAccount}
 
         XHRUtils.editAccount newAccount, (error, rawAccount) ->
             if error?
-                AppDispatcher.handleViewAction
+                AppDispatcher.dispatch
                     type: ActionTypes.EDIT_ACCOUNT_FAILURE
                     value: {error}
             else
-                AppDispatcher.handleViewAction
+                AppDispatcher.dispatch
                     type: ActionTypes.EDIT_ACCOUNT_SUCCESS
                     value: {rawAccount}
 
-    check: (inputValues, accountID) ->
+    check: ({value, accountID}) ->
         if accountID?
             account = AccountStore.getByID accountID
-            newAccount = account.mergeDeep(inputValues).toJS()
+            newAccount = account.mergeDeep(value).toJS()
         else
-            newAccount = inputValues
+            newAccount = value
 
-        AppDispatcher.handleViewAction
+        AppDispatcher.dispatch
             type: ActionTypes.CHECK_ACCOUNT_REQUEST
-            value: {inputValues, newAccount}
+            value: {value, newAccount}
 
         XHRUtils.checkAccount newAccount, (error, rawAccount) ->
             if error?
-                AppDispatcher.handleViewAction
+                AppDispatcher.dispatch
                     type: ActionTypes.CHECK_ACCOUNT_FAILURE
                     value: {error}
 
             else
-                AppDispatcher.handleViewAction
+                AppDispatcher.dispatch
                     type: ActionTypes.CHECK_ACCOUNT_SUCCESS
                     value: {rawAccount}
 
     remove: (accountID) ->
-        AppDispatcher.handleViewAction
+        AppDispatcher.dispatch
             type: ActionTypes.REMOVE_ACCOUNT_REQUEST
             value: accountID
         XHRUtils.removeAccount accountID, (error) ->
             if error
-                AppDispatcher.handleViewAction
+                AppDispatcher.dispatch
                     type: ActionTypes.REMOVE_ACCOUNT_FAILURE
                     value: accountID
             else
-                AppDispatcher.handleViewAction
+                AppDispatcher.dispatch
                     type: ActionTypes.REMOVE_ACCOUNT_SUCCESS
                     value: accountID
 
-    selectAccount: (accountID) ->
+
+    discover: (domain) ->
         AppDispatcher.handleViewAction
-            type: ActionTypes.SELECT_ACCOUNT
-            value: {accountID}
+            type: ActionTypes.DISCOVER_REQUEST
+            value: {domain}
+        XHRUtils.accountDiscover domain, (error, provider) ->
+            if error
+                AppDispatcher.handleViewAction
+                    type: ActionTypes.DISCOVER_FAILURE
+                    value: {error, domain}
+            else
+                AppDispatcher.handleViewAction
+                    type: ActionTypes.DISCOVER_SUCCESS
+                    value: {domain, provider}
+
 
     saveEditTab: (tab) ->
-        AppDispatcher.handleViewAction
+        AppDispatcher.dispatch
             type: ActionTypes.EDIT_ACCOUNT_TAB
             value: {tab}
 
     mailboxCreate: (inputValues) ->
-        AppDispatcher.handleViewAction
+        AppDispatcher.dispatch
             type: ActionTypes.MAILBOX_CREATE_REQUEST
             value: account
         XHRUtils.mailboxCreate inputValues, (error, account) ->
             unless error?
-                AppDispatcher.handleViewAction
+                AppDispatcher.dispatch
                     type: ActionTypes.MAILBOX_CREATE_SUCCESS
                     value: account
             else
-                AppDispatcher.handleViewAction
+                AppDispatcher.dispatch
                     type: ActionTypes.MAILBOX_CREATE_FAILURE
                     value: account
 
     mailboxUpdate: (inputValues) ->
-        AppDispatcher.handleViewAction
+        AppDispatcher.dispatch
             type: ActionTypes.MAILBOX_UPDATE_REQUEST
             value: account
         XHRUtils.mailboxUpdate inputValues, (error, account) ->
             unless error?
-                AppDispatcher.handleViewAction
+                AppDispatcher.dispatch
                     type: ActionTypes.MAILBOX_UPDATE_SUCCESS
                     value: account
             else
-                AppDispatcher.handleViewAction
+                AppDispatcher.dispatch
                     type: ActionTypes.MAILBOX_UPDATE_FAILURE
                     value: account
 
     mailboxDelete: (inputValues) ->
-        AppDispatcher.handleViewAction
+        AppDispatcher.dispatch
             type: ActionTypes.MAILBOX_DELETE_REQUEST
             value: account
         XHRUtils.mailboxDelete inputValues, (error, account) ->
             if error?
-                AppDispatcher.handleViewAction
+                AppDispatcher.dispatch
                     type: ActionTypes.MAILBOX_DELETE_FAILURE
                     value: account
             else
-                AppDispatcher.handleViewAction
+                AppDispatcher.dispatch
                     type: ActionTypes.MAILBOX_DELETE_SUCCESS
                     value: account
 
@@ -145,16 +156,16 @@ module.exports = AccountActionCreator =
 
         # delete message from local store to refresh display,
         # we'll fetch them again on error
-        AppDispatcher.handleViewAction
+        AppDispatcher.dispatch
             type: ActionTypes.MAILBOX_EXPUNGE_REQUEST
             value: mailboxID
 
         XHRUtils.mailboxExpunge options, (error, account) ->
             if error
-                AppDispatcher.handleViewAction
+                AppDispatcher.dispatch
                     type: ActionTypes.MAILBOX_EXPUNGE_FAILURE
                     value: {mailboxID, accountID, error}
             else
-                AppDispatcher.handleViewAction
+                AppDispatcher.dispatch
                     type: ActionTypes.MAILBOX_EXPUNGE_SUCCESS
                     value: {mailboxID, accountID}

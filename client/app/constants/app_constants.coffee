@@ -17,6 +17,9 @@ module.exports =
         'EDIT_ACCOUNT_TAB'          : 'EDIT_ACCOUNT_TAB'
         'SELECT_ACCOUNT'            : 'SELECT_ACCOUNT'
         'NEW_ACCOUNT_SETTING'       : 'NEW_ACCOUNT_SETTING'
+        'DISCOVER_REQUEST'          : 'DISCOVER_REQUEST'
+        'DISCOVER_SUCCESS'          : 'DISCOVER_SUCCESS'
+        'DISCOVER_FAILURE'          : 'DISCOVER_FAILURE'
 
         # Mailbox
         # 'MAILBOX_ADD'               : 'MAILBOX_ADD'
@@ -61,11 +64,6 @@ module.exports =
         'MESSAGE_UNDO_SUCCESS'          : 'MESSAGE_UNDO_SUCCESS'
         'MESSAGE_UNDO_FAILURE'          : 'MESSAGE_UNDO_FAILURE'
         'MESSAGE_UNDO_TIMEOUT'          : 'MESSAGE_UNDO_TIMEOUT'
-
-        'CONVERSATION_FETCH_REQUEST'     : 'CONVERSATION_FETCH_REQUEST'
-        'CONVERSATION_FETCH_SUCCESS'     : 'CONVERSATION_FETCH_SUCCESS'
-        'CONVERSATION_FETCH_FAILURE'     : 'CONVERSATION_FETCH_FAILURE'
-
 
         'MESSAGE_RECOVER_REQUEST'     : 'MESSAGE_RECOVER_REQUEST'
         'MESSAGE_RECOVER_SUCCESS'     : 'MESSAGE_RECOVER_SUCCESS'
@@ -190,6 +188,8 @@ module.exports =
         trashMailbox: 'fa-trash-o'
         junkMailbox: 'fa-fire'
         allMailbox: 'fa-archive'
+        unreadMailbox: 'fa-eye'
+        flaggedMailbox: 'fa-star'
 
     Tooltips:
         REPLY                       : 'TOOLTIP_REPLY'

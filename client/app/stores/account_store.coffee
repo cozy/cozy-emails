@@ -3,14 +3,11 @@ Immutable = require 'immutable'
 
 Store = require '../libs/flux/store/store'
 
-{ActionTypes} = require '../constants/app_constants'
+RouterGetter = require '../getters/router'
+
+{ActionTypes, AccountActions} = require '../constants/app_constants'
 
 AccountTranslator = require '../utils/translators/account_translator'
-
-cachedTransform = require '../libs/cached_transform'
-
-STATICBOXFIELDS = ['id', 'accountID', 'label', 'tree', 'weight']
-CHANGEBOXFIELDS = ['lastSync', 'nbTotal', 'nbUnread', 'nbRecent']
 
 class AccountStore extends Store
 
@@ -19,7 +16,6 @@ class AccountStore extends Store
         Defines private variables here.
     ###
 
-    _accountsUnread = Immutable.Map()
     # Creates an OrderedMap of accounts
     # this map will contains the base information for an account
     _accounts = Immutable.Iterable window.accounts
@@ -32,34 +28,19 @@ class AccountStore extends Store
         .mapKeys (_, account) -> account.id
 
         # makes account object an immutable Map
-        .map (account) ->
-            _accountsUnread.set account.id, account.totalUnread
-            return AccountTranslator.toImmutable account
+        .map (account) -> AccountTranslator.toImmutable account
 
         .toOrderedMap()
 
-    _mailboxesCounters = Immutable.Map()
+    _accountID = null
+    _mailboxID = null
 
-    _selectedAccount   = null
-    _selectedMailbox   = null
     _newAccountWaiting = false
     _newAccountChecking = false
-    _serverAccountErrorByField = Immutable.Map()
-    _mailboxRefreshing = {}
-    _refreshLastError = null
 
-    _emitTimeout = null
+    _serverAccountErrorByField = Immutable.Map()
 
     _tab = null
-
-    # FIXME : utilisé?
-    _refreshSelected = ->
-        if selectedAccountID = _selectedAccount?.get 'id'
-            _selectedAccount = _accounts.get selectedAccountID
-            if selectedMailboxID = _selectedMailbox?.get 'id'
-                _selectedMailbox = _selectedAccount
-                    ?.get('mailboxes')
-                    ?.get(selectedMailboxID)
 
     _clearError = ->
         _serverAccountErrorByField = Immutable.Map()
@@ -87,34 +68,26 @@ class AccountStore extends Store
             _serverAccountErrorByField = Immutable.Map "unknown": error
 
 
-    setMailbox = (accountID, boxID, boxData) ->
-
-        account = _accounts.get(accountID)
+    _setMailbox = (data) ->
         # on account creation, sometime socket send mailboxes updates
         # before the account has been saved locally
-        return true unless account
+        return true unless (account = _accounts.get _accountID)?.size
 
+        mailboxID = data.id
         mailboxes = account.get('mailboxes')
-        mailbox = mailboxes.get(boxID) or Immutable.Map()
-        more = _mailboxesCounters.get(boxID) or Immutable.Map()
 
-        boxData.weight = mailbox.get 'weight' if mailbox.get 'weight'
+        mailbox = mailboxes.get(mailboxID) or Immutable.Map()
+        for field, value of data
+            mailbox = mailbox.set field, value
 
-        for field of STATICBOXFIELDS when mailbox.get(field) isnt boxData[field]
-            mailbox = mailbox.set field, boxData[field]
+        if mailbox isnt mailboxes.get mailboxID
+            mailboxes = mailboxes.set mailboxID, mailbox
 
-        for field of CHANGEBOXFIELDS when more.get(field) isnt boxData[field]
-            more = more.set field, boxData[field]
-
-        if more isnt _mailboxesCounters.get boxID
-            _mailboxesCounters.set boxID, more
-
-        if mailbox isnt mailboxes.get boxID
-            mailboxes = mailboxes.set boxID, mailbox
+            # FIXME : is attaching mailboxes to account useless?
             account = account.set 'mailboxes', mailboxes
-            _accounts = _accounts.set accountID, account
 
-        _refreshSelected()
+            _accounts = _accounts.set _accountID, account
+
 
     _mailboxSort = (mb1, mb2) ->
         w1 = mb1.get 'weight'
@@ -127,48 +100,37 @@ class AccountStore extends Store
             else return 0
 
 
-    _applyMailboxDiff: (accountID, diff) ->
-        for boxID, deltas of diff when deltas.nbTotal + deltas.nbUnread
-            counters = _mailboxesCounters.get(boxID) or Immutable.Map()
-            _mailboxesCounters.set boxID, counters.merge
-                nbTotal: counters.get('nbTotal') + deltas.nbTotal
-                nbUnread: counters.get('nbUnread') + deltas.nbUnread
-
-        diffTotalUnread = diff[accountID]?.nbUnread or 0
-        if diffTotalUnread
-
-            total = _accountsUnread.get(accountID) + diffTotalUnread
-            _accountsUnread = _accountsUnread.set accountID, total
-
-        clearTimeout _emitTimeout
-        _emitTimeout = setTimeout (=> @emit 'change'), 1
+    _setCurrentAccount = (accountID, mailboxID, tab="mailboxes") ->
+        _accountID = accountID
+        _mailboxID = mailboxID
+        _tab = tab
 
 
-    _setCurrentAccount: (account) ->
-        _selectedAccount = account
-
-
-    _setCurrentMailbox: (mailbox) ->
-        _selectedMailbox = mailbox
-
-    _onAccountUpdated: (rawAccount) ->
+    _updateAccount = (rawAccount) ->
         account = AccountTranslator.toImmutable rawAccount
-        _accounts = _accounts.set account.get('id'), account
-        @_setCurrentAccount account
+        accountID = account.get 'id'
+        _accounts = _accounts.set accountID, account
+
 
     ###
         Defines here the action handlers.
     ###
     __bindHandlers: (handle) ->
 
-        handle ActionTypes.ADD_ACCOUNT_REQUEST, ({inputValues}) ->
+        handle ActionTypes.ROUTE_CHANGE, ({accountID, mailboxID, action, tab}) ->
+            accountID ?= @getDefault(mailboxID)?.get('id') if mailboxID
+            _setCurrentAccount accountID, mailboxID, tab
+
+            @emit 'change'
+
+        handle ActionTypes.ADD_ACCOUNT_REQUEST, ({value}) ->
             _newAccountWaiting = true
             @emit 'change'
 
         handle ActionTypes.ADD_ACCOUNT_SUCCESS, ({account}) ->
             _newAccountWaiting = false
             _checkForNoMailbox account
-            @_onAccountUpdated account
+            _updateAccount account
             @emit 'change'
 
         handle ActionTypes.ADD_ACCOUNT_FAILURE, ({error}) ->
@@ -189,36 +151,17 @@ class AccountStore extends Store
             _setError error
             @emit 'change'
 
-        handle ActionTypes.EDIT_ACCOUNT_TAB, (params) ->
-            unless (_tab = params.tab)
-                mailboxes = @getSelected()?.get 'mailboxes'
-                _tab = if mailboxes?.size is 0 then 'mailboxes' else 'account'
-            @emit 'change'
 
-        handle ActionTypes.SELECT_ACCOUNT, (value) ->
-            if value?.accountID
-                @_setCurrentAccount(_accounts.get(value.accountID) or null)
-            else
-                @_setCurrentAccount(null)
-            if value?.mailboxID
-                mailbox = _selectedAccount
-                    ?.get('mailboxes')
-                    ?.get(value.mailboxID) or null
-                @_setCurrentMailbox mailbox
-            else
-                _clearError()
-                @_setCurrentMailbox null
-            @emit 'change'
-
-        handle ActionTypes.EDIT_ACCOUNT_REQUEST, ({inputValues}) ->
+        handle ActionTypes.EDIT_ACCOUNT_REQUEST, ({value}) ->
             _newAccountWaiting = true
             @emit 'change'
+
 
         handle ActionTypes.EDIT_ACCOUNT_SUCCESS, ({rawAccount}) ->
             _newAccountWaiting = false
             _clearError()
             _checkForNoMailbox rawAccount
-            @_onAccountUpdated rawAccount
+            _updateAccount rawAccount
             @emit 'change'
 
         handle ActionTypes.EDIT_ACCOUNT_FAILURE, ({error}) ->
@@ -226,51 +169,25 @@ class AccountStore extends Store
             _setError error
             @emit 'change'
 
-        # handle ActionTypes.MAILBOX_CREATE_SUCCESS, (rawAccount) ->
-        #     @_onAccountUpdated rawAccount
-        #     @emit 'change'
-        #
-        # handle ActionTypes.MAILBOX_UPDATE_SUCCESS, (rawAccount) ->
-        #     @_onAccountUpdated rawAccount
-        #     @emit 'change'
-        # handle ActionTypes.MAILBOX_DELETE_SUCCESS, (rawAccount) ->
-        #     @_onAccountUpdated rawAccount
-        #     @emit 'change'
+        handle ActionTypes.MAILBOX_CREATE_SUCCESS, (rawAccount) ->
+            _updateAccount rawAccount
+            @emit 'change'
 
-        handle ActionTypes.MAILBOX_EXPUNGE_FAILURE, ({error, mailboxID, accountID}) ->
-            # if user hasn't switched to another box, refresh display
-            unless _selectedMailbox?.get('id') isnt mailboxID
-                _setCurrentMailbox _selectedAccount
-                    ?.get('mailboxes')
-                    ?.get(mailboxID) or null
+        handle ActionTypes.MAILBOX_UPDATE_SUCCESS, (rawAccount) ->
+            _updateAccount rawAccount
+            @emit 'change'
+
+        handle ActionTypes.MAILBOX_DELETE_SUCCESS, (rawAccount) ->
+            _updateAccount rawAccount
+            @emit 'change'
 
         handle ActionTypes.REMOVE_ACCOUNT_SUCCESS, (accountID) ->
             _accounts = _accounts.delete accountID
-            @_setCurrentAccount @getDefault()
+            _setCurrentAccount()
             @emit 'change'
 
-        handle ActionTypes.RECEIVE_MAILBOX_UPDATE, (boxData) ->
-            setMailbox boxData.accountID, boxData.id, boxData
-            @emit 'change'
-
-        handle ActionTypes.RECEIVE_REFRESH_NOTIF, (data) ->
-            _accountsUnread.set data.accountID, data.totalUnread
-            @emit 'change'
-
-        handle ActionTypes.REFRESH_SUCCESS, ({mailboxID}) ->
-            _mailboxRefreshing[mailboxID] ?= 0
-            _mailboxRefreshing[mailboxID]++
-            @emit 'change'
-
-        handle ActionTypes.REFRESH_FAILURE, ({mailboxID, error}) ->
-            _mailboxRefreshing[mailboxID]--
-            _refreshLastError = error
-            @emit 'change'
-
-        handle ActionTypes.REFRESH_SUCCESS, ({mailboxID, updated}) ->
-            _mailboxRefreshing[mailboxID]--
-            if updated?
-                setMailbox updated.accountID, updated.id, updated
+        handle ActionTypes.RECEIVE_MAILBOX_UPDATE, (mailbox) ->
+            _setMailbox mailbox
             @emit 'change'
 
 
@@ -281,15 +198,9 @@ class AccountStore extends Store
         return _accounts
 
 
-    getAllMailboxes: ->
-        cachedTransform AccountStore, 'all-mailboxes', _accounts, ->
-            _accounts.flatMap (account) -> account.get 'mailboxes'
-
-    getMailboxCounters: ->
-        return _mailboxesCounters
-
     getSelectedTab: ->
         return _tab
+
 
     getByID: (accountID) ->
         return _accounts.get accountID
@@ -299,68 +210,37 @@ class AccountStore extends Store
         _accounts.find (account) -> account.get('label') is label
 
 
-    getDefault: ->
-        return _accounts.first() or null
+    getDefault: (mailboxID) ->
+        if mailboxID
+            return _accounts.find (account) ->
+                account.get('mailboxes').get(mailboxID)
+        return _accounts.first()
 
 
-    getDefaultMailbox: (accountID) ->
+    getAccountID: ->
+        return @getDefault()?.get 'id' unless _accountID
+        return _accountID
 
-        account = _accounts.get(accountID) or @getDefault()
-        return null unless account
 
-        mailboxes = account.get('mailboxes')
-        mailbox = mailboxes.filter (mailbox) ->
-            return mailbox.get('label').toLowerCase() is 'inbox'
-
-        if mailbox.size
-            return mailbox.first()
-        else
-            favorites = account.get('favorites')
-            defaultID = if favorites? then favorites[0]
-
-            return if defaultID then mailboxes.get defaultID
-            else mailboxes.first()
-
-    hasConversationEnabled: (mailboxID) ->
-        # don't display conversations in Trash and Draft folders
-        mailboxID not in [
-            _selectedAccount?.get('trashMailbox')
-            _selectedAccount?.get('draftMailbox')
-            _selectedAccount?.get('junkMailbox')
-        ]
+    getMailboxID: ->
+        return @getDefault()?.get 'inboxMailbox' unless _mailboxID
+        return _mailboxID
 
 
     getSelected: ->
-        return _selectedAccount
-
-    getSelectedOrDefault: ->
-        @getSelected() or @getDefault()
-
-    getSelectedMailboxes: ->
-        return null unless _selectedAccount?
-        result = _selectedAccount.get 'mailboxes'
-        result = result.sort _mailboxSort
-        return result
+        return _accounts.get _accountID
 
 
-    getSelectedMailbox: (selectedID) ->
-        if (mailboxes = @getSelectedMailboxes())?.size
-            return mailboxes.get(selectedID) if selectedID
-            return _selectedMailbox
-        return @getDefaultMailbox()
+    getAllMailboxes: (accountID) ->
+        accountID ?= @getAccountID()
+        return _accounts.get accountID
+            .get 'mailboxes'
+            .sort _mailboxSort
 
-    getSelectedFavorites: ->
-        if (mailboxes = @getSelectedMailboxes())
-            ids = _selectedAccount?.get 'favorites'
-            if ids?
-                mailboxes = mailboxes
-                    .filter (box, key) -> key in ids
-                    .toOrderedMap()
-            else
-                mailboxes = mailboxes.toOrderedMap()
 
-            mailboxes = mailboxes.sort _mailboxSort
-        return mailboxes
+    getMailbox: (mailboxID) ->
+        mailboxID ?= _mailboxID
+        return @getAllMailboxes()?.get mailboxID
 
 
     getErrors: -> _serverAccountErrorByField
@@ -372,62 +252,9 @@ class AccountStore extends Store
         else
             return error.message or error.name or error
 
-    getRefreshLastError: ->
-        error = _refreshLastError
-        if error.name is 'AccountConfigError'
-            return t "config error #{error.field}"
-        else
-            return error.message or error.name or error
-
     isWaiting: -> return _newAccountWaiting
     isChecking: -> return _newAccountChecking
 
-    # Select the "best" mailbox among a list of candidates
-    # prefer in order inbox, favorites, or first of list
-    pickBestBox: (accountID, candidates) ->
-        account = _accounts.get accountID
-        favorites = account?.get('favorites') or []
-        inFavorites = _.intersection candidates, favorites
-
-        if account and account.get('inboxMailbox') of candidates
-            mailboxID = account.get('inboxMailbox')
-        else if inFavorites.length
-            mailboxID = inFavorites[0]
-        else
-            mailboxID = candidates[0]
-
-        return mailboxID
-
-    getMailboxRole: (account, mailboxID) ->
-        for role in ['trashMailbox','draftMailbox','junkMailbox']
-            if mailboxID is account.get role
-                return role
-
-        return null
 
 
-    makeEmptyAccount: ->
-        account = {}
-        account.label = ''
-        account.login = ''
-        account.password = ''
-        account.imapServer = ''
-        account.imapLogin = ''
-        account.smtpServer = ''
-        account.label = ''
-        account.id = null
-        account.smtpPort = 465
-        account.smtpSSL = true
-        account.smtpTLS = false
-        account.smtpMethod = 'PLAIN'
-        account.imapPort = 993
-        account.imapSSL = true
-        account.imapTLS = false
-        account.accountType = 'IMAP'
-        account.favoriteMailboxes = null
-        return Immutable.Map account
-
-
-
-
-module.exports = new AccountStore()
+module.exports = _self = new AccountStore()

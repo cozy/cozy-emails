@@ -10,6 +10,8 @@ MessageStore = require '../stores/message_store'
 
 {MessageActions} = require '../constants/app_constants'
 
+discovery2Fields = require '../utils/discovery_to_fields'
+
 
 handleResponse = (callback, details...) ->
     # Prepare the handler to get `err`, `res` from superagent, and next the
@@ -43,11 +45,11 @@ module.exports =
         .send settings
         .end handleResponse callback, 'changeSettings', settings
 
-    fetchConversation: (messageID, callback) ->
-        request.get "messages/batchFetch?messageID=#{messageID}"
+    fetchConversation: (conversationID, callback) ->
+        request.get "messages/batchFetch?conversationID=#{conversationID}"
         .set 'Accept', 'application/json'
         .end (err, res) ->
-            _cb = handleResponse callback, 'fetchConversation', messageID
+            _cb = handleResponse callback, 'fetchConversation', conversationID
             _cb err, res
 
     fetchMessagesByFolder: (url, callback) ->
@@ -155,10 +157,14 @@ module.exports =
         .end handleResponse callback, "removeAccount"
 
     accountDiscover: (domain, callback) ->
+        _callback = (error, provider) =>
+            unless error
+                infos = discovery2Fields(provider)
+            callback error, provider, infos
 
         request.get "provider/#{domain}"
         .set 'Accept', 'application/json'
-        .end handleResponse callback, "accountDiscover"
+        .end handleResponse _callback, "accountDiscover"
 
     search: (url, callback) ->
         request.get url

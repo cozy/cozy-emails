@@ -20,12 +20,10 @@ StoreWatchMixin      = require '../mixins/store_watch_mixin'
 
 {AccountActions} = require '../constants/app_constants'
 
-REQUIRED_FIELDS_NEW = [
+REQUIRED_FIELDS = [
     'label', 'name', 'login', 'password', 'imapServer', 'imapPort',
     'smtpServer', 'smtpPort', 'smtpMethod'
 ]
-
-REQUIRED_FIELDS_EDIT = REQUIRED_FIELDS_NEW
 
 TABS = ['account', 'mailboxes', 'signature']
 
@@ -66,25 +64,22 @@ module.exports = React.createClass
 
         return nstate
 
-    isOauth: ->
-        @state.selectedAccount?.get('oauthProvider')?
-
     isNew: ->
         not @state.selectedAccount?
 
     onTabChangesDoSubmit: (changes) ->
-        @onTabChanges changes, => @onSubmit()
+        @onTabChanges changes
+        @onSubmit()
 
-    onTabChanges: (changes, callback = ->) ->
+    onTabChanges: (changes) ->
         nextstate =
-            editedAccount: @state.editedAccount.merge(changes)
+            editedAccount: @state.editedAccount.merge changes
             errors: Immutable.Map()
-
         if @state.selectedAccount?
             validErrors = @getLocalValidationErrors nextstate.editedAccount
             nextstate.errors = Immutable.Map validErrors
 
-        @setState nextstate, callback
+        @setState nextstate
 
     render: ->
         Container
@@ -122,7 +117,7 @@ module.exports = React.createClass
 
                 else
                     AccountConfigMain
-                        editedAccount: @state.editedAccount
+                        account: @state.editedAccount
                         requestChange: @onTabChanges
                         isWaiting: @state.isWaiting
                         checking: @state.isChecking
@@ -135,8 +130,7 @@ module.exports = React.createClass
 
     getLocalValidationErrors: (accountWithChanges) ->
         out = {}
-        requiredFields = if @isNew() then REQUIRED_FIELDS_NEW
-        else REQUIRED_FIELDS_EDIT
+        requiredFields = REQUIRED_FIELDS
 
         for field in requiredFields
             unless accountWithChanges.get(field)
@@ -148,22 +142,20 @@ module.exports = React.createClass
     # If everything is ok, it runs the checking, the account edition and the
     # creation depending on the current state and if the user submitted it
     # with the check button.
-    onSubmit: (event, check) ->
+    onSubmit: (event, isCheck) ->
         event?.preventDefault()
+
         errors = @getLocalValidationErrors @state.editedAccount
-
-        id = @state.editedAccount?.get('id')
-        accountValue = @state.editedAccount.toJS()
-
-        if Object.keys(errors).length > 0
+        if Object.keys(errors).length
             NotificationActionsCreator.alertError t 'account errors'
             @setState submitted: true, errors: Immutable.Map(errors)
+            return
 
-        else if check is true
-            AccountActionCreator.check accountValue, id
-
-        else if id
-            AccountActionCreator.edit accountValue, id
-
+        accountID = @state.editedAccount?.get('id')
+        value = @state.editedAccount.toJS()
+        if isCheck
+            AccountActionCreator.check {accountID, value}
+        else if accountID
+            AccountActionCreator.edit {accountID, value}
         else
-            AccountActionCreator.create accountValue
+            AccountActionCreator.create {value}

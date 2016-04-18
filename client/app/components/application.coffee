@@ -1,23 +1,25 @@
 require '../styles/application.styl'
 
 React = require 'react'
-{div, section, main, p, span, a, i, strong, form, input, button} = React.DOM
+{div, section, main} = React.DOM
 
 # React components
-Menu           = React.createFactory require './menu'
-Modal          = React.createFactory require './modal'
-ToastContainer = React.createFactory require './toast_container'
-Tooltips       = React.createFactory require './tooltips-manager'
-MessageList    = React.createFactory require './message-list'
-Conversation   = React.createFactory require './conversation'
-AccountConfig  = React.createFactory require './account_config'
-Compose        = React.createFactory require './compose'
-classNames = require 'classnames'
+Menu            = React.createFactory require './menu'
+Modal           = React.createFactory require './modal'
+ToastContainer  = React.createFactory require './toast_container'
+Tooltips        = React.createFactory require './tooltips-manager'
+MessageList     = React.createFactory require './message-list'
+Conversation    = React.createFactory require './conversation'
+AccountConfig   = React.createFactory require './account_config'
+Compose         = React.createFactory require './compose'
 
 # React Mixins
+LayoutStore          = require '../stores/layout_store'
 MessageStore         = require '../stores/message_store'
 RouterStore          = require '../stores/router_store'
 SettingsStore        = require '../stores/settings_store'
+RefreshesStore       = require '../stores/refreshes_store'
+AccountStore         = require '../stores/account_store'
 StoreWatchMixin      = require '../mixins/store_watch_mixin'
 TooltipRefesherMixin = require '../mixins/tooltip_refresher_mixin'
 
@@ -39,31 +41,38 @@ Application = React.createClass
 
     mixins: [
         TooltipRefesherMixin
-        StoreWatchMixin [SettingsStore, RouterStore, MessageStore]
+        StoreWatchMixin [SettingsStore, RefreshesStore, RouterStore, MessageStore, LayoutStore, AccountStore]
     ]
 
-    getStateFromStores: ->
+    getStateFromStores: (props) ->
         settings = RouterGetter.getLayoutSettings()
         className = ['layout'
             "layout-#{settings.disposition}"
             if settings.isCompact then "layout-compact"
             "layout-preview-#{settings.previewSize}"].join(' ')
 
+        mailbox = RouterGetter.getCurrentMailbox()
         return {
-            mailboxID       : RouterGetter.getMailboxID()
+            mailboxID       : (mailboxID = mailbox?.get 'id')
+            nbTotal         : mailbox?.get('nbTotal') or 0
+            nbUnread        : mailbox?.get('nbUnread') or 0
+            nbRecent        : mailbox?.get('nbRecent') or 0
             accountID       : RouterGetter.getAccountID()
-            messageID       : (messageID = RouterGetter.getCurrentMessageID())
-            message         : RouterGetter.getCurrentMessage()
+            messageID       : RouterGetter.getCurrentMessageID()
             action          : RouterGetter.getAction()
             isEditable      : RouterGetter.isEditable()
-            inReplyTo       : RouterGetter.getReplyMessage messageID
-            currentSearch   : RouterGetter.getSearch()
             modal           : RouterGetter.getModal()
-            nextURL         : RouterGetter.getNextURL()
             className       : className
+            messages        : RouterGetter.getMessagesList mailboxID
         }
 
     render: ->
+        action = MessageActions.CREATE
+        composeURL = RouterGetter.getURL {action}
+
+        action = AccountActions.CREATE
+        newAccountURL = RouterGetter.getURL {action}
+
         div className: @state.className,
 
             div className: 'app',
@@ -73,8 +82,8 @@ Application = React.createClass
                     accountID       : @state.accountID
                     mailboxID       : @state.mailboxID
                     accounts        : RouterGetter.getAccounts().toArray()
-                    composeURL      : RouterGetter.getURL action: MessageActions.CREATE
-                    newAccountURL   : RouterGetter.getURL action: AccountActions.CREATE
+                    composeURL      : composeURL
+                    newAccountURL   : newAccountURL
 
                 main
                     className: @props.layout
@@ -92,8 +101,8 @@ Application = React.createClass
                             key                  : @state.action + '-' + @state.messageID
                             id                   : @state.messageID
                             action               : @state.action
-                            message              : @state.message
-                            inReplyTo            : @state.inReplyTo
+                            message              : RouterGetter.getCurrentMessage()
+                            inReplyTo            : RouterGetter.getReplyMessage @state.messageID
                             settings             : SettingsStore.get()
                             account              : RouterGetter.getAccounts().get(@state.accountID)
 
@@ -106,6 +115,7 @@ Application = React.createClass
                                 accountID   : @state.accountID
                                 mailboxID   : @state.mailboxID
                                 messageID   : @state.messageID
+                                messages    : @state.messages
 
                             if @state.action is MessageActions.SHOW
                                 Conversation

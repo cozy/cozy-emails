@@ -21,14 +21,17 @@ class RouterStore extends Store
     _nextURL = null
     _lastDate = null
 
+    _modal = null
+
     _currentFilter = _defaultFilter =
-        sort: '-'
+        sort: '-date'
 
         flags: null
 
         value: null
         before: null
         after: null
+        pageAfter: null
 
     getRouter: ->
         return _router
@@ -41,63 +44,60 @@ class RouterStore extends Store
     getQueryParams: ->
          if _currentFilter isnt _defaultFilter then _currentFilter else null
 
+
     getFilter: ->
         _currentFilter
 
+
+    # FIXME: refactor filtering based on query object (see doc/routes.md
+    #        and router.coffee:_parseQuery)
     setFilter: (params={}) ->
-        return if params.query and not (params = _getURLparams params.query)
 
-        # Update Filter
-        _currentFilter = _.clone _defaultFilter
-        _.extend _currentFilter, params
 
-        return _currentFilter
-
-    getScrollValue: ->
-        _scrollValue
 
     getURL: (params={}) ->
-        # FIXME : prendre en compte ici le cas
-        # next conversation : MessageActions.GROUP_NEXT
-        # previous conversation : MessageActions.GROUP_PREVIOUS
         action = _getRouteAction params
-        filter = if MessageActions.SHOW_ALL is action then _getURIQueryParams params else ''
 
-        isMessage = !!params.messageID or -1 < action.indexOf 'message'
+        filter = unless params.resetFilter
+        then _getURIQueryParams params
+        else ''
+
+        isMessage = !!params.messageID or _.contains action, 'message'
         if isMessage and not params.mailboxID
-            params.mailboxID = AccountStore.getSelectedMailbox()?.get 'id'
+            params.mailboxID = AccountStore.getMailboxID()
 
-        isMailbox = -1 < action.indexOf 'mailbox'
+        isMailbox = _.contains action, 'mailbox'
         if isMailbox and not params.mailboxID
-            params.mailboxID = AccountStore.getSelected()?.get 'id'
+            params.mailboxID = AccountStore.getMailboxID()
 
-        isAccount = -1 < action.indexOf 'account'
+        isAccount = _.contains action, 'account'
         if isAccount and not params.accountID
-            params.accountID = AccountStore.getSelectedOrDefault()?.get 'id'
+            params.accountID = AccountStore.getAccountID()
         if isAccount and not params.tab
             params.tab = 'account'
 
         if (route = _getRoute action)
             isValid = true
             prefix = unless params.isServer then '#' else ''
+            filter = '/' + filter if params.isServer
             url = route.replace /\:\w*/gi, (match) =>
                 # Get Route pattern of action
                 # Replace param name by its value
                 param = match.substring 1, match.length
-                params[param]
+                params[param] or match
+            return prefix + url.replace(/\(\?:query\)$/, filter)
 
-            # console.log 'getURL', action, prefix + url.replace(/\/\*$/, '')
-            return prefix + url.replace(/\/\*$/, '') + filter
-
-        return '/' + filter
-
-    getNextURL: ->
-        return _nextURL
+    getNextURL: (params={}) ->
+        pageAfter = params.messages?.last()?.get 'date'
+        delete params.messages
+        params.filter = {} unless params.filter?
+        params.filter.pageAfter = pageAfter
+        return @getCurrentURL params
 
     getCurrentURL: (options={}) ->
         params = _.extend {isServer: true}, options
         params.action = @getAction() unless params.action
-        params.mailboxID = AccountStore.getSelectedMailbox()?.get('id')
+        params.mailboxID = AccountStore.getMailboxID()
         return @getURL params
 
     _getRouteAction = (params) ->
@@ -148,27 +148,28 @@ class RouterStore extends Store
                 (result = {}).flags = flags
         return result
 
-    _getURIQueryParams = (params) ->
-        filters = _self.getFilter()
-        isServer = params.isServer
-        params = _.extend {}, filters, params?.filter
-        result = ''
+    _getURIQueryParams = (params={}) ->
+        filters = _.extend {}, _self.getFilter()
+        _.extend filters, params.filter if params.filter
 
-        if isServer
-            params.sort = "#{params.sort}date"
-            _.each params, (value, key) ->
-                if value and value isnt 'undefined'
-                    start = unless result.length then '/?' else '&'
-                    result += start + key + '=' + encodeURIComponent(value)
-        else
-            _.each params, (value, key) ->
-                if value and value isnt 'undefined' and _defaultFilter[key] isnt value
-                    start = unless result.length then '/?' else '&'
-                    result += start + key + '=' + value
-        result
+        query = _.compact _.map filters, (value, key) ->
+            if value? and _defaultFilter[key] isnt value
+                return key + '=' + encodeURIComponent(value)
+
+        if query.length then "?#{query.join '&'}" else ""
+
+
+
+    _setFilter = (query) ->
+        # Update Filter
+        _currentFilter = _.clone _defaultFilter
+        _.extend _currentFilter, query
+        return _currentFilter
+
 
     _resetFilter = ->
         _currentFilter = _defaultFilter
+
 
     # Useless for MessageStore
     # to clean messages
@@ -181,17 +182,19 @@ class RouterStore extends Store
     ###
     __bindHandlers: (handle) ->
 
-        handle ActionTypes.QUERY_PARAMETER_CHANGED, (params) ->
-            _self.setFilter params
-            @emit 'change'
+        handle ActionTypes.ROUTE_CHANGE, (params={}) ->
+            {action, query} = params
 
-        handle ActionTypes.ROUTE_CHANGE, (value) ->
             # We cant display any informations
             # without accounts
-            unless AccountStore.getAll()?.size
-                _action = AccountActions.CREATE
+            if AccountStore.getAll()?.size
+                _action = action
             else
-                _action = value
+                _action = AccountActions.CREATE
+
+            # Save current filters
+            _setFilter query
+
             @emit 'change'
 
         handle ActionTypes.ROUTES_INITIALIZE, (router) ->
@@ -199,36 +202,31 @@ class RouterStore extends Store
             @emit 'change'
 
         handle ActionTypes.REMOVE_ACCOUNT_SUCCESS, ->
-            _router?.navigate url: ''
+            # FIXME : move AccountStore actions here
+            _action = AccountActions.CREATE
+            @emit 'change'
 
         handle ActionTypes.ADD_ACCOUNT_SUCCESS, ({account, areMailboxesConfigured}) ->
-            accountID = account.id
-            action = if areMailboxesConfigured then MessageActions.SHOW_ALL else AccountActions.EDIT
-            _router?.navigate {accountID, action}
+            # FIXME : move AccountStore actions here
+            _action = if areMailboxesConfigured
+            then MessageActions.SHOW_ALL
+            else AccountActions.EDIT
+
             @emit 'change'
 
-        handle ActionTypes.MESSAGE_FETCH_SUCCESS, (params) ->
-            newDate = params.nextURL?.match(/pageAfter=[\w-%.]*&*/gi)
-            newDate = newDate?[0].split('=')[1]
 
-            # PageAfter should get older Messages
-            # if not do not change _nextPage
-            if not _lastDate or _lastDate > newDate
-                _nextURL = params.nextURL
-                _lastDate = newDate
+        handle ActionTypes.MESSAGE_FETCH_SUCCESS, ->
             @emit 'change'
 
-        handle ActionTypes.SELECT_ACCOUNT, (value) ->
-            _resetFilter()
+
+        handle ActionTypes.DISPLAY_MODAL, (params) ->
+            _modal = params
             @emit 'change'
 
-        handle ActionTypes.MESSAGE_TRASH_SUCCESS, (params) ->
-            if MessageActions.SHOW is _action
-                if (messageID = params?.next?.get 'id')
-                    _router.navigate @getURL {messageID}
-                else
-                    _action = MessageActions.SHOW_ALL
-                @emit 'change'
+        handle ActionTypes.HIDE_MODAL, (value) ->
+            _modal = null
+            @emit 'change'
+
 
 _toCamelCase = (value) ->
     return value.replace /\.(\w)*/gi, (match) ->

@@ -12,12 +12,12 @@ refCounter = 1
 MessageActionCreator =
 
     receiveRawMessages: (messages) ->
-        AppDispatcher.handleViewAction
+        AppDispatcher.dispatch
             type: ActionTypes.RECEIVE_RAW_MESSAGES
             value: messages
 
     receiveRawMessage: (message) ->
-        AppDispatcher.handleViewAction
+        AppDispatcher.dispatch
             type: ActionTypes.RECEIVE_RAW_MESSAGE
             value: message
 
@@ -30,17 +30,17 @@ MessageActionCreator =
         unless message.composeInHTML
             message.html = message.text
 
-        AppDispatcher.handleViewAction
+        AppDispatcher.dispatch
             type: ActionTypes.MESSAGE_SEND_REQUEST
             value: message
 
         XHRUtils.messageSend message, (error, message) =>
             if error?
-                AppDispatcher.handleViewAction
+                AppDispatcher.dispatch
                     type: ActionTypes.MESSAGE_SEND_FAILURE
                     value: {error, action, message}
             else
-                AppDispatcher.handleViewAction
+                AppDispatcher.dispatch
                     type: ActionTypes.MESSAGE_SEND_SUCCESS
                     value: {action, message}
 
@@ -49,63 +49,27 @@ MessageActionCreator =
     setCurrent: (messageID, conv) ->
         if messageID? and typeof messageID isnt 'string'
             messageID = messageID.get 'id'
-        AppDispatcher.handleViewAction
+        AppDispatcher.dispatch
             type: ActionTypes.MESSAGE_CURRENT
             value:
                 messageID: messageID
 
-    fetchConversation: (messageID) ->
-
-        console.log 'FETCH_CONVERSATION'
-        # AppDispatcher.handleViewAction
-        #     type: ActionTypes.CONVERSATION_FETCH_REQUEST
-        #     value: {conversationID}
-        #
-        # XHRUtils.fetchConversation conversationID, (error, updated) ->
-        #     if error
-        #         AppDispatcher.handleViewAction
-        #             type: ActionTypes.CONVERSATION_FETCH_FAILURE
-        #             value: {error}
-        #     else
-        #         AppDispatcher.handleViewAction
-        #             type: ActionTypes.CONVERSATION_FETCH_SUCCESS
-        #             value: {updated}
-
-
     # Immediately synchronise some messages with the server
     # Used if one of the action fail
     recover: (target, ref) ->
-        AppDispatcher.handleViewAction
+        AppDispatcher.dispatch
             type: ActionTypes.MESSAGE_RECOVER_REQUEST
             value: {ref}
 
         XHRUtils.batchFetch target, (err, messages) ->
             if err
-                AppDispatcher.handleViewAction
+                AppDispatcher.dispatch
                     type: ActionTypes.MESSAGE_RECOVER_FAILURE
                     value: {ref}
             else
-                AppDispatcher.handleViewAction
+                AppDispatcher.dispatch
                     type: ActionTypes.MESSAGE_RECOVER_SUCCESS
                     value: {ref}
-
-    refreshMailbox: (mailboxID) ->
-        AppDispatcher.handleViewAction
-            type: ActionTypes.REFRESH_REQUEST
-            value: {mailboxID}
-
-        account = AccountStore.getSelected()
-        options = deep: account.get('draftMailbox') is mailboxID
-
-        XHRUtils.refreshMailbox mailboxID, options, (error, updated) ->
-            if error?
-                AppDispatcher.handleViewAction
-                    type: ActionTypes.REFRESH_FAILURE
-                    value: {mailboxID, error}
-            else
-                AppDispatcher.handleViewAction
-                    type: ActionTypes.REFRESH_SUCCESS
-                    value: {mailboxID, updated}
 
 
     # Delete message(s)
@@ -114,16 +78,15 @@ MessageActionCreator =
     delete: (target) ->
         ref = refCounter++
 
-        AppDispatcher.handleViewAction
+        AppDispatcher.dispatch
             type: ActionTypes.MESSAGE_TRASH_REQUEST
             value: {target, ref}
 
         # send request
         ts = Date.now()
-        next = MessageStore.getNextConversation()
         XHRUtils.batchDelete target, (error, updated) =>
             if error
-                AppDispatcher.handleViewAction
+                AppDispatcher.dispatch
                     type: ActionTypes.MESSAGE_TRASH_FAILURE
                     value: {target, ref, error}
 
@@ -134,13 +97,13 @@ MessageActionCreator =
                 return
 
             msg.updated = ts for msg in updated
-            AppDispatcher.handleViewAction
+            AppDispatcher.dispatch
                 type: ActionTypes.MESSAGE_TRASH_SUCCESS
-                value: {target, ref, updated, next}
+                value: {target, ref, updated}
 
     move: (target, from, to, callback) ->
         ref = refCounter++
-        AppDispatcher.handleViewAction
+        AppDispatcher.dispatch
             type: ActionTypes.MESSAGE_MOVE_REQUEST
             value: {target, ref, from, to}
 
@@ -148,7 +111,7 @@ MessageActionCreator =
         # send request
         XHRUtils.batchMove target, from, to, (error, updated) =>
             if error
-                AppDispatcher.handleViewAction
+                AppDispatcher.dispatch
                     type: ActionTypes.MESSAGE_MOVE_FAILURE
                     value: {target, ref, error}
 
@@ -158,7 +121,7 @@ MessageActionCreator =
                 @recover target, ref
             else
                 msg.updated = ts for msg in updated
-                AppDispatcher.handleViewAction
+                AppDispatcher.dispatch
                     type: ActionTypes.MESSAGE_MOVE_SUCCESS
                     value: {target, ref, updated}
 
@@ -185,13 +148,13 @@ MessageActionCreator =
 
         ts = Date.now()
 
-        AppDispatcher.handleViewAction
+        AppDispatcher.dispatch
             type: ActionTypes.MESSAGE_FLAGS_REQUEST
             value: {target, ref, op, flag, flagAction}
 
         XHRUtils[op] target, flag, (error, updated) =>
             if error
-                AppDispatcher.handleViewAction
+                AppDispatcher.dispatch
                     type: ActionTypes.MESSAGE_FLAGS_FAILURE
                     value: {target, ref, error, op, flag, flagAction}
 
@@ -201,7 +164,7 @@ MessageActionCreator =
                 @recover target, ref
             else
                 msg.updated = ts for msg in updated
-                AppDispatcher.handleViewAction
+                AppDispatcher.dispatch
                     type: ActionTypes.MESSAGE_FLAGS_SUCCESS
                     value: {target, ref, updated, op, flag, flagAction}
 
@@ -220,7 +183,7 @@ MessageActionCreator =
             bydest[destString] ?= {to: dest, from: oldto, messageIDs: []}
             bydest[destString].messageIDs.push message.get('id')
 
-        AppDispatcher.handleViewAction
+        AppDispatcher.dispatch
             type: ActionTypes.MESSAGE_UNDO_START
             value: {ref}
 
@@ -230,7 +193,7 @@ MessageActionCreator =
             MessageActionCreator.move target, from, to, next
         , (error) ->
             if error
-                AppDispatcher.handleViewAction
+                AppDispatcher.dispatch
                     type: ActionTypes.MESSAGE_UNDO_FAILURE
                     value: {ref}
 
@@ -239,7 +202,7 @@ MessageActionCreator =
                 # server
                 @recover target, ref
             else
-                AppDispatcher.handleViewAction
+                AppDispatcher.dispatch
                     type: ActionTypes.MESSAGE_UNDO_SUCCESS
                     value: {ref}
 

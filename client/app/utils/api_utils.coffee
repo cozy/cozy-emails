@@ -3,6 +3,8 @@ _        = require 'underscore'
 Polyglot = require 'node-polyglot'
 moment   = require 'moment'
 
+{sendReport} = require './error_manager'
+
 RouterGetter = require '../getters/router'
 
 # FIXME : remove all this from Stores to  RouterGetter
@@ -13,14 +15,14 @@ RouterStore  = require '../stores/router_store'
 SettingsStore = require '../stores/settings_store'
 LayoutActionCreator  = require '../actions/layout_action_creator'
 MessageActionCreator = require '../actions/message_action_creator'
-RouterActionCreator  = require '../actions/layout_action_creator'
+RouterActionCreator  = require '../actions/router_action_creator'
 NotificationActionsCreator = require '../actions/notification_action_creator'
 
 {MessageActions, AccountActions} = require '../constants/app_constants'
 
 
 onMessageList = ->
-    return RouterStore.getAction() is MessageActions.SHOW_ALL
+    return RouterStore.getAction() in [MessageActions.SHOW_ALL, MessageActions.SHOW]
 
 
 module.exports = Utils =
@@ -34,7 +36,7 @@ module.exports = Utils =
 
 
     getCurrentMailbox: ->
-        AccountStore.getSelectedMailbox()?.toJS()
+        AccountStore.getMailbox()?.toJS()
 
 
     getCurrentMessage: ->
@@ -92,13 +94,19 @@ module.exports = Utils =
                 settings[k] = v
         else
             settings[key] = value
-        AppDispatcher.handleViewAction
+        AppDispatcher.dispatch
             type: ActionTypes.SETTINGS_UPDATE_SUCCESS
             value: settings
 
-    messageNavigate: (direction, inConv) ->
-        return unless onMessageList()
-        RouterActionCreator.navigate action: MessageActions.GROUP_NEXT
+    # top/bottom navigation
+    # `top` key     -> direction is prev
+    # `bottom` key  -> direction is next
+    messageNavigate: (direction) ->
+        if 'prev' is direction
+            messageID = MessageStore.getNextConversation()?.get 'id'
+        else
+            messageID = MessageStore.getPreviousConversation()?.get 'id'
+        RouterActionCreator.navigate {messageID}
 
 
     messageSetCurrent: (message) ->
@@ -157,18 +165,13 @@ module.exports = Utils =
         MessageActionCreator.undo()
 
 
-    customEvent: (name, data) ->
-        domEvent = new CustomEvent name, detail: data
-        window.dispatchEvent domEvent
-
-
     simulateUpdate: ->
 
         AppDispatcher = require '../app_dispatcher'
         window.setInterval ->
             content =
-                "accountID": AccountStore.getDefault()?.get('id'),
-                "id": AccountStore.getDefaultMailbox()?.get('id'),
+                "accountID": AccountStore.getAccountID()
+                "id": AccountStore.getMailboxID()
                 "label": "INBOX",
                 "path": "INBOX",
                 "tree": ["INBOX"],
@@ -182,7 +185,7 @@ module.exports = Utils =
                 "nbRecent": 5,
                 "weight": 1000,
                 "depth": 0
-            AppDispatcher.handleServerAction
+            AppDispatcher.dispatch
                 type: 'RECEIVE_MAILBOX_UPDATE'
                 value: content
         , 5000
@@ -212,15 +215,7 @@ module.exports = Utils =
 
     # Log message into server logs
     logInfo: (message) ->
-        data =
-            data:
-                type: 'debug'
-                message: message
-        xhr = new XMLHttpRequest()
-        xhr.open 'POST', 'activity', true
-        xhr.setRequestHeader "Content-Type", "application/json;charset=UTF-8"
-        xhr.send JSON.stringify(data)
-        console.info message
+        sendReport 'debug', message
 
 
     # Log every Flux action (only in development environment)

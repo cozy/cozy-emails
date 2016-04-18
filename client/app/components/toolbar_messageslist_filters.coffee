@@ -7,8 +7,6 @@ React = require 'react'
 RouterGetter = require '../getters/router'
 RouterActionCreator = require '../actions/router_action_creator'
 
-DateRangePicker = React.createFactory require './date_range_picker'
-
 module.exports = FiltersToolbarMessagesList = React.createClass
     displayName: 'FiltersToolbarMessagesList'
 
@@ -18,9 +16,6 @@ module.exports = FiltersToolbarMessagesList = React.createClass
 
     getInitialState: ->
         expanded:  false
-
-    onDateFilter: (before, after) ->
-        RouterActionCreator.addFilter {before, after}
 
     toggleFilters: (filter) ->
         RouterActionCreator.addFilter filter
@@ -56,16 +51,3 @@ module.exports = FiltersToolbarMessagesList = React.createClass
 
                 i className: 'fa fa-star'
                 span className: 'btn-label', t 'filters flagged'
-
-            button
-                role: 'menuitem'
-                'aria-selected': RouterGetter.isFlags 'ATTACH'
-                onClick: => @toggleFilters flags: MessageFilter.ATTACH
-                'aria-describedby': Tooltips.FILTER_ONLY_WITH_ATTACHMENT
-                'data-tooltip-direction': 'bottom'
-
-                i className: 'fa fa-paperclip'
-                span className: 'btn-label', t 'filters attach'
-
-            DateRangePicker
-                onDateFilter: @onDateFilter

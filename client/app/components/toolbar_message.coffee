@@ -22,7 +22,6 @@ module.exports = React.createClass
         selectedMailboxID  : React.PropTypes.string.isRequired
         onDelete           : React.PropTypes.func.isRequired
         onMove             : React.PropTypes.func.isRequired
-        onHeaders          : React.PropTypes.func.isRequired
 
 
     render: ->

@@ -33,6 +33,7 @@ class RefreshesStore extends Store
             _refreshes = refreshesToImmutable refreshes
 
         handle ActionTypes.RECEIVE_REFRESH_UPDATE, (refresh) ->
+            return unless refresh.length
             refresh = Immutable.Map refresh
             id = refresh.get('objectID')
             _refreshes = _refreshes.set(id, refresh).toOrderedMap()
