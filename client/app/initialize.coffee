@@ -16,7 +16,6 @@ Router = require './router'
 
 window.__DEV__ = window.location.hostname is 'localhost'
 
-
 # Waits for the DOM to be ready
 document.addEventListener 'DOMContentLoaded', ->
 
@@ -36,10 +35,10 @@ document.addEventListener 'DOMContentLoaded', ->
         LayoutActionCreator.setDisposition window.settings.layoutStyle
 
         # Routing management
+        initRealtime()
         window.router = new Router()
 
         # initialize interfaces
-        initRealtime()
         initDesktopNotifications()
 
         # starts perfs logging
