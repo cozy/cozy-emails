@@ -56,7 +56,7 @@ class RouterStore extends Store
     getURL: (params={}) ->
         action = _getRouteAction params
 
-        filter = if params.resetFilter
+        filter = unless params.resetFilter
         then _getURIQueryParams params
         else ''
 
