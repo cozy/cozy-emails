@@ -7,24 +7,29 @@ describe 'Mailbox fetching', ->
     inboxCount = 0
     readCount = 0
 
+
     testResultLength = (first, iterator, callback) ->
         [iterator, callback] = [null, iterator] unless callback
+        totalFound = null
+
         step = (link, callback) ->
             client.get link, (err, res, body) ->
                 return callback err if err
                 body.messages.length.should.be.lessThan MSGBYPAGE + 1
+                totalFound = body.messages.length
                 iterator?(body.messages)
                 callback null
+
+        step first, ->
+            if totalFound isnt null then callback null, totalFound
+            else callback new Error 'total & count doesnt match'
+
 
     it "When I follow the next links", (done) ->
         testResultLength "/mailbox/#{store.inboxID}",
             (messages) ->
                 readCount += messages
                             .filter (m) -> '\\Seen' in m.flags
-                            .length
-
-                flaggedCount += messages
-                            .filter (m) -> '\\Flagged' in m.flags
                             .length
 
             (err, total) ->
