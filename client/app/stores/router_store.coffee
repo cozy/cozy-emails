@@ -71,6 +71,7 @@ class RouterStore extends Store
         if (route = _getRoute action)
             isValid = true
             prefix = unless params.isServer then '#' else ''
+            filter = '/' + filter if params.isServer
             url = route.replace /\:\w*/gi, (match) =>
                 # Get Route pattern of action
                 # Replace param name by its value
