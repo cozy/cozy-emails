@@ -105,9 +105,7 @@ class AccountStore extends Store
     _updateAccount = (rawAccount) ->
         account = AccountTranslator.toImmutable rawAccount
         accountID = account.get 'id'
-
         _accounts = _accounts.set accountID, account
-
 
 
     ###
