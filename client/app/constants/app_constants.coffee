@@ -62,11 +62,6 @@ module.exports =
         'MESSAGE_UNDO_FAILURE'          : 'MESSAGE_UNDO_FAILURE'
         'MESSAGE_UNDO_TIMEOUT'          : 'MESSAGE_UNDO_TIMEOUT'
 
-        'CONVERSATION_FETCH_REQUEST'     : 'CONVERSATION_FETCH_REQUEST'
-        'CONVERSATION_FETCH_SUCCESS'     : 'CONVERSATION_FETCH_SUCCESS'
-        'CONVERSATION_FETCH_FAILURE'     : 'CONVERSATION_FETCH_FAILURE'
-
-
         'MESSAGE_RECOVER_REQUEST'     : 'MESSAGE_RECOVER_REQUEST'
         'MESSAGE_RECOVER_SUCCESS'     : 'MESSAGE_RECOVER_SUCCESS'
         'MESSAGE_RECOVER_FAILURE'     : 'MESSAGE_RECOVER_FAILURE'
@@ -190,6 +185,8 @@ module.exports =
         trashMailbox: 'fa-trash-o'
         junkMailbox: 'fa-fire'
         allMailbox: 'fa-archive'
+        unreadMailbox: 'fa-eye'
+        flaggedMailbox: 'fa-star'
 
     Tooltips:
         REPLY                       : 'TOOLTIP_REPLY'

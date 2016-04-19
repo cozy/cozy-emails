@@ -37,8 +37,8 @@ describe 'AccountStore initialized without account', ->
         defaultAccount.get('id').should.equal 'testid'
 
     it 'Then the created account should be selected', ->
-        AccountStore.getSelected().get('id').should.equal 'testid'
-        AccountStore.getSelectedOrDefault().get('id').should.equal 'testid'
+        AccountStore.getAccountID().should.equal 'testid'
+        AccountStore.getAccountID().should.equal 'testid'
 
     it 'Then AccountStore.isWaiting is false', ->
         AccountStore.isWaiting().should.be.false
@@ -94,4 +94,4 @@ describe 'AccountStore initialized with accounts', ->
         should.not.exist AccountStore.getSelected()
 
     it 'Then selectedOrDefault should be first', ->
-        AccountStore.getSelectedOrDefault().get('id').should.equal 'testid'
+        AccountStore.getAccountID().should.equal 'testid'

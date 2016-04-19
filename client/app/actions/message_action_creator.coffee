@@ -54,24 +54,6 @@ MessageActionCreator =
             value:
                 messageID: messageID
 
-    fetchConversation: (messageID) ->
-
-        console.log 'FETCH_CONVERSATION'
-        # AppDispatcher.dispatch
-        #     type: ActionTypes.CONVERSATION_FETCH_REQUEST
-        #     value: {conversationID}
-        #
-        # XHRUtils.fetchConversation conversationID, (error, updated) ->
-        #     if error
-        #         AppDispatcher.dispatch
-        #             type: ActionTypes.CONVERSATION_FETCH_FAILURE
-        #             value: {error}
-        #     else
-        #         AppDispatcher.dispatch
-        #             type: ActionTypes.CONVERSATION_FETCH_SUCCESS
-        #             value: {updated}
-
-
     # Immediately synchronise some messages with the server
     # Used if one of the action fail
     recover: (target, ref) ->
@@ -89,24 +71,6 @@ MessageActionCreator =
                     type: ActionTypes.MESSAGE_RECOVER_SUCCESS
                     value: {ref}
 
-    refreshMailbox: (mailboxID) ->
-        AppDispatcher.dispatch
-            type: ActionTypes.REFRESH_REQUEST
-            value: {mailboxID}
-
-        account = AccountStore.getSelected()
-        options = deep: account.get('draftMailbox') is mailboxID
-
-        XHRUtils.refreshMailbox mailboxID, options, (error, updated) ->
-            if error?
-                AppDispatcher.dispatch
-                    type: ActionTypes.REFRESH_FAILURE
-                    value: {mailboxID, error}
-            else
-                AppDispatcher.dispatch
-                    type: ActionTypes.REFRESH_SUCCESS
-                    value: {mailboxID, updated}
-
 
     # Delete message(s)
     # target:
@@ -120,7 +84,6 @@ MessageActionCreator =
 
         # send request
         ts = Date.now()
-        next = MessageStore.getNextConversation()
         XHRUtils.batchDelete target, (error, updated) =>
             if error
                 AppDispatcher.dispatch
@@ -136,7 +99,7 @@ MessageActionCreator =
             msg.updated = ts for msg in updated
             AppDispatcher.dispatch
                 type: ActionTypes.MESSAGE_TRASH_SUCCESS
-                value: {target, ref, updated, next}
+                value: {target, ref, updated}
 
     move: (target, from, to, callback) ->
         ref = refCounter++

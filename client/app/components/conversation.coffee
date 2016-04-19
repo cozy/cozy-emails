@@ -10,6 +10,7 @@ DomUtils = require '../utils/dom_utils'
 Message             = React.createFactory require './message'
 ToolbarConversation = React.createFactory require './toolbar_conversation'
 
+SettingsStore = require '../stores/settings_store'
 RouterGetter = require '../getters/router'
 
 # FIXME : use Getters instead of Stores
@@ -21,9 +22,6 @@ StoreWatchMixin      = require '../mixins/store_watch_mixin'
 
 module.exports = React.createClass
     displayName: 'Conversation'
-
-    propTypes:
-        messageID: React.PropTypes.string
 
     mixins: [
         StoreWatchMixin [SelectionStore, MessageStore]
@@ -37,45 +35,29 @@ module.exports = React.createClass
 
     getStateFromStores: ->
         return {
-            isLoading: RouterGetter.isLoading()
             message: RouterGetter.getMessage()
-            messages: RouterGetter.getConversationMessages()
-            # compactMin: 3
-            # compact: if @state then @state.compact else true
-            # isCompacted: if @state then @state.isCompacted else false
+            conversation: RouterGetter.getConversation()
         }
 
     renderMessage: (message, index) ->
-        # isCompactMode = not @state.isCompacted and @state.compact
-        # doCompact = index <= @state.compactMin
-        # if isCompactMode and doCompact
-        #     hiddenSize = @state.messages?.size -  @state.compactMin
-        #     @state.isCompacted = true
-        #     return button
-        #         ref: 'button-expand'
-        #         key: 'button-expand-' + message.get 'id'
-        #         className: 'more'
-        #         onClick: =>
-        #             @setState compact: false
-        #         i className: 'fa fa-refresh'
-        #         t 'load more messages', hiddenSize
-
         accounts = AccountStore.getAll()
         accountID = RouterGetter.getAccountID()
         messageID = message.get 'id'
-        conversationID = message.get('conversationID')
         Message
             ref                 : 'message'
             key                 : 'message-' + messageID
             message             : message
-            active              : RouterGetter.isCurrentConversation conversationID
+            active              : @props.messageID is messageID
             url                 : RouterGetter.getURL {messageID}
             selectedMailboxID   : @props.mailboxID
             useIntents          : LayoutStore.intentAvailable()
             trashMailbox        : accounts[accountID]?.trashMailbox
+            displayHTML         : SettingsStore.get 'messageDisplayHTML'
+            displayImages       : SettingsStore.get 'messageDisplayImages'
+            confirmDelete       : SettingsStore.get 'messageConfirmDelete'
 
     render: ->
-        unless @state.messages?.size
+        unless @state.conversation?.length
             return section
                 key: 'conversation'
                 className: 'conversation panel'
@@ -106,7 +88,7 @@ module.exports = React.createClass
 
             section
                 ref: 'scrollable',
-                    @state.messages.map @renderMessage
+                    @state.conversation.map @renderMessage
 
     _initScroll: ->
         if not (scrollable = ReactDOM.findDOMNode @refs.scrollable) or scrollable.scrollTop

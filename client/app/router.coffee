@@ -46,7 +46,7 @@ class Router extends Backbone.Router
 
 
     defaultMailbox: ->
-        mailboxID = AccountStore.getDefault().get('id')
+        mailboxID = AccountStore.getMailboxID()
         @navigate "mailbox/#{mailboxID}", trigger: true
 
 
@@ -64,7 +64,6 @@ class Router extends Backbone.Router
 
     messageShow: (mailboxID, messageID, query) ->
         _dispatch {action: MessageActions.SHOW, mailboxID, messageID}, query
-
 
     messageEdit: (mailboxID, messageID) ->
         _dispatch {action: MessageActions.EDIT, mailboxID, messageID}

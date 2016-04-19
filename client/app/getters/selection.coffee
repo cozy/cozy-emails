@@ -10,7 +10,8 @@ class SelectionGetter
 
     getSelection: (messages) ->
         if @isAllSelected() and messages?.size
-            return messages.map (message) -> message.get('id')
+            messages = messages.map (message) -> message.get('id')
+            return messages.toArray()
         return SelectionStore.getSelected()?.toArray()
 
 module.exports = new SelectionGetter()

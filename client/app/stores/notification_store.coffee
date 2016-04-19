@@ -237,8 +237,14 @@ class NotificationStore extends Store
 
         handle ActionTypes.REFRESH_FAILURE, ({error}) ->
             AppDispatcher.waitFor [AccountStore.dispatchToken]
+
+            if error.name is 'AccountConfigError'
+                message = t "config error #{error.field}"
+            else
+                message = error.message or error.name or error
+
             _showNotification
-                message: AccountStore.getRefreshLastError()
+                message: message
                 errors: [error]
                 autoclose: true
 

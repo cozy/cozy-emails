@@ -13,8 +13,13 @@ _ = require 'lodash'
 
 class RouteGetter
 
-    getNextURL: ->
-        RouterStore.getNextURL()
+    hasNextPage: ->
+        not MessageStore.isAllLoaded()
+
+    isCurrentURL: (url) ->
+        isServer = false
+        currentURL = RouterStore.getCurrentURL {isServer}
+        currentURL is url
 
     getURL: (params) ->
         RouterStore.getURL params
@@ -53,9 +58,6 @@ class RouteGetter
             previewSize: LayoutStore.getPreviewSize()
         }
 
-    isLoading: ->
-        MessageStore.isFetching()
-
     getProgress: (accountID) ->
         RefreshesStore.getRefreshing().get accountID
 
@@ -69,9 +71,11 @@ class RouteGetter
         flags = @getFilter()?.flags or []
         MessageFilter[name] is flags or MessageFilter[name] in flags
 
-    getMessagesToDisplay: (mailboxID) ->
+    getMessagesList: (mailboxID) ->
         mailboxID ?= @getMailboxID()
-        messages = MessageStore.getMessagesToDisplay mailboxID
+        return null unless mailboxID
+
+        messages = MessageStore.getMessagesList mailboxID
 
         # We dont filter for type from and dest because it is
         # complicated by collation and name vs address.
@@ -89,17 +93,14 @@ class RouteGetter
         messages.sort sortByDate filter.order
 
     getMessage: (messageID) ->
-        MessageStore.getMessage messageID
+        MessageStore.getByID messageID
 
-    getConversationLength: (messageID) ->
-        MessageStore.getConversationLength messageID
+    getConversationLength: ({messageID, conversationID}) ->
+        MessageStore.getConversationLength {messageID, conversationID}
 
-    getConversationMessages: (messageID) ->
-        messageID ?= MessageStore.getCurrentID()
-        messageIDs = MessageStore.getByID(messageID)?.get('messageIDs')
-        return messageIDs?.map (messageID) ->
-            MessageStore.getByID messageID
-
+    getConversation: (messageID) ->
+        conversation = MessageStore.getConversation messageID
+        conversation?.toArray()
 
     getCurrentMessageID: ->
         MessageStore.getCurrentID()
@@ -110,8 +111,12 @@ class RouteGetter
     isCurrentConversation: (conversationID) ->
         conversationID is @getCurrentMessage()?.get 'conversationID'
 
-    getCurrentMailbox: (id) ->
-        AccountStore.getSelectedMailbox id
+    getCurrentMailbox: (mailboxID) ->
+        AccountStore.getMailbox mailboxID
+
+    getInbox: ->
+        AccountStore.getAllMailboxes()?.find (mailbox) ->
+            'INBOX' is mailbox.get 'label'
 
     getAccounts: ->
         accountID = @getAccountID()
@@ -123,19 +128,19 @@ class RouteGetter
             return 0
 
     getAccountSignature: ->
-        AccountStore.getSelectedOrDefault()?.get 'signature'
+        AccountStore.getSelected()?.get 'signature'
 
     getAccountID: ->
-        AccountStore.getSelectedOrDefault()?.get 'id'
+        AccountStore.getAccountID()
 
     getMailboxID: ->
-        @getCurrentMailbox()?.get 'id'
+        AccountStore.getMailboxID()
 
     getLogin: ->
         @getCurrentMailbox()?.get 'login'
 
     getMailboxes: ->
-        AccountStore.getSelectedMailboxes()
+        AccountStore.getAllMailboxes()
 
     getTags: (message) ->
         mailboxID = @getMailboxID()

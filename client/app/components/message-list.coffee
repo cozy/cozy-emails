@@ -2,30 +2,22 @@ Immutable = require 'immutable'
 React     = require 'react'
 ReactDOM  = require 'react-dom'
 
-{div, section, p, ul, li, a, span, i, button, input, img} = React.DOM
+{div, section, p, a} = React.DOM
 DomUtils = require '../utils/dom_utils'
 
 SelectionGetter = require '../getters/selection'
 RouterGetter = require '../getters/router'
 
 # React Mixins
-SettingsStore        = require '../stores/settings_store'
 MessageStore        = require '../stores/message_store'
-LayoutStore          = require '../stores/layout_store'
-RouterStore = require '../stores/router_store'
-
-SelectionStore       = require '../stores/selection_store'
-StoreWatchMixin      = require '../mixins/store_watch_mixin'
+SettingsStore       = require '../stores/settings_store'
+SelectionStore      = require '../stores/selection_store'
+StoreWatchMixin     = require '../mixins/store_watch_mixin'
 
 RouterActionCreator = require '../actions/router_action_creator'
 
-{Spinner, Progress} = require('./basic_components').factories
-MessageListLoader   = React.createFactory require './message-list-loader'
 ToolbarMessagesList = React.createFactory require './toolbar_messageslist'
 MessageListBody     = React.createFactory require './message-list-body'
-
-{MessageFilter} = require '../constants/app_constants'
-
 
 module.exports = MessageList = React.createClass
     displayName: 'MessageList'
@@ -40,13 +32,12 @@ module.exports = MessageList = React.createClass
     componentDidUpdate: ->
         @_initScroll()
 
-    getStateFromStores: ->
-        messages = RouterGetter.getMessagesToDisplay @props.mailboxID
+    getStateFromStores: (props={}) ->
+        messages = props.messages or @props.messages
         return {
             isAllSelected   : SelectionGetter.isAllSelected()
             selection       : SelectionGetter.getSelection messages
-            messages        : messages
-            hasNextPage     : !!RouterGetter.getNextURL()
+            hasNextPage     : RouterGetter.hasNextPage()
         }
 
     render: ->
@@ -60,42 +51,38 @@ module.exports = MessageList = React.createClass
             ToolbarMessagesList
                 ref: 'messageList-toolbar'
                 key: 'messageList-toolbar-' + @state.selection?.length
-                settings: SettingsStore.get()
                 accountID: @props.accountID
                 mailboxID: @props.mailboxID
-                messages: @state.messages
+                messages: @props.messages
                 selection: @state.selection
                 isAllSelected: @state.isAllSelected
 
             # Message List
-            if @state.isLoading?
-                p className: 'listFetching list-loading', t 'list fetching'
+            unless @props.messages.size
+                p
+                    className: 'list-empty'
+                    ref: 'listEmpty'
+                    RouterGetter.getEmptyMessage()
             else
-                unless @state.messages.size
-                    p
-                        className: 'list-empty'
-                        ref: 'listEmpty'
-                        RouterGetter.getEmptyMessage()
-                else
-                    div
-                        className: 'main-content'
-                        ref: 'scrollable',
+                div
+                    className: 'main-content'
+                    ref: 'scrollable',
 
-                        MessageListBody
-                            messages: @state.messages
-                            accountID: @props.accountID
-                            mailboxID: @props.mailboxID
-                            selection: @state.selection
-                            ref: 'listBody'
+                    MessageListBody
+                        messages: @props.messages
+                        accountID: @props.accountID
+                        mailboxID: @props.mailboxID
+                        selection: @state.selection
+                        ref: 'listBody'
 
-                        if @state.hasNextPage
-                            a
-                                className: 'more-messages'
-                                onClick: @loadMoreMessage,
-                                ref: 'nextPage',
-                                t 'list next page'
-                        else
-                            p ref: 'listEnd', t 'list end'
+                    if @state.hasNextPage
+                        a
+                            className: 'more-messages'
+                            onClick: @loadMoreMessage,
+                            ref: 'nextPage',
+                            t 'list next page'
+                    else
+                        p ref: 'listEnd', t 'list end'
 
     loadMoreMessage: ->
         RouterActionCreator.getNextPage()

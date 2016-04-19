@@ -42,5 +42,3 @@ module.exports = React.createClass
             queryParams          : null
             filters              : {}
             emptyListMessage     : t 'search deactivated', query: @state.search
-            loadMoreMessage      : ->
-                MessageActionCreator.fetchSearchResults()
