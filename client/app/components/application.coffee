@@ -52,12 +52,12 @@ Application = React.createClass
 
         mailbox = RouterGetter.getCurrentMailbox()
         return {
-            mailboxID       : (mailboxID = mailbox.get 'id')
-            nbTotal         : mailbox.get('nbTotal') or 0
-            nbUnread        : mailbox.get('nbUnread') or 0
-            nbRecent        : mailbox.get('nbRecent') or 0
+            mailboxID       : (mailboxID = mailbox?.get 'id')
+            nbTotal         : mailbox?.get('nbTotal') or 0
+            nbUnread        : mailbox?.get('nbUnread') or 0
+            nbRecent        : mailbox?.get('nbRecent') or 0
             accountID       : RouterGetter.getAccountID()
-            messageID       : (messageID = RouterGetter.getCurrentMessageID())
+            messageID       : RouterGetter.getCurrentMessageID()
             action          : RouterGetter.getAction()
             isEditable      : RouterGetter.isEditable()
             modal           : RouterGetter.getModal()

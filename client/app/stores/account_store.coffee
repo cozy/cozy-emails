@@ -118,8 +118,8 @@ class AccountStore extends Store
     ###
     __bindHandlers: (handle) ->
 
-        handle ActionTypes.ROUTE_CHANGE, ({mailboxID, action, tab}) ->
-            accountID = @getSelected(mailboxID)?.get('id')
+        handle ActionTypes.ROUTE_CHANGE, ({accountID, mailboxID, action, tab}) ->
+            accountID ?= @getDefault(mailboxID)?.get('id') if mailboxID
             _setCurrentAccount accountID, mailboxID, tab
 
             @emit 'change'
@@ -228,8 +228,7 @@ class AccountStore extends Store
         return _mailboxID
 
 
-    getSelected: (mailboxID) ->
-        return @getDefault mailboxID if mailboxID
+    getSelected: ->
         return _accounts.get _accountID
 
 

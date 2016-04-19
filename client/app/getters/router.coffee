@@ -73,6 +73,8 @@ class RouteGetter
 
     getMessagesList: (mailboxID) ->
         mailboxID ?= @getMailboxID()
+        return null unless mailboxID
+
         messages = MessageStore.getMessagesList mailboxID
 
         # We dont filter for type from and dest because it is
