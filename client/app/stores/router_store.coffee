@@ -42,16 +42,14 @@ class RouterStore extends Store
     getQueryParams: ->
          if _currentFilter isnt _defaultFilter then _currentFilter else null
 
+
     getFilter: ->
         _currentFilter
-
-    # FIXME: refactor filtering based on query object (see doc/routes.md
-    #        and router.coffee:_parseQuery)
-    setFilter: (params={}) ->
 
 
     getScrollValue: ->
         _scrollValue
+
 
     getURL: (params={}) ->
         action = _getRouteAction params
@@ -153,10 +151,20 @@ class RouterStore extends Store
             if value? and _defaultFilter[key] isnt value
                 return key + '=' + encodeURIComponent(value)
 
-        if query.length then "/?#{query.join '&'}" else ""
+        if query.length then "?#{query.join '&'}" else ""
+
+
+
+    _setFilter = (query) ->
+        # Update Filter
+        _currentFilter = _.clone _defaultFilter
+        _.extend _currentFilter, query
+        return _currentFilter
+
 
     _resetFilter = ->
         _currentFilter = _defaultFilter
+
 
     # Useless for MessageStore
     # to clean messages
@@ -169,19 +177,18 @@ class RouterStore extends Store
     ###
     __bindHandlers: (handle) ->
 
-        handle ActionTypes.ROUTE_CHANGE, (value) ->
+        handle ActionTypes.ROUTE_CHANGE, (params={}) ->
+            {action, query} = params
+
             # We cant display any informations
             # without accounts
             if AccountStore.getAll()?.size
-                _action = value.action
+                _action = action
             else
                 _action = AccountActions.CREATE
 
-            if value.action is MessageActions.SHOW_ALL
-                _resetFilter()
-
-            if value.query
-                _self.setFilter value.query
+            # Save current filters
+            _setFilter query
 
             @emit 'change'
 
