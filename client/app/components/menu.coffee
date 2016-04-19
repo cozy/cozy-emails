@@ -14,6 +14,7 @@ LayoutActionCreator  = require '../actions/layout_action_creator'
 RouterStore = require '../stores/router_store'
 AccountStore = require '../stores/account_store'
 StoreWatchMixin = require '../mixins/store_watch_mixin'
+StoreWatchMixin = require '../mixins/store_watch_mixin'
 
 RouterGetter = require '../getters/router'
 IconGetter = require '../getters/icon'

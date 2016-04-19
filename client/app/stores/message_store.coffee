@@ -129,13 +129,26 @@ class MessageStore extends Store
                 if not _self.isAllLoaded() and messageID and
                         not _messages?.get messageID
                     action = MessageActions.PAGE_NEXT
+
+                AppDispatcher.dispatch
+                    type: ActionTypes.MESSAGE_FETCH_SUCCESS
+                    value: {action, result, messageID}
+
+                # Message doesnt belong to the result
+                # Go fetch next page
+                if messageID and not _messages?.get messageID
                     AppDispatcher.dispatch
                         type: ActionTypes.MESSAGE_FETCH_REQUEST
+                        value: {action, messageID, mailboxID}
+                else
+                    action = MessageActions.PAGE_NEXT
+                    AppDispatcher.handleViewAction
                         value: {action, messageID, mailboxID}
                 else
                     AppDispatcher.dispatch
                         type: ActionTypes.MESSAGE_FETCH_SUCCESS
                         value: {action, messages, messageID, mailboxID}
+
 
         if action is MessageActions.PAGE_NEXT
             action = MessageActions.SHOW_ALL
@@ -150,6 +163,48 @@ class MessageStore extends Store
 
         else
             XHRUtils.fetchConversation conversationID, callback
+
+
+    _computeMailboxDiff = (oldmsg, newmsg) ->
+        return {} unless oldmsg
+        changed = false
+
+        wasRead = MessageFlags.SEEN in oldmsg.get 'flags'
+        isRead = MessageFlags.SEEN in newmsg.get 'flags'
+
+        accountID = newmsg.get 'accountID'
+        oldboxes = Object.keys oldmsg.get 'mailboxIDs'
+        newboxes = Object.keys newmsg.get 'mailboxIDs'
+
+        out = {}
+        added = _.difference(newboxes, oldboxes)
+        added.forEach (boxid) ->
+            changed = true
+            out[boxid] = nbTotal: +1, nbUnread: if isRead then 0 else +1
+
+        removed = _.difference oldboxes, newboxes
+        removed.forEach (boxid) ->
+            changed = true
+            out[boxid] = nbTotal: -1, nbUnread: if wasRead then -1 else 0
+
+        stayed = _.intersection oldboxes, newboxes
+        deltaUnread = if wasRead and not isRead then +1
+        else if not wasRead and isRead then -1
+        else 0
+
+        if deltaUnread isnt 0
+            changed = true
+
+        out[accountID] = nbUnread: deltaUnread
+
+        stayed.forEach (boxid) ->
+            out[boxid] = nbTotal: 0, nbUnread: deltaUnread
+
+        if changed
+            return out
+        else
+            return false
+
 
     _saveMessage = (message, timestamp) ->
         oldmsg = _messages.get message.id
@@ -184,6 +239,7 @@ class MessageStore extends Store
 
             _messages = _messages.set message.id, messageMap
 
+
     _deleteMessage = (message) ->
         _messages = _messages.remove message.id
 
@@ -195,7 +251,6 @@ class MessageStore extends Store
         Defines here the action handlers.
     ###
     __bindHandlers: (handle) ->
-
         handle ActionTypes.ROUTE_CHANGE, (value) ->
             {messageID} = value
             _setCurrentID messageID
@@ -225,6 +280,14 @@ class MessageStore extends Store
             @emit 'change'
 
 
+        handle ActionTypes.MESSAGE_FETCH_SUCCESS, ({messages, mailboxID}) ->
+            unless messages
+                # either end of list or no messages, we stay open
+                SocketUtils.changeRealtimeScope mailboxID, EPOCH
+
+            @emit 'change'
+
+
         handle ActionTypes.RECEIVE_RAW_MESSAGE, (message) ->
             _saveMessage message
             @emit 'change'
@@ -251,6 +314,7 @@ class MessageStore extends Store
             _addInFlight {type: 'trash', trashBoxID, messages, ref}
             @emit 'change'
 
+
         handle ActionTypes.MESSAGE_TRASH_SUCCESS, ({target, updated, ref}) ->
             _undoable[ref] = _removeInFlight ref
             for message in updated
@@ -261,6 +325,7 @@ class MessageStore extends Store
                 else
                     _saveMessage message
             @emit 'change'
+
 
         handle ActionTypes.MESSAGE_FLAGS_SUCCESS, ({target, updated, ref}) ->
             _removeInFlight ref
@@ -331,9 +396,11 @@ class MessageStore extends Store
             return inMailbox and not exist
         .toList()
 
+
     getMessagesList: (mailboxID) ->
         _currentMessages = _getCurrentConversations(mailboxID)?.toOrderedMap()
         return _currentMessages
+
 
     getConversation: (messageID) ->
         messageID ?= @getCurrentID()
@@ -373,9 +440,9 @@ class MessageStore extends Store
             return _conversationLength.get conversationID
 
 
-    # FIXME : move this into RouterStore/RouterGetter
     getUndoableRequest: (ref) ->
         _undoable[ref]
+
 
 _self = new MessageStore()
 

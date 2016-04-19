@@ -49,7 +49,6 @@ module.exports = LayoutActionCreator =
             type: ActionTypes.CLEAR_TOASTS
             value: null
 
-
     showSearchResult: (parameters) ->
         {accountID, search} = parameters
 

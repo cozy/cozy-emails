@@ -49,12 +49,6 @@ class RouterStore extends Store
         _currentFilter
 
 
-    # FIXME: refactor filtering based on query object (see doc/routes.md
-    #        and router.coffee:_parseQuery)
-    setFilter: (params={}) ->
-
-
-
     getURL: (params={}) ->
         action = _getRouteAction params
 
@@ -148,6 +142,7 @@ class RouterStore extends Store
                 (result = {}).flags = flags
         return result
 
+
     _getURIQueryParams = (params={}) ->
         filters = _.extend {}, _self.getFilter()
         _.extend filters, params.filter if params.filter
@@ -157,7 +152,6 @@ class RouterStore extends Store
                 return key + '=' + encodeURIComponent(value)
 
         if query.length then "?#{query.join '&'}" else ""
-
 
 
     _setFilter = (query) ->
@@ -223,10 +217,17 @@ class RouterStore extends Store
             _modal = params
             @emit 'change'
 
+
         handle ActionTypes.HIDE_MODAL, (value) ->
             _modal = null
             @emit 'change'
 
+
+        handle ActionTypes.REFRESH_SUCCESS, ({mailboxID, accountID}) ->
+            # Update URL after refresh,
+            # Views are updated but not URL
+            _router.navigate @getCurrentURL()
+            @emit 'change'
 
 _toCamelCase = (value) ->
     return value.replace /\.(\w)*/gi, (match) ->
