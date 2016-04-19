@@ -87,12 +87,9 @@ module.exports = Menu = React.createClass
     renderMailboxesFlags: (params={}) ->
         {flags, type, progress, slug} = params
 
-        accountID = RouterGetter.getAccountID()
-        mailboxID = RouterGetter.getMailboxID()
-        mailbox = RouterGetter.getCurrentMailbox mailboxID
-
+        mailbox = RouterGetter.getInbox()
         mailboxURL = RouterGetter.getURL
-            mailboxID: mailboxID
+            mailboxID: (mailboxID = mailbox.get 'id')
             filter: {flags}
 
         # No way to get this data for flagged email
@@ -103,7 +100,7 @@ module.exports = Menu = React.createClass
         recent = if 'flagged' isnt slug then mailbox?.get('nbRecent') else 0
 
         MenuMailboxItem
-            accountID:      accountID
+            accountID:      RouterGetter.getAccountID()
             mailboxID:      mailboxID
             label:          t "mailbox title #{slug}"
             key:            "mailbox-item-#{slug}"
