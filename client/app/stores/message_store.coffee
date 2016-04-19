@@ -100,7 +100,7 @@ class MessageStore extends Store
     # Get Emails from Server
     # This is a read data pattern
     # ActionCreator is a write data pattern
-    _fetchMessage = (params={}) ->
+    _fetchMessages = (params={}) ->
         {messageID, conversationID, action} = params
         mailboxID = AccountStore.getMailboxID()
         action ?= MessageActions.SHOW_ALL
@@ -204,13 +204,13 @@ class MessageStore extends Store
             # Get messageList for 1rst panel
             if action in [MessageActions.SHOW_ALL, MessageActions.SHOW]
                 _refreshMailbox payload
-                _fetchMessage payload
+                _fetchMessages payload
 
             @emit 'change'
 
 
-        handle ActionTypes.MESSAGE_FETCH_REQUEST, (params) ->
-            _fetchMessage params
+        handle ActionTypes.MESSAGE_FETCH_REQUEST, (payload) ->
+            _fetchMessages payload
             @emit 'change'
 
 
@@ -349,7 +349,7 @@ class MessageStore extends Store
             # If missing messages, get them
             if conversation?.size isnt @getConversationLength {conversationID}
                 action = MessageActions.SHOW
-                _fetchMessage {messageID, conversationID, action}
+                _fetchMessages {messageID, conversationID, action}
 
             # Return loaded messages
             return conversation
