@@ -81,7 +81,7 @@ class MessageStore extends Store
     # Refresh Emails from Server
     # This is a read data pattern
     # ActionCreator is a write data pattern
-    _refreshMessage = (params={}) ->
+    _refreshMailbox = (params={}) ->
         {mailboxID} = params
         mailboxID ?= AccountStore.getMailboxID()
         deep = true
