@@ -75,7 +75,8 @@ class MessageStore extends Store
         else throw new Error 'Wrong Usage : unrecognized target AS.getMixed'
 
     isAllLoaded: ->
-        AccountStore.getMailbox().get('nbTotal') is _currentMessages?.size
+        total = AccountStore.getMailbox()?.get('nbTotal')
+        total is _currentMessages?.size
 
 
     # Refresh Emails from Server
@@ -128,11 +129,11 @@ class MessageStore extends Store
                 if not _self.isAllLoaded() and messageID and
                         not _messages?.get messageID
                     action = MessageActions.PAGE_NEXT
-                    AppDispatcher.handleViewAction
+                    AppDispatcher.dispatch
                         type: ActionTypes.MESSAGE_FETCH_REQUEST
                         value: {action, messageID, mailboxID}
                 else
-                    AppDispatcher.handleViewAction
+                    AppDispatcher.dispatch
                         type: ActionTypes.MESSAGE_FETCH_SUCCESS
                         value: {action, messages, messageID, mailboxID}
 
@@ -215,12 +216,10 @@ class MessageStore extends Store
 
 
         handle ActionTypes.MESSAGE_FETCH_SUCCESS, ({messages, mailboxID}) ->
-            unless messages
-                # either end of list or no messages, we stay open
-                SocketUtils.changeRealtimeScope mailboxID, EPOCH
+            lastdate = _messages.last()?.get 'date'
+            before = unless messages then EPOCH else lastdate
+            changeRealtimeScope {mailboxID, before}
 
-            else if (lastdate = _messages.last()?.get 'date')
-                SocketUtils.changeRealtimeScope mailboxID, lastdate
             @emit 'change'
 
 
