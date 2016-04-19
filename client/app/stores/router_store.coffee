@@ -48,12 +48,6 @@ class RouterStore extends Store
         _currentFilter
 
 
-    # FIXME: refactor filtering based on query object (see doc/routes.md
-    #        and router.coffee:_parseQuery)
-    setFilter: (params={}) ->
-
-
-
     getURL: (params={}) ->
         action = _getRouteAction params
 
