@@ -47,10 +47,6 @@ class RouterStore extends Store
         _currentFilter
 
 
-    getScrollValue: ->
-        _scrollValue
-
-
     getURL: (params={}) ->
         action = _getRouteAction params
 
