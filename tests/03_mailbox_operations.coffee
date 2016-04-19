@@ -7,9 +7,11 @@ describe 'Mailbox fetching', ->
     inboxCount = 0
     readCount = 0
 
+
     testResultLength = (first, iterator, callback) ->
         [iterator, callback] = [null, iterator] unless callback
         totalFound = null
+
         step = (link, callback) ->
             client.get link, (err, res, body) ->
                 return callback err if err
@@ -21,6 +23,7 @@ describe 'Mailbox fetching', ->
         step first, ->
             if totalFound isnt null then callback null, totalFound
             else callback new Error 'total & count doesnt match'
+
 
     it "When I get a mailbox (filter by flag)", (done) ->
         testResultLength "/mailbox/#{store.inboxID}?flag=seen", (err, total) ->
