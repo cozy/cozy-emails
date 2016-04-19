@@ -9,8 +9,6 @@ RouterGetter = require '../getters/router'
 
 AccountTranslator = require '../utils/translators/account_translator'
 
-cachedTransform = require '../libs/cached_transform'
-
 class AccountStore extends Store
 
     ###
@@ -90,6 +88,7 @@ class AccountStore extends Store
 
             _accounts = _accounts.set _accountID, account
 
+
     _mailboxSort = (mb1, mb2) ->
         w1 = mb1.get 'weight'
         w2 = mb2.get 'weight'
@@ -101,15 +100,16 @@ class AccountStore extends Store
             else return 0
 
 
-    _setCurrentAccount = (accountID, mailboxID) ->
+    _setCurrentAccount = (accountID, mailboxID, tab="mailboxes") ->
         _accountID = accountID
         _mailboxID = mailboxID
+        _tab = tab
 
-    _onAccountUpdated: (rawAccount) ->
+    _onAccountUpdated = (rawAccount) ->
         account = AccountTranslator.toImmutable rawAccount
         accountID = account.get 'id'
-
         _accounts = _accounts.set accountID, account
+
         _setCurrentAccount accountID
 
 
@@ -118,28 +118,9 @@ class AccountStore extends Store
     ###
     __bindHandlers: (handle) ->
 
-        # handle ActionTypes.SELECT_ACCOUNT, (value) ->
-        handle ActionTypes.ROUTE_CHANGE, (value) ->
-            mailboxID = @getSelectedMailbox()?.get 'id'
-            accountID = @getSelectedOrDefault()?.get 'id'
-
-            if accountID
-                @_setCurrentAccount(_accounts.get(value.accountID) or null)
-            else
-                @_setCurrentAccount(null)
-
-            if mailboxID
-                mailbox = _selectedAccount
-                ?.get('mailboxes')
-                ?.get(value.mailboxID) or null
-                @_setCurrentMailbox mailbox
-            else
-                _clearError()
-                @_setCurrentMailbox null
-
-            if value.action is AccountActions.EDIT and not _tab = params.tab
-                mailboxes = @getSelected()?.get 'mailboxes'
-                _tab = if mailboxes?.size is 0 then 'mailboxes' else 'account'
+        handle ActionTypes.ROUTE_CHANGE, ({mailboxID, action, tab}) ->
+            accountID = @getSelected(mailboxID)?.get('id')
+            _setCurrentAccount accountID, mailboxID, tab
 
             @emit 'change'
 
@@ -150,7 +131,7 @@ class AccountStore extends Store
         handle ActionTypes.ADD_ACCOUNT_SUCCESS, ({account}) ->
             _newAccountWaiting = false
             _checkForNoMailbox account
-            @_onAccountUpdated account
+            _updateAccount account
             @emit 'change'
 
         handle ActionTypes.ADD_ACCOUNT_FAILURE, ({error}) ->
@@ -181,7 +162,7 @@ class AccountStore extends Store
             _newAccountWaiting = false
             _clearError()
             _checkForNoMailbox rawAccount
-            @_onAccountUpdated rawAccount
+            _updateAccount rawAccount
             @emit 'change'
 
         handle ActionTypes.EDIT_ACCOUNT_FAILURE, ({error}) ->
@@ -190,21 +171,16 @@ class AccountStore extends Store
             @emit 'change'
 
         handle ActionTypes.MAILBOX_CREATE_SUCCESS, (rawAccount) ->
-            @_onAccountUpdated rawAccount
+            _updateAccount rawAccount
             @emit 'change'
 
         handle ActionTypes.MAILBOX_UPDATE_SUCCESS, (rawAccount) ->
-            @_onAccountUpdated rawAccount
+            _updateAccount rawAccount
             @emit 'change'
 
         handle ActionTypes.MAILBOX_DELETE_SUCCESS, (rawAccount) ->
-            @_onAccountUpdated rawAccount
+            _updateAccount rawAccount
             @emit 'change'
-
-        handle ActionTypes.MAILBOX_EXPUNGE_FAILURE, ({error, mailboxID, accountID}) ->
-            # if user hasn't switched to another box, refresh display
-            unless _mailboxID isnt mailboxID
-                _mailboxID = mailboxID
 
         handle ActionTypes.REMOVE_ACCOUNT_SUCCESS, (accountID) ->
             _accounts = _accounts.delete accountID
@@ -223,12 +199,9 @@ class AccountStore extends Store
         return _accounts
 
 
-    getAllMailboxes: ->
-        cachedTransform AccountStore, 'all-mailboxes', _accounts, ->
-            _accounts.flatMap (account) -> account.get 'mailboxes'
-
     getSelectedTab: ->
         return _tab
+
 
     getByID: (accountID) ->
         return _accounts.get accountID
@@ -238,49 +211,37 @@ class AccountStore extends Store
         _accounts.find (account) -> account.get('label') is label
 
 
-    getDefault: ->
-        return _accounts.first() or null
-
-
-    _getDefaultMailbox = ->
-        return null unless (account = _self.getDefault())
-
-        mailboxes = account.get('mailboxes')
-        mailbox = mailboxes.filter (mailbox) ->
-            return mailbox.get('label').toLowerCase() is 'inbox'
-
-        if mailbox.size
-            return mailbox.first()
-        else
-            favorites = account.get('favorites')
-            defaultID = if favorites? then favorites[0]
-
-            return if defaultID then mailboxes.get defaultID
-            else mailboxes.first()
+    getDefault: (mailboxID) ->
+        if mailboxID
+            return _accounts.find (account) ->
+                account.get('mailboxes').get(mailboxID)
+        return _accounts.first()
 
 
     getAccountID: ->
         return @getDefault()?.get 'id' unless _accountID
         return _accountID
 
+
     getMailboxID: ->
         return @getDefault()?.get 'inboxMailbox' unless _mailboxID
         return _mailboxID
 
-    getSelected: ->
-        _accounts.get(_accountID) or @getDefault()
+
+    getSelected: (mailboxID) ->
+        return @getDefault mailboxID if mailboxID
+        return _accounts.get _accountID
+
 
     getAllMailboxes: ->
-        if _accountID?
-            return _accounts.get(_accountID)
-                .get('mailboxes')
-                .sort(_mailboxSort)
+        return _accounts.get @getAccountID()
+            .get 'mailboxes'
+            .sort _mailboxSort
 
-    getMailbox: (selectedID) ->
-        if (mailboxes = @getAllMailboxes())?.size
-            selectedID ?= _mailboxID
-            return mailboxes.get selectedID
-        return _getDefaultMailbox()
+
+    getMailbox: (mailboxID) ->
+        mailboxID ?= _mailboxID
+        return @getAllMailboxes()?.get mailboxID
 
 
     getErrors: -> _serverAccountErrorByField
