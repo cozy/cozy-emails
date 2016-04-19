@@ -36,7 +36,7 @@ module.exports = Utils =
 
 
     getCurrentMailbox: ->
-        AccountStore.getSelectedMailbox()?.toJS()
+        AccountStore.getMailbox()?.toJS()
 
 
     getCurrentMessage: ->

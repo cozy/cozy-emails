@@ -46,7 +46,7 @@ class Router extends Backbone.Router
 
 
     defaultMailbox: ->
-        mailboxID = AccountStore.getDefault().get('id')
+        mailboxID = AccountStore.getMailboxID()
         @navigate "mailbox/#{mailboxID}", trigger: true
 
 
