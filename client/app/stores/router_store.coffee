@@ -48,10 +48,6 @@ class RouterStore extends Store
     getFilter: ->
         _currentFilter
 
-    # FIXME: refactor filtering based on query object (see doc/routes.md
-    #        and router.coffee:_parseQuery)
-    setFilter: (params={}) ->
-
 
     getModalParams: ->
         return _modal
