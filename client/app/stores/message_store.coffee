@@ -1,6 +1,5 @@
 _         = require 'underscore'
 Immutable = require 'immutable'
-XHRUtils = require '../utils/xhr_utils'
 
 AppDispatcher = require '../libs/flux/dispatcher/dispatcher'
 
@@ -8,10 +7,8 @@ Store = require '../libs/flux/store/store'
 AccountStore = require './account_store'
 RouterStore = require './router_store'
 
-RouterGetter = require '../getters/router'
-
 {changeRealtimeScope} = require '../utils/realtime_utils'
-{sortByDate} = require '../utils/misc'
+XHRUtils = require '../utils/xhr_utils'
 
 {ActionTypes, MessageFlags, MessageActions} = require '../constants/app_constants'
 
@@ -33,30 +30,9 @@ class MessageStore extends Store
 
 
     _setCurrentID = (messageID) ->
-        return if messageID is _currentID
         _currentID = messageID
 
-
-    # Retrieve a batch of message with various criteria
-    # target - is an {Object} with a property messageID or messageIDs or
-    #          conversationID or messageIDs
-    # target.accountID is needed to success Delete
-    #
-    # Returns an {Array} of {Immutable.Map} messages
-    _getMixed = (target) ->
-        if target.messageID
-            return [_messages.get(target.messageID)]
-        else if target.messageIDs
-            return target.messageIDs.map (id) ->
-                 _messages.get id
-            .filter (message) -> message?
-        else if target.conversationID
-            return _messages.filter (message) ->
-                message?.get('conversationID') is target?.conversationID
-            .toArray()
-        else throw new Error 'Wrong Usage : unrecognized target AS.getMixed'
-
-    isAllLoaded: ->
+    _isAllLoaded = ->
         total = AccountStore.getMailbox()?.get('nbTotal')
         total is _currentMessages?.size
 
@@ -108,7 +84,7 @@ class MessageStore extends Store
 
                 # Message should belong to the result
                 # If not : go fetch next messages
-                if not _self.isAllLoaded() and messageID and
+                if not _isAllLoaded() and messageID and
                         not _messages?.get messageID
                     action = MessageActions.PAGE_NEXT
 
@@ -233,15 +209,17 @@ class MessageStore extends Store
         Defines here the action handlers.
     ###
     __bindHandlers: (handle) ->
-        handle ActionTypes.ROUTE_CHANGE, (value) ->
-            {messageID} = value
+
+        handle ActionTypes.ROUTE_CHANGE, (payload={}) ->
+            {action, mailboxID, messageID} = payload
+
+            console.log 'ROUTE_CHANGE', payload
+
+            # Update currentMessageID
             _setCurrentID messageID
 
-            # All messageslist from mailbox are displayed
-            # when a messageDetail must be displayed as well
-            if action is MessageActions.SHOW
-                action = MessageActions.SHOW_ALL
-
+            # Get messageList for 1rst panel
+            action = MessageActions.SHOW_ALL if MessageActions.SHOW
             if action is MessageActions.SHOW_ALL
                 _refreshMailbox payload
                 _fetchMessages {action, mailboxID, messageID}
@@ -261,31 +239,21 @@ class MessageStore extends Store
             @emit 'change'
 
 
-        handle ActionTypes.MESSAGE_FETCH_REQUEST, (params) ->
-            _fetchMessage params
-            @emit 'change'
-
-
-        handle ActionTypes.MESSAGE_FETCH_SUCCESS, ({messages, mailboxID}) ->
-            unless messages
-                # either end of list or no messages, we stay open
-                SocketUtils.changeRealtimeScope mailboxID, EPOCH
-
-            @emit 'change'
-
-
         handle ActionTypes.RECEIVE_RAW_MESSAGE, (message) ->
             _saveMessage message
             @emit 'change'
+
 
         handle ActionTypes.RECEIVE_RAW_MESSAGE_REALTIME, (message) ->
             _saveMessage message
             @emit 'change'
 
+
         handle ActionTypes.RECEIVE_RAW_MESSAGES, (messages) ->
             for message in messages when message?
                 _saveMessage message
             @emit 'change'
+
 
         handle ActionTypes.REMOVE_ACCOUNT_SUCCESS, (accountID) ->
             _messages = _messages.filter (message) ->
@@ -297,27 +265,22 @@ class MessageStore extends Store
         handle ActionTypes.MESSAGE_TRASH_SUCCESS, ({updated}) ->
             for message in updated
                 if message._deleted
+                    # Remove messages from client
                     _deleteMessage message
+
+                    # Select next message
                     if (nextMessage = @getNextConversation())?.size
                         _setCurrentID nextMessage?.get 'id'
-                else
-                    _saveMessage message
+
             @emit 'change'
 
         handle ActionTypes.MESSAGE_FLAGS_SUCCESS, ({updated}) ->
             _saveMessage message for message in updated
             @emit 'change'
 
+
         handle ActionTypes.MESSAGE_MOVE_SUCCESS, ({updated}) ->
             _saveMessage message for message in updated
-            @emit 'change'
-
-        handle ActionTypes.MESSAGE_FETCH_REQUEST, (payload)->
-            _fetchMessage payload
-            @emit 'change'
-
-
-        handle ActionTypes.REFRESH_SUCCESS, ->
             @emit 'change'
 
 
@@ -329,6 +292,7 @@ class MessageStore extends Store
         handle ActionTypes.RECEIVE_MESSAGE_DELETE, (id) ->
             _deleteMessage {id}
             @emit 'change'
+
 
         handle ActionTypes.MAILBOX_EXPUNGE, (mailboxID) ->
             _messages = _messages.filter (message) ->
@@ -351,6 +315,9 @@ class MessageStore extends Store
     getByID: (messageID) ->
         messageID ?= _currentID
         _messages.get messageID
+
+    isAllLoaded: ->
+        _isAllLoaded()
 
     _getCurrentConversations = (mailboxID) ->
         __conv = {}
