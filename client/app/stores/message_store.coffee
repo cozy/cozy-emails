@@ -255,10 +255,14 @@ class MessageStore extends Store
             {messageID} = value
             _setCurrentID messageID
 
-            # Get messageList for 1rst panel
-            if action in [MessageActions.SHOW_ALL, MessageActions.SHOW]
+            # All messageslist from mailbox are displayed
+            # when a messageDetail must be displayed as well
+            if action is MessageActions.SHOW
+                action = MessageActions.SHOW_ALL
+
+            if action is MessageActions.SHOW_ALL
                 _refreshMailbox payload
-                _fetchMessages payload
+                _fetchMessages {action, mailboxID, messageID}
 
             @emit 'change'
 
