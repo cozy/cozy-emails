@@ -46,7 +46,6 @@ class LayoutStore extends Store
                 _previewSize = 50
             @emit 'change'
 
-
         handle ActionTypes.REFRESH, ->
             @emit 'change'
 
