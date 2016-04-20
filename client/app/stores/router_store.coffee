@@ -49,6 +49,10 @@ class RouterStore extends Store
         _currentFilter
 
 
+    getModalParams: ->
+        return _modal
+
+
     getURL: (params={}) ->
         action = _getRouteAction params
 
@@ -213,6 +217,15 @@ class RouterStore extends Store
             @emit 'change'
 
 
+        handle ActionTypes.MESSAGE_TRASH_SUCCESS, (params) ->
+            if MessageActions.SHOW is _action
+                if (messageID = params?.next?.get 'id')
+                    _router.navigate @getURL {messageID}
+                else
+                    _action = MessageActions.SHOW_ALL
+                @emit 'change'
+
+
         handle ActionTypes.DISPLAY_MODAL, (params) ->
             _modal = params
             @emit 'change'
@@ -228,6 +241,7 @@ class RouterStore extends Store
             # Views are updated but not URL
             _router.navigate @getCurrentURL()
             @emit 'change'
+
 
 _toCamelCase = (value) ->
     return value.replace /\.(\w)*/gi, (match) ->
