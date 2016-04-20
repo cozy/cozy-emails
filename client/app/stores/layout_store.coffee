@@ -19,8 +19,6 @@ class LayoutStore extends Store
     # TODO: Use a constant for default value?
     _previewSize = 60
 
-    _focus = null
-
     _shown = true
 
     _intentAvailable = false
@@ -50,8 +48,16 @@ class LayoutStore extends Store
                 _previewSize = 50
             @emit 'change'
 
-        handle ActionTypes.FOCUS, (path) ->
-            _focus = path
+
+        handle ActionTypes.DISPLAY_MODAL, (value) ->
+            _modal = value
+            @emit 'change'
+
+
+        handle ActionTypes.HIDE_MODAL, (value) ->
+            _modal = null
+            @emit 'change'
+
 
         handle ActionTypes.REFRESH, ->
             @emit 'change'
@@ -84,8 +90,8 @@ class LayoutStore extends Store
         return _previewSize
 
 
-    getFocus: ->
-        return _focus
+    getModal: ->
+        return _modal
 
 
     isShown: ->
