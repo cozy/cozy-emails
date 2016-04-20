@@ -21,6 +21,8 @@ class RouterStore extends Store
     _nextURL = null
     _lastDate = null
 
+    _modal = null
+
     _currentFilter = _defaultFilter =
         sort: '-date'
 
@@ -45,6 +47,10 @@ class RouterStore extends Store
 
     getFilter: ->
         _currentFilter
+
+
+    getModalParams: ->
+        return _modal
 
 
     getURL: (params={}) ->
@@ -194,16 +200,31 @@ class RouterStore extends Store
             @emit 'change'
 
         handle ActionTypes.REMOVE_ACCOUNT_SUCCESS, ->
-            _router?.navigate url: ''
+            # FIXME : move AccountStore actions here
+            _action = AccountActions.CREATE
+            @emit 'change'
 
         handle ActionTypes.ADD_ACCOUNT_SUCCESS, ({account, areMailboxesConfigured}) ->
-            accountID = account.id
-            action = if areMailboxesConfigured then MessageActions.SHOW_ALL else AccountActions.EDIT
-            _router?.navigate {accountID, action}
+            # FIXME : move AccountStore actions here
+            _action = if areMailboxesConfigured
+            then MessageActions.SHOW_ALL
+            else AccountActions.EDIT
+
             @emit 'change'
+
 
         handle ActionTypes.MESSAGE_FETCH_SUCCESS, ->
             @emit 'change'
+
+
+        handle ActionTypes.DISPLAY_MODAL, (params) ->
+            _modal = params
+            @emit 'change'
+
+        handle ActionTypes.HIDE_MODAL, (value) ->
+            _modal = null
+            @emit 'change'
+
 
 _toCamelCase = (value) ->
     return value.replace /\.(\w)*/gi, (match) ->

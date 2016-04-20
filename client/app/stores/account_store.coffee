@@ -71,7 +71,7 @@ class AccountStore extends Store
     _setMailbox = (data) ->
         # on account creation, sometime socket send mailboxes updates
         # before the account has been saved locally
-        return true unless (account = _accounts.get _accountID)
+        return true unless (account = _accounts.get _accountID)?.size
 
         mailboxID = data.id
         mailboxes = account.get('mailboxes')
@@ -105,12 +105,11 @@ class AccountStore extends Store
         _mailboxID = mailboxID
         _tab = tab
 
-    _onAccountUpdated = (rawAccount) ->
+
+    _updateAccount = (rawAccount) ->
         account = AccountTranslator.toImmutable rawAccount
         accountID = account.get 'id'
         _accounts = _accounts.set accountID, account
-
-        _setCurrentAccount accountID
 
 
     ###
@@ -124,7 +123,7 @@ class AccountStore extends Store
 
             @emit 'change'
 
-        handle ActionTypes.ADD_ACCOUNT_REQUEST, ({inputValues}) ->
+        handle ActionTypes.ADD_ACCOUNT_REQUEST, ({value}) ->
             _newAccountWaiting = true
             @emit 'change'
 
@@ -153,7 +152,7 @@ class AccountStore extends Store
             @emit 'change'
 
 
-        handle ActionTypes.EDIT_ACCOUNT_REQUEST, ({inputValues}) ->
+        handle ActionTypes.EDIT_ACCOUNT_REQUEST, ({value}) ->
             _newAccountWaiting = true
             @emit 'change'
 
@@ -232,8 +231,9 @@ class AccountStore extends Store
         return _accounts.get _accountID
 
 
-    getAllMailboxes: ->
-        return _accounts.get @getAccountID()
+    getAllMailboxes: (accountID) ->
+        accountID ?= @getAccountID()
+        return _accounts.get accountID
             .get 'mailboxes'
             .sort _mailboxSort
 

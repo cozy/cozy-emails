@@ -19,6 +19,7 @@ MessageStore         = require '../stores/message_store'
 RouterStore          = require '../stores/router_store'
 SettingsStore        = require '../stores/settings_store'
 RefreshesStore       = require '../stores/refreshes_store'
+AccountStore         = require '../stores/account_store'
 StoreWatchMixin      = require '../mixins/store_watch_mixin'
 TooltipRefesherMixin = require '../mixins/tooltip_refresher_mixin'
 
@@ -40,7 +41,7 @@ Application = React.createClass
 
     mixins: [
         TooltipRefesherMixin
-        StoreWatchMixin [SettingsStore, RefreshesStore, RouterStore, MessageStore, LayoutStore]
+        StoreWatchMixin [SettingsStore, RefreshesStore, RouterStore, MessageStore, LayoutStore, AccountStore]
     ]
 
     getStateFromStores: (props) ->
@@ -66,6 +67,12 @@ Application = React.createClass
         }
 
     render: ->
+        action = MessageActions.CREATE
+        composeURL = RouterGetter.getURL {action}
+
+        action = AccountActions.CREATE
+        newAccountURL = RouterGetter.getURL {action}
+
         div className: @state.className,
 
             div className: 'app',
@@ -75,8 +82,8 @@ Application = React.createClass
                     accountID       : @state.accountID
                     mailboxID       : @state.mailboxID
                     accounts        : RouterGetter.getAccounts().toArray()
-                    composeURL      : RouterGetter.getURL action: MessageActions.CREATE
-                    newAccountURL   : RouterGetter.getURL action: AccountActions.CREATE
+                    composeURL      : composeURL
+                    newAccountURL   : newAccountURL
 
                 main
                     className: @props.layout

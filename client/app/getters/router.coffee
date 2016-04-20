@@ -65,7 +65,7 @@ class RouteGetter
         AccountStore.getSelectedTab()
 
     getModal: ->
-        LayoutStore.getModal()
+        RouterStore.getModalParams()
 
     isFlags: (name) ->
         flags = @getFilter()?.flags or []
@@ -111,21 +111,18 @@ class RouteGetter
     isCurrentConversation: (conversationID) ->
         conversationID is @getCurrentMessage()?.get 'conversationID'
 
-    getCurrentMailbox: (mailboxID) ->
+    getMailbox: (mailboxID) ->
         AccountStore.getMailbox mailboxID
 
-    getInbox: ->
-        AccountStore.getAllMailboxes()?.find (mailbox) ->
+    getCurrentMailbox: ->
+        AccountStore.getMailbox()
+
+    getInbox: (accountID) ->
+        AccountStore.getAllMailboxes(accountID)?.find (mailbox) ->
             'INBOX' is mailbox.get 'label'
 
     getAccounts: ->
-        accountID = @getAccountID()
-        AccountStore.getAll().sort (account1, account2) ->
-            if accountID is account1.get('id')
-                return -1
-            if accountID is account2.get('id')
-                return 1
-            return 0
+        AccountStore.getAll()
 
     getAccountSignature: ->
         AccountStore.getSelected()?.get 'signature'
@@ -145,13 +142,13 @@ class RouteGetter
     getTags: (message) ->
         mailboxID = @getMailboxID()
         mailboxesIDs = Object.keys message.get 'mailboxIDs'
-        result = mailboxesIDs.map (id) =>
-            if (mailbox = @getCurrentMailbox id)
-                isGlobal = MailboxFlags.ALL in mailbox.get 'attribs'
+        return _.uniq _.compact mailboxesIDs.map (id) =>
+            if (mailbox = @getMailbox id)
+                attribs = mailbox.get('attribs') or []
+                isGlobal = MailboxFlags.ALL in attribs
                 isEqual = mailboxID is id
                 unless (isEqual or isGlobal)
                     return mailbox?.get 'label'
-        _.uniq _.compact result
 
     getEmptyMessage: ->
         filter = @getFilter()

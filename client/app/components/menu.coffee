@@ -9,7 +9,7 @@ classNames = require 'classnames'
 colorhash = require '../utils/colorhash'
 
 LayoutActionCreator  = require '../actions/layout_action_creator'
-{MessageFilter, Tooltips, AccountActions} = require '../constants/app_constants'
+{MessageFilter, Tooltips, AccountActions, MessageActions} = require '../constants/app_constants'
 
 RouterStore = require '../stores/router_store'
 AccountStore = require '../stores/account_store'
@@ -115,13 +115,20 @@ module.exports = Menu = React.createClass
             icon:           IconGetter.getMailboxIcon {type}
 
     # renders a single account and its submenu
-    # FIXME : make a component for this
+    # TODO : make a component for this
     renderMailBoxes: (account) ->
+        # Goto the default mailbox of the account
+        action = MessageActions.SHOW_ALL
         accountID = account.get 'id'
+        mailbox = RouterGetter.getInbox(accountID)
+        mailboxID = mailbox?.get 'id'
+        mailboxURL = RouterGetter.getURL {action, mailboxID}
 
         props = {
             key: 'account-' + accountID
             isSelected: accountID is RouterGetter.getAccountID()
+            mailboxes: RouterGetter.getMailboxes()
+            mailboxURL: mailboxURL
             configURL: RouterGetter.getURL
                 action: AccountActions.EDIT
                 accountID: accountID
@@ -135,7 +142,7 @@ module.exports = Menu = React.createClass
             key: props.key,
             div className: 'account-title',
                 a
-                    href: props.configURL
+                    href: props.mailboxURL
                     role: 'menuitem'
                     className: 'account ' + className,
                     'data-toggle': 'tooltip'
@@ -143,38 +150,22 @@ module.exports = Menu = React.createClass
                     'data-placement' : 'right',
                         i
                             className: 'avatar'
-                            style:
-                                backgroundColor: props.color
+                            style: backgroundColor: props.color
                             account.get('label')[0]
                         div
                             className: 'account-details',
                                 span
                                     'data-account-id': props.key,
-                                    className: 'item-label display-label'
-                                    account.get 'label'
-                                span
-                                    'data-account-id': props.key,
                                     className: 'item-label display-login'
                                     account.get 'login'
 
-                    if props.progress?.get('errors')?.size
-                        span className: 'refresh-error',
-                            i
-                                className: 'fa warning',
-                                onClick: @displayErrors,
-                                props.progress
-
-                if props.isSelected
-                    a
-                        href: props.configURL
-                        className: 'mailbox-config menu-subaction',
-                        i
-                            'className': 'fa fa-cog'
-                            'aria-describedby': Tooltips.ACCOUNT_PARAMETERS
-                            'data-tooltip-direction': 'right'
-
-                if props.nbUnread > 0 and not props.progress
-                    span className: 'badge', props.nbUnread
+                a
+                    href: props.configURL
+                    className: 'mailbox-config menu-subaction',
+                    i
+                        'className': 'fa fa-cog'
+                        'aria-describedby': Tooltips.ACCOUNT_PARAMETERS
+                        'data-tooltip-direction': 'right'
 
             if props.isSelected
                 ul

@@ -7,12 +7,12 @@ RouterStore = require '../stores/router_store'
 
 module.exports = AccountActionCreator =
 
-    create: (inputValues, afterCreation) ->
+    create: (value) ->
         AppDispatcher.dispatch
             type: ActionTypes.ADD_ACCOUNT_REQUEST
-            value: {inputValues}
+            value: {value}
 
-        XHRUtils.createAccount inputValues, (error, account) ->
+        XHRUtils.createAccount value, (error, account) ->
             if error?
                 AppDispatcher.dispatch
                     type: ActionTypes.ADD_ACCOUNT_FAILURE
@@ -34,12 +34,12 @@ module.exports = AccountActionCreator =
                     type: ActionTypes.ADD_ACCOUNT_SUCCESS
                     value: {account, areMailboxesConfigured}
 
-    edit: (inputValues, accountID) ->
-        newAccount = AccountStore.getByID(accountID).mergeDeep inputValues
+    edit: ({value, accountID}) ->
+        newAccount = AccountStore.getByID(accountID).mergeDeep value
 
         AppDispatcher.dispatch
             type: ActionTypes.EDIT_ACCOUNT_REQUEST
-            value: {inputValues, newAccount}
+            value: {value, newAccount}
 
         XHRUtils.editAccount newAccount, (error, rawAccount) ->
             if error?
@@ -51,16 +51,16 @@ module.exports = AccountActionCreator =
                     type: ActionTypes.EDIT_ACCOUNT_SUCCESS
                     value: {rawAccount}
 
-    check: (inputValues, accountID) ->
+    check: ({value, accountID}) ->
         if accountID?
             account = AccountStore.getByID accountID
-            newAccount = account.mergeDeep(inputValues).toJS()
+            newAccount = account.mergeDeep(value).toJS()
         else
-            newAccount = inputValues
+            newAccount = value
 
         AppDispatcher.dispatch
             type: ActionTypes.CHECK_ACCOUNT_REQUEST
-            value: {inputValues, newAccount}
+            value: {value, newAccount}
 
         XHRUtils.checkAccount newAccount, (error, rawAccount) ->
             if error?
@@ -87,6 +87,19 @@ module.exports = AccountActionCreator =
                     type: ActionTypes.REMOVE_ACCOUNT_SUCCESS
                     value: accountID
 
+    discover: (domain) ->
+        AppDispatcher.handleViewAction
+            type: ActionTypes.DISCOVER_REQUEST
+            value: {domain}
+        XHRUtils.accountDiscover domain, (error, provider) ->
+            if error
+                AppDispatcher.handleViewAction
+                    type: ActionTypes.DISCOVER_FAILURE
+                    value: {error, domain}
+            else
+                AppDispatcher.handleViewAction
+                    type: ActionTypes.DISCOVER_SUCCESS
+                    value: {domain, provider}
 
     saveEditTab: (tab) ->
         AppDispatcher.dispatch
