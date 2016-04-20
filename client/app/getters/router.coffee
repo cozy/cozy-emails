@@ -15,6 +15,7 @@ class RouteGetter
     hasNextPage: ->
         RouterStore.hasNextPage()
 
+
     isCurrentURL: (mailboxURL) ->
         isServer = false
         currentURL = RouterStore.getCurrentURL {isServer}
@@ -25,6 +26,7 @@ class RouteGetter
         isSameQuery = current[1] is mailbox[1]
 
         isSameMailbox and isSameQuery
+
 
     getURL: (params) ->
         RouterStore.getURL params
