@@ -19,7 +19,10 @@ class RouteGetter
     isCurrentURL: (url) ->
         isServer = false
         currentURL = RouterStore.getCurrentURL {isServer}
-        currentURL is url
+
+        # Dont care about params
+        # such as: messageID or ?query
+        -1 < currentURL.indexOf url
 
     getURL: (params) ->
         RouterStore.getURL params
