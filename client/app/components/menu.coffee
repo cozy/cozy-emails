@@ -9,15 +9,11 @@ classNames = require 'classnames'
 colorhash = require '../utils/colorhash'
 
 LayoutActionCreator  = require '../actions/layout_action_creator'
-<<<<<<< dfd2af7ea66bc5a5ca79040000fe620820bc9c3e
-{MessageFilter, Tooltips, AccountActions} = require '../constants/app_constants'
+{MessageFilter, Tooltips, AccountActions, MessageActions} = require '../constants/app_constants'
 
 RouterStore = require '../stores/router_store'
 AccountStore = require '../stores/account_store'
 StoreWatchMixin = require '../mixins/store_watch_mixin'
-=======
-{Tooltips, AccountActions, MessageActions} = require '../constants/app_constants'
->>>>>>> mailboxLink should redirect to the appropriate mailbox (not account adit)
 
 RouterGetter = require '../getters/router'
 IconGetter = require '../getters/icon'

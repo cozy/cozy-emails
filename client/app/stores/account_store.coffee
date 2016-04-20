@@ -231,30 +231,12 @@ class AccountStore extends Store
     getSelected: ->
         return _accounts.get _accountID
 
+
     getAllMailboxes: ->
         return _accounts.get @getAccountID()
             .get 'mailboxes'
             .sort _mailboxSort
 
-    getSelectedMailboxes: (accountID) ->
-        accountID ?= _selectedAccount?.get('id')
-        _accounts.get(accountID)?.get('mailboxes')
-            .sort(_mailboxSort)
-
-    getSelectedMailbox: (accountID) ->
-        mailboxes = @getSelectedMailboxes(accountID)
-        return mailboxes?.first() or @getSelectedOrDefault()
-
-    getSelectedFavorites: ->
-        if (mailboxes = @getSelectedMailboxes())
-            ids = _selectedAccount?.get 'favorites'
-            if ids?
-                mailboxes = mailboxes
-                    .filter (box, key) -> key in ids
-                    .toOrderedMap()
-            else
-                mailboxes = mailboxes.toOrderedMap()
->>>>>>> mailboxLink should redirect to the appropriate mailbox (not account adit)
 
     getMailbox: (mailboxID) ->
         mailboxID ?= _mailboxID
