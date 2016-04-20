@@ -5,7 +5,7 @@ AppDispatcher = require '../libs/flux/dispatcher/dispatcher'
 
 Store = require '../libs/flux/store/store'
 
-{ActionTypes, MessageActions} = require '../constants/app_constants'
+{ActionTypes} = require '../constants/app_constants'
 
 class MessageStore extends Store
 
@@ -95,7 +95,6 @@ class MessageStore extends Store
     ###
     __bindHandlers: (handle) ->
 
-
         handle ActionTypes.MESSAGE_FETCH_SUCCESS, ({error, result, timestamp}) ->
             _updateMessages result, timestamp unless error
             @emit 'change'
@@ -105,14 +104,17 @@ class MessageStore extends Store
             _saveMessage message
             @emit 'change'
 
+
         handle ActionTypes.RECEIVE_RAW_MESSAGE_REALTIME, (message) ->
             _saveMessage message
             @emit 'change'
+
 
         handle ActionTypes.RECEIVE_RAW_MESSAGES, (messages) ->
             for message in messages when message?
                 _saveMessage message
             @emit 'change'
+
 
         handle ActionTypes.REMOVE_ACCOUNT_SUCCESS, (accountID) ->
             _messages = _messages.filter (message) ->
@@ -120,23 +122,16 @@ class MessageStore extends Store
             .toOrderedMap()
             @emit 'change'
 
+
         handle ActionTypes.MESSAGE_FLAGS_SUCCESS, ({updated}) ->
             _saveMessage message for message in updated
             @emit 'change'
+
 
         handle ActionTypes.MESSAGE_MOVE_SUCCESS, ({updated}) ->
             _saveMessage message for message in updated
             @emit 'change'
 
-        handle ActionTypes.MESSAGE_FETCH_REQUEST, (payload)->
-            _fetchMessage payload
-            @emit 'change'
-
-        handle ActionTypes.MESSAGE_FETCH_FAILURE, ->
-            @emit 'change'
-
-        handle ActionTypes.REFRESH_SUCCESS, ->
-            @emit 'change'
 
         handle ActionTypes.MESSAGE_SEND_SUCCESS, ({message}) ->
             _saveMessage message
@@ -146,6 +141,7 @@ class MessageStore extends Store
         handle ActionTypes.RECEIVE_MESSAGE_DELETE, (id) ->
             _deleteMessage {id}
             @emit 'change'
+
 
         handle ActionTypes.MAILBOX_EXPUNGE, (mailboxID) ->
             _messages = _messages.filter (message) ->
