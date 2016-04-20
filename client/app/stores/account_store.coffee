@@ -232,8 +232,9 @@ class AccountStore extends Store
         return _accounts.get _accountID
 
 
-    getAllMailboxes: ->
-        return _accounts.get @getAccountID()
+    getAllMailboxes: (accountID) ->
+        accountID ?= @getAccountID()
+        return _accounts.get accountID
             .get 'mailboxes'
             .sort _mailboxSort
 

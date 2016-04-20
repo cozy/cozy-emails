@@ -111,11 +111,14 @@ class RouteGetter
     isCurrentConversation: (conversationID) ->
         conversationID is @getCurrentMessage()?.get 'conversationID'
 
-    getCurrentMailbox: (mailboxID) ->
+    getMailbox: (mailboxID) ->
         AccountStore.getMailbox mailboxID
 
-    getInbox: ->
-        AccountStore.getAllMailboxes()?.find (mailbox) ->
+    getCurrentMailbox: ->
+        AccountStore.getMailbox()
+
+    getInbox: (accountID) ->
+        AccountStore.getAllMailboxes(accountID)?.find (mailbox) ->
             'INBOX' is mailbox.get 'label'
 
     getAccounts: ->
@@ -140,7 +143,7 @@ class RouteGetter
         mailboxID = @getMailboxID()
         mailboxesIDs = Object.keys message.get 'mailboxIDs'
         return _.uniq _.compact mailboxesIDs.map (id) =>
-            if (mailbox = @getCurrentMailbox id)
+            if (mailbox = @getMailbox id)
                 attribs = mailbox.get('attribs') or []
                 isGlobal = MailboxFlags.ALL in attribs
                 isEqual = mailboxID is id
