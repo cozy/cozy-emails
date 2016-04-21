@@ -429,28 +429,25 @@ module.exports = MessageUtils =
     # Display date as a readable string.
     # Make it shorter if compact is set to true.
     formatDate: (date, compact) ->
+        return null unless date?
 
-        unless date?
-            return null
+        today = moment()
+        date  = moment date
+
+        if date.isBefore today, 'year'
+            formatter = 'DD/MM/YYYY'
+
+        else if date.isBefore today, 'day'
+
+            if compact? and compact
+                formatter = 'L'
+            else
+                formatter = 'MMM DD'
 
         else
-            today = moment()
-            date  = moment date
+            formatter = 'HH:mm'
 
-            if date.isBefore today, 'year'
-                formatter = 'DD/MM/YYYY'
-
-            else if date.isBefore today, 'day'
-
-                if compact? and compact
-                    formatter = 'L'
-                else
-                    formatter = 'MMM DD'
-
-            else
-                formatter = 'HH:mm'
-
-            return date.format formatter
+        return date.format formatter
 
 
     # Return avatar corresponding to sender by matching his email address with

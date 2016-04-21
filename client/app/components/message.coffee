@@ -12,6 +12,7 @@ MessageContent = React.createFactory require './message-content'
 LayoutActionCreator = require '../actions/layout_action_creator'
 RouterActionCreator = require '../actions/router_action_creator'
 
+messageUtils = require '../utils/message_utils'
 
 module.exports = React.createClass
     displayName: 'Message'
@@ -28,6 +29,7 @@ module.exports = React.createClass
 
 
     render: ->
+        createdAt = @props.message.get 'createdAt'
         article
             className: classNames
                 message: true
@@ -43,8 +45,11 @@ module.exports = React.createClass
                 ref: 'header'
                 key: "messageHeader-#{@props.message.get('id')}"
                 message: @props.message
+                avatar: messageUtils.getAvatar @props.message
+                createdAt: messageUtils.formatDate createdAt
                 isDraft: @props.isDraft
                 isDeleted: @props.isDeleted
+                isFlagged: MessageFlags.FLAGGED in @props.message.get('flags')
                 active: @props.active,
 
             # FIXME : il existe une erreur dans le composant
