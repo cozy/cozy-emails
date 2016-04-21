@@ -43,8 +43,8 @@ module.exports =
 
 
     getReplyMessage: (messageID) ->
-        if (isReply = @getAction() isnt 'message.edit')
-            return MessageStore.getByID messageID
+        isReply = @getAction() is MessageActions.EDIT
+        MessageStore.getByID messageID unless isReply
 
 
     isEditable: ->

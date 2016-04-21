@@ -46,8 +46,8 @@ module.exports = React.createClass
         nstate.isWaiting         = RouterStore.isWaiting()
         nstate.isChecking        = RouterStore.isChecking()
 
-        unless (nstate.editedAccount = nstate.selectedAccount)
-            nstate.editedAccount = AccountStore.makeEmptyAccount()
+        # unless (nstate.editedAccount = nstate.selectedAccount)
+        #     nstate.editedAccount = AccountStore.makeEmptyAccount()
 
         unless @state
             nstate.isWaiting = false

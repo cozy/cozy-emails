@@ -96,7 +96,7 @@ _initReporting = ->
 
 
 _initDesktopNotifications = ->
-    if window.settings.desktopNotifications and window.Notification
+    if window.settings?.desktopNotifications and window.Notification
         Notification.requestPermission (status) ->
             # This allows to use Notification.permission
             # with Chrome/Safari
