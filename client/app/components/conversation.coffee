@@ -5,11 +5,9 @@ ReactDOM  = require 'react-dom'
 {section, header, ul, li, span, i, p, h3, a, button} = React.DOM
 DomUtils = require '../utils/dom_utils'
 MessageUtils = require '../utils/message_utils'
-
-{MessageFlags, MessageActions} = require '../constants/app_constants'
+{MessageActions} = require '../constants/app_constants'
 
 Message             = React.createFactory require './message'
-ToolbarConversation = React.createFactory require './toolbar_conversation'
 
 # SettingsStore = require '../stores/settings_store'
 RouterGetter = require '../getters/router'
@@ -17,7 +15,6 @@ RouterGetter = require '../getters/router'
 # FIXME : use Getters instead of Stores
 AccountStore        = require '../stores/account_store'
 MessageStore        = require '../stores/message_store'
-LayoutStore         = require '../stores/layout_store'
 SelectionStore       = require '../stores/selection_store'
 StoreWatchMixin      = require '../mixins/store_watch_mixin'
 
@@ -77,10 +74,6 @@ module.exports = React.createClass
                 h3 className: 'conversation-title',
                     subject
 
-                ToolbarConversation
-                    key                 : 'ToolbarConversation-' + conversationID
-                    conversationID      : conversationID
-                    mailboxID           : @props.mailboxID
                 a
                     className: 'clickable btn btn-default fa fa-close'
                     href: RouterGetter.getURL
