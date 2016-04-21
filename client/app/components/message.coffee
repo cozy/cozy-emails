@@ -1,5 +1,5 @@
 React      = require 'react'
-{div, article, header, footer, i, p, a, textarea} = React.DOM
+{div, article, footer, i, p, a, textarea} = React.DOM
 classNames = require 'classnames'
 
 MessageHeader  = React.createFactory require './message_header'
@@ -22,6 +22,11 @@ module.exports = React.createClass
         console.log 'MARK_AS_READ', messageID
         # RouterActionCreator.mark {messageID}, MessageFlags.SEEN
 
+    gotoMessage: ->
+        messageID = @props.message?.get('id')
+        RouterActionCreator.navigate {messageID}
+
+
     render: ->
         article
             className: classNames
@@ -32,39 +37,34 @@ module.exports = React.createClass
                 isUnread: @props.isUnread
             key: "messageContainer-#{@props.message.get('id')}",
 
-            if @props.active
-                header null,
-                    MessageHeader
-                        ref: 'header'
-                        key: "messageHeader-#{@props.message.get('id')}"
-                        message: @props.message
-                        isDraft: @props.isDraft
-                        isDeleted: @props.isDeleted
-                        active: @props.active,
+            # FIXME : le click ne fonctionne pas
+            # conflit avec 'MessageHeader'?!
+            MessageHeader
+                ref: 'header'
+                key: "messageHeader-#{@props.message.get('id')}"
+                message: @props.message
+                isDraft: @props.isDraft
+                isDeleted: @props.isDeleted
+                active: @props.active,
 
-            if @props.active
-                MessageContent
-                    ref: 'messageContent'
-                    messageID: @props.message.get 'id'
-                    html: @props.html
-                    text: @props.text
-                    rich: @props.rich
-                    imagesWarning: @props.imagesWarning
+            # FIXME : il existe une erreur dans le composant
+            # if @props.active
+            #     ToolbarMessage
+            #         ref         : 'messageToolbar'
+            #         isFull      : true
+            #         messageID   : @props.message.get('id')
 
-            if @props.active
-                footer null,
-                    MessageFooter
-                        ref: 'footer'
-                        files: @props.message.get 'attachments'
 
-            unless @props.active
-                a
-                    href: @props.messageURL
-                    className: 'header',
-                    MessageHeader
-                        ref: 'header'
-                        key: "messageHeader-#{@props.message.get('id')}"
-                        message: @props.message
-                        isDraft: @props.isDraft
-                        isDeleted: @props.isDeleted
-                        active: @props.active
+            # if @props.active
+            #     MessageContent
+            #         ref: 'messageContent'
+            #         messageID: @props.message.get 'id'
+            #         html: @props.html
+            #         text: @props.text
+            #         rich: @props.rich
+            #         imagesWarning: @props.imagesWarning
+            #
+            # if @props.active
+            #         MessageFooter
+            #             ref: 'footer'
+            #             files: @props.message.get 'attachments'
