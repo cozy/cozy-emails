@@ -5,11 +5,19 @@ React = require 'react'
 PopupMessageAttachments = React.createFactory require './popup_message_attachments'
 ContactLabel = React.createFactory require '../components/contact_label'
 
+RouterActionCreator = require '../actions/router_action_creator'
+
 module.exports = React.createClass
     displayName: 'MessageHeader'
 
+    gotoMessage: ->
+        messageID = @props.message?.get('id')
+        RouterActionCreator.navigate {messageID}
+
     render: ->
         header
+            onClick: @gotoMessage
+
             key: "message-header-#{@props.message.get 'id'}",
             if @props.avatar
                 span
@@ -18,7 +26,8 @@ module.exports = React.createClass
                         className: 'media-object'
                         src: @props.avatar
 
-            div className: 'infos',
+            div
+                className: 'infos',
                 @renderAddress 'from'
                 @renderAddress 'to' if @props.active
                 @renderAddress 'cc' if @props.active
