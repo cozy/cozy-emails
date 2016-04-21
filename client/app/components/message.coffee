@@ -24,10 +24,6 @@ module.exports = React.createClass
         console.log 'MARK_AS_READ', messageID
         # RouterActionCreator.mark {messageID}, MessageFlags.SEEN
 
-    gotoMessage: ->
-        messageID = @props.message?.get('id')
-        RouterActionCreator.navigate {messageID}
-
     renderAttachement: (file, index, isPreview=false) ->
         file = file?.toJS()
         AttachmentPreview
