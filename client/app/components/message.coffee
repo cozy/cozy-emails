@@ -9,7 +9,6 @@ AttachmentPreview = React.createFactory require './attachement_preview'
 
 {MessageFlags, MessageActions} = require '../constants/app_constants'
 
-LayoutActionCreator = require '../actions/layout_action_creator'
 RouterActionCreator = require '../actions/router_action_creator'
 
 RouterGetter = require '../getters/router'
@@ -62,11 +61,11 @@ module.exports = React.createClass
                 isFlagged: MessageFlags.FLAGGED in @props.message.get('flags')
                 active: @props.active,
 
-            # if @props.active
-            #     ToolbarMessage
-            #         ref         : 'messageToolbar'
-            #         isFull      : true
-            #         messageID   : @props.message.get('id')
+            if @props.active
+                ToolbarMessage
+                    ref         : 'messageToolbar'
+                    isFull      : true
+                    messageID   : @props.message.get('id')
 
             if @props.active
                 MessageContent
