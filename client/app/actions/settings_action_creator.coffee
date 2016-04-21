@@ -6,10 +6,10 @@ SettingsStore = require '../stores/settings_store'
 
 module.exports = SettingsActionCreator =
 
-    edit: (inputValues) ->
+    edit: (values) ->
         AppDispatcher.dispatch
             type: ActionTypes.SETTINGS_UPDATE_REQUEST
-            value: inputValues
+            value: values
 
         XHRUtils.changeSettings inputValues, (error, values) ->
             if error

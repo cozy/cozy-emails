@@ -1,6 +1,6 @@
 _     = require 'underscore'
 React = require 'react'
-{div, span, i, img, a} = React.DOM
+{span, span, i, img, a} = React.DOM
 {MessageFlags} = require '../constants/app_constants'
 
 
@@ -29,15 +29,15 @@ module.exports = React.createClass
     render: ->
         avatar = messageUtils.getAvatar @props.message
 
-        div key: "message-header-#{@props.message.get 'id'}",
+        span key: "message-header-#{@props.message.get 'id'}",
             if avatar
-                div className: 'sender-avatar',
+                span className: 'sender-avatar',
                     img className: 'media-object', src: avatar
-            div className: 'infos',
+            span className: 'infos',
                 @renderAddress 'from'
                 @renderAddress 'to' if @props.active
                 @renderAddress 'cc' if @props.active
-                div className: 'metas indicators',
+                span className: 'metas indicators',
                     if @props.message.get('attachments').size
                         PopupMessageAttachments
                             message: @props.message
@@ -52,7 +52,7 @@ module.exports = React.createClass
 
                         if @props.isDeleted
                             i className: 'fa fa-trash'
-                div className: 'metas date',
+                span className: 'metas date',
                     messageUtils.formatDate @props.message.get 'createdAt'
 
 
@@ -60,11 +60,11 @@ module.exports = React.createClass
         users = @props.message.get field
         return unless users.length
 
-        div
+        span
             className: "addresses #{field}"
             key: "address-#{field}",
 
-            div className: 'addresses-wrapper',
+            span className: 'addresses-wrapper',
                 if field isnt 'from'
                     span className: 'field',
                         t "mail #{field}"

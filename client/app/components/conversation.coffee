@@ -4,13 +4,14 @@ ReactDOM  = require 'react-dom'
 
 {section, header, ul, li, span, i, p, h3, a, button} = React.DOM
 DomUtils = require '../utils/dom_utils'
+MessageUtils = require '../utils/message_utils'
 
 {MessageFlags, MessageActions} = require '../constants/app_constants'
 
 Message             = React.createFactory require './message'
 ToolbarConversation = React.createFactory require './toolbar_conversation'
 
-SettingsStore = require '../stores/settings_store'
+# SettingsStore = require '../stores/settings_store'
 RouterGetter = require '../getters/router'
 
 # FIXME : use Getters instead of Stores
@@ -43,18 +44,16 @@ module.exports = React.createClass
         accounts = AccountStore.getAll()
         accountID = RouterGetter.getAccountID()
         messageID = message.get 'id'
-        Message
+
+        props = MessageUtils.formatContent message
+        Message _.extend props, {
             ref                 : 'message'
             key                 : 'message-' + messageID
             message             : message
             active              : @props.messageID is messageID
-            url                 : RouterGetter.getURL {messageID}
-            selectedMailboxID   : @props.mailboxID
-            useIntents          : LayoutStore.intentAvailable()
-            trashMailbox        : accounts[accountID]?.trashMailbox
-            displayHTML         : SettingsStore.get 'messageDisplayHTML'
-            displayImages       : SettingsStore.get 'messageDisplayImages'
-            confirmDelete       : SettingsStore.get 'messageConfirmDelete'
+            messageURL          : RouterGetter.getURL {messageID}
+            mailboxID           : @props.mailboxID
+        }
 
 
     render: ->
