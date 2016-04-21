@@ -1,17 +1,24 @@
 React = require 'react'
+{div, span, i, p, button} = React.DOM
 
 frame  = React.createFactory require '../components/frame'
-{div, span, i, p, button} = React.DOM
+
+SettingsActionCreator = require '../actions/settings_action_creator'
 
 
 module.exports = MessageContent = React.createClass
     displayName: 'MessageContent'
 
+    displayImages: ->
+        displayImages = true
+        SettingsActionCreator.edit {displayImages}
+
     render: ->
-        if @props.displayHTML and @props.html
+        if @props.html?.length
             div null,
                 if @props.imagesWarning
                     div
+                        ref: "imagesWarning"
                         className: "imagesWarning alert alert-warning content-action",
                         ref: "imagesWarning",
                             i className: 'fa fa-shield'
@@ -20,12 +27,11 @@ module.exports = MessageContent = React.createClass
                                 className: 'btn btn-xs btn-warning',
                                 type: "button",
                                 ref: 'imagesDisplay',
-                                onClick: @props.displayImages,
+                                onClick: @displayImages,
                                 t 'message images display'
 
                 frame null,
                     span dangerouslySetInnerHTML: { __html: @props.html }
-
         else
             div className: 'row',
                 div className: 'preview', ref: 'content',

@@ -1,13 +1,6 @@
 React      = require 'react'
+{div, article, header, footer, i, p, a, textarea} = React.DOM
 classNames = require 'classnames'
-
-{markdown} = require 'markdown'
-toMarkdown = require 'to-markdown'
-
-{
-    div, article, header, footer, ul, li, span, i, p, a, button, pre,
-    iframe, textarea
-} = React.DOM
 
 MessageHeader  = React.createFactory require './message_header'
 MessageFooter  = React.createFactory require './message_footer'
@@ -16,235 +9,64 @@ MessageContent = React.createFactory require './message-content'
 
 {MessageFlags, MessageActions} = require '../constants/app_constants'
 
-LayoutActionCreator  = require '../actions/layout_action_creator'
+LayoutActionCreator = require '../actions/layout_action_creator'
 RouterActionCreator = require '../actions/router_action_creator'
-
-RGXP_PROTOCOL = /:\/\//
 
 
 module.exports = React.createClass
     displayName: 'Message'
 
 
-    prepareMessage: ->
-        # display full headers
-        fullHeaders = []
-        for key, value of @props.message.get 'headers'
-            value = value.join('\n ') if Array.isArray value
-            fullHeaders.push "#{key}: #{value}"
+    componentWillUnMount: ->
+        # Mark message as read
+        messageID = @props.message?.get('id')
+        console.log 'MARK_AS_READ', messageID
+        # RouterActionCreator.mark {messageID}, MessageFlags.SEEN
 
-        # Do not display content
-        # if message isnt active
-        if @props.active
-            text = @props.message.get 'text'
-            html = @props.message.get 'html'
-            urls = /((([A-Za-z]{3,9}:(?:\/\/)?)(?:[-;:&=\+\$,\w]+@)?[A-Za-z0-9.-]+|(?:www.|[-;:&=\+\$,\w]+@)[A-Za-z0-9.-]+)((?:\/[\+~%\/.\w-_]*)?\??(?:[-\+=&;%@.\w_]*)#?(?:[\w]*))?)/gim
-
-            # Some calendar invitation
-            # may contain neither text nor HTML part
-            if not text? and not html?
-                text = if (@props.message.get 'alternatives')?.length
-                    t 'calendar unknown format'
-
-            # TODO: Do we want to convert text only messages to HTML ?
-            # /!\ if displayHTML is set, this method should always return
-            # a value fo html, otherwise the content of the email flashes
-            if text? and not html? and @props.displayHTML
-                try
-                    html = markdown.toHTML text.replace(/(^>.*$)([^>]+)/gm, "$1\n$2")
-                    html = "<div class='textOnly'>#{html}</div>"
-                catch e
-                    html = "<div class='textOnly'>#{text}</div>"
-
-            if html? and not text? and not @props.displayHTML
-                text = toMarkdown html
-
-            if text?
-                rich = text.replace urls, '<a href="$1" target="_blank">$1</a>'
-                rich = rich.replace /^>>>>>[^>]?.*$/gim, '<span class="quote5">$&</span>'
-                rich = rich.replace /^>>>>[^>]?.*$/gim, '<span class="quote4">$&</span>'
-                rich = rich.replace /^>>>[^>]?.*$/gim, '<span class="quote3">$&</span>'
-                rich = rich.replace /^>>[^>]?.*$/gim, '<span class="quote2">$&</span>'
-                rich = rich.replace /^>[^>]?.*$/gim, '<span class="quote1">$&</span>'
-
-        flags = @props.message.get('flags').slice()
-        mailboxes = @props.message.get 'mailboxIDs'
-        trash = @props.trashMailbox
-        return {
-            attachments : @props.message.get 'attachments'
-            fullHeaders : fullHeaders
-            text        : text
-            rich        : rich
-            html        : html
-            isDraft     : (flags.indexOf(MessageFlags.DRAFT) > -1)
-            isDeleted   : mailboxes[trash]?
-        }
-
-    prepareHTML: (html) ->
-        displayHTML = true
-        parser = new DOMParser()
-        html   = """<html><head>
-                <link rel="stylesheet" href="./fonts/fonts.css" />
-                <link rel="stylesheet" href="./mail_stylesheet.css" />
-                <style>body { visibility: hidden; }</style>
-            </head><body>#{html}</body></html>"""
-        doc    = parser.parseFromString html, "text/html"
-        images = []
-
-        unless doc
-            doc = document.implementation.createHTMLDocument("")
-            doc.documentElement.innerHTML = html
-
-        unless doc
-            console.error "Unable to parse HTML content of message"
-            displayHTML = false
-
-        if doc and not @props.displayImages
-            images = doc.querySelectorAll('IMG[src]')
-            images = Array.prototype.filter.call images, (img) ->
-                RGXP_PROTOCOL.test img.getAttribute('src')
-
-            for image in images
-                image.dataset.src = image.getAttribute 'src'
-                image.removeAttribute 'src'
-
-        for link in doc.querySelectorAll 'a[href]'
-            link.target = '_blank'
-            # convert relative to absolute links in message content
-            href = link.getAttribute 'href'
-            if href isnt '' and not RGXP_PROTOCOL.test href
-                link.setAttribute 'href', 'http://' + href
-
-        if doc?
-            html = doc.documentElement.innerHTML
-
-        return {displayHTML, images, html}
-
-    isUnread: ->
-        @props.message.get('flags').indexOf(MessageFlags.SEEN) is -1
-
-    onHeaderClicked: ->
-        messageID = @props.message.get 'id'
-        mailboxID = @props.message.get 'mailboxID'
-        RouterActionCreator.gotoMessage {messageID, mailboxID}
 
     render: ->
-        message  = @props.message
-        prepared = @prepareMessage()
-
-        if @props.displayHTML and prepared.html?
-            {displayHTML, images, html} = @prepareHTML prepared.html
-            imagesWarning = images.length > 0 and not @props.displayImages
-        else
-            displayHTML = false
-            imagesWarning = false
-            html = ''
-
-        classes = classNames
-            message: true
-            active: @props.active
-            isDraft: prepared.isDraft
-            isDeleted: prepared.isDeleted
-            isUnread: @isUnread()
-
         article
-            className: classes,
-            key: @props.key,
-            'data-message-active': @props.active
-            'data-id': @props.message.get('id'),
+            className: classNames
+                message: true
+                active: @props.active
+                isDraft: @props.isDraft
+                isDeleted: @props.isDeleted
+                isUnread: @props.isUnread
+            key: "messageContainer-#{@props.message.get('id')}",
 
-                header onClick: @onHeaderClicked,
+            if @props.active
+                header null,
                     MessageHeader
-                        message: @props.message
-                        isDraft: prepared.isDraft
-                        isDeleted: prepared.isDeleted
-                        active: @props.active
                         ref: 'header'
+                        key: "messageHeader-#{@props.message.get('id')}"
+                        message: @props.message
+                        isDraft: @props.isDraft
+                        isDeleted: @props.isDeleted
+                        active: @props.active,
 
-                    if @props.active
-                        @renderToolbox()
+            if @props.active
+                MessageContent
+                    ref: 'messageContent'
+                    messageID: @props.message.get 'id'
+                    html: @props.html
+                    text: @props.text
+                    rich: @props.rich
+                    imagesWarning: @props.imagesWarning
 
-                if @props.active
-                    div className: 'full-headers',
-                        # should be a pre, but it breaks flex
-                        textarea
-                            disabled: true
-                            resize: false
-                            value: prepared?.fullHeaders?.join("\n")
+            if @props.active
+                footer null,
+                    MessageFooter
+                        ref: 'footer'
+                        files: @props.message.get 'attachments'
 
-                    MessageContent
-                        ref: 'messageContent'
-                        messageID: @props.message.get 'id'
-                        displayHTML: @props.displayHTML
-                        html: html
-                        text: prepared.text
-                        rich: prepared.rich
-                        imagesWarning: imagesWarning
-                        displayImages: @displayImages
-                        displayHTML: @displayHTML
-
-                if @props.active
-                    footer null,
-                        MessageFooter
-                            message: @props.message
-                            ref: 'footer'
-                        @renderToolbox(false)
-
-    renderToolbox: (full = true) ->
-        ToolbarMessage
-            full                 : full
-            message              : @props.message
-            selectedMailboxID    : @props.selectedMailboxID
-            onDelete             : @onDelete
-            onMove               : @onMove
-            ref                  : 'toolbarMessage'
-
-
-    onDelete: (event) ->
-        event.preventDefault()
-        event.stopPropagation()
-
-        success = =>
-            messageID = @props.message.get 'id'
-            accountID = @props.message.get 'accountID'
-            MessageActionCreator.delete {messageID, accountID}
-
-        unless @props.confirmDelete
-            success()
-            return
-
-        confirmMessage = t 'mail confirm delete',
-            subject: @props.message.get('subject')
-        LayoutActionCreator.displayModal
-            title       : t 'app confirm delete'
-            subtitle    : confirmMessage
-            closeLabel  : t 'app cancel'
-            actionLabel : t 'app confirm'
-            action      : ->
-                LayoutActionCreator.hideModal()
-                success()
-
-
-    onMove: (to) ->
-        messageID = @props.message.get('id')
-        from = @props.selectedMailboxID
-        subject = @props.message.get 'subject'
-        RouterActionCreator.move {messageID}, from, to
-
-
-    onCopy: (args) ->
-        NotificationActionsCreator.alertWarning t "app unimplemented"
-
-
-    addAddress: (address) ->
-        ContactActionCreator.createContact address
-
-
-    displayImages: (event) ->
-        event.preventDefault()
-        @setState displayImages: true
-
-
-    displayHTML: (value) ->
-        value = true unless value?
-        @setState displayHTML: value
+            unless @props.active
+                a
+                    href: @props.messageURL
+                    className: 'header',
+                    MessageHeader
+                        ref: 'header'
+                        key: "messageHeader-#{@props.message.get('id')}"
+                        message: @props.message
+                        isDraft: @props.isDraft
+                        isDeleted: @props.isDeleted
+                        active: @props.active
