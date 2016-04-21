@@ -1,71 +1,52 @@
 React = require 'react'
-
 {nav, div, button, a} = React.DOM
 
 {MessageActions, Tooltips} = require '../constants/app_constants'
+RouterActionCreator = require '../actions/router_action_creator'
 
 RouterGetter = require '../getters/router'
 
-ToolboxMove    = React.createFactory require './toolbox_move'
-
-# Shortcuts for buttons classes
-cBtnGroup = 'btn-group btn-group-sm pull-right'
-cBtn      = 'btn btn-default fa'
 
 
 module.exports = React.createClass
     displayName: 'ToolbarMessage'
 
-    propTypes:
-        message            : React.PropTypes.object.isRequired
-        onDelete           : React.PropTypes.func.isRequired
-        onMove             : React.PropTypes.func.isRequired
-
+    deleteMessage: ->
+        messageID = @props.messageID
+        RouterActionCreator.delete {messageID}
 
     render: ->
+        messageID = @props.messageID
+        cBtnGroup = 'btn-group btn-group-sm pull-right'
+        cBtn      = 'btn btn-default fa'
+
         nav
-            className: 'toolbar toolbar-message btn-toolbar'
-            onClick: (event) -> event.stopPropagation()
-            # inverted order due to `pull-right` class
-            div(className: cBtnGroup, @renderToolboxMove())
-            @renderQuickActions() if @props.full
-            @renderReply()
+            className: 'toolbar toolbar-message btn-toolbar',
 
+            if @props.isFull
+                div className: cBtnGroup,
+                    button
+                        className: "#{cBtn} fa-trash"
+                        onClick: @deleteMessage
+                        'aria-describedby': Tooltips.REMOVE_MESSAGE
+                        'data-tooltip-direction': 'top'
 
-    renderReply: ->
-        messageID = @props.message.get 'id'
-        div className: cBtnGroup,
+            if @props.isFull
+                div className: cBtnGroup,
+                    a
+                        className: "#{cBtn} fa-mail-reply mail-reply"
+                        href: RouterGetter.getURL {action: MessageActions.REPLY, messageID}
+                        'aria-describedby': Tooltips.REPLY
+                        'data-tooltip-direction': 'top'
 
-            a
-                className: "#{cBtn} fa-mail-reply mail-reply"
-                href: RouterGetter.getURL {action: MessageActions.REPLY, messageID}
-                'aria-describedby': Tooltips.REPLY
-                'data-tooltip-direction': 'top'
+                    a
+                        className: "#{cBtn} fa-mail-reply-all mail-reply-all"
+                        href: RouterGetter.getURL {action: MessageActions.REPLY_ALL, messageID}
+                        'aria-describedby': Tooltips.REPLY_ALL
+                        'data-tooltip-direction': 'top'
 
-            a
-                className: "#{cBtn} fa-mail-reply-all mail-reply-all"
-                href: RouterGetter.getURL {action: MessageActions.REPLY_ALL, messageID}
-                'aria-describedby': Tooltips.REPLY_ALL
-                'data-tooltip-direction': 'top'
-
-            a
-                className: "#{cBtn} fa-mail-forward mail-forward"
-                href: RouterGetter.getURL {action: MessageActions.FORWARD, messageID}
-                'aria-describedby': Tooltips.FORWARD
-                'data-tooltip-direction': 'top'
-
-
-    renderQuickActions: ->
-        div className: cBtnGroup,
-            button
-                className: "#{cBtn} fa-trash"
-                onClick: @props.onDelete
-                'aria-describedby': Tooltips.REMOVE_MESSAGE
-                'data-tooltip-direction': 'top'
-
-
-    renderToolboxMove: ->
-        ToolboxMove
-            ref:       'toolboxMove'
-            onMove:    @props.onMove
-            direction: 'right'
+                    a
+                        className: "#{cBtn} fa-mail-forward mail-forward"
+                        href: RouterGetter.getURL {action: MessageActions.FORWARD, messageID}
+                        'aria-describedby': Tooltips.FORWARD
+                        'data-tooltip-direction': 'top'
