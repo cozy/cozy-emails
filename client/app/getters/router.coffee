@@ -5,10 +5,12 @@ SearchStore = require '../stores/search_store'
 RefreshesStore = require '../stores/refreshes_store'
 RouterStore = require '../stores/router_store'
 
+_ = require 'lodash'
 Immutable = require 'immutable'
+
 {MessageActions, MailboxFlags} = require '../constants/app_constants'
 
-_ = require 'lodash'
+
 
 class RouteGetter
 

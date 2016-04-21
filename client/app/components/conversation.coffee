@@ -8,7 +8,7 @@ MessageUtils = require '../utils/message_utils'
 
 {MessageActions} = require '../constants/app_constants'
 
-Message             = React.createFactory require './message'
+Message = React.createFactory require './message'
 
 RouterGetter = require '../getters/router'
 
@@ -39,12 +39,11 @@ module.exports = React.createClass
         props = MessageUtils.formatContent message
 
         Message _.extend props, {
-            ref                 : 'message'
-            key                 : 'message-' + messageID
-            message             : message
-            active              : @props.messageID is messageID
-            messageURL          : RouterGetter.getURL {messageID}
-            mailboxID           : @props.mailboxID
+            ref         : 'message'
+            key         : "message-#{messageID}"
+            message     : message
+            active      : @props.messageID is messageID
+            resources   : RouterGetter.getResources message
         }
 
     render: ->
