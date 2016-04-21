@@ -2,6 +2,7 @@ _ = require 'lodash'
 
 AppDispatcher = require '../libs/flux/dispatcher/dispatcher'
 
+AccountStore = require '../stores/account_store'
 RouterStore = require '../stores/router_store'
 
 XHRUtils = require '../utils/xhr_utils'
