@@ -9,7 +9,6 @@ MessageUtils = require '../utils/message_utils'
 {MessageActions} = require '../constants/app_constants'
 
 Message             = React.createFactory require './message'
-ToolbarConversation = React.createFactory require './toolbar_conversation'
 
 RouterGetter = require '../getters/router'
 
@@ -69,10 +68,6 @@ module.exports = React.createClass
                 h3 className: 'conversation-title',
                     subject
 
-                ToolbarConversation
-                    key                 : 'ToolbarConversation-' + conversationID
-                    conversationID      : conversationID
-                    mailboxID           : @props.mailboxID
                 a
                     className: 'clickable btn btn-default fa fa-close'
                     href: RouterGetter.getURL
