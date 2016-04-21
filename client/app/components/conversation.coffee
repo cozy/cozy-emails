@@ -7,9 +7,8 @@ DomUtils = require '../utils/dom_utils'
 MessageUtils = require '../utils/message_utils'
 {MessageActions} = require '../constants/app_constants'
 
-Message             = React.createFactory require './message'
+Message = React.createFactory require './message'
 
-# SettingsStore = require '../stores/settings_store'
 RouterGetter = require '../getters/router'
 
 # FIXME : use Getters instead of Stores
@@ -44,12 +43,11 @@ module.exports = React.createClass
 
         props = MessageUtils.formatContent message
         Message _.extend props, {
-            ref                 : 'message'
-            key                 : 'message-' + messageID
-            message             : message
-            active              : @props.messageID is messageID
-            messageURL          : RouterGetter.getURL {messageID}
-            mailboxID           : @props.mailboxID
+            ref         : 'message'
+            key         : "message-#{messageID}"
+            message     : message
+            active      : @props.messageID is messageID
+            resources   : RouterGetter.getResources message
         }
 
 

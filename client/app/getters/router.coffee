@@ -5,11 +5,15 @@ SearchStore = require '../stores/search_store'
 RefreshesStore = require '../stores/refreshes_store'
 RouterStore = require '../stores/router_store'
 
+_ = require 'lodash'
 Immutable = require 'immutable'
+
 {sortByDate} = require '../utils/misc'
+MessageUtils = require '../utils/message_utils'
+
 {MessageFilter, MessageActions, MessageFlags, MailboxFlags} = require '../constants/app_constants'
 
-_ = require 'lodash'
+
 
 class RouteGetter
 
@@ -165,6 +169,19 @@ class RouteGetter
         if @isFlags 'ATTACH', filter.flags
             return t 'no filter message'
         return  t 'list empty'
+
+    getResources: (message) ->
+        if (files = message?.get 'attachments')
+            files.groupBy (file) ->
+                contentType = MessageUtils.getAttachmentType file.contentType
+                if contentType is 'image' then 'preview' else 'binary'
+
+    getAvatar: (message) ->
+        MessageUtils.getAvatar message
+
+    getCreatedAt: (message) ->
+        MessageUtils.formatDate message?.get 'createdAt'
+
 
     # Uniq Key from URL params
     #
