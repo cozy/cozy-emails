@@ -169,15 +169,28 @@ module.exports =
         COL:  'column'
         ROW:  'row'
 
-    SpecialBoxIcons:
-        inboxMailbox: 'fa-inbox'
-        draftMailbox: 'fa-file-text-o'
-        sentMailbox: 'fa-send-o'
-        trashMailbox: 'fa-trash-o'
-        junkMailbox: 'fa-fire'
-        allMailbox: 'fa-archive'
-        unreadMailbox: 'fa-eye'
-        flaggedMailbox: 'fa-star'
+    Icons:
+        'inboxMailbox'  : 'fa-inbox'
+        'draftMailbox'  : 'fa-file-text-o'
+        'sentMailbox'   : 'fa-send-o'
+        'trashMailbox'  : 'fa-trash-o'
+        'junkMailbox'   : 'fa-fire'
+        'allMailbox'    : 'fa-archive'
+        'unreadMailbox' : 'fa-eye'
+        'flaggedMailbox': 'fa-star'
+
+        'archive'       : 'fa-file-archive-o'
+        'audio'         : 'fa-file-audio-o'
+        'code'          : 'fa-file-code-o'
+        'image'         : 'fa-file-image-o'
+        'pdf'           : 'fa-file-pdf-o'
+        'word'          : 'fa-file-word-o'
+        'presentation'  : 'fa-file-powerpoint-o'
+        'spreadsheet'   : 'fa-file-excel-o'
+        'text'          : 'fa-file-text-o'
+        'video'         : 'fa-file-video-o'
+        'word'          : 'fa-file-word-o'
+
 
     Tooltips:
         REPLY                       : 'TOOLTIP_REPLY'
