@@ -2,8 +2,8 @@ _ = require 'lodash'
 
 AppDispatcher = require '../libs/flux/dispatcher/dispatcher'
 
+AccountStore = require '../stores/account_store'
 RouterStore = require '../stores/router_store'
-MessageStore = require '../stores/message_store'
 
 XHRUtils      = require '../utils/xhr_utils'
 
@@ -46,7 +46,7 @@ RouterActionCreator =
 
 
     mark: (target, action) ->
-        AppDispatcher.handleViewAction
+        AppDispatcher.dispatch
             type: ActionTypes.MESSAGE_FLAGS_REQUEST
             value: {target, action}
 
@@ -54,12 +54,12 @@ RouterActionCreator =
         ref = 'batchFlag' + timestamp
         XHRUtils.batchFlag {target, action}, (error, updated) =>
             if error
-                AppDispatcher.handleViewAction
+                AppDispatcher.dispatch
                     type: ActionTypes.MESSAGE_FLAGS_FAILURE
                     value: {target, ref, error, action}
             else
                 message.updated = timestamp for message in updated
-                AppDispatcher.handleViewAction
+                AppDispatcher.dispatch
                     type: ActionTypes.MESSAGE_FLAGS_SUCCESS
                     value: {target, ref, updated, action}
 
@@ -67,48 +67,47 @@ RouterActionCreator =
     # Delete message(s)
     # target:
     #  - messageID or messageIDs or conversationIDs or conversationIDs
-    delete: (target) ->
-        ref = refCounter++
+    delete: (target={}) ->
+        timestamp = Date.now()
+        ref = 'delete' + timestamp
+        target.accountID = AccountStore.getAccountID()
 
-        AppDispatcher.handleViewAction
+        AppDispatcher.dispatch
             type: ActionTypes.MESSAGE_TRASH_REQUEST
             value: {target, ref}
 
         # send request
-        ts = Date.now()
-        next = MessageStore.getNextConversation()
         XHRUtils.batchDelete target, (error, updated) =>
             if error
-                AppDispatcher.handleViewAction
+                AppDispatcher.dispatch
                     type: ActionTypes.MESSAGE_TRASH_FAILURE
                     value: {target, ref, error}
             else
                 msg.updated = ts for msg in updated
-                AppDispatcher.handleViewAction
+                AppDispatcher.dispatch
                     type: ActionTypes.MESSAGE_TRASH_SUCCESS
-                    value: {target, ref, updated, next}
+                    value: {target, ref, updated}
 
 
-    move: (target, from, to, callback) ->
-        ref = refCounter++
-        AppDispatcher.handleViewAction
+    move: (target, from, to) ->
+        timestamp = Date.now()
+        ref = 'move' + timestamp
+
+        AppDispatcher.dispatch
             type: ActionTypes.MESSAGE_MOVE_REQUEST
             value: {target, ref, from, to}
 
         # send request
-        timestamp = Date.now()
         XHRUtils.batchMove target, from, to, (error, updated) =>
             if error
-                AppDispatcher.handleViewAction
+                AppDispatcher.dispatch
                     type: ActionTypes.MESSAGE_MOVE_FAILURE
                     value: {target, ref, error}
             else
                 message.updated = ts for message in updated
-                AppDispatcher.handleViewAction
+                AppDispatcher.dispatch
                     type: ActionTypes.MESSAGE_MOVE_SUCCESS
                     value: {target, ref, updated}
-
-            callback? error, updated
 
 
     navigate: (params={}) ->
