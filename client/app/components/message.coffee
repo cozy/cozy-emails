@@ -13,6 +13,7 @@ LayoutActionCreator = require '../actions/layout_action_creator'
 RouterActionCreator = require '../actions/router_action_creator'
 
 RouterGetter = require '../getters/router'
+IconGetter = require '../getters/icon'
 
 module.exports = React.createClass
     displayName: 'Message'
@@ -25,7 +26,20 @@ module.exports = React.createClass
         # RouterActionCreator.mark {messageID}, MessageFlags.SEEN
 
 
+    renderAttachement: (file, index, isPreview=false) ->
+        file = file?.toJS()
+        AttachmentPreview
+            ref: "attachmentPreview-#{index}"
+            key: "messageAttachement-#{file.checksum}"
+            file: file
+            fileSize: RouterGetter.getFileSize file
+            icon: IconGetter.getAttachmentIcon file
+            isPreview: isPreview
+            isLink: true
+
+
     render: ->
+
         article
             className: classNames
                 message: true
@@ -68,17 +82,7 @@ module.exports = React.createClass
                     ref: 'messageFooter'
                     className: 'attachments',
                     ul null,
-                        @props.resources.get('preview')?.map (file, index) ->
-                            AttachmentPreview
-                                ref: "attachmentPreview-#{index}"
-                                file: file?.toJS()
-                                key: file.get('checksum')
-                                preview: true
-                                previewLink: true
-                        @props.resources.get('binary')?.map (file, index) ->
-                            AttachmentPreview
-                                ref: "attachmentBinary-#{index}"
-                                file: file?.toJS()
-                                key: file.get('checksum')
-                                preview: false
-                                previewLink: true
+                        @props.resources.get('preview')?.map (file, index) =>
+                            @renderAttachement file, index, true
+                        @props.resources.get('binary')?.map (file, index) =>
+                            @renderAttachement file, index, false

@@ -154,4 +154,36 @@ class RouteGetter
         return  t 'list empty'
 
 
+    getResources: (message) ->
+        if (files = message?.get 'attachments')
+            files.groupBy (file) ->
+                contentType = MessageUtils.getAttachmentType file.contentType
+                if contentType is 'image' then 'preview' else 'binary'
+
+    getAvatar: (message) ->
+        MessageUtils.getAvatar message
+
+    getCreatedAt: (message) ->
+        MessageUtils.formatDate message?.get 'createdAt'
+
+    getFileSize: (file) ->
+        if file?.length < 1024
+            "#{length} #{t 'length bytes'}"
+        else if file?.length < 1024*1024
+            "#{0 | length / 1024} #{t 'length kbytes'}"
+        else
+            "#{0 | length / (1024*1024)} #{t 'length mbytes'}"
+
+
+    # Uniq Key from URL params
+    #
+    # return a {string}
+    getKey: (str = '') ->
+        if (filter = RouterStore.getQueryParams())
+            keys = _.compact ['before', 'after'].map (key) ->
+                filter[key] if filter[key] isnt '-'
+            keys.unshift str unless _.isEmpty str
+            return keys.join('-')
+        return str
+
 module.exports = new RouteGetter()

@@ -5,6 +5,9 @@ React = require 'react'
 
 AttachmentPreview = React.createFactory require './attachement_preview'
 
+RouterGetter = require '../getters/router'
+IconGetter = require '../getters/icon'
+
 
 module.exports = React.createClass
     displayName: 'MessageAttachmentsPopup'
@@ -32,18 +35,21 @@ module.exports = React.createClass
         div
             className: 'attachments'
             'aria-expanded': @state.showAttachements
-            onClick: (event) -> event.stopPropagation()
             i
                 className: 'btn fa fa-paperclip'
                 onClick: @toggleAttachments
                 'aria-describedby': Tooltips.OPEN_ATTACHMENTS
                 'data-tooltip-direction': 'left'
 
-            div className: 'popup', 'aria-hidden': not @state.showAttachements,
+            div
+                className: 'popup'
+                'aria-hidden': not @state.showAttachements,
+    
                 ul className: null,
                     for file in attachments
                         AttachmentPreview
                             ref: 'attachmentPreview'
+                            key: "attachmentPreview-#{file.checksum}"
                             file: file
-                            key: file.checksum
-                            preview: false
+                            fileSize: RouterGetter.getFileSize file
+                            icon: IconGetter.getAttachmentIcon file
