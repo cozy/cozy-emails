@@ -2,7 +2,8 @@ _     = require 'underscore'
 React = require 'react'
 {header, div, span, span, i, img, a} = React.DOM
 
-PopupMessageAttachments = React.createFactory require './popup_message_attachments'
+{Tooltips} = require '../constants/app_constants'
+
 ContactLabel = React.createFactory require '../components/contact_label'
 
 RouterActionCreator = require '../actions/router_action_creator'
@@ -33,8 +34,10 @@ module.exports = React.createClass
                 @renderAddress 'cc' if @props.active
                 span className: 'metas indicators',
                     if @props.message.get('attachments').size
-                        PopupMessageAttachments
-                            message: @props.message
+                        i
+                            className: 'btn fa fa-paperclip'
+                            'aria-describedby': Tooltips.OPEN_ATTACHMENTS
+                            'data-tooltip-direction': 'left'
 
                     if @props.active
                         if @props.isFlagged
