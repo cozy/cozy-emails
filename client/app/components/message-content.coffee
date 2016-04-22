@@ -1,9 +1,7 @@
 React = require 'react'
-ApiUtils = require '../utils/api_utils'
 {div, span, i, p, a, button, iframe} = React.DOM
 
 SettingsActionCreator = require '../actions/settings_action_creator'
-
 
 module.exports = MessageContent = React.createClass
     displayName: 'MessageContent'
@@ -60,7 +58,6 @@ module.exports = MessageContent = React.createClass
                 doc = frame.contentDocument or frame.contentWindow?.document
                 if doc?
                     doc.documentElement.innerHTML = @props.html
-                    ApiUtils.customEvent "MESSAGE_LOADED", @props.messageID
                     updateHeight = (e) ->
                         height = doc.documentElement.scrollHeight
                         if height < 60
@@ -95,8 +92,6 @@ module.exports = MessageContent = React.createClass
                 frame.addEventListener 'load', loadContent
             else
                 loadContent()
-        else
-            ApiUtils.customEvent "MESSAGE_LOADED", @props.messageID
 
 
     componentDidMount: ->
