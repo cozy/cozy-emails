@@ -10,7 +10,6 @@ require 'imports?jQuery=jquery!bootstrap/dist/js/bootstrap.js'
 {initRealtime} = require './utils/realtime_utils'
 {initDesktopNotifications} = require './utils/notification_utils'
 
-ApiUtils = require './utils/api_utils'
 Router = require './router'
 
 # Waits for the DOM to be ready

@@ -8,10 +8,7 @@ AppDispatcher = require './libs/flux/dispatcher/dispatcher'
 
 {ActionTypes, MessageActions, AccountActions, SearchActions} = require './constants/app_constants'
 {setLocale} = require './utils/api_utils'
-{initRealtime} = require './utils/realtime_utils'
-{initDesktopNotifications} = require './utils/notification_utils'
 
->>>>>>> Move ComponentsHandler into Router
 
 # MessageList :
 # ?sort=asc&filters=&status=unseen&start=2016-02-27T23:00:00.000Z&end=2016-03-05T22:59:59.999Z
