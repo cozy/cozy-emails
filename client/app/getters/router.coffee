@@ -168,9 +168,10 @@ class RouteGetter
         MessageUtils.formatDate message?.get 'createdAt'
 
     getFileSize: (file) ->
-        if file?.length < 1024
+        length = parseInt file?.length, 10
+        if length < 1024
             "#{length} #{t 'length bytes'}"
-        else if file?.length < 1024*1024
+        else if length < 1024*1024
             "#{0 | length / 1024} #{t 'length kbytes'}"
         else
             "#{0 | length / (1024*1024)} #{t 'length mbytes'}"
