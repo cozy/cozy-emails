@@ -173,8 +173,9 @@ class RouteGetter
     getResources: (message) ->
         if (files = message?.get 'attachments')
             files.groupBy (file) ->
-                contentType = MessageUtils.getAttachmentType file.contentType
-                if contentType is 'image' then 'preview' else 'binary'
+                contentType = file.get 'contentType'
+                attachementType = MessageUtils.getAttachmentType contentType
+                if attachementType is 'image' then 'preview' else 'binary'
 
     getAvatar: (message) ->
         MessageUtils.getAvatar message
