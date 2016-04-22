@@ -7,21 +7,13 @@ ToolbarMessage = React.createFactory require './toolbar_message'
 MessageContent = React.createFactory require './message-content'
 AttachmentPreview = React.createFactory require './attachement_preview'
 
-{MessageFlags, MessageActions} = require '../constants/app_constants'
-
-RouterActionCreator = require '../actions/router_action_creator'
+{MessageFlags} = require '../constants/app_constants'
 
 RouterGetter = require '../getters/router'
 IconGetter = require '../getters/icon'
 
 module.exports = React.createClass
     displayName: 'Message'
-
-    componentWillUnMount: ->
-        # Mark message as read
-        messageID = @props.message?.get('id')
-        console.log 'MARK_AS_READ', messageID
-        # RouterActionCreator.mark {messageID}, MessageFlags.SEEN
 
     renderAttachement: (file, index, isPreview=false) ->
         file = file?.toJS()
