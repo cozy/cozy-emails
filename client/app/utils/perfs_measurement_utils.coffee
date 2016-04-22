@@ -1,6 +1,5 @@
 Perf = require 'react-addons-perf'
 
-
 # expose an API for performance
 # performance is not defined in phantomJS
 module.exports.initPerformances = ->
@@ -31,4 +30,3 @@ module.exports.logPerformances = ->
             Onload: #{timing.loadEventStart - timing.navigationStart}ms
             Page loaded: #{now}ms
         "
-        window.cozyMails.logInfo message

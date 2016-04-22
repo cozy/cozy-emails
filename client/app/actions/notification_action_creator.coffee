@@ -1,4 +1,4 @@
-AppDispatcher = require '../app_dispatcher'
+AppDispatcher = require '../libs/flux/dispatcher/dispatcher'
 
 NotificationStore  = require '../stores/notification_store'
 

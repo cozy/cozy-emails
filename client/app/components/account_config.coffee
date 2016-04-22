@@ -82,11 +82,12 @@ module.exports = React.createClass
         @setState nextstate
 
     render: ->
+        title = if @isNew() then 'account new' else 'account edit'
         Container
             id: 'mailbox-config'
             expand: true,
 
-            Title text: t if @isNew() then 'account new' else 'account edit'
+            Title text: t "#{title}"
             if (accountID = @state.editedAccount.get('id'))
                 Tabs tabs: TABS.map (name) =>
                     class: if @state.tab is name then 'active' else ''

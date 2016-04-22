@@ -1,6 +1,6 @@
 _ = require 'lodash'
 
-AppDispatcher = require '../app_dispatcher'
+AppDispatcher = require '../libs/flux/dispatcher/dispatcher'
 
 RouterStore = require '../stores/router_store'
 

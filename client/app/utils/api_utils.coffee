@@ -3,6 +3,8 @@ _        = require 'underscore'
 Polyglot = require 'node-polyglot'
 moment   = require 'moment'
 
+AppDispatcher = require '../libs/flux/dispatcher/dispatcher'
+
 {sendReport} = require './error_manager'
 
 RouterGetter = require '../getters/router'
@@ -19,7 +21,6 @@ RouterActionCreator  = require '../actions/router_action_creator'
 NotificationActionsCreator = require '../actions/notification_action_creator'
 
 {MessageActions, AccountActions} = require '../constants/app_constants'
-
 
 onMessageList = ->
     return RouterStore.getAction() in [MessageActions.SHOW_ALL, MessageActions.SHOW]
@@ -86,7 +87,6 @@ module.exports = Utils =
 
     # warning: don't update setting value server side
     setSetting: (key, value) ->
-        AppDispatcher = require '../app_dispatcher'
         {ActionTypes} = require '../constants/app_constants'
         settings = SettingsStore.get().toJS()
         if typeof key is 'object'
@@ -166,8 +166,6 @@ module.exports = Utils =
 
 
     simulateUpdate: ->
-
-        AppDispatcher = require '../app_dispatcher'
         window.setInterval ->
             content =
                 "accountID": AccountStore.getAccountID()
@@ -206,7 +204,7 @@ module.exports = Utils =
 
 
     # Send errors to serveur
-    # Usage: window.cozyMails.log(new Error('message'))
+    # Usage: Utils.(new Error('message'))
     log: (error) ->
         url = error.stack.split('\n')[0].split('@')[1]
             .split(/:\d/)[0].split('/').slice(0, -2).join('/')
@@ -257,10 +255,10 @@ module.exports = Utils =
                 _log.action = actionCleanup action
             if message?
                 _log.message = message
-            window.cozyMails.debugLogs.unshift _log
+            Utils.debugLogs.unshift _log
 
             # only keep the last 100 lines of logs
-            window.cozyMails.debugLogs = window.cozyMails.debugLogs.slice 0, 100
+            Utils.debugLogs = Utils.debugLogs.slice 0, 100
 
 
     # display action logs in a modal window
@@ -273,10 +271,10 @@ module.exports = Utils =
             content     : React.DOM.pre
                 style: "max-height": "300px",
                 "word-wrap": "normal",
-                    JSON.stringify(window.cozyMails.debugLogs, null, 4)
+                    JSON.stringify(Utils.debugLogs, null, 4)
         LayoutActionCreator.displayModal modal
 
 
     # clear action logs
     clearLogs: ->
-        window.cozyMails.debugLogs = []
+        Utils.debugLogs = []

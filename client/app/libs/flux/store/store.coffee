@@ -1,7 +1,6 @@
 EventEmitter = require 'node-event-emitter'
 
-AppDispatcher = require '../../../app_dispatcher'
-
+AppDispatcher = require '../dispatcher/dispatcher'
 
 module.exports = class Store extends EventEmitter
 
@@ -20,7 +19,7 @@ module.exports = class Store extends EventEmitter
     # Registers the store's callbacks to the dispatcher
     _processBinding = ->
         @dispatchToken = AppDispatcher.register (payload) =>
-            {type, value} = payload.action
+            {type, value} = payload
             if (callback = _handlers[@uniqID][type])?
                 callback.call @, value
 

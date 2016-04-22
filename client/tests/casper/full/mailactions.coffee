@@ -5,6 +5,7 @@ else
     require.globals.casper = casper
 init  = require(fs.workingDirectory + "/client/tests/casper/common").init
 utils = require "utils.js"
+ApiUtils = require '/client/app/utils/api_utils'
 x     = require('casper.js').selectXPath
 
 selectInConv = (account, folder, subject, messageID, cb) ->
@@ -55,8 +56,8 @@ casper.test.begin 'Test Message Actions', (test) ->
     #casper.then ->
     #    test.comment "Compose on top"
     #    #casper.evaluate ->
-    #    #    window.cozyMails.setSetting 'composeOnTop', true
-    #    #    window.cozyMails.setSetting 'composeInHTML', true
+    #    #    ApiUtils.setSetting 'composeOnTop', true
+    #    #    ApiUtils.setSetting 'composeInHTML', true
     #    messageID =  "20141106093513.GH5642@mail.cozy.io"
     #    currentSel = ".conversation article.message.active[data-id='#{messageID}']"
     #    selectInConv "DoveCot", "Test Folder", "Re: troll", messageID, ->
@@ -72,7 +73,7 @@ casper.test.begin 'Test Message Actions', (test) ->
     #                casper.click '.form-compose .btn-cancel'
     #                casper.waitWhileSelector '.form-compose', ->
     #                    casper.evaluate ->
-    #                        window.cozyMails.setSetting 'composeOnTop', false
+    #                        ApiUtils.setSetting 'composeOnTop', false
 
     # casper.then ->
     #     test.comment "Reply all"

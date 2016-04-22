@@ -1,6 +1,6 @@
 RouterGetter = require '../getters/router'
 
-AppDispatcher = require '../app_dispatcher'
+AppDispatcher = require '../libs/flux/dispatcher/dispatcher'
 
 {ActionTypes, MessageActions} = require '../constants/app_constants'
 

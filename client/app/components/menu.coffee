@@ -75,7 +75,9 @@ module.exports = Menu = React.createClass
                     role: 'menuitem'
                     className: "btn new-account-action",
                         i className: 'fa fa-plus'
-                        span className: 'item-label', t 'menu account new'
+
+                        span className: 'item-label',
+                        t 'menu account new'
 
                 button
                     role: 'menuitem'
@@ -137,8 +139,10 @@ module.exports = Menu = React.createClass
             progress: RouterGetter.getProgress accountID
         }
 
+        mailboxes = @state.mailboxes.toArray()
+        className = classNames active: props.isSelected
         div
-            className: (className = classNames active: props.isSelected),
+            className: className,
             key: props.key,
             div className: 'account-title',
                 a
@@ -172,26 +176,25 @@ module.exports = Menu = React.createClass
                     role: 'group'
                     className: 'list-unstyled mailbox-list',
 
-                    @state.mailboxes?.map (mailbox, key) =>
-                            mailboxURL = RouterGetter.getURL
-                                mailboxID: (mailboxID = mailbox.get 'id')
-                                resetFilter: true
+                    mailboxes.map (mailbox, key) =>
+                        mailboxURL = RouterGetter.getURL
+                            mailboxID: (mailboxID = mailbox.get 'id')
+                            resetFilter: true
 
-                            MenuMailboxItem
-                                key:            'mailbox-item-' + key
-                                accountID:      account.get 'id'
-                                mailboxID:      mailboxID
-                                label:          mailbox.get 'label'
-                                depth:          mailbox.get 'depth'
-                                isActive:       RouterGetter.isCurrentURL mailboxURL
-                                displayErrors:  @displayErrors
-                                progress:       props.progress
-                                url:            mailboxURL
-                                total:          mailbox.get 'nbTotal'
-                                unread:         mailbox.get 'nbUnread'
-                                recent:         mailbox.get 'nbRecent'
-                                icon:           IconGetter.getMailboxIcon {account, mailboxID}
-                        .toArray()
+                        MenuMailboxItem
+                            key:            'mailbox-item-' + key
+                            accountID:      account.get 'id'
+                            mailboxID:      mailboxID
+                            label:          mailbox.get 'label'
+                            depth:          mailbox.get 'depth'
+                            isActive:       RouterGetter.isCurrentURL mailboxURL
+                            displayErrors:  @displayErrors
+                            progress:       props.progress
+                            url:            mailboxURL
+                            total:          mailbox.get 'nbTotal'
+                            unread:         mailbox.get 'nbUnread'
+                            recent:         mailbox.get 'nbRecent'
+                            icon:           IconGetter.getMailboxIcon {account, mailboxID}
 
                     @renderMailboxesFlags
                         type: 'unreadMailbox'
