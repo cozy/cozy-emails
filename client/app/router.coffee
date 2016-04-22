@@ -4,7 +4,7 @@ ReactDOM = require 'react-dom'
 
 AccountStore = require './stores/account_store'
 
-AppDispatcher = require './app_dispatcher'
+AppDispatcher = require './libs/flux/dispatcher/dispatcher'
 
 {ActionTypes, MessageActions, AccountActions, SearchActions} = require './constants/app_constants'
 

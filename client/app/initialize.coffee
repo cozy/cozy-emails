@@ -10,7 +10,7 @@ require 'imports?jQuery=jquery!bootstrap/dist/js/bootstrap.js'
 {initRealtime} = require './utils/realtime_utils'
 {initDesktopNotifications} = require './utils/notification_utils'
 
-ConsoleAPI = require './utils/api_utils'
+ApiUtils = require './utils/api_utils'
 Router = require './router'
 
 
@@ -23,12 +23,12 @@ document.addEventListener 'DOMContentLoaded', ->
         # initialize system
         initReporting(window.__DEV__)
         initPerformances() if window.__DEV__
-        window.cozyMails = ConsoleAPI
 
         # use Cozy instance locale or navigator language or "en" by default
         window.settings = {} unless window.settings
+
         locale = window.locale or window.navigator.language or 'en'
-        window.cozyMails.setLocale locale
+        ApiUtils.setLocale locale
 
         # Set default Layout
         LayoutActionCreator = require './actions/layout_action_creator'
@@ -42,7 +42,10 @@ document.addEventListener 'DOMContentLoaded', ->
         initDesktopNotifications()
 
         # starts perfs logging
-        logPerformances() if window.__DEV__
+        if window.__DEV__
+            if (message = logPerformances())
+                ApiUtils.logInfo message
+
 
     catch err
         sendReport 'error', err

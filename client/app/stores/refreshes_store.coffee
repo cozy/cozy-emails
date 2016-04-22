@@ -4,6 +4,8 @@ Store = require '../libs/flux/store/store'
 
 {ActionTypes} = require '../constants/app_constants'
 
+ApiUtils = require '../utils/api_utils'
+
 
 refreshesToImmutable = (refreshes) ->
     Immutable.Iterable refreshes
@@ -45,8 +47,9 @@ class RefreshesStore extends Store
             .toOrderedMap()
             @emit 'change'
 
-        handle ActionTypes.RECEIVE_REFRESH_NOTIF, (data) ->
-            window.cozyMails.notify t('notif new title'), body: data.message
+        # handle ActionTypes.RECEIVE_REFRESH_NOTIF, (data) ->
+        #     console.log 'PLOP', t('notif new title'), body: data.message
+        #     # ApiUtils.notify t('notif new title'), body: data.message
 
 
     getRefreshing: ->
