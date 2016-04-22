@@ -12,6 +12,11 @@ Message = React.createFactory require './message'
 
 RouterGetter = require '../getters/router'
 
+RouterActionCreator = require '../actions/router_action_creator'
+
+# FIXME : use Getters instead of Stores
+AccountStore        = require '../stores/account_store'
+MessageStore        = require '../stores/message_store'
 SelectionStore       = require '../stores/selection_store'
 StoreWatchMixin      = require '../mixins/store_watch_mixin'
 
@@ -54,9 +59,6 @@ module.exports = React.createClass
                 'aria-expanded': true,
                 p null, t "app loading"
 
-        conversationID = @state.message.get 'conversationID'
-        subject = @state.message.get 'subject'
-
         # Starts components rendering
         section
             ref: 'conversation'
@@ -65,16 +67,19 @@ module.exports = React.createClass
 
             header null,
                 h3 className: 'conversation-title',
-                    subject
+                    @state.message.get 'subject'
 
-                a
+                button
                     className: 'clickable btn btn-default fa fa-close'
-                    href: RouterGetter.getURL
-                        action: MessageActions.SHOW_ALL
+                    onClick: @closeConversation
 
             section
                 ref: 'scrollable',
                     @state.conversation.map @renderMessage
+
+    closeConversation: ->
+        action = MessageActions.SHOW_ALL
+        RouterActionCreator.navigate {action}
 
     _initScroll: ->
         if not (scrollable = ReactDOM.findDOMNode @refs.scrollable) or scrollable.scrollTop
