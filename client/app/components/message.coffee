@@ -34,11 +34,9 @@ module.exports = React.createClass
             fileSize: RouterGetter.getFileSize file
             icon: IconGetter.getAttachmentIcon file
             isPreview: isPreview
-            isLink: true
 
 
     render: ->
-
         article
             className: classNames
                 message: true
@@ -47,6 +45,8 @@ module.exports = React.createClass
                 isDeleted: @props.isDeleted
                 isUnread: @props.isUnread
             key: "messageContainer-#{@props.message.get('id')}",
+
+
 
             # FIXME : le click ne fonctionne pas
             # conflit avec 'MessageHeader'?!
