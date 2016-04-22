@@ -119,7 +119,7 @@ class MessageStore extends Store
             XHRUtils.fetchMessagesByFolder url, callback
 
         else
-            XHRUtils.fetchConversation conversationID, callback
+            XHRUtils.fetchConversation {conversationID}, callback
 
 
     _computeMailboxDiff = (oldmsg, newmsg) ->
@@ -336,20 +336,19 @@ class MessageStore extends Store
 
     getConversation: (messageID) ->
         messageID ?= @getCurrentID()
-        conversationID = @getByID(messageID)?.get 'conversationID'
 
         # Get messages from loaded ones
         # Do not fetch if messages isnt loaded yet
+        conversationID = @getByID(messageID)?.get 'conversationID'
         return unless conversationID
 
-        return _messages.filter (message) ->
+        conversation = _messages.filter (message) ->
             conversationID is message.get 'conversationID'
 
         # If missing messages, get them
-        console.log 'PLOP', conversation?.size, conversation?.size, @getConversationLength {conversationID}
-        # if conversation?.size isnt @getConversationLength {conversationID}
-        #     action = MessageActions.SHOW
-        #     _fetchMessages {messageID, conversationID, action}
+        if conversation?.size isnt @getConversationLength {conversationID}
+            action = MessageActions.SHOW
+            _fetchMessages {messageID, conversationID, action}
 
         # Return loaded messages
         return conversation
