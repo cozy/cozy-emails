@@ -2,7 +2,6 @@ exports.initGlobals = ->
     global.Immutable = require 'immutable'
     global.EventEmitter = require('events').EventEmitter
     global.t = (x) -> "translated #{x}"
-    global.__DEV__ = true
     global.window = cozyMails:
         logAction: ->
         customEvent: ->

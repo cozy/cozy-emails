@@ -1,6 +1,7 @@
 EventEmitter = require 'node-event-emitter'
 
 AppDispatcher = require '../dispatcher/dispatcher'
+{isDev} = require '../../../utils/environement'
 
 module.exports = class Store extends EventEmitter
 
@@ -33,7 +34,7 @@ module.exports = class Store extends EventEmitter
 
     # Must be overriden by each store
     __bindHandlers: (handle) ->
-        if __DEV__
+        if isDev()
             message = "The store #{@constructor.name} must define a " + \
                       "`__bindHandlers` method"
             throw new Error message

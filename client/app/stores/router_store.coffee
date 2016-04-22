@@ -3,7 +3,6 @@ Immutable = require 'immutable'
 
 Store = require '../libs/flux/store/store'
 AccountStore = require '../stores/account_store'
-
 AppDispatcher = require '../libs/flux/dispatcher/dispatcher'
 
 {ActionTypes, MessageActions, AccountActions} = require '../constants/app_constants'
@@ -196,7 +195,6 @@ class RouterStore extends Store
             @emit 'change'
 
         handle ActionTypes.ROUTES_INITIALIZE, (router) ->
-            console.log 'SAVE_ROUTER', router
             _router = router
             @emit 'change'
 

@@ -7,11 +7,7 @@ AccountStore = require './stores/account_store'
 AppDispatcher = require './libs/flux/dispatcher/dispatcher'
 
 {ActionTypes, MessageActions, AccountActions, SearchActions} = require './constants/app_constants'
-
-ApiUtils = require './utils/api_utils'
-{initRealtime} = require './utils/realtime_utils'
-{initDesktopNotifications} = require './utils/notification_utils'
-
+{setLocale} = require './utils/api_utils'
 
 # MessageList :
 # ?sort=asc&filters=&status=unseen&start=2016-02-27T23:00:00.000Z&end=2016-03-05T22:59:59.999Z
@@ -37,25 +33,18 @@ class Router extends Backbone.Router
 
 
     initialize: ->
-        # use Cozy instance locale or
-        # navigator language or
-        # "en" by default
-        locale = window.locale or window.navigator.language or 'en'
-        ApiUtils.setLocale locale
+        setLocale()
 
         # Save Routes in Stores
         AppDispatcher.dispatch
             type: ActionTypes.ROUTES_INITIALIZE
             value: @
 
-        # Start Navigation
-        Backbone.history.start()
-
         # Display application
         _displayApplication()
 
-        initRealtime()
-        initDesktopNotifications()
+        # Start Navigation
+        Backbone.history.start()
 
 
     defaultMailbox: ->
