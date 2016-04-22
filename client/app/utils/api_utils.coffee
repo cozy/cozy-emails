@@ -64,6 +64,7 @@ module.exports = Utils =
 
     # update locate (without saving it into settings)
     setLocale: (lang) ->
+        lang ?= window.locale or window.navigator.language or 'en'
         moment.locale lang
         locales = {}
         try

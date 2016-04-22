@@ -1,8 +1,11 @@
 Perf = require 'react-addons-perf'
+ApiUtils = require '../utils/api_utils'
+{isDev} = require '../utils/environement'
 
 # expose an API for performance
 # performance is not defined in phantomJS
 module.exports.initPerformances = ->
+    return unless isDev()
     referencePoint = 0
     window.start = ->
         referencePoint = performance.now() if performance?.now?
@@ -20,8 +23,7 @@ module.exports.initPerformances = ->
         stop()
         Perf.printExclusive()
 
-
-module.exports.logPerformances = ->
+    # starts perfs logging
     timing = window.performance?.timing
     now = Math.ceil window.performance?.now()
     if timing?
@@ -30,3 +32,4 @@ module.exports.logPerformances = ->
             Onload: #{timing.loadEventStart - timing.navigationStart}ms
             Page loaded: #{now}ms
         "
+        ApiUtils.logInfo message

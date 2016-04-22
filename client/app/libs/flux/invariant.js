@@ -22,8 +22,10 @@
  * will remain to ensure logic does not differ in production.
  */
 
+var Environement = require('../../utils/environement');
+
 var invariant = function(condition, format, a, b, c, d, e, f) {
-  if (__DEV__) {
+  if (Environement.isDev()) {
     if (format === undefined) {
       throw new Error('invariant requires an error message argument');
     }
@@ -51,3 +53,4 @@ var invariant = function(condition, format, a, b, c, d, e, f) {
 };
 
 module.exports = invariant;
+ 

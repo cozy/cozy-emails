@@ -1,7 +1,5 @@
 LOG_URL = 'activity'
-
 lastError = undefined
-
 
 module.exports.sendReport = sendReport = (level, err) ->
     return if err is lastError
@@ -31,7 +29,9 @@ module.exports.sendReport = sendReport = (level, err) ->
     lastError = err
 
 
-module.exports.initReporting = (dev) ->
+module.exports.initReporting = ->
+    {isDev} = require '../utils/environement'
+    dev = isDev()
     console = window.console or {}
 
     levels = ['debug', 'log', 'info', 'warn', 'error']
