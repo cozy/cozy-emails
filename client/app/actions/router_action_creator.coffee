@@ -8,8 +8,8 @@ RouterStore = require '../stores/router_store'
 
 RouterActionCreator =
 
-    getCurrentPage: (payload) ->
-        url = RouterStore.getCurrentURL payload
+    getCurrentPage: ->
+        url = RouterStore.getCurrentURL()
         AppDispatcher.dispatch
             type: ActionTypes.MESSAGE_FETCH_REQUEST
             value: {url}

@@ -7,7 +7,10 @@ MessageStore = require '../stores/message_store'
 
 AppDispatcher = require '../app_dispatcher'
 
-{ActionTypes, MessageActions, AccountActions, SearchActions} = require '../constants/app_constants'
+{ActionTypes, MessageFilter, MessageFlags, MessageActions,
+AccountActions, SearchActions} = require '../constants/app_constants'
+
+{sortByDate} = require '../utils/misc'
 
 class RouterStore extends Store
 
@@ -62,10 +65,7 @@ class RouterStore extends Store
 
     getURL: (params={}) ->
         action = _getRouteAction params
-
-        filter = unless params.resetFilter
-        then _getURIQueryParams params
-        else ''
+        filter = _getURIQueryParams params
 
         isMessage = !!params.messageID or _.contains action, 'message'
         if isMessage and not params.mailboxID
@@ -102,6 +102,7 @@ class RouterStore extends Store
         params = _.extend {isServer: true}, options
         params.action ?= @getAction()
         params.mailboxID ?= @getMailboxID()
+
         return @getURL params
 
     _getRouteAction = (params) ->
@@ -153,10 +154,12 @@ class RouterStore extends Store
         return result
 
     _getURIQueryParams = (params={}) ->
-        filters = _.extend {}, _currentFilter
-        _.extend filters, params.filter if params.filter
+        _filter = _.clone _defaultFilter
 
-        query = _.compact _.map filters, (value, key) ->
+        {filter, resetFilter} = params
+        _.extend _filter, _currentFilter, filter unless resetFilter
+
+        query = _.compact _.map _filter, (value, key) ->
             if value? and _defaultFilter[key] isnt value
                 return key + '=' + encodeURIComponent(value)
 
@@ -171,13 +174,8 @@ class RouterStore extends Store
         return _currentFilter
 
 
-    _resetFilter = ->
-        _currentFilter = _defaultFilter
-
-
     _isSearchAction = ->
         _action is SearchActions.SHOW_ALL
-
 
 
     # Useless for MessageStore
@@ -239,17 +237,45 @@ class RouterStore extends Store
         _messageID
 
 
-    getMessagesList: ->
-        conversations = {}
-        mailboxID = @getMailboxID()
-        MessageStore.getAll()?.filter (message) ->
+    isFlags: (name) ->
+        flags = @getFilter()?.flags or []
+        MessageFilter[name] is flags or MessageFilter[name] in flags
+
+
+    getMessagesList: (mailboxID) ->
+        mailboxID ?= @getMailboxID()
+        filter = @getFilter()
+
+        # We dont filter for type from and dest because it is
+        # complicated by collation and name vs address.
+        _filterFlags = (message) =>
+            if filter?.flags
+                flags = message.get 'flags'
+                if @isFlags 'FLAGGED'
+                    return MessageFlags.FLAGGED in flags
+                if @isFlags 'ATTACH'
+                    return message.get('attachments')?.size > 0
+                if @isFlags 'UNSEEN'
+                    return MessageFlags.SEEN not in flags
+            true
+
+        uniq = {}
+        messages = MessageStore.getAll()?.filter (message) =>
+            # Display only last Message of conversation
             conversationID = message.get 'conversationID'
-            unless (exist = conversations[conversationID])
-                conversations[conversationID] = true
+            unless (exist = uniq[conversationID])
+                uniq[conversationID] = true
+
+            # Message should be in mailbox
             inMailbox = mailboxID of message.get 'mailboxIDs'
-            return inMailbox and not exist
+
+            # Should have the same flags
+            hasSameFlag = _filterFlags message
+
+            return inMailbox and not exist and hasSameFlag
         .toList()
         .toOrderedMap()
+        .sort sortByDate filter.order
 
 
     getConversation: (messageID) ->
@@ -358,4 +384,4 @@ _toCamelCase = (value) ->
         return part1.toUpperCase() + part2
 
 
-module.exports = new RouterStore()
+module.exports = (_self = new RouterStore())

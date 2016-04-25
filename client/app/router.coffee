@@ -101,14 +101,17 @@ class Router extends Backbone.Router
 _dispatch = (payload, query) ->
     payload.query = _parseQuery query if query
 
-    # Fetch Messages
-    if payload.action in
-    [MessageActions.SHOW_ALL, MessageActions.SHOW]
-        RouterActionCreator.getCurrentPage payload
-
     AppDispatcher.dispatch
         type: ActionTypes.ROUTE_CHANGE
         value: payload
+
+    # Fetch Messages
+    if payload.action in
+    [MessageActions.SHOW_ALL, MessageActions.SHOW]
+        payload.filter = payload.query
+        delete payload.query
+        RouterActionCreator.getCurrentPage payload
+
 
 
 # Extract params from q queryString to an object that map `key` > `value`.

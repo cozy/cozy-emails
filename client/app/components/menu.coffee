@@ -123,7 +123,7 @@ module.exports = Menu = React.createClass
         accountID = account.get 'id'
         mailbox = RouterGetter.getInbox(accountID)
         mailboxID = mailbox?.get 'id'
-        mailboxURL = RouterGetter.getURL {action, mailboxID}
+        mailboxURL = RouterGetter.getURL {action, mailboxID, resetFilter: true}
 
         props = {
             key: 'account-' + accountID
