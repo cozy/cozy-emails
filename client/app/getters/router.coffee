@@ -6,8 +6,7 @@ RefreshesStore = require '../stores/refreshes_store'
 RouterStore = require '../stores/router_store'
 
 Immutable = require 'immutable'
-{sortByDate} = require '../utils/misc'
-{MessageFilter, MessageActions, MessageFlags, MailboxFlags} = require '../constants/app_constants'
+{MessageActions, MailboxFlags} = require '../constants/app_constants'
 
 _ = require 'lodash'
 
@@ -67,34 +66,15 @@ class RouteGetter
     getModal: ->
         RouterStore.getModalParams()
 
-    isFlags: (name) ->
-        flags = @getFilter()?.flags or []
-        MessageFilter[name] is flags or MessageFilter[name] in flags
 
     getMessagesList: (mailboxID) ->
         mailboxID ?= @getMailboxID()
-        return null unless mailboxID
+        RouterStore.getMessagesList mailboxID
 
-        messages = RouterStore.getMessagesList mailboxID
-
-        #TODO : move this into Router_store
-        # We dont filter for type from and dest because it is
-        # complicated by collation and name vs address.
-        unless _.isEmpty (filter = @getFilter()).flags
-            messages = messages.filter (message, index) =>
-                if @isFlags 'FLAGGED'
-                    return MessageFlags.FLAGGED in message.get 'flags'
-                if @isFlags 'ATTACH'
-                    return message.get('attachments')?.size > 0
-                if @isFlags 'UNSEEN'
-                    return MessageFlags.SEEN not in message.get 'flags'
-                return true
-
-        # FIXME : use params ASC et DESC into URL
-        messages?.sort sortByDate filter.order
 
     getMessage: (messageID) ->
         MessageStore.getByID messageID
+
 
     getConversationLength: ({messageID, conversationID}) ->
         MessageStore.getConversationLength {messageID, conversationID}
@@ -155,12 +135,11 @@ class RouteGetter
     # TODO : move this into getter
     # this has nothing to do with store
     getEmptyMessage: ->
-        filter = @getFilter()
-        if @isFlags 'UNSEEN', filter.flags
+        if RouterStore.isFlags 'UNSEEN'
             return  t 'no unseen message'
-        if @isFlags 'FLAGGED', filter.flags
+        if RouterStore.isFlags 'FLAGGED'
             return  t 'no flagged message'
-        if @isFlags 'ATTACH', filter.flags
+        if RouterStore.isFlags 'ATTACH'
             return t 'no filter message'
         return  t 'list empty'
 
