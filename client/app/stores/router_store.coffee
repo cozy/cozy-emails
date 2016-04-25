@@ -11,6 +11,7 @@ AppDispatcher = require '../app_dispatcher'
 AccountActions, SearchActions} = require '../constants/app_constants'
 
 {sortByDate} = require '../utils/misc'
+# {MSGBYPAGE} = require '../../../server/utils/constants'
 
 class RouterStore extends Store
 
@@ -41,13 +42,16 @@ class RouterStore extends Store
     _tab = null
 
     _messageID = null
+    _messagesLength = 0
 
 
     getRouter: ->
         return _router
 
+
     getAction: ->
         return _action
+
 
     # If filters are default
     # Nothing should appear in URL
@@ -220,17 +224,18 @@ class RouterStore extends Store
         AccountStore.getAllMailboxes accountID
 
 
+    getInbox: (accountID) ->
+        @getAllMailboxes(accountID)?.find (mailbox) ->
+            'INBOX' is mailbox.get 'label'
+
+
     getSelectedTab: ->
         _tab
 
 
     _setCurrentMessage = (messageID) ->
         _messageID = messageID
-
-
-    isAllLoaded: ->
-        total = @getMailbox()?.get 'nbTotal'
-        total is @getMessagesList()?.size
+        _messagesLength = 0
 
 
     getMessageID: ->
@@ -240,6 +245,23 @@ class RouterStore extends Store
     isFlags: (name) ->
         flags = @getFilter()?.flags or []
         MessageFilter[name] is flags or MessageFilter[name] in flags
+
+
+    getMailboxTotal: (mailboxID) ->
+        props = 'nbTotal'
+        if (@isFlags 'UNSEEN')
+            props = 'nbUnread'
+        else if (@isFlags 'FLAGGED')
+            props = 'nbFlagged'
+        @getMailbox(mailboxID)?.get(props) or 0
+
+
+    getMessagesTotal: ->
+        @getInbox().get 'nbTotal'
+
+
+    hasNextPage: ->
+        _messagesLength + 1 < @getMailboxTotal()
 
 
     getMessagesList: (mailboxID) ->
@@ -276,6 +298,10 @@ class RouterStore extends Store
         .toList()
         .toOrderedMap()
         .sort sortByDate filter.order
+
+        _messagesLength = messages.size
+
+        return messages
 
 
     getConversation: (messageID) ->

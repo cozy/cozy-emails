@@ -14,10 +14,13 @@ RouterActionCreator =
             type: ActionTypes.MESSAGE_FETCH_REQUEST
             value: {url}
 
+
     getNextPage: ->
-        AppDispatcher.dispatch
-            type: ActionTypes.MESSAGE_FETCH_REQUEST
-            value: {url: RouterStore.getNextURL()}
+        if (hasNextPage = RouterStore.hasNextPage())
+            url = RouterStore.getNextURL()
+            AppDispatcher.dispatch
+                type: ActionTypes.MESSAGE_FETCH_REQUEST
+                value: {url}
 
 
     addFilter: (params) ->

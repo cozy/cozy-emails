@@ -13,7 +13,7 @@ _ = require 'lodash'
 class RouteGetter
 
     hasNextPage: ->
-        not RouterStore.isAllLoaded()
+        RouterStore.hasNextPage()
 
     isCurrentURL: (url) ->
         isServer = false
@@ -99,8 +99,7 @@ class RouteGetter
         RouterStore.getMailbox()
 
     getInbox: (accountID) ->
-        RouterStore.getAllMailboxes(accountID)?.find (mailbox) ->
-            'INBOX' is mailbox.get 'label'
+        RouterStore.getInbox accountID
 
     getAccounts: ->
         AccountStore.getAll()
