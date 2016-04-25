@@ -5,7 +5,7 @@ React = require 'react'
 SearchInput = React.createFactory require './search_input'
 AccountPicker = React.createFactory require './account_picker'
 
-AccountStore = require '../stores/account_store'
+RouterGetter = require '../getters/router'
 SearchStore = require '../stores/search_store'
 
 RouterActionCreator = require '../actions/router_action_creator'
@@ -61,7 +61,7 @@ module.exports = GlobalSearchBar = React.createClass
             @setState {accountID}
 
     getStateFromStores: ->
-        accounts = AccountStore.getAll()
+        accounts = RouterGetter.getAccounts()
         .map (account) -> account.get 'label'
         .toOrderedMap()
         .set 'all', t 'search all accounts'

@@ -5,15 +5,11 @@ XHRUtils = require '../utils/xhr_utils'
 AppDispatcher = require '../libs/flux/dispatcher/dispatcher'
 
 Store = require '../libs/flux/store/store'
-AccountStore = require './account_store'
-RouterStore = require './router_store'
 
-RouterGetter = require '../getters/router'
 
 {changeRealtimeScope} = require '../utils/realtime_utils'
-{sortByDate} = require '../utils/misc'
 
-{ActionTypes, MessageFlags, MessageActions} = require '../constants/app_constants'
+{ActionTypes, MessageActions} = require '../constants/app_constants'
 
 EPOCH = (new Date(0)).toISOString()
 
@@ -27,17 +23,10 @@ class MessageStore extends Store
     _messages = Immutable.OrderedMap()
     _conversationLength = Immutable.Map()
 
-    _currentMessages = Immutable.OrderedMap()
-
-    _currentID = null
-
     _inFlightByRef = {}
     _inFlightByMessageID = {}
     _undoable = {}
 
-
-    _setCurrentID = (messageID) ->
-        _currentID = messageID
 
     _addInFlight = (request) ->
         _inFlightByRef[request.ref] = request
@@ -74,44 +63,19 @@ class MessageStore extends Store
             .toArray()
         else throw new Error 'Wrong Usage : unrecognized target AS.getMixed'
 
-    isAllLoaded: ->
-        total = AccountStore.getMailbox()?.get('nbTotal')
-        total is _currentMessages?.size
-
-
-    # Refresh Emails from Server
-    # This is a read data pattern
-    # ActionCreator is a write data pattern
-    _refreshMailbox = (params={}) ->
-        {mailboxID} = params
-        mailboxID ?= AccountStore.getMailboxID()
-        deep = true
-
-        XHRUtils.refreshMailbox mailboxID, {deep}, (error, updated) ->
-            if error?
-                AppDispatcher.dispatch
-                    type: ActionTypes.REFRESH_FAILURE
-                    value: {mailboxID, error}
-            else
-                AppDispatcher.dispatch
-                    type: ActionTypes.REFRESH_SUCCESS
-                    value: {mailboxID, updated}
-
 
     # Get Emails from Server
     # This is a read data pattern
     # ActionCreator is a write data pattern
     _fetchMessages = (params={}) ->
-        {messageID, conversationID, action} = params
-        mailboxID = AccountStore.getMailboxID()
-        action ?= MessageActions.SHOW_ALL
-        timestamp = Date.now()
+        {messageID, conversationID, url} = params
 
+        timestamp = Date.now()
         callback = (error, result) ->
             if error?
                 AppDispatcher.dispatch
                     type: ActionTypes.MESSAGE_FETCH_FAILURE
-                    value: {error, mailboxID}
+                    value: {error, url}
             else
                 # This prevent to override local updates
                 # with older ones from server
@@ -124,31 +88,25 @@ class MessageStore extends Store
                     for conversationID, length of conversationLength
                         _saveConversationLength conversationID, length
 
-                # Message should belong to the result
-                # If not : go fetch next messages
-                if not _self.isAllLoaded() and messageID and
-                        not _messages?.get messageID
-                    action = MessageActions.PAGE_NEXT
-                    AppDispatcher.dispatch
-                        type: ActionTypes.MESSAGE_FETCH_REQUEST
-                        value: {action, messageID, mailboxID}
-                else
-                    AppDispatcher.dispatch
-                        type: ActionTypes.MESSAGE_FETCH_SUCCESS
-                        value: {action, messages, messageID, mailboxID}
+                # # Message should belong to the result
+                # # If not : go fetch next messages
+                # # TODO : ajouter un param ici pour autorise le fetch ou pas
+                # if not _self.isAllLoaded() and messageID and
+                #         not _messages?.get messageID
+                #     action = MessageActions.PAGE_NEXT
+                #     AppDispatcher.dispatch
+                #         type: ActionTypes.MESSAGE_FETCH_REQUEST
+                #         value: {messageID}
+                # else
+                AppDispatcher.dispatch
+                    type: ActionTypes.MESSAGE_FETCH_SUCCESS
+                    value: {messages, messageID}
 
-        if action is MessageActions.PAGE_NEXT
-            action = MessageActions.SHOW_ALL
-            messages = _messages
-            url = RouterStore.getNextURL {action, messages, messageID}
+        if url
             XHRUtils.fetchMessagesByFolder url, callback
-
-        else if action is MessageActions.SHOW_ALL
-            url = RouterStore.getCurrentURL {action, mailboxID}
-            XHRUtils.fetchMessagesByFolder url, callback
-
         else
             XHRUtils.fetchConversation conversationID, callback
+
 
     _saveMessage = (message, timestamp) ->
         oldmsg = _messages.get message.id
@@ -195,20 +153,6 @@ class MessageStore extends Store
     ###
     __bindHandlers: (handle) ->
 
-        handle ActionTypes.ROUTE_CHANGE, (payload) ->
-            {action, mailboxID, messageID} = payload
-
-            # Update currentMessageID
-            _setCurrentID messageID
-
-            # Get messageList for 1rst panel
-            if action in [MessageActions.SHOW_ALL, MessageActions.SHOW]
-                _refreshMailbox {mailboxID}
-                _fetchMessages {action, mailboxID, messageID}
-
-            @emit 'change'
-
-
         handle ActionTypes.MESSAGE_FETCH_REQUEST, (payload) ->
             _fetchMessages payload
             @emit 'change'
@@ -241,23 +185,6 @@ class MessageStore extends Store
             .toOrderedMap()
             @emit 'change'
 
-        handle ActionTypes.MESSAGE_TRASH_REQUEST, ({target, ref}) ->
-            messages = _getMixed target
-            target.accountID = messages[0].get 'accountID'
-            trashBoxID = AccountStore.getSelected().get 'trashMailbox'
-            _addInFlight {type: 'trash', trashBoxID, messages, ref}
-            @emit 'change'
-
-        handle ActionTypes.MESSAGE_TRASH_SUCCESS, ({target, updated, ref}) ->
-            _undoable[ref] = _removeInFlight ref
-            for message in updated
-                if message._deleted
-                    _deleteMessage message
-                    if (nextMessage = @getNextConversation())?.size
-                        _setCurrentID nextMessage?.get 'id'
-                else
-                    _saveMessage message
-            @emit 'change'
 
         handle ActionTypes.MESSAGE_FLAGS_SUCCESS, ({target, updated, ref}) ->
             _removeInFlight ref
@@ -315,29 +242,15 @@ class MessageStore extends Store
     ###
         Public API
     ###
-    getCurrentID: ->
-        return _currentID
+    getAll: ->
+        _messages
+
 
     getByID: (messageID) ->
-        messageID ?= _currentID
         _messages.get messageID
 
-    _getCurrentConversations = (mailboxID) ->
-        __conv = {}
-        _messages.filter (message) ->
-            conversationID = message.get 'conversationID'
-            __conv[conversationID] = true unless (exist = __conv[conversationID])
-            inMailbox = mailboxID of message.get 'mailboxIDs'
-            return inMailbox and not exist
-        .toList()
-
-    getMessagesList: (mailboxID) ->
-        _currentMessages = _getCurrentConversations(mailboxID)?.toOrderedMap()
-        return _currentMessages
 
     getConversation: (messageID) ->
-        messageID ?= @getCurrentID()
-
         # Get messages from loaded ones
         # Do not fetch if messages isnt loaded yet
         if (conversationID = @getByID(messageID)?.get 'conversationID')
@@ -353,30 +266,13 @@ class MessageStore extends Store
             return conversation
 
 
-    getNextConversation: ->
-        index = _currentMessages.keyOf @getByID()
-        return _currentMessages.get --index
-
-
-    getPreviousConversation: ->
-        index = _currentMessages.keyOf @getByID()
-        return _currentMessages.get ++index
-
-
-    getConversationLength: ({messageID, conversationID}) ->
-        unless conversationID
-            messageID ?= @getCurrentID()
-            if messageID and (message = @getByID messageID)
-                conversationID = message.get 'conversationID'
-
-        if conversationID
-            return _conversationLength.get conversationID
+    getConversationLength: (conversationID) ->
+        _conversationLength?.get conversationID
 
 
     # FIXME : move this into RouterStore/RouterGetter
     getUndoableRequest: (ref) ->
         _undoable[ref]
 
-_self = new MessageStore()
 
-module.exports = _self
+module.exports = new MessageStore()

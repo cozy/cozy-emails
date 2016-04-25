@@ -8,11 +8,16 @@ RouterStore = require '../stores/router_store'
 
 RouterActionCreator =
 
-    getNextPage: ->
-        action = MessageActions.PAGE_NEXT
+    getCurrentPage: (payload) ->
+        url = RouterStore.getCurrentURL payload
         AppDispatcher.dispatch
             type: ActionTypes.MESSAGE_FETCH_REQUEST
-            value: {action}
+            value: {url}
+
+    getNextPage: ->
+        AppDispatcher.dispatch
+            type: ActionTypes.MESSAGE_FETCH_REQUEST
+            value: {url: RouterStore.getNextURL()}
 
 
     addFilter: (params) ->

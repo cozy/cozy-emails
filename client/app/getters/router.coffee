@@ -14,7 +14,7 @@ _ = require 'lodash'
 class RouteGetter
 
     hasNextPage: ->
-        not MessageStore.isAllLoaded()
+        not RouterStore.isAllLoaded()
 
     isCurrentURL: (url) ->
         isServer = false
@@ -62,7 +62,7 @@ class RouteGetter
         RefreshesStore.getRefreshing().get accountID
 
     getSelectedTab: ->
-        AccountStore.getSelectedTab()
+        RouterStore.getSelectedTab()
 
     getModal: ->
         RouterStore.getModalParams()
@@ -75,8 +75,9 @@ class RouteGetter
         mailboxID ?= @getMailboxID()
         return null unless mailboxID
 
-        messages = MessageStore.getMessagesList mailboxID
+        messages = RouterStore.getMessagesList mailboxID
 
+        #TODO : move this into Router_store
         # We dont filter for type from and dest because it is
         # complicated by collation and name vs address.
         unless _.isEmpty (filter = @getFilter()).flags
@@ -90,7 +91,7 @@ class RouteGetter
                 return true
 
         # FIXME : use params ASC et DESC into URL
-        messages.sort sortByDate filter.order
+        messages?.sort sortByDate filter.order
 
     getMessage: (messageID) ->
         MessageStore.getByID messageID
@@ -103,41 +104,41 @@ class RouteGetter
         conversation?.toArray()
 
     getCurrentMessageID: ->
-        MessageStore.getCurrentID()
+        RouterStore.getMessageID()
 
     getCurrentMessage: ->
-        MessageStore.getByID MessageStore.getCurrentID()
+        MessageStore.getByID RouterStore.getMessageID()
 
     isCurrentConversation: (conversationID) ->
         conversationID is @getCurrentMessage()?.get 'conversationID'
 
     getMailbox: (mailboxID) ->
-        AccountStore.getMailbox mailboxID
+        RouterStore.getMailbox mailboxID
 
     getCurrentMailbox: ->
-        AccountStore.getMailbox()
+        RouterStore.getMailbox()
 
     getInbox: (accountID) ->
-        AccountStore.getAllMailboxes(accountID)?.find (mailbox) ->
+        RouterStore.getAllMailboxes(accountID)?.find (mailbox) ->
             'INBOX' is mailbox.get 'label'
 
     getAccounts: ->
         AccountStore.getAll()
 
     getAccountSignature: ->
-        AccountStore.getSelected()?.get 'signature'
+        RouterStore.getAccount()?.get 'signature'
 
     getAccountID: ->
-        AccountStore.getAccountID()
+        RouterStore.getAccountID()
 
     getMailboxID: ->
-        AccountStore.getMailboxID()
+        RouterStore.getMailboxID()
 
     getLogin: ->
         @getCurrentMailbox()?.get 'login'
 
     getMailboxes: ->
-        AccountStore.getAllMailboxes()
+        RouterStore.getAllMailboxes()
 
     getTags: (message) ->
         mailboxID = @getMailboxID()

@@ -1,11 +1,11 @@
 _         = require 'underscore'
 Immutable = require 'immutable'
+XHRUtils = require '../utils/xhr_utils'
+AppDispatcher = require '../app_dispatcher'
 
 Store = require '../libs/flux/store/store'
 
-RouterGetter = require '../getters/router'
-
-{ActionTypes, AccountActions} = require '../constants/app_constants'
+{ActionTypes} = require '../constants/app_constants'
 
 AccountTranslator = require '../utils/translators/account_translator'
 
@@ -32,15 +32,12 @@ class AccountStore extends Store
 
         .toOrderedMap()
 
-    _accountID = null
-    _mailboxID = null
-
+    # FIXME : move this into ROuter Store
     _newAccountWaiting = false
     _newAccountChecking = false
 
     _serverAccountErrorByField = Immutable.Map()
 
-    _tab = null
 
     _clearError = ->
         _serverAccountErrorByField = Immutable.Map()
@@ -67,26 +64,28 @@ class AccountStore extends Store
         else
             _serverAccountErrorByField = Immutable.Map "unknown": error
 
+    _getByMailbox = (mailboxID) ->
+        _accounts?.find (account) ->
+            account.get('mailboxes').get mailboxID
 
-    _setMailbox = (data) ->
-        # on account creation, sometime socket send mailboxes updates
-        # before the account has been saved locally
-        return true unless (account = _accounts?.get _accountID)?.size
 
+    _updateMailbox = (data) ->
         mailboxID = data.id
-        mailboxes = account.get('mailboxes')
+        account = _getByMailbox mailboxID
+        if (accountID = account?.get 'id')
+            mailboxes = account.get 'mailboxes'
+            mailbox = mailboxes?.get(mailboxID) or Immutable.Map()
 
-        mailbox = mailboxes.get(mailboxID) or Immutable.Map()
-        for field, value of data
-            mailbox = mailbox.set field, value
+            for field, value of data
+                mailbox = mailbox.set field, value
 
-        if mailbox isnt mailboxes.get mailboxID
-            mailboxes = mailboxes.set mailboxID, mailbox
+            if mailbox isnt mailboxes.get mailboxID
+                mailboxes = mailboxes.set mailboxID, mailbox
 
-            # FIXME : is attaching mailboxes to account useless?
-            account = account.set 'mailboxes', mailboxes
+                # FIXME : is attaching mailboxes to account usefull?
+                account = account.set 'mailboxes', mailboxes
 
-            _accounts = _accounts?.set _accountID, account
+                _accounts = _accounts.set accountID, account
 
 
     _mailboxSort = (mb1, mb2) ->
@@ -100,27 +99,34 @@ class AccountStore extends Store
             else return 0
 
 
-    _setCurrentAccount = (accountID, mailboxID, tab="mailboxes") ->
-        _accountID = accountID
-        _mailboxID = mailboxID
-        _tab = tab
-
-
     _updateAccount = (rawAccount) ->
         account = AccountTranslator.toImmutable rawAccount
         accountID = account.get 'id'
         _accounts = _accounts?.set accountID, account
 
 
+    # Refresh Emails from Server
+    # This is a read data pattern
+    # ActionCreator is a write data pattern
+    _refreshMailbox = (mailboxID) ->
+        deep = true
+        XHRUtils.refreshMailbox mailboxID, {deep}, (error, updated) ->
+            if error?
+                AppDispatcher.dispatch
+                    type: ActionTypes.REFRESH_FAILURE
+                    value: {mailboxID, error}
+            else
+                AppDispatcher.dispatch
+                    type: ActionTypes.REFRESH_SUCCESS
+                    value: {mailboxID, updated}
+
+
     ###
         Defines here the action handlers.
     ###
     __bindHandlers: (handle) ->
-
-        handle ActionTypes.ROUTE_CHANGE, ({accountID, mailboxID, action, tab}) ->
-            accountID ?= @getDefault(mailboxID)?.get('id') if mailboxID
-            _setCurrentAccount accountID, mailboxID, tab
-
+        handle ActionTypes.ROUTE_CHANGE, ({mailboxID}) ->
+            _refreshMailbox mailboxID
             @emit 'change'
 
         handle ActionTypes.ADD_ACCOUNT_REQUEST, ({value}) ->
@@ -182,12 +188,10 @@ class AccountStore extends Store
             @emit 'change'
 
         handle ActionTypes.REMOVE_ACCOUNT_SUCCESS, (accountID) ->
-            _accounts = _accounts?.delete accountID
-            _setCurrentAccount()
             @emit 'change'
 
         handle ActionTypes.RECEIVE_MAILBOX_UPDATE, (mailbox) ->
-            _setMailbox mailbox
+            _updateMailbox mailbox
             @emit 'change'
 
 
@@ -195,54 +199,36 @@ class AccountStore extends Store
         Public API
     ###
     getAll: ->
-        return _accounts
-
-
-    getSelectedTab: ->
-        return _tab
+        _accounts
 
 
     getByID: (accountID) ->
-        return _accounts?.get accountID
-
-
-    getByLabel: (label) ->
-        _accounts?.find (account) -> account.get('label') is label
+        _accounts?.get accountID
 
 
     getDefault: (mailboxID) ->
         if mailboxID
-            return _accounts?.find (account) ->
-                account.get('mailboxes').get(mailboxID)
-        return _accounts?.first()
+            return @getByMailbox mailboxID
+        else
+            return @getAll().first()
 
 
-    getAccountID: ->
-        return @getDefault()?.get 'id' unless _accountID
-        return _accountID
+    getByMailbox: (mailboxID) ->
+        _getByMailbox mailboxID
 
 
-    getMailboxID: ->
-        return @getDefault()?.get 'inboxMailbox' unless _mailboxID
-        return _mailboxID
-
-
-    getSelected: ->
-        return _accounts?.get _accountID
+    getByLabel: (label) ->
+        _accounts?.find (account) ->
+            account.get('label') is label
 
 
     getAllMailboxes: (accountID) ->
-        accountID ?= @getAccountID()
-        return _accounts?.get accountID
+        _accounts?.get accountID
             .get 'mailboxes'
             .sort _mailboxSort
 
 
-    getMailbox: (mailboxID) ->
-        mailboxID ?= _mailboxID
-        return @getAllMailboxes()?.get mailboxID
-
-
+    # FIXME : move this into ROuterStore
     getErrors: -> _serverAccountErrorByField
     getRawErrors: -> _serverAccountErrorByField.get('unknown')
     getAlertErrorMessage: ->
@@ -256,5 +242,4 @@ class AccountStore extends Store
     isChecking: -> return _newAccountChecking
 
 
-
-module.exports = _self = new AccountStore()
+module.exports = new AccountStore()

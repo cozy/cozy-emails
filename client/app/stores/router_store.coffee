@@ -3,9 +3,11 @@ Immutable = require 'immutable'
 
 Store = require '../libs/flux/store/store'
 AccountStore = require '../stores/account_store'
-AppDispatcher = require '../libs/flux/dispatcher/dispatcher'
+MessageStore = require '../stores/message_store'
 
-{ActionTypes, MessageActions, AccountActions} = require '../constants/app_constants'
+AppDispatcher = require '../app_dispatcher'
+
+{ActionTypes, MessageActions, AccountActions, SearchActions} = require '../constants/app_constants'
 
 class RouterStore extends Store
 
@@ -14,9 +16,7 @@ class RouterStore extends Store
         Defines private variables here.
     ###
     _router = null
-
     _action = null
-
     _nextURL = null
     _lastDate = null
 
@@ -31,6 +31,14 @@ class RouterStore extends Store
         before: null
         after: null
         pageAfter: null
+
+
+    _accountID = null
+    _mailboxID = null
+    _tab = null
+
+    _messageID = null
+
 
     getRouter: ->
         return _router
@@ -61,15 +69,15 @@ class RouterStore extends Store
 
         isMessage = !!params.messageID or _.contains action, 'message'
         if isMessage and not params.mailboxID
-            params.mailboxID = AccountStore.getMailboxID()
+            params.mailboxID = @getMailboxID()
 
         isMailbox = _.contains action, 'mailbox'
         if isMailbox and not params.mailboxID
-            params.mailboxID = AccountStore.getMailboxID()
+            params.mailboxID = @getMailboxID()
 
         isAccount = _.contains action, 'account'
         if isAccount and not params.accountID
-            params.accountID = AccountStore.getAccountID()
+            params.accountID = @getAccountID()
         if isAccount and not params.tab
             params.tab = 'account'
 
@@ -85,16 +93,15 @@ class RouterStore extends Store
             return prefix + url.replace(/\(\?:query\)$/, filter)
 
     getNextURL: (params={}) ->
-        pageAfter = params.messages?.last()?.get 'date'
-        delete params.messages
-        params.filter = {} unless params.filter?
-        params.filter.pageAfter = pageAfter
-        return @getCurrentURL params
+        filter = {}
+        lastMessage = @getMessagesList()?.last()
+        filter.pageAfter = lastMessage?.get 'date'
+        return @getCurrentURL {filter}
 
     getCurrentURL: (options={}) ->
         params = _.extend {isServer: true}, options
-        params.action = @getAction() unless params.action
-        params.mailboxID = AccountStore.getMailboxID()
+        params.action ?= @getAction()
+        params.mailboxID ?= @getMailboxID()
         return @getURL params
 
     _getRouteAction = (params) ->
@@ -146,7 +153,7 @@ class RouterStore extends Store
         return result
 
     _getURIQueryParams = (params={}) ->
-        filters = _.extend {}, _self.getFilter()
+        filters = _.extend {}, _currentFilter
         _.extend filters, params.filter if params.filter
 
         query = _.compact _.map filters, (value, key) ->
@@ -168,19 +175,120 @@ class RouterStore extends Store
         _currentFilter = _defaultFilter
 
 
+    _isSearchAction = ->
+        _action is SearchActions.SHOW_ALL
+
+
+
     # Useless for MessageStore
     # to clean messages
     isResetFilter: (filter) ->
-        filter = _self.getFilter() unless filter
+        filter = @getFilter() unless filter
         filter.type in ['from', 'dest']
+
+
+    _setCurrentAccount = (accountID, mailboxID, tab="mailboxes") ->
+        _accountID = accountID
+        _mailboxID = mailboxID
+        _tab = tab
+
+
+    getAccount: (accountID) ->
+        accountID ?= _accountID
+        AccountStore.getByID accountID
+
+
+    getAccountID: ->
+        unless _accountID
+            return AccountStore.getDefault()?.get 'id'
+        else
+            return _accountID
+
+
+    getMailboxID: ->
+        unless _mailboxID
+            return AccountStore.getDefault()?.get 'inboxMailbox'
+        else
+            return _mailboxID
+
+
+    getMailbox: (mailboxID) ->
+        mailboxID ?= @getMailboxID()
+        @getAllMailboxes()?.get mailboxID
+
+
+    getAllMailboxes: (accountID) ->
+        accountID ?= @getAccountID()
+        AccountStore.getAllMailboxes accountID
+
+
+    getSelectedTab: ->
+        _tab
+
+
+    _setCurrentMessage = (messageID) ->
+        _messageID = messageID
+
+
+    isAllLoaded: ->
+        total = @getMailbox()?.get 'nbTotal'
+        total is @getMessagesList()?.size
+
+
+    getMessageID: ->
+        _messageID
+
+
+    getMessagesList: ->
+        conversations = {}
+        mailboxID = @getMailboxID()
+        MessageStore.getAll()?.filter (message) ->
+            conversationID = message.get 'conversationID'
+            unless (exist = conversations[conversationID])
+                conversations[conversationID] = true
+            inMailbox = mailboxID of message.get 'mailboxIDs'
+            return inMailbox and not exist
+        .toList()
+        .toOrderedMap()
+
+
+    getConversation: (messageID) ->
+        messageID ?= @getMessageID()
+        MessageStore.getConversation messageID
+
+
+    getNextConversation: ->
+        messageID = @getMessageID()
+        messages = @getMessagesList()
+        index = messages?.keyOf MessageStore.getByID messageID
+        messages?.get --index
+
+
+    getPreviousConversation: ->
+        messageID = @getMessageID()
+        messages = @getMessagesList()
+        index = messages?.keyOf MessageStore.getByID messageID
+        messages?.get ++index
+
+
+    getConversationLength: ({messageID, conversationID}) ->
+        unless conversationID
+            messageID ?= @getMessageID()
+            if (message = MessageStore.getByID messageID)
+                conversationID = message.get 'conversationID'
+
+        MessageStore.getConversationLength conversationID
+
+
 
     ###
         Defines here the action handlers.
     ###
     __bindHandlers: (handle) ->
 
-        handle ActionTypes.ROUTE_CHANGE, (params={}) ->
-            {action, query} = params
+        handle ActionTypes.ROUTE_CHANGE, (payload={}) ->
+            {accountID, mailboxID, messageID} = payload
+            {action, query, tab} = payload
 
             # We cant display any informations
             # without accounts
@@ -189,8 +297,23 @@ class RouterStore extends Store
             else
                 _action = AccountActions.CREATE
 
+            # From AccountStore
+            accountID ?= AccountStore.getDefault(mailboxID)?.get('id')
+            _setCurrentAccount accountID, mailboxID, tab
+
+            # From MessageStore
+            # Update currentMessageID
+            _setCurrentMessage messageID
+
+            # Handle all Sleection
+            # _resetSelection()
+
             # Save current filters
             _setFilter query
+
+            # From searchStore
+            if _isSearchAction()
+                _resetSearch()
 
             @emit 'change'
 
@@ -199,16 +322,14 @@ class RouterStore extends Store
             @emit 'change'
 
         handle ActionTypes.REMOVE_ACCOUNT_SUCCESS, ->
-            # FIXME : move AccountStore actions here
             _action = AccountActions.CREATE
+            _setCurrentAccount()
             @emit 'change'
 
         handle ActionTypes.ADD_ACCOUNT_SUCCESS, ({account, areMailboxesConfigured}) ->
-            # FIXME : move AccountStore actions here
             _action = if areMailboxesConfigured
             then MessageActions.SHOW_ALL
             else AccountActions.EDIT
-
             @emit 'change'
 
 
@@ -224,6 +345,11 @@ class RouterStore extends Store
             _modal = null
             @emit 'change'
 
+        handle ActionTypes.MESSAGE_TRASH_SUCCESS, ({target, updated, ref}) ->
+            if (nextMessage = @getNextConversation())?.size
+                _setCurrentMessage nextMessage?.get 'id'
+            @emit 'change'
+
 
 _toCamelCase = (value) ->
     return value.replace /\.(\w)*/gi, (match) ->
@@ -232,4 +358,4 @@ _toCamelCase = (value) ->
         return part1.toUpperCase() + part2
 
 
-module.exports = (_self = new RouterStore())
+module.exports = new RouterStore()

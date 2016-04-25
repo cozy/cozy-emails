@@ -13,8 +13,8 @@ RouterGetter = require '../getters/router'
 AccountStore  = require '../stores/account_store'
 MessageStore  = require '../stores/message_store'
 RouterStore  = require '../stores/router_store'
-
 SettingsStore = require '../stores/settings_store'
+
 LayoutActionCreator  = require '../actions/layout_action_creator'
 MessageActionCreator = require '../actions/message_action_creator'
 RouterActionCreator  = require '../actions/router_action_creator'
@@ -33,22 +33,20 @@ module.exports = Utils =
 
 
     getCurrentAccount: ->
-        AccountStore.getSelected()?.toJS()
+        RouterStore.getAccount()?.toJS()
 
 
     getCurrentMailbox: ->
-        AccountStore.getMailbox()?.toJS()
+        RouterStore.getMailbox()?.toJS()
 
 
     getCurrentMessage: ->
-        messageID = MessageStore.getCurrentID()
-        message = MessageStore.getByID messageID
-        return message?.toJS()
+        messageID = RouterStore.getMessageID()
+        Utils.getMessage messageID
 
 
-    getMessage: (id) ->
-        message = MessageStore.getByID id
-        return message?.toJS()
+    getMessage: (messageID) ->
+        MessageStore.getByID(messageID)?.toJS()
 
     getCurrentActions: ->
         res = []
@@ -104,9 +102,9 @@ module.exports = Utils =
     # `bottom` key  -> direction is next
     messageNavigate: (direction) ->
         if 'prev' is direction
-            messageID = MessageStore.getNextConversation()?.get 'id'
+            messageID = RouterStore.getNextConversation()?.get 'id'
         else
-            messageID = MessageStore.getPreviousConversation()?.get 'id'
+            messageID = RouterStore.getPreviousConversation()?.get 'id'
         RouterActionCreator.navigate {messageID}
 
 
@@ -123,7 +121,7 @@ module.exports = Utils =
     # Display a message
     # @params {Immutable} message the message (current one if null)
     messageDisplay: (message) ->
-        messageID = message?.get('id') or MessageStore.getCurrentID()
+        messageID = message?.get('id') or RouterStore.getMessageID()
         RouterActionCreator.navigate {messageID}
 
 
@@ -135,7 +133,7 @@ module.exports = Utils =
         RouterActionCreator.navigate {url}
 
     messageDeleteCurrent: ->
-        messageID = MessageStore.getCurrentID()
+        messageID = RouterStore.getMessageID()
         if not onMessageList() or not messageID?
             return
 
@@ -169,8 +167,8 @@ module.exports = Utils =
     simulateUpdate: ->
         window.setInterval ->
             content =
-                "accountID": AccountStore.getAccountID()
-                "id": AccountStore.getMailboxID()
+                "accountID": RouterStore.getAccountID()
+                "id": RouterStore.getMailboxID()
                 "label": "INBOX",
                 "path": "INBOX",
                 "tree": ["INBOX"],

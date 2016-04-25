@@ -1,15 +1,6 @@
 request = require 'superagent'
 _       = require 'underscore'
 
-AccountTranslator = require './translators/account_translator'
-
-SettingsStore = require '../stores/settings_store'
-RouterStore = require '../stores/router_store'
-AccountStore = require '../stores/account_store'
-MessageStore = require '../stores/message_store'
-
-{MessageActions} = require '../constants/app_constants'
-
 discovery2Fields = require '../utils/discovery_to_fields'
 
 
