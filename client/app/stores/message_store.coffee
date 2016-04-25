@@ -69,8 +69,8 @@ class MessageStore extends Store
     # ActionCreator is a write data pattern
     _fetchMessages = (params={}) ->
         {messageID, conversationID, url} = params
-
         timestamp = Date.now()
+
         callback = (error, result) ->
             if error?
                 AppDispatcher.dispatch
@@ -88,16 +88,6 @@ class MessageStore extends Store
                     for conversationID, length of conversationLength
                         _saveConversationLength conversationID, length
 
-                # # Message should belong to the result
-                # # If not : go fetch next messages
-                # # TODO : ajouter un param ici pour autorise le fetch ou pas
-                # if not _self.isAllLoaded() and messageID and
-                #         not _messages?.get messageID
-                #     action = MessageActions.PAGE_NEXT
-                #     AppDispatcher.dispatch
-                #         type: ActionTypes.MESSAGE_FETCH_REQUEST
-                #         value: {messageID}
-                # else
                 AppDispatcher.dispatch
                     type: ActionTypes.MESSAGE_FETCH_SUCCESS
                     value: {messages, messageID}
