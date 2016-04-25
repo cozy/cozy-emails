@@ -3,7 +3,6 @@ AppDispatcher = require '../libs/flux/dispatcher/dispatcher'
 {ActionTypes} = require '../constants/app_constants'
 
 AccountStore = require '../stores/account_store'
-RouterStore = require '../stores/router_store'
 
 module.exports = AccountActionCreator =
 

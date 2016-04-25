@@ -4,7 +4,6 @@ AppDispatcher = require '../libs/flux/dispatcher/dispatcher'
 
 XHRUtils      = require '../utils/xhr_utils'
 
-AccountStore  = require "../stores/account_store"
 MessageStore  = require '../stores/message_store'
 
 refCounter = 1
@@ -20,7 +19,6 @@ MessageActionCreator =
         AppDispatcher.dispatch
             type: ActionTypes.RECEIVE_RAW_MESSAGE
             value: message
-
 
     send: (action, message) ->
         conversationID = message.conversationID

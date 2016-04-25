@@ -35,10 +35,6 @@ class SelectionStore extends Store
     ###
     __bindHandlers: (handle) ->
 
-        handle ActionTypes.ROUTE_CHANGE, ->
-            _resetSelection()
-            @emit 'change'
-
         handle ActionTypes.MAILBOX_SELECT_ALL, ->
             if _isAllSelected
                 _resetSelection()

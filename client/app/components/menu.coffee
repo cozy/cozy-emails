@@ -12,7 +12,6 @@ colorhash = require '../utils/colorhash'
 LayoutActionCreator  = require '../actions/layout_action_creator'
 
 RouterStore = require '../stores/router_store'
-AccountStore = require '../stores/account_store'
 StoreWatchMixin = require '../mixins/store_watch_mixin'
 
 RouterGetter = require '../getters/router'
@@ -22,7 +21,7 @@ module.exports = Menu = React.createClass
     displayName: 'Menu'
 
     mixins: [
-        StoreWatchMixin [AccountStore, RouterStore]
+        StoreWatchMixin [RouterStore]
     ]
 
     getStateFromStores: ->

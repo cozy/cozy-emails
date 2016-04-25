@@ -2,7 +2,9 @@ Backbone = require 'backbone'
 React    = require 'react'
 ReactDOM = require 'react-dom'
 
-AccountStore = require './stores/account_store'
+# TODO : Call getter instead ?
+RouterStore = require './stores/router_store'
+RouterActionCreator = require './actions/router_action_creator'
 
 AppDispatcher = require './libs/flux/dispatcher/dispatcher'
 
@@ -49,7 +51,7 @@ class Router extends Backbone.Router
 
 
     defaultMailbox: ->
-        url = if (mailboxID = AccountStore.getMailboxID())
+        url = if (mailboxID = RouterStore.getMailboxID())
         then "mailbox/#{mailboxID}"
         else "account/new"
 
@@ -99,6 +101,12 @@ class Router extends Backbone.Router
 # Dispatch payload with extracted query if available
 _dispatch = (payload, query) ->
     payload.query = _parseQuery query if query
+
+    # Fetch Messages
+    if payload.action in
+    [MessageActions.SHOW_ALL, MessageActions.SHOW]
+        RouterActionCreator.getCurrentPage payload
+
     AppDispatcher.dispatch
         type: ActionTypes.ROUTE_CHANGE
         value: payload

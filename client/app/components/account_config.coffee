@@ -15,6 +15,7 @@ AccountConfigMailboxes = React.createFactory require './account_config_mailboxes
 AccountConfigSignature = React.createFactory require './account_config_signature'
 
 AccountStore         = require '../stores/account_store'
+RouterStore         = require '../stores/router_store'
 SettingsStore        = require '../stores/settings_store'
 StoreWatchMixin      = require '../mixins/store_watch_mixin'
 
@@ -41,7 +42,7 @@ module.exports = React.createClass
 
         # dont overwrite editedAccount when stores state changed
         nstate.serverErrors      = AccountStore.getErrors()
-        nstate.selectedAccount   = AccountStore.getSelected()
+        nstate.selectedAccount   = RouterStore.getAccount()
         nstate.isWaiting         = AccountStore.isWaiting()
         nstate.isChecking        = AccountStore.isChecking()
         nstate.tab               = RouterGetter.getSelectedTab()

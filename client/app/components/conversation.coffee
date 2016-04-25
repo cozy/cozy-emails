@@ -14,7 +14,6 @@ SettingsStore = require '../stores/settings_store'
 RouterGetter = require '../getters/router'
 
 # FIXME : use Getters instead of Stores
-AccountStore        = require '../stores/account_store'
 MessageStore        = require '../stores/message_store'
 LayoutStore         = require '../stores/layout_store'
 SelectionStore       = require '../stores/selection_store'
@@ -40,7 +39,7 @@ module.exports = React.createClass
         }
 
     renderMessage: (message, index) ->
-        accounts = AccountStore.getAll()
+        accounts = RouterGetter.getAccounts()
         accountID = RouterGetter.getAccountID()
         messageID = message.get 'id'
         Message
