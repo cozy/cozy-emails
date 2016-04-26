@@ -9,7 +9,9 @@ RouterStore = require '../stores/router_store'
 RouterActionCreator =
 
     getCurrentPage: ->
-        url = RouterStore.getCurrentURL()
+        # Always load messagesList
+        action = MessageActions.SHOW_ALL
+        url = RouterStore.getCurrentURL {action}
         AppDispatcher.dispatch
             type: ActionTypes.MESSAGE_FETCH_REQUEST
             value: {url}
