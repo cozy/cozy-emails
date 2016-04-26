@@ -5,8 +5,6 @@ Store = require '../libs/flux/store/store'
 AccountStore = require '../stores/account_store'
 MessageStore = require '../stores/message_store'
 
-AppDispatcher = require '../app_dispatcher'
-
 {ActionTypes, MessageFilter, MessageFlags, MessageActions,
 AccountActions, SearchActions} = require '../constants/app_constants'
 
@@ -106,6 +104,7 @@ class RouterStore extends Store
         params = _.extend {isServer: true}, options
         params.action ?= @getAction()
         params.mailboxID ?= @getMailboxID()
+        params.messageID ?= @getMessageID()
 
         return @getURL params
 
@@ -226,7 +225,12 @@ class RouterStore extends Store
 
     getInbox: (accountID) ->
         @getAllMailboxes(accountID)?.find (mailbox) ->
-            'INBOX' is mailbox.get 'label'
+            'inbox' is mailbox.get('label').toLowerCase()
+
+
+    getTrashMailbox: (accountID) ->
+        @getAllMailboxes(accountID)?.find (mailbox) ->
+            'trash' is mailbox.get('label').toLowerCase()
 
 
     getSelectedTab: ->
@@ -306,7 +310,16 @@ class RouterStore extends Store
 
     getConversation: (messageID) ->
         messageID ?= @getMessageID()
-        MessageStore.getConversation messageID
+        conversationID = MessageStore.getByID(messageID)?.get 'conversationID'
+        conversationLength = @getConversationLength {messageID, conversationID}
+        conversation = MessageStore.getConversation conversationID
+
+        # Fetch missing messages
+        if not conversationID or conversation?.length isnt conversationLength
+            MessageStore.fetchConversation {messageID, conversationID}
+
+        conversation
+
 
 
     getNextConversation: ->

@@ -36,11 +36,15 @@ module.exports =
         .send settings
         .end handleResponse callback, 'changeSettings', settings
 
-    fetchConversation: (conversationID, callback) ->
-        request.get "messages/batchFetch?conversationID=#{conversationID}"
+    fetchConversation: ({messageID, conversationID}, callback) ->
+        query = if conversationID
+        then "conversationID=#{conversationID}"
+        else "messageID=#{messageID}"
+
+        request.get "messages/batchFetch?#{query}"
         .set 'Accept', 'application/json'
         .end (err, res) ->
-            _cb = handleResponse callback, 'fetchConversation', conversationID
+            _cb = handleResponse callback, 'fetchConversation', {messageID, conversationID}
             _cb err, res
 
     fetchMessagesByFolder: (url, callback) ->

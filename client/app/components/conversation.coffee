@@ -10,12 +10,11 @@ DomUtils = require '../utils/dom_utils'
 Message             = React.createFactory require './message'
 ToolbarConversation = React.createFactory require './toolbar_conversation'
 
+# FIXME : use Getters instead of Stores
+LayoutStore         = require '../stores/layout_store'
 SettingsStore = require '../stores/settings_store'
 RouterGetter = require '../getters/router'
 
-# FIXME : use Getters instead of Stores
-MessageStore        = require '../stores/message_store'
-LayoutStore         = require '../stores/layout_store'
 SelectionStore       = require '../stores/selection_store'
 StoreWatchMixin      = require '../mixins/store_watch_mixin'
 
@@ -23,7 +22,7 @@ module.exports = React.createClass
     displayName: 'Conversation'
 
     mixins: [
-        StoreWatchMixin [SelectionStore, MessageStore]
+        StoreWatchMixin [SelectionStore]
     ]
 
     componentDidMount: ->
@@ -32,15 +31,14 @@ module.exports = React.createClass
     componentDidUpdate: ->
         @_initScroll()
 
-    getStateFromStores: ->
+    getStateFromStores: (props) ->
         return {
             message: RouterGetter.getMessage()
             conversation: RouterGetter.getConversation()
+            trashMailbox: RouterGetter.getTrashMailbox()
         }
 
-    renderMessage: (message, index) ->
-        accounts = RouterGetter.getAccounts()
-        accountID = RouterGetter.getAccountID()
+    renderMessage: (message) ->
         messageID = message.get 'id'
         Message
             ref                 : 'message'
@@ -50,7 +48,7 @@ module.exports = React.createClass
             url                 : RouterGetter.getURL {messageID}
             selectedMailboxID   : @props.mailboxID
             useIntents          : LayoutStore.intentAvailable()
-            trashMailbox        : accounts[accountID]?.trashMailbox
+            trashMailbox        : @state.trashMailbox
             displayHTML         : SettingsStore.get 'messageDisplayHTML'
             displayImages       : SettingsStore.get 'messageDisplayImages'
             confirmDelete       : SettingsStore.get 'messageConfirmDelete'
