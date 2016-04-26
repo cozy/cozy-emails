@@ -73,15 +73,15 @@ class RouteGetter
 
 
     getMessage: (messageID) ->
+        messageID ?= RouterStore.getMessageID()
         MessageStore.getByID messageID
 
 
     getConversationLength: ({messageID, conversationID}) ->
-        MessageStore.getConversationLength {messageID, conversationID}
+        RouterStore.getConversationLength {messageID, conversationID}
 
     getConversation: (messageID) ->
-        conversation = MessageStore.getConversation messageID
-        conversation?.toArray()
+        RouterStore.getConversation(messageID)
 
     getCurrentMessageID: ->
         RouterStore.getMessageID()
@@ -99,7 +99,12 @@ class RouteGetter
         RouterStore.getMailbox()
 
     getInbox: (accountID) ->
+        accountID ?= @getAccountID()
         RouterStore.getInbox accountID
+
+    getTrashMailbox: (accountID) ->
+        accountID ?= @getAccountID()
+        RouterStore.getTrashMailbox accountID
 
     getAccounts: ->
         AccountStore.getAll()
