@@ -39,10 +39,6 @@ module.exports = LayoutActionCreator =
             type: ActionTypes.RESIZE_PREVIEW_PANE
             value: null
 
-    focus: (path) ->
-        AppDispatcher.dispatch
-            type: ActionTypes.FOCUS
-            value: path
 
     clearToasts: ->
         AppDispatcher.dispatch
