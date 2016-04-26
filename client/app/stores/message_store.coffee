@@ -67,8 +67,9 @@ class MessageStore extends Store
 
         # Shortcut to know conversationLength
         # withount loading all massages of the conversation
-        for conversationID, length of conversationLength
-            _conversationLength = _conversationLength.set conversationID, length
+        if (conversationLength)
+            for conversationID, length of conversationLength
+                _conversationLength = _conversationLength.set conversationID, length
 
 
     _saveMessage = (message, timestamp) ->

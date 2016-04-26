@@ -42,6 +42,7 @@ class RouterStore extends Store
 
     _messageID = null
     _messagesLength = 0
+    _messagePage = 0
 
 
     getRouter: ->
@@ -52,10 +53,9 @@ class RouterStore extends Store
         return _action
 
 
-    # If filters are default
-    # Nothing should appear in URL
-    getQueryParams: ->
-         if _currentFilter isnt _defaultFilter then _currentFilter else null
+    getQuery: ->
+        filter = @getFilter()
+        _getURIQueryParams {filter}
 
 
     getFilter: ->
@@ -95,11 +95,6 @@ class RouterStore extends Store
                 params[param] or match
             return prefix + url.replace(/\(\?:query\)$/, filter)
 
-    getNextURL: (params={}) ->
-        filter = {}
-        lastMessage = @getMessagesList()?.last()
-        filter.pageAfter = lastMessage?.get 'date'
-        return @getCurrentURL {filter}
 
     getCurrentURL: (options={}) ->
         params = _.extend {isServer: true}, options
@@ -108,6 +103,7 @@ class RouterStore extends Store
         params.messageID ?= @getMessageID()
 
         return @getURL params
+
 
     _getRouteAction = (params) ->
         unless (action = params.action)
@@ -160,11 +156,15 @@ class RouterStore extends Store
     _getURIQueryParams = (params={}) ->
         _filter = _.clone _defaultFilter
 
-        {filter, resetFilter} = params
+        {filter, resetFilter, isServer} = params
         _.extend _filter, _currentFilter, filter unless resetFilter
 
         query = _.compact _.map _filter, (value, key) ->
             if value? and _defaultFilter[key] isnt value
+                # Server Side request:
+                # Flags query doesnt exist
+                key = 'flag' if isServer and key is 'flags'
+
                 return key + '=' + encodeURIComponent(value)
 
         if query.length then "?#{query.join '&'}" else ""
@@ -241,6 +241,7 @@ class RouterStore extends Store
     _setCurrentMessage = (messageID) ->
         _messageID = messageID
         _messagesLength = 0
+        _messagePage = 0
 
 
     getMessageID: ->
@@ -252,21 +253,22 @@ class RouterStore extends Store
         MessageFilter[name] is flags or MessageFilter[name] in flags
 
 
-    getMailboxTotal: (mailboxID) ->
-        props = 'nbTotal'
+    getMailboxTotal: ->
         if (@isFlags 'UNSEEN')
             props = 'nbUnread'
         else if (@isFlags 'FLAGGED')
             props = 'nbFlagged'
-        @getMailbox(mailboxID)?.get(props) or 0
-
-
-    getMessagesTotal: ->
-        @getInbox().get 'nbTotal'
+        else
+            props = 'nbTotal'
+        @getMailbox()?.get(props) or 0
 
 
     hasNextPage: ->
-        _messagesLength + 1 < @getMailboxTotal()
+        _messagePage < @getPagesLength()
+
+
+    getPagesLength: (params={}) ->
+        Math.ceil  @getMailboxTotal() / MSGBYPAGE
 
 
     isMissingMessages: ->
@@ -292,22 +294,22 @@ class RouterStore extends Store
             true
 
         uniq = {}
+        sortOrder = parseInt "#{filter.sort.charAt(0)}1", 10
         messages = MessageStore.getAll()?.filter (message) =>
             # Display only last Message of conversation
             conversationID = message.get 'conversationID'
             unless (exist = uniq[conversationID])
                 uniq[conversationID] = true
 
-            # Message should be in mailbox
-            inMailbox = mailboxID of message.get 'mailboxIDs'
-
             # Should have the same flags
             hasSameFlag = _filterFlags message
 
+            # Message should be in mailbox
+            inMailbox = mailboxID of message.get 'mailboxIDs'
+
             return inMailbox and not exist and hasSameFlag
-        .toList()
+        .sort sortByDate sortOrder
         .toOrderedMap()
-        .sort sortByDate filter.order
 
         _messagesLength = messages.size
 
@@ -397,25 +399,16 @@ class RouterStore extends Store
 
 
         handle ActionTypes.MESSAGE_FETCH_SUCCESS, (payload) ->
-            {result, timestamp, mailboxID, messageID} = payload
+            {result, timestamp, page} = payload
+
+            _messagePage = page
 
             # Update Realtime
+            mailboxID = @getMailboxID()
             before = if result?.messages?.size
             then result?.messages?.last()?.get('date')
             else timestamp
             changeRealtimeScope {mailboxID, before}
-
-            # # conversationLength = RouterStore.getConversationLength {messageID}
-            # # conversation = RouterStore.getConversation()
-            # # if not conversationID or conversation?.length isnt conversationLength
-            # #     MessageStore.fetchConversation {messageID, conversationID}
-            #
-            # # Fetch missing messages
-            # # No messages are found
-            # # get next_page
-            # if RouterStore.isMissingMessages()
-            #     console.log 'FETCH_MORE'
-            #     # MessageStore.fetchMailbox @getNextURL()
 
             @emit 'change'
 

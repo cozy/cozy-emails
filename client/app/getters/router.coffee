@@ -41,11 +41,10 @@ class RouteGetter
             ]
         action in editables
 
-    getQueryParams: ->
-        RouterStore.getQueryParams()
 
     getFilter: ->
         RouterStore.getFilter()
+
 
     getSearch: ->
         SearchStore.getCurrentSearch()
@@ -144,15 +143,5 @@ class RouteGetter
             return t 'no filter message'
         return  t 'list empty'
 
-    # Uniq Key from URL params
-    #
-    # return a {string}
-    getKey: (str = '') ->
-        if (filter = RouterStore.getQueryParams())
-            keys = _.compact ['before', 'after'].map (key) ->
-                filter[key] if filter[key] isnt '-'
-            keys.unshift str unless _.isEmpty str
-            return keys.join('-')
-        return str
 
 module.exports = new RouteGetter()
