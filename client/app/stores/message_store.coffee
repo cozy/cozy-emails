@@ -60,7 +60,6 @@ class MessageStore extends Store
 
 
     _updateMessages = (result={}, timestamp) ->
-        console.log 'SAVE', result, timestamp
         {messages, conversationLength} = result
 
         # This prevent to override local updates
@@ -69,8 +68,9 @@ class MessageStore extends Store
 
         # Shortcut to know conversationLength
         # withount loading all massages of the conversation
-        for conversationID, length of conversationLength
-            _conversationLength = _conversationLength.set conversationID, length
+        if (conversationLength)
+            for conversationID, length of conversationLength
+                _conversationLength = _conversationLength.set conversationID, length
 
 
     _computeMailboxDiff = (oldmsg, newmsg) ->
@@ -252,10 +252,6 @@ class MessageStore extends Store
 
     getConversationLength: (conversationID) ->
         _conversationLength?.get conversationID
-
-
-    fetchConversation: ({messageID, conversationID}) ->
-        # _fetchMessages {messageID, conversationID}
 
 
     # FIXME : move this into RouterStore/RouterGetter
