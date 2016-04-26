@@ -1,17 +1,12 @@
 _         = require 'underscore'
 Immutable = require 'immutable'
-XHRUtils = require '../utils/xhr_utils'
 
-AppDispatcher = require '../libs/flux/dispatcher/dispatcher'
+AppDispatcher = require '../app_dispatcher'
 
 Store = require '../libs/flux/store/store'
 
-
-{changeRealtimeScope} = require '../utils/realtime_utils'
-
 {ActionTypes, MessageActions} = require '../constants/app_constants'
 
-EPOCH = (new Date(0)).toISOString()
 
 class MessageStore extends Store
 
@@ -64,39 +59,18 @@ class MessageStore extends Store
         else throw new Error 'Wrong Usage : unrecognized target AS.getMixed'
 
 
-    # Get Emails from Server
-    # This is a read data pattern
-    # ActionCreator is a write data pattern
-    _fetchMessages = (params={}) ->
-        {messageID, conversationID, url} = params
-        timestamp = Date.now()
+    _updateMessages = (result={}, timestamp) ->
+        console.log 'SAVE', result, timestamp
+        {messages, conversationLength} = result
 
-        callback = (error, result) ->
-            if error?
-                AppDispatcher.dispatch
-                    type: ActionTypes.MESSAGE_FETCH_FAILURE
-                    value: {error, url}
-            else
-                # This prevent to override local updates
-                # with older ones from server
-                messages = if _.isArray(result) then result else result.messages
-                messages?.forEach (message) -> _saveMessage message, timestamp
+        # This prevent to override local updates
+        # with older ones from server
+        messages?.forEach (message) -> _saveMessage message, timestamp
 
-                # Shortcut to know conversationLength
-                # withount loading all massages of the conversation
-                if (conversationLength = result?.conversationLength)
-                    for conversationID, length of conversationLength
-                        _saveConversationLength conversationID, length
-
-                AppDispatcher.dispatch
-                    type: ActionTypes.MESSAGE_FETCH_SUCCESS
-                    value: {messages, messageID}
-
-
-        if url
-            XHRUtils.fetchMessagesByFolder url, callback
-        else
-            XHRUtils.fetchConversation {messageID, conversationID}, callback
+        # Shortcut to know conversationLength
+        # withount loading all massages of the conversation
+        for conversationID, length of conversationLength
+            _conversationLength = _conversationLength.set conversationID, length
 
 
     _computeMailboxDiff = (oldmsg, newmsg) ->
@@ -178,36 +152,13 @@ class MessageStore extends Store
         _messages = _messages.remove message.id
 
 
-    _saveConversationLength = (conversationID, length) ->
-        _conversationLength = _conversationLength.set conversationID, length
-
     ###
         Defines here the action handlers.
     ###
     __bindHandlers: (handle) ->
 
-        handle ActionTypes.MESSAGE_FETCH_REQUEST, (payload) ->
-            _fetchMessages payload
-            @emit 'change'
-
-
-        handle ActionTypes.MESSAGE_FETCH_SUCCESS, ({messages, mailboxID}) ->
-            lastdate = _messages.last()?.get 'date'
-            before = unless messages then EPOCH else lastdate
-            changeRealtimeScope {mailboxID, before}
-            @emit 'change'
-
-
-        handle ActionTypes.MESSAGE_FETCH_REQUEST, (params) ->
-            _fetchMessage params
-            @emit 'change'
-
-
-        handle ActionTypes.MESSAGE_FETCH_SUCCESS, ({messages, mailboxID}) ->
-            unless messages
-                # either end of list or no messages, we stay open
-                SocketUtils.changeRealtimeScope mailboxID, EPOCH
-
+        handle ActionTypes.MESSAGE_FETCH_SUCCESS, ({error, result, timestamp}) ->
+            _updateMessages result, timestamp unless error
             @emit 'change'
 
 
@@ -303,6 +254,11 @@ class MessageStore extends Store
         _conversationLength?.get conversationID
 
 
+    fetchConversation: ({messageID, conversationID}) ->
+        # _fetchMessages {messageID, conversationID}
+
+
+    # FIXME : move this into RouterStore/RouterGetter
     getUndoableRequest: (ref) ->
         _undoable[ref]
 
