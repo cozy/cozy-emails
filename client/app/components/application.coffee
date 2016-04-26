@@ -14,12 +14,9 @@ AccountConfig   = React.createFactory require './account_config'
 Compose         = React.createFactory require './compose'
 
 # React Mixins
-LayoutStore          = require '../stores/layout_store'
-MessageStore         = require '../stores/message_store'
 RouterStore          = require '../stores/router_store'
 SettingsStore        = require '../stores/settings_store'
 RefreshesStore       = require '../stores/refreshes_store'
-AccountStore         = require '../stores/account_store'
 StoreWatchMixin      = require '../mixins/store_watch_mixin'
 TooltipRefesherMixin = require '../mixins/tooltip_refresher_mixin'
 
@@ -41,7 +38,7 @@ Application = React.createClass
 
     mixins: [
         TooltipRefesherMixin
-        StoreWatchMixin [SettingsStore, RefreshesStore, RouterStore, MessageStore, LayoutStore, AccountStore]
+        StoreWatchMixin [SettingsStore, RefreshesStore, RouterStore]
     ]
 
     getStateFromStores: (props) ->
@@ -54,9 +51,6 @@ Application = React.createClass
         mailbox = RouterGetter.getCurrentMailbox()
         return {
             mailboxID       : (mailboxID = mailbox?.get 'id')
-            nbTotal         : mailbox?.get('nbTotal') or 0
-            nbUnread        : mailbox?.get('nbUnread') or 0
-            nbRecent        : mailbox?.get('nbRecent') or 0
             accountID       : RouterGetter.getAccountID()
             messageID       : RouterGetter.getCurrentMessageID()
             action          : RouterGetter.getAction()
@@ -76,7 +70,6 @@ Application = React.createClass
         isAccount = -1 < @state.action?.indexOf 'account'
 
         div className: @state.className,
-
             div className: 'app',
                 Menu
                     ref             : 'menu'
