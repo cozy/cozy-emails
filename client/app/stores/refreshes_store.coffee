@@ -4,6 +4,8 @@ Store = require '../libs/flux/store/store'
 
 {ActionTypes} = require '../constants/app_constants'
 
+ApiUtils = require '../utils/api_utils'
+
 
 refreshesToImmutable = (refreshes) ->
     Immutable.Iterable refreshes
@@ -46,7 +48,7 @@ class RefreshesStore extends Store
             @emit 'change'
 
         handle ActionTypes.RECEIVE_REFRESH_NOTIF, (data) ->
-            window.cozyMails.notify t('notif new title'), body: data.message
+            ApiUtils.notify t('notif new title'), body: data.message
 
 
     getRefreshing: ->

@@ -6,43 +6,28 @@ require 'bootstrap/dist/css/bootstrap.css'
 require 'imports?jQuery=jquery!bootstrap/dist/js/bootstrap.js'
 
 {initReporting, sendReport} = require './utils/error_manager'
-{initPerformances, logPerformances} = require './utils/perfs_measurement_utils'
+{initPerformances} = require './utils/perfs_measurement_utils'
 {initRealtime} = require './utils/realtime_utils'
 {initDesktopNotifications} = require './utils/notification_utils'
 
-ConsoleAPI = require './utils/api_utils'
 Router = require './router'
-
-
-window.__DEV__ = window.location.hostname is 'localhost'
 
 # Waits for the DOM to be ready
 document.addEventListener 'DOMContentLoaded', ->
 
     try
-        # initialize system
-        initReporting(window.__DEV__)
-        initPerformances() if window.__DEV__
-        window.cozyMails = ConsoleAPI
+        window.__DEV__ = window.location.hostname is 'localhost'
 
-        # use Cozy instance locale or navigator language or "en" by default
-        window.settings = {} unless window.settings
-        locale = window.locale or window.navigator.language or 'en'
-        window.cozyMails.setLocale locale
-
-        # Set default Layout
-        LayoutActionCreator = require './actions/layout_action_creator'
-        LayoutActionCreator.setDisposition window.settings.layoutStyle
+        # Initialize system
+        initReporting()
+        initPerformances()
 
         # Routing management
+        new Router()
+
+        # Initialize discussions
         initRealtime()
-        window.router = new Router()
-
-        # initialize interfaces
         initDesktopNotifications()
-
-        # starts perfs logging
-        logPerformances() if window.__DEV__
 
     catch err
         sendReport 'error', err

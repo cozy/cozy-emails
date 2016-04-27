@@ -2,8 +2,9 @@ React = require 'react'
 
 {li, span, i, a} = React.DOM
 
-MessageUtils = require '../utils/message_utils'
-{getFileURL} = require '../utils/file_utils'
+MessageUtils    = require '../utils/message_utils'
+ApiUtils        = require '../utils/api_utils'
+{getFileURL}    = require '../utils/file_utils'
 
 ###
 # Display a file item
@@ -40,7 +41,7 @@ module.exports = FileItem = React.createClass
     render: ->
         file = @props.file
         unless @state.tmpFileURL
-            window.cozyMails.log(new Error "Wrong file #{JSON.stringify(file)}")
+            ApiUtils.log(new Error "Wrong file #{JSON.stringify(file)}")
             file.url = "message/#{@props.messageID}/attachments/#{file.generatedFileName}"
         type = MessageUtils.getAttachmentType file.contentType
         icons =

@@ -11,7 +11,7 @@ AccountActionCreator = require '../actions/account_action_creator'
 {Tooltips} = require '../constants/app_constants'
 
 
-module.exports = MenuMailboxItem = React.createClass
+module.exports = React.createClass
     displayName: 'MenuMailboxItem'
 
     getInitialState: ->
@@ -28,9 +28,9 @@ module.exports = MenuMailboxItem = React.createClass
     getTitle: ->
         title = t "menu mailbox total", @props.total
         if @props.unread
-            title += " #{t "menu mailbox unread", @props.unread}"
+            title += t "menu mailbox unread", @props.unread
         if @props.recent
-            title += " #{t "menu mailbox new", @props.recent}"
+            title += t "menu mailbox new", @props.recent
         return title
 
     render: ->

@@ -1,7 +1,5 @@
 LOG_URL = 'activity'
-
 lastError = undefined
-
 
 module.exports.sendReport = sendReport = (level, err) ->
     return if err is lastError
@@ -31,7 +29,7 @@ module.exports.sendReport = sendReport = (level, err) ->
     lastError = err
 
 
-module.exports.initReporting = (dev) ->
+module.exports.initReporting = ->
     console = window.console or {}
 
     levels = ['debug', 'log', 'info', 'warn', 'error']
@@ -40,10 +38,10 @@ module.exports.initReporting = (dev) ->
         consolefn = console[level]
 
         (args...) ->
-            if dev or level in ['warn', 'error']
+            if __DEV__ or level in ['warn', 'error']
                 sendReport level, JSON.stringify args
             # display in console if not in production mode
-            consolefn.apply console, args if dev
+            consolefn.apply console, args if __DEV__
 
     console[level] = wrapLog level for level in levels
 
