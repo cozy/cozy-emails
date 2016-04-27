@@ -32,37 +32,6 @@ class AccountStore extends Store
 
         .toOrderedMap()
 
-    # FIXME : move this into ROuter Store
-    _newAccountWaiting = false
-    _newAccountChecking = false
-
-    _serverAccountErrorByField = Immutable.Map()
-
-
-    _clearError = ->
-        _serverAccountErrorByField = Immutable.Map()
-    _addError = (field, err) ->
-        _serverAccountErrorByField = _serverAccountErrorByField.set field, err
-
-    _checkForNoMailbox = (rawAccount) ->
-        unless rawAccount.mailboxes?.length > 0
-            _setError
-                name: 'AccountConfigError',
-                field: 'nomailboxes'
-                causeFields: ['nomailboxes']
-
-    _setError = (error) ->
-        if error.name is 'AccountConfigError'
-            clientError =
-                message: t "config error #{error.field}"
-                originalError: error.originalError
-                originalErrorStack: error.originalErrorStack
-            errorsMap = {}
-            errorsMap[field] = clientError for field in error.causeFields
-            _serverAccountErrorByField = Immutable.Map errorsMap
-
-        else
-            _serverAccountErrorByField = Immutable.Map "unknown": error
 
     _getByMailbox = (mailboxID) ->
         _accounts?.find (account) ->
@@ -129,66 +98,35 @@ class AccountStore extends Store
             _refreshMailbox mailboxID
             @emit 'change'
 
-        handle ActionTypes.ADD_ACCOUNT_REQUEST, ({value}) ->
-            _newAccountWaiting = true
-            @emit 'change'
 
         handle ActionTypes.ADD_ACCOUNT_SUCCESS, ({account}) ->
-            _newAccountWaiting = false
-            _checkForNoMailbox account
             _updateAccount account
-            @emit 'change'
-
-        handle ActionTypes.ADD_ACCOUNT_FAILURE, ({error}) ->
-            _newAccountWaiting = false
-            _setError error
-            @emit 'change'
-
-        handle ActionTypes.CHECK_ACCOUNT_REQUEST, () ->
-            _newAccountChecking = true
-            @emit 'change'
-
-        handle ActionTypes.CHECK_ACCOUNT_SUCCESS, () ->
-            _newAccountChecking = false
-            @emit 'change'
-
-        handle ActionTypes.CHECK_ACCOUNT_FAILURE, ({error}) ->
-            _newAccountChecking = false
-            _setError error
-            @emit 'change'
-
-
-        handle ActionTypes.EDIT_ACCOUNT_REQUEST, ({value}) ->
-            _newAccountWaiting = true
             @emit 'change'
 
 
         handle ActionTypes.EDIT_ACCOUNT_SUCCESS, ({rawAccount}) ->
-            _newAccountWaiting = false
-            _clearError()
-            _checkForNoMailbox rawAccount
             _updateAccount rawAccount
             @emit 'change'
 
-        handle ActionTypes.EDIT_ACCOUNT_FAILURE, ({error}) ->
-            _newAccountWaiting = false
-            _setError error
-            @emit 'change'
 
         handle ActionTypes.MAILBOX_CREATE_SUCCESS, (rawAccount) ->
             _updateAccount rawAccount
             @emit 'change'
 
+
         handle ActionTypes.MAILBOX_UPDATE_SUCCESS, (rawAccount) ->
             _updateAccount rawAccount
             @emit 'change'
+
 
         handle ActionTypes.MAILBOX_DELETE_SUCCESS, (rawAccount) ->
             _updateAccount rawAccount
             @emit 'change'
 
+
         handle ActionTypes.REMOVE_ACCOUNT_SUCCESS, (accountID) ->
             @emit 'change'
+
 
         handle ActionTypes.RECEIVE_MAILBOX_UPDATE, (mailbox) ->
             _updateMailbox mailbox
@@ -226,20 +164,6 @@ class AccountStore extends Store
         _accounts?.get accountID
             .get 'mailboxes'
             .sort _mailboxSort
-
-
-    # FIXME : move this into ROuterStore
-    getErrors: -> _serverAccountErrorByField
-    getRawErrors: -> _serverAccountErrorByField.get('unknown')
-    getAlertErrorMessage: ->
-        error = _serverAccountErrorByField.first()
-        if error.name is 'AccountConfigError'
-            return t "config error #{error.field}"
-        else
-            return error.message or error.name or error
-
-    isWaiting: -> return _newAccountWaiting
-    isChecking: -> return _newAccountChecking
 
 
 module.exports = new AccountStore()
