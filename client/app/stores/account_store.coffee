@@ -203,7 +203,7 @@ class AccountStore extends Store
 
 
     getByID: (accountID) ->
-        return _accounts.get accountID
+        return _accounts?.get accountID
 
 
     getByLabel: (label) ->
@@ -228,7 +228,7 @@ class AccountStore extends Store
 
 
     getSelected: ->
-        return _accounts.get _accountID
+        return _accounts?.get _accountID
 
 
     getAllMailboxes: (accountID) ->
