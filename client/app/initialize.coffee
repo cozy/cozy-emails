@@ -30,6 +30,14 @@ document.addEventListener 'DOMContentLoaded', ->
         locale = window.locale or window.navigator.language or 'en'
         window.cozyMails.setLocale locale
 
+        # init plugins
+        PluginUtils = require "./utils/plugin_utils"
+        if not window.settings.plugins?
+            window.settings.plugins = {}
+        PluginUtils.merge window.settings.plugins
+        PluginUtils.init()
+
+
         # Set default Layout
         LayoutActionCreator = require './actions/layout_action_creator'
         LayoutActionCreator.setDisposition window.settings.layoutStyle

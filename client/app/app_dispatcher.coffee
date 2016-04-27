@@ -8,6 +8,7 @@ class AppDispatcher extends Dispatcher
 
     dispatch: (action) ->
         window.cozyMails.logAction action
+        window.cozyMails.customEvent PayloadSources.SERVER_ACTION, action
         super {action}
 
 
