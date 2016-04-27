@@ -3,8 +3,7 @@ Immutable = require 'immutable'
 
 Store = require '../libs/flux/store/store'
 AccountStore = require '../stores/account_store'
-
-AppDispatcher = require '../app_dispatcher'
+AppDispatcher = require '../libs/flux/dispatcher/dispatcher'
 
 {ActionTypes, MessageActions, AccountActions} = require '../constants/app_constants'
 
@@ -105,10 +104,10 @@ class RouterStore extends Store
         action
 
     _getRoute = (action) ->
-        routes = _router.routes
-        name = _toCamelCase action
-        index = _.values(routes).indexOf(name)
-        _.keys(routes)[index]
+        if (routes = _router?.routes)
+            name = _toCamelCase action
+            index = _.values(routes).indexOf(name)
+            _.keys(routes)[index]
 
     _getURLparams = (query) ->
         # Get data from URL

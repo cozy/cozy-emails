@@ -1,5 +1,6 @@
 _     = require 'underscore'
 React = require 'react'
+ApiUtils = require '../utils/api_utils'
 
 {
     div, article, header, footer, ul, li, span, i, p, a, button, pre,
@@ -55,7 +56,7 @@ module.exports = MessageContent = React.createClass
                 doc = frame.contentDocument or frame.contentWindow?.document
                 if doc?
                     doc.documentElement.innerHTML = @props.html
-                    window.cozyMails.customEvent "MESSAGE_LOADED", @props.messageID
+                    ApiUtils.customEvent "MESSAGE_LOADED", @props.messageID
                     updateHeight = (e) ->
                         height = doc.documentElement.scrollHeight
                         if height < 60
@@ -91,7 +92,7 @@ module.exports = MessageContent = React.createClass
             else
                 loadContent()
         else
-            window.cozyMails.customEvent "MESSAGE_LOADED", @props.messageID
+            ApiUtils.customEvent "MESSAGE_LOADED", @props.messageID
 
 
     componentDidMount: ->

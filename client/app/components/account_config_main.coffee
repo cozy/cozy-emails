@@ -10,12 +10,6 @@ classNames = require 'classnames'
 AccountInput  = React.createFactory require './account_config_input'
 AccountActionCreator = require '../actions/account_action_creator'
 
-SMTP_OPTIONS =
-    'NONE': t("account smtpMethod NONE")
-    'CRAM-MD5': t("account smtpMethod CRAM-MD5")
-    'LOGIN': t("account smtpMethod LOGIN")
-    'PLAIN': t("account smtpMethod PLAIN")
-
 GOOGLE_EMAIL = ['googlemail.com', 'gmail.com']
 TRIMMEDFIELDS = ['imapServer', 'imapPort', 'smtpServer', 'smtpPort']
 
@@ -200,7 +194,12 @@ module.exports = AccountConfigMain = React.createClass
             if @state.smtpAdvanced
                 @buildInput 'smtpMethod',
                     type: 'dropdown'
-                    options: SMTP_OPTIONS
+                    options: {
+                        'NONE': t("account smtpMethod NONE")
+                        'CRAM-MD5': t("account smtpMethod CRAM-MD5")
+                        'LOGIN': t("account smtpMethod LOGIN")
+                        'PLAIN': t("account smtpMethod PLAIN")
+                    }
                     allowUndefined: true
 
             if @state.smtpAdvanced

@@ -1,4 +1,4 @@
-AppDispatcher = require '../app_dispatcher'
+AppDispatcher = require '../libs/flux/dispatcher/dispatcher'
 
 {ActionTypes, MessageFlags, FlagsConstants} = require '../constants/app_constants'
 

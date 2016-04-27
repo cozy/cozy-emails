@@ -20,8 +20,7 @@ describe('LayoutStore spec', function() {
             useCleanCache: true
         })
 
-        mockery.registerMock('../app_dispatcher', dispatcher)
-        mockery.registerMock('../../../app_dispatcher', dispatcher)
+        mockery.registerMock('../libs/flux/dispatcher/dispatcher', dispatcher)
         mockery.registerMock('./account_store', {})
         mockery.registerAllowables([
             'node-event-emitter',

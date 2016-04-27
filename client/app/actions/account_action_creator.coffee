@@ -1,5 +1,5 @@
 XHRUtils = require '../utils/xhr_utils'
-AppDispatcher = require '../app_dispatcher'
+AppDispatcher = require '../libs/flux/dispatcher/dispatcher'
 {ActionTypes} = require '../constants/app_constants'
 
 AccountStore = require '../stores/account_store'

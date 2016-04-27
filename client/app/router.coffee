@@ -4,10 +4,10 @@ ReactDOM = require 'react-dom'
 
 AccountStore = require './stores/account_store'
 
-AppDispatcher = require './app_dispatcher'
+AppDispatcher = require './libs/flux/dispatcher/dispatcher'
 
 {ActionTypes, MessageActions, AccountActions, SearchActions} = require './constants/app_constants'
-
+{setLocale} = require './utils/api_utils'
 
 # MessageList :
 # ?sort=asc&filters=&status=unseen&start=2016-02-27T23:00:00.000Z&end=2016-03-05T22:59:59.999Z
@@ -33,16 +33,18 @@ class Router extends Backbone.Router
 
 
     initialize: ->
+        setLocale()
+
         # Save Routes in Stores
         AppDispatcher.dispatch
             type: ActionTypes.ROUTES_INITIALIZE
             value: @
 
-        # Start Navigation
-        Backbone.history.start()
-
         # Display application
         _displayApplication()
+
+        # Start Navigation
+        Backbone.history.start()
 
 
     defaultMailbox: ->

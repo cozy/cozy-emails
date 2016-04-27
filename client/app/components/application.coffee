@@ -73,6 +73,8 @@ Application = React.createClass
         action = AccountActions.CREATE
         newAccountURL = RouterGetter.getURL {action}
 
+        isAccount = -1 < @state.action?.indexOf 'account'
+
         div className: @state.className,
 
             div className: 'app',
@@ -88,7 +90,7 @@ Application = React.createClass
                 main
                     className: @props.layout
 
-                    if -1 < @state.action.indexOf 'account'
+                    if isAccount
                         accountID = @state.accountID or 'new'
                         tab = RouterGetter.getSelectedTab()
                         AccountConfig
