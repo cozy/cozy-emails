@@ -87,7 +87,7 @@ module.exports = React.createClass
             id: 'mailbox-config'
             expand: true,
 
-            Title text: t "#{title}"
+            Title text: t title
             if (accountID = @state.editedAccount.get('id'))
                 Tabs tabs: TABS.map (name) =>
                     class: if @state.tab is name then 'active' else ''

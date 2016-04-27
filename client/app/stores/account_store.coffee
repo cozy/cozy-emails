@@ -114,7 +114,6 @@ class AccountStore extends Store
     __bindHandlers: (handle) ->
 
         handle ActionTypes.ROUTE_CHANGE, ({accountID, mailboxID, action, tab}) ->
-            console.log 'SAVE', {accountID, mailboxID, action, tab}
             accountID ?= @getDefault(mailboxID)?.get('id') if mailboxID
             _setCurrentAccount accountID, mailboxID, tab
 

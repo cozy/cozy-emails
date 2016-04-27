@@ -47,9 +47,8 @@ class RefreshesStore extends Store
             .toOrderedMap()
             @emit 'change'
 
-        # handle ActionTypes.RECEIVE_REFRESH_NOTIF, (data) ->
-        #     console.log 'PLOP', t('notif new title'), body: data.message
-        #     # ApiUtils.notify t('notif new title'), body: data.message
+        handle ActionTypes.RECEIVE_REFRESH_NOTIF, (data) ->
+            ApiUtils.notify t('notif new title'), body: data.message
 
 
     getRefreshing: ->
