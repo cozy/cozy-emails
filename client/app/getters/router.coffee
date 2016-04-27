@@ -15,10 +15,10 @@ class RouteGetter
     hasNextPage: ->
         RouterStore.hasNextPage()
 
-    isCurrentURL: (url) ->
+    isCurrentURL: (mailboxURL) ->
         isServer = false
         currentURL = RouterStore.getCurrentURL {isServer}
-        currentURL is url
+        0 is currentURL.indexOf mailboxURL
 
     getURL: (params) ->
         RouterStore.getURL params
