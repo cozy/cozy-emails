@@ -162,6 +162,11 @@ module.exports = Utils =
         LayoutActionCreator.displayModal modal
 
 
+    customEvent: (name, data) ->
+        domEvent = new CustomEvent name, detail: data
+        window.dispatchEvent domEvent
+
+
     messageUndo: ->
         MessageActionCreator.undo()
 
