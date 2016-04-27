@@ -350,17 +350,21 @@ class RouterStore extends Store
 
 
     getNextConversation: ->
-        messageID = @getMessageID()
         messages = @getMessagesList()
-        index = messages?.keyOf MessageStore.getByID messageID
-        messages?.get --index
+        keys = _.keys messages?.toObject()
+        values = messages?.toArray()
+
+        index = keys.indexOf @getMessageID()
+        values[--index]
 
 
     getPreviousConversation: ->
-        messageID = @getMessageID()
         messages = @getMessagesList()
-        index = messages?.keyOf MessageStore.getByID messageID
-        messages?.get ++index
+        keys = _.keys messages?.toObject()
+        values = messages?.toArray()
+
+        index = keys.indexOf @getMessageID()
+        values[++index]
 
 
     getConversationLength: ({messageID, conversationID}) ->
