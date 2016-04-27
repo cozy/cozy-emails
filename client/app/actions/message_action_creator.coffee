@@ -99,14 +99,14 @@ MessageActionCreator =
                 type: ActionTypes.MESSAGE_TRASH_SUCCESS
                 value: {target, ref, updated}
 
-    move: (target, from, to, callback) ->
+    move: (target, from, to) ->
         ref = refCounter++
         AppDispatcher.dispatch
             type: ActionTypes.MESSAGE_MOVE_REQUEST
             value: {target, ref, from, to}
 
-        ts = Date.now()
         # send request
+        ts = Date.now()
         XHRUtils.batchMove target, from, to, (error, updated) =>
             if error
                 AppDispatcher.dispatch
@@ -123,7 +123,6 @@ MessageActionCreator =
                     type: ActionTypes.MESSAGE_MOVE_SUCCESS
                     value: {target, ref, updated}
 
-            callback? error, updated
 
     mark: (target, flagAction) ->
         ref = refCounter++
