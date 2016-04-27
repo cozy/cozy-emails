@@ -29,15 +29,8 @@ RGXP_PROTOCOL = /:\/\//
 module.exports = React.createClass
     displayName: 'Message'
 
-    propTypes:
-        active                 : React.PropTypes.bool
-        key                    : React.PropTypes.string.isRequired
-        message                : React.PropTypes.object.isRequired
-        selectedMailboxID      : React.PropTypes.string.isRequired
-        useIntents             : React.PropTypes.bool.isRequired
-
     getInitialState: ->
-        return @getStateFromStores()
+        @getStateFromStores()
 
     componentWillReceiveProps: ->
         @setState @getStateFromStores()

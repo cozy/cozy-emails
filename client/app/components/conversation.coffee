@@ -41,8 +41,7 @@ module.exports = React.createClass
     renderMessage: (message) ->
         messageID = message.get 'id'
         Message
-            ref                 : 'message'
-            key                 : 'message-' + messageID
+            key                 : 'message-detail-' + messageID
             message             : message
             active              : @props.messageID is messageID
             url                 : RouterGetter.getURL {messageID}
