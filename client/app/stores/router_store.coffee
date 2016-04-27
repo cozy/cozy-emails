@@ -299,6 +299,9 @@ class RouterStore extends Store
 
 
     isMissingMessages: ->
+        if (messageID = @getMessageID())
+            unless (message = MessageStore.getByID(messageID))?.size
+                return true
         (_messagesLength + 1) < MSGBYPAGE and @hasNextPage()
 
 

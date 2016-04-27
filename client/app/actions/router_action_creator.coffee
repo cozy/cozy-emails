@@ -35,7 +35,6 @@ RouterActionCreator =
                     type: ActionTypes.MESSAGE_FETCH_SUCCESS
                     value: {result, url, timestamp, page}
 
-
                 # Save messagesLength per page
                 # to get the correct pageAfter param
                 # for getNext handles
@@ -50,7 +49,7 @@ RouterActionCreator =
                     @getConversation conversationID
 
                 # Fetch missing messages
-                else if RouterStore.isMissingMessages()
+                if RouterStore.isMissingMessages()
                     @getNextPage()
 
 
