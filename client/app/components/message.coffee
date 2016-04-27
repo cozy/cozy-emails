@@ -244,8 +244,9 @@ module.exports = React.createClass
         event.stopPropagation()
 
         success = =>
-            # Then remove message
-            MessageActionCreator.delete messageID: @props.message.get 'id'
+            messageID = @props.message.get 'id'
+            accountID = @props.message.get 'accountID'
+            MessageActionCreator.delete {messageID, accountID}
 
         unless @props.confirmDelete
             success()
