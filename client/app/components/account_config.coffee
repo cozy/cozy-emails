@@ -41,10 +41,10 @@ module.exports = React.createClass
         nstate = {}
 
         # dont overwrite editedAccount when stores state changed
-        nstate.serverErrors      = AccountStore.getErrors()
+        nstate.serverErrors      = RouterStore.getErrors()
         nstate.selectedAccount   = RouterStore.getAccount()
-        nstate.isWaiting         = AccountStore.isWaiting()
-        nstate.isChecking        = AccountStore.isChecking()
+        nstate.isWaiting         = RouterStore.isWaiting()
+        nstate.isChecking        = RouterStore.isChecking()
         nstate.tab               = RouterGetter.getSelectedTab()
 
         unless (nstate.editedAccount = nstate.selectedAccount)

@@ -40,6 +40,9 @@ class RouterStore extends Store
     _accountID = null
     _mailboxID = null
     _tab = null
+    _newAccountWaiting = false
+    _newAccountChecking = false
+    _serverAccountErrorByField = Immutable.Map()
 
     _messageID = null
     _messagesLength = 0
@@ -64,7 +67,31 @@ class RouterStore extends Store
 
 
     getModalParams: ->
-        return _modal
+        _modal
+
+
+    getErrors: ->
+        _serverAccountErrorByField
+
+
+    getRawErrors: ->
+        _serverAccountErrorByField.get 'unknown'
+
+
+    getAlertErrorMessage: ->
+        error = _serverAccountErrorByField.first()
+        if error.name is 'AccountConfigError'
+            return t "config error #{error.field}"
+        else
+            return error.message or error.name or error
+
+
+    isWaiting: ->
+        _newAccountWaiting
+
+
+    isChecking: ->
+        _newAccountChecking
 
 
     getURL: (params={}) ->
@@ -345,6 +372,35 @@ class RouterStore extends Store
         MessageStore.getConversationLength conversationID
 
 
+    _clearError = ->
+        _serverAccountErrorByField = Immutable.Map()
+
+
+    _addError = (field, err) ->
+        _serverAccountErrorByField = _serverAccountErrorByField.set field, err
+
+
+    _checkForNoMailbox = (rawAccount) ->
+        unless rawAccount.mailboxes?.length > 0
+            _setError
+                name: 'AccountConfigError',
+                field: 'nomailboxes'
+                causeFields: ['nomailboxes']
+
+
+    _setError = (error) ->
+        if error.name is 'AccountConfigError'
+            clientError =
+                message: t "config error #{error.field}"
+                originalError: error.originalError
+                originalErrorStack: error.originalErrorStack
+            errorsMap = {}
+            errorsMap[field] = clientError for field in error.causeFields
+            _serverAccountErrorByField = Immutable.Map errorsMap
+
+        else
+            _serverAccountErrorByField = Immutable.Map "unknown": error
+
 
     ###
         Defines here the action handlers.
@@ -391,10 +447,58 @@ class RouterStore extends Store
             _setCurrentAccount()
             @emit 'change'
 
+
+        handle ActionTypes.ADD_ACCOUNT_REQUEST, ({value}) ->
+            _newAccountWaiting = true
+            @emit 'change'
+
+
         handle ActionTypes.ADD_ACCOUNT_SUCCESS, ({account, areMailboxesConfigured}) ->
+            _newAccountWaiting = false
+            _checkForNoMailbox account
             _action = if areMailboxesConfigured
             then MessageActions.SHOW_ALL
             else AccountActions.EDIT
+            @emit 'change'
+
+
+        handle ActionTypes.ADD_ACCOUNT_FAILURE, ({error}) ->
+            _newAccountWaiting = false
+            _setError error
+            @emit 'change'
+
+
+        handle ActionTypes.CHECK_ACCOUNT_REQUEST, () ->
+            _newAccountChecking = true
+            @emit 'change'
+
+
+        handle ActionTypes.CHECK_ACCOUNT_SUCCESS, () ->
+            _newAccountChecking = false
+            @emit 'change'
+
+
+        handle ActionTypes.CHECK_ACCOUNT_FAILURE, ({error}) ->
+            _newAccountChecking = false
+            _setError error
+            @emit 'change'
+
+
+        handle ActionTypes.EDIT_ACCOUNT_REQUEST, ({value}) ->
+            _newAccountWaiting = true
+            @emit 'change'
+
+
+        handle ActionTypes.EDIT_ACCOUNT_SUCCESS, ({rawAccount}) ->
+            _newAccountWaiting = false
+            _checkForNoMailbox rawAccount
+            _clearError()
+            @emit 'change'
+
+
+        handle ActionTypes.EDIT_ACCOUNT_FAILURE, ({error}) ->
+            _newAccountWaiting = false
+            _setError error
             @emit 'change'
 
 
@@ -431,16 +535,10 @@ class RouterStore extends Store
             _modal = null
             @emit 'change'
 
+
         handle ActionTypes.MESSAGE_TRASH_SUCCESS, ({target, updated, ref}) ->
             if (nextMessage = @getNextConversation())?.size
                 _setCurrentMessage nextMessage?.get 'id'
-            @emit 'change'
-
-
-        handle ActionTypes.REFRESH_SUCCESS, ({mailboxID, accountID}) ->
-            # Update URL after refresh,
-            # Views are updated but not URL
-            _router.navigate @getCurrentURL()
             @emit 'change'
 
 
