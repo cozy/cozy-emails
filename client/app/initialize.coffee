@@ -16,6 +16,8 @@ Router = require './router'
 document.addEventListener 'DOMContentLoaded', ->
 
     try
+        window.__DEV__ = window.location.hostname is 'localhost'
+
         # Initialize system
         initReporting()
         initPerformances()

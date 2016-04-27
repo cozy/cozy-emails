@@ -1,11 +1,10 @@
 Perf = require 'react-addons-perf'
 ApiUtils = require '../utils/api_utils'
-{isDev} = require '../utils/environement'
 
 # expose an API for performance
 # performance is not defined in phantomJS
 module.exports.initPerformances = ->
-    return unless isDev()
+    return unless __DEV__
     referencePoint = 0
     window.start = ->
         referencePoint = performance.now() if performance?.now?
