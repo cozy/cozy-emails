@@ -156,8 +156,9 @@ _setNextURL = ({messages}) ->
     # Do not overwrite result
     # that has no reasons to changes
     if _nextURL[key] is undefined
+        action = MessageActions.SHOW_ALL
         filter = pageAfter: _.last(messages)?.date
-        _nextURL[key] = RouterStore.getCurrentURL {filter}
+        _nextURL[key] = RouterStore.getCurrentURL {filter, action}
 
 
 module.exports = RouterActionCreator
