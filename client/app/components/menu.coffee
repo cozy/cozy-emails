@@ -7,9 +7,9 @@ MenuMailboxItem = React.createFactory require './menu_mailbox_item'
 
 classNames = require 'classnames'
 colorhash = require '../utils/colorhash'
+{MessageFilter, Tooltips, AccountActions, MessageActions} = require '../constants/app_constants'
 
 LayoutActionCreator  = require '../actions/layout_action_creator'
-{MessageFilter, Tooltips, AccountActions, MessageActions} = require '../constants/app_constants'
 
 RouterStore = require '../stores/router_store'
 AccountStore = require '../stores/account_store'
@@ -122,6 +122,7 @@ module.exports = Menu = React.createClass
         # Goto the default mailbox of the account
         action = MessageActions.SHOW_ALL
         accountID = account.get 'id'
+
         mailbox = RouterGetter.getInbox(accountID)
         mailboxID = mailbox?.get 'id'
         mailboxURL = RouterGetter.getURL {action, mailboxID}

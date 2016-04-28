@@ -109,16 +109,6 @@ module.exports = Utils =
             messageID = MessageStore.getPreviousConversation()?.get 'id'
         RouterActionCreator.navigate {messageID}
 
-
-    messageSetCurrent: (message) ->
-        return unless message?.get('id')
-
-        MessageActionCreator.setCurrent message.get('id'), true
-
-        if SettingsStore.get('displayPreview')
-            @messageDisplay message
-
-
     ##
     # Display a message
     # @params {Immutable} message the message (current one if null)
@@ -140,7 +130,7 @@ module.exports = Utils =
             return
 
         deleteMessage = (isModal) ->
-            MessageActionCreator.delete {messageID}
+            RouterActionCreator.delete {messageID}
             RouterActionCreator.navigate action: MessageActions.GROUP_NEXT
 
         settings = SettingsStore.get()
@@ -160,10 +150,6 @@ module.exports = Utils =
             actionLabel : t 'app confirm'
             action      : deleteMessage
         LayoutActionCreator.displayModal modal
-
-
-    messageUndo: ->
-        MessageActionCreator.undo()
 
 
     simulateUpdate: ->

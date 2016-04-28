@@ -104,7 +104,7 @@ module.exports.listByMailboxOptions = (req, res, next) ->
         'unanswered' : '!\\Answered'
         'attach'     : '\\Attachments'
 
-    flagcode = req.query.flags
+    flagcode = req.query.flag
     if flagcode
         unless flag = FLAGS_CONVERT[flagcode]
             return next new BadRequest "Unsuported flag filter"

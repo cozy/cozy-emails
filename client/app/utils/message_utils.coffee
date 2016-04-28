@@ -1,18 +1,21 @@
 React      = require 'react'
-Immutable  = require 'immutable'
-moment     = require 'moment'
+{span} = React.DOM
+
 {markdown} = require 'markdown'
 toMarkdown = require 'to-markdown'
 
-{span} = React.DOM
+Immutable   = require 'immutable'
+moment      = require 'moment'
+_           = require 'underscore'
+jQuery      = require 'jquery'
 
-_      = require 'underscore'
-jQuery = require 'jquery'
+{MessageActions, MessageFlags} = require '../constants/app_constants'
 
-{MessageActions} = require '../constants/app_constants'
+# FIXME : appeler ici des getters à la place des stores
 ContactStore     = require '../stores/contact_store'
 SearchStore      = require '../stores/search_store'
-
+SettingsStore    = require '../stores/settings_store'
+AccountStore     = require '../stores/account_store'
 
 QUOTE_STYLE = "margin-left: 0.8ex; padding-left: 1ex; border-left: 3px solid #34A6FF;"
 
@@ -24,8 +27,6 @@ COMPOSE_STYLE = """
 pre {background: transparent; border: 0}
 </style>
 """
-
-
 
 module.exports = MessageUtils =
 
@@ -428,28 +429,25 @@ module.exports = MessageUtils =
     # Display date as a readable string.
     # Make it shorter if compact is set to true.
     formatDate: (date, compact) ->
+        return null unless date?
 
-        unless date?
-            return null
+        today = moment()
+        date  = moment date
+
+        if date.isBefore today, 'year'
+            formatter = 'DD/MM/YYYY'
+
+        else if date.isBefore today, 'day'
+
+            if compact? and compact
+                formatter = 'L'
+            else
+                formatter = 'MMM DD'
 
         else
-            today = moment()
-            date  = moment date
+            formatter = 'HH:mm'
 
-            if date.isBefore today, 'year'
-                formatter = 'DD/MM/YYYY'
-
-            else if date.isBefore today, 'day'
-
-                if compact? and compact
-                    formatter = 'L'
-                else
-                    formatter = 'MMM DD'
-
-            else
-                formatter = 'HH:mm'
-
-            return date.format formatter
+        return date.format formatter
 
 
     # Return avatar corresponding to sender by matching his email address with
@@ -486,24 +484,46 @@ module.exports = MessageUtils =
 
 
     # set source of attached images
-    cleanHTML: (html) ->
-        parser = new DOMParser()
+    cleanHTML: (html, attachments) ->
+        imagesWarning = false
 
+        # Add HTML to a document
+        parser = new DOMParser()
         unless (doc = parser.parseFromString html, "text/html")
             doc = document.implementation.createHTMLDocument("")
-            doc.documentElement.innerHTML = html
-            unless doc
-                console.error "Unable to parse HTML content of message"
-                return html
+            doc.documentElement.innerHTML = """<html><head>
+                   <link rel="stylesheet" href="./fonts/fonts.css" />
+                   <link rel="stylesheet" href="./mail_stylesheet.css" />
+                   <style>body { visibility: hidden; }</style>
+               </head><body>#{html}</body></html>"""
 
-        # the contentID of attached images will be in the data-src attribute
-        # override image source with this attribute
-        imageSrc = (image) ->
-            image.setAttribute 'src', "cid:#{image.dataset.src}"
-        images = doc.querySelectorAll 'IMG[data-src]'
-        imageSrc image for image in images
+        unless doc
+            console.error "Unable to parse HTML content of message"
+            html = null
+        else
+            # Do not display images if we don't want to
+            if (displayImages = SettingsStore.get 'messageDisplayImages')
+                imagesWarning = doc.querySelectorAll('IMG[src]').length?
 
-        doc.documentElement.innerHTML
+            # Format links:
+            # - open links into a new window
+            # - convert relative URL to absolute
+            for link in doc.querySelectorAll 'a[href]'
+               link.target = '_blank'
+               _toAbsolutePath link, 'href'
+
+            # Remove picture if its attached
+            # because you can get it from attached menu
+            for image in doc.querySelectorAll 'img[src]'
+                filePath = image.getAttribute 'src'
+                file = attachments.find (attachment) ->
+                    if filePath is attachment.get 'url'
+                        image.parentNode.removeChild image
+
+            html = doc.documentElement.innerHTML
+
+        return {html, imagesWarning}
+
 
     # Remove from given string:
     # * html tags
@@ -665,3 +685,82 @@ module.exports = MessageUtils =
             node.addEventListener 'click', (event) ->
                 event.stopPropagation()
                 addTooltip()
+
+
+    formatContent: (message) ->
+        displayHTML = SettingsStore.get 'messageDisplayHTML'
+
+        # display full headers
+        fullHeaders = []
+        for key, value of message.get 'headers'
+            value = value.join('\n ') if Array.isArray value
+            fullHeaders.push "#{key}: #{value}"
+
+        # Do not display content
+        # if message isnt active
+        text = message.get 'text'
+        html = message.get 'html'
+
+        # Some calendar invitation
+        # may contain neither text nor HTML part
+        if not text?.length and not html?.length
+            text = if (message.get 'alternatives')?.length
+                t 'calendar unknown format'
+
+        # TODO: Do we want to convert text only messages to HTML ?
+        # /!\ if displayHTML is set, this method should always return
+        # a value fo html, otherwise the content of the email flashes
+        if text?.length and not html?.length and displayHTML
+            try
+                html = markdown.toHTML text.replace(/(^>.*$)([^>]+)/gm, "$1\n$2")
+                html = "<div class='textOnly'>#{html}</div>"
+            catch e
+                html = "<div class='textOnly'>#{text}</div>"
+
+        # Convert text into markdown
+        if html?.length and not text?.length and not displayHTML
+            text = toMarkdown html
+
+        if text?.length
+            # Tranform URL into links
+            urls = /((([A-Za-z]{3,9}:(?:\/\/)?)(?:[-;:&=\+\$,\w]+@)?[A-Za-z0-9.-]+|(?:www.|[-;:&=\+\$,\w]+@)[A-Za-z0-9.-]+)((?:\/[\+~%\/.\w-_]*)?\??(?:[-\+=&;%@.\w_]*)#?(?:[\w]*))?)/gim
+
+            rich = text.replace urls, '<a href="$1" target="_blank">$1</a>'
+
+            # Tranform Separation chars into HTML
+            rich = rich.replace /^>>>>>[^>]?.*$/gim, '<span class="quote5">$&</span><br />\r\n'
+            rich = rich.replace /^>>>>[^>]?.*$/gim, '<span class="quote4">$&</span><br />\r\n'
+            rich = rich.replace /^>>>[^>]?.*$/gim, '<span class="quote3">$&</span><br />\r\n'
+            rich = rich.replace /^>>[^>]?.*$/gim, '<span class="quote2">$&</span><br />\r\n'
+            rich = rich.replace /^>[^>]?.*$/gim, '<span class="quote1">$&</span><br />\r\n'
+
+        isDraft = -1 < message.get('flags').indexOf MessageFlags.DRAFT
+        isUnread = -1 is message.get('flags').indexOf MessageFlags.SEEN
+
+        # Does message belong to trashMailbox?
+        trashMailboxID = AccountStore.getSelected().get 'trashMailbox'
+        isDeleted = message.get('mailboxIDs')?[trashMailboxID]?
+
+        attachments = message.get 'attachments'
+
+        if html?.length
+            {html, imagesWarning} = MessageUtils.cleanHTML html, attachments
+
+        return {
+            attachments     : attachments
+            fullHeaders     : fullHeaders
+            imagesWarning   : imagesWarning
+            text            : text
+            rich            : rich
+            html            : html
+            isDraft         : isDraft
+            isDeleted       : isDeleted
+            isUnread        : isUnread
+        }
+
+
+_toAbsolutePath = (elm, attribute, prefix='http://') ->
+    RGXP_PROTOCOL = /:\/\//
+    value = elm.getAttribute attribute
+    if value?.length and not RGXP_PROTOCOL.test value
+        elm.setAttribute attribute, prefix + value

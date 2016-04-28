@@ -4,34 +4,37 @@ ReactDOM  = require 'react-dom'
 
 {section, header, ul, li, span, i, p, h3, a, button} = React.DOM
 DomUtils = require '../utils/dom_utils'
+MessageUtils = require '../utils/message_utils'
+{MessageActions} = require '../constants/app_constants'
 
-{MessageFlags, MessageActions} = require '../constants/app_constants'
+Message = React.createFactory require './message'
 
-Message             = React.createFactory require './message'
-ToolbarConversation = React.createFactory require './toolbar_conversation'
-
-SettingsStore = require '../stores/settings_store'
 RouterGetter = require '../getters/router'
 
-# FIXME : use Getters instead of Stores
-AccountStore        = require '../stores/account_store'
-MessageStore        = require '../stores/message_store'
-LayoutStore         = require '../stores/layout_store'
-SelectionStore       = require '../stores/selection_store'
-StoreWatchMixin      = require '../mixins/store_watch_mixin'
+RouterActionCreator = require '../actions/router_action_creator'
 
 module.exports = React.createClass
     displayName: 'Conversation'
 
-    mixins: [
-        StoreWatchMixin [SelectionStore, MessageStore]
-    ]
+
+    getInitialState: ->
+        # Build initial state
+        # from store values.
+        @getStateFromStores @props
+
+
+    componentWillReceiveProps: (nextProps={}) ->
+        @setState @getStateFromStores nextProps
+        nextProps
+
 
     componentDidMount: ->
         @_initScroll()
 
+
     componentDidUpdate: ->
         @_initScroll()
+
 
     getStateFromStores: ->
         return {
@@ -39,22 +42,21 @@ module.exports = React.createClass
             conversation: RouterGetter.getConversation()
         }
 
+
     renderMessage: (message, index) ->
-        accounts = AccountStore.getAll()
+        accounts = RouterGetter.getAccounts()
         accountID = RouterGetter.getAccountID()
         messageID = message.get 'id'
-        Message
-            ref                 : 'message'
-            key                 : 'message-' + messageID
-            message             : message
-            active              : @props.messageID is messageID
-            url                 : RouterGetter.getURL {messageID}
-            selectedMailboxID   : @props.mailboxID
-            useIntents          : LayoutStore.intentAvailable()
-            trashMailbox        : accounts[accountID]?.trashMailbox
-            displayHTML         : SettingsStore.get 'messageDisplayHTML'
-            displayImages       : SettingsStore.get 'messageDisplayImages'
-            confirmDelete       : SettingsStore.get 'messageConfirmDelete'
+
+        props = MessageUtils.formatContent message
+        Message _.extend props, {
+            ref         : 'message'
+            key         : "message-#{messageID}"
+            message     : message
+            active      : @props.messageID is messageID
+            resources   : RouterGetter.getResources message
+        }
+
 
     render: ->
         unless @state.conversation?.length
@@ -64,9 +66,6 @@ module.exports = React.createClass
                 'aria-expanded': true,
                 p null, t "app loading"
 
-        conversationID = @state.message.get 'conversationID'
-        subject = @state.message.get 'subject'
-
         # Starts components rendering
         section
             ref: 'conversation'
@@ -75,20 +74,18 @@ module.exports = React.createClass
 
             header null,
                 h3 className: 'conversation-title',
-                    subject
+                    @state.message.get 'subject'
 
-                ToolbarConversation
-                    key                 : 'ToolbarConversation-' + conversationID
-                    conversationID      : conversationID
-                    mailboxID           : @props.mailboxID
-                a
+                button
                     className: 'clickable btn btn-default fa fa-close'
-                    href: RouterGetter.getURL
-                        action: MessageActions.SHOW_ALL
+                    onClick: @closeConversation
 
             section
                 ref: 'scrollable',
                     @state.conversation.map @renderMessage
+
+    closeConversation: ->
+        RouterActionCreator.closeConversation()
 
     _initScroll: ->
         if not (scrollable = ReactDOM.findDOMNode @refs.scrollable) or scrollable.scrollTop

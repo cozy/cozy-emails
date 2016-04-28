@@ -145,6 +145,7 @@ class RouterStore extends Store
                 (result = {}).flags = flags
         return result
 
+
     _getURIQueryParams = (params={}) ->
         filters = _.extend {}, _self.getFilter()
         _.extend filters, params.filter if params.filter
@@ -154,7 +155,6 @@ class RouterStore extends Store
                 return key + '=' + encodeURIComponent(value)
 
         if query.length then "?#{query.join '&'}" else ""
-
 
 
     _setFilter = (query) ->
@@ -216,12 +216,26 @@ class RouterStore extends Store
             @emit 'change'
 
 
+        handle ActionTypes.MESSAGE_TRASH_SUCCESS, (params) ->
+            if MessageActions.SHOW is _action
+                if (messageID = params?.next?.get 'id')
+                    _router.navigate @getURL {messageID}
+                else
+                    _action = MessageActions.SHOW_ALL
+                @emit 'change'
+
+
         handle ActionTypes.DISPLAY_MODAL, (params) ->
             _modal = params
             @emit 'change'
 
+
         handle ActionTypes.HIDE_MODAL, (value) ->
             _modal = null
+            @emit 'change'
+
+
+        handle ActionTypes.REFRESH_SUCCESS, ->
             @emit 'change'
 
 

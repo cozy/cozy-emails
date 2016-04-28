@@ -1,38 +1,48 @@
 _ = require 'underscore'
 
+RouterActionCreator = require '../actions/router_action_creator'
+{MessageFlags} = require '../constants/app_constants'
+
 module.exports = StoreWatchMixin = (stores) ->
 
-    # Update state when linked store emit changes.
     componentDidMount: ->
+        # Update state
+        # when linked store emit changes.
         stores.forEach (store) =>
             store.addListener 'change', @_setStateFromStores
 
-    # Stop listening to the linked stores when the component is unmounted.
     componentWillUnmount: ->
+        # Mark message as read
+        if @state?.message?.size
+            messageID = @state.message.get 'id'
+            RouterActionCreator.mark {messageID}, MessageFlags.SEEN
+
+        # Stop listening to the linked stores
+        # when the component is unmounted.
         stores.forEach (store) =>
             store.removeListener 'change', @_setStateFromStores
 
-    # Build initial state from store values.
     getInitialState: ->
-        return @getStateFromStores @props
+        # Build initial state
+        # from store values.
+        @getStateFromStores @props
 
     componentWillReceiveProps: (nextProps={}) ->
         @setState @getStateFromStores nextProps
         nextProps
 
-    # Update state with store values
     _setStateFromStores: ->
         return unless @isMounted()
-
-        _difference = (obj0, obj1) ->
-            result = {}
-            _.filter obj0, (value, key) ->
-                unless value is obj1[key]
-                    result[key] = value
-            result
-
         nextState = @getInitialState()
         changes = _difference nextState, @state
         unless _.isEmpty changes
-            console.log 'change', changes
+            # Update state with store values
+            # console.log 'change', changes
             @setState nextState
+
+_difference = (obj0, obj1) ->
+    result = {}
+    _.filter obj0, (value, key) ->
+        unless value is obj1[key]
+            result[key] = value
+    result

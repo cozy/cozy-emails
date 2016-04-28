@@ -44,7 +44,6 @@ module.exports =
         'MESSAGE_SEND_REQUEST'          : 'MESSAGE_SEND_REQUEST'
         'MESSAGE_SEND_SUCCESS'          : 'MESSAGE_SEND_SUCCESS'
         'MESSAGE_SEND_FAILURE'          : 'MESSAGE_SEND_FAILURE'
-        'MESSAGE_CURRENT'               : 'MESSAGE_CURRENT'
         'RECEIVE_MESSAGE_DELETE'        : 'RECEIVE_MESSAGE_DELETE'
         'RECEIVE_MAILBOX_UPDATE'        : 'RECEIVE_MAILBOX_UPDATE'
 
@@ -60,14 +59,6 @@ module.exports =
         'MESSAGE_FETCH_REQUEST'         : 'MESSAGE_FETCH_REQUEST'
         'MESSAGE_FETCH_SUCCESS'         : 'MESSAGE_FETCH_SUCCESS'
         'MESSAGE_FETCH_FAILURE'         : 'MESSAGE_FETCH_FAILURE'
-        'MESSAGE_UNDO_REQUEST'          : 'MESSAGE_UNDO_REQUEST'
-        'MESSAGE_UNDO_SUCCESS'          : 'MESSAGE_UNDO_SUCCESS'
-        'MESSAGE_UNDO_FAILURE'          : 'MESSAGE_UNDO_FAILURE'
-        'MESSAGE_UNDO_TIMEOUT'          : 'MESSAGE_UNDO_TIMEOUT'
-
-        'MESSAGE_RECOVER_REQUEST'     : 'MESSAGE_RECOVER_REQUEST'
-        'MESSAGE_RECOVER_SUCCESS'     : 'MESSAGE_RECOVER_SUCCESS'
-        'MESSAGE_RECOVER_FAILURE'     : 'MESSAGE_RECOVER_FAILURE'
 
         # Search
         'SEARCH_PARAMETER_CHANGED' : 'SEARCH_PARAMETER_CHANGED'
@@ -114,9 +105,6 @@ module.exports =
         'REFRESH_REQUEST'              : 'REFRESH_REQUEST'
         'REFRESH_SUCCESS'              : 'REFRESH_SUCCESS'
         'REFRESH_FAILURE'              : 'REFRESH_FAILURE'
-
-        # List
-        'QUERY_PARAMETER_CHANGED'   : 'QUERY_PARAMETER_CHANGED'
 
         # Toasts
         'TOASTS_SHOW'               : 'TOASTS_SHOW'
@@ -181,15 +169,28 @@ module.exports =
         COL:  'column'
         ROW:  'row'
 
-    SpecialBoxIcons:
-        inboxMailbox: 'fa-inbox'
-        draftMailbox: 'fa-file-text-o'
-        sentMailbox: 'fa-send-o'
-        trashMailbox: 'fa-trash-o'
-        junkMailbox: 'fa-fire'
-        allMailbox: 'fa-archive'
-        unreadMailbox: 'fa-eye'
-        flaggedMailbox: 'fa-star'
+    Icons:
+        'inboxMailbox'  : 'fa-inbox'
+        'draftMailbox'  : 'fa-file-text-o'
+        'sentMailbox'   : 'fa-send-o'
+        'trashMailbox'  : 'fa-trash-o'
+        'junkMailbox'   : 'fa-fire'
+        'allMailbox'    : 'fa-archive'
+        'unreadMailbox' : 'fa-eye'
+        'flaggedMailbox': 'fa-star'
+
+        'archive'       : 'fa-file-archive-o'
+        'audio'         : 'fa-file-audio-o'
+        'code'          : 'fa-file-code-o'
+        'image'         : 'fa-file-image-o'
+        'pdf'           : 'fa-file-pdf-o'
+        'word'          : 'fa-file-word-o'
+        'presentation'  : 'fa-file-powerpoint-o'
+        'spreadsheet'   : 'fa-file-excel-o'
+        'text'          : 'fa-file-text-o'
+        'video'         : 'fa-file-video-o'
+        'word'          : 'fa-file-word-o'
+
 
     Tooltips:
         REPLY                       : 'TOOLTIP_REPLY'

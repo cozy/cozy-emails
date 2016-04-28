@@ -1,8 +1,9 @@
 _ = require 'lodash'
 
-{SpecialBoxIcons} = require '../constants/app_constants'
+{Icons} = require '../constants/app_constants'
 
 AccountStore = require '../stores/account_store'
+MessageUtils = require '../utils/message_utils'
 
 class IconGetter
 
@@ -10,12 +11,18 @@ class IconGetter
         {account, mailboxID, type} = params
         mailboxID ?= AccountStore.getMailboxID()
 
-        if (value = SpecialBoxIcons[type])
+        if (value = Icons[type])
             return {type, value}
 
         account ?= AccountStore.getSelected()
-        for type, value of SpecialBoxIcons
+        for type, value of Icons
             if mailboxID is account?.get type
                 return {type, value}
+
+
+    getAttachmentIcon: (file) ->
+        type = MessageUtils.getAttachmentType file.contentType
+        Icons[type] or 'fa-file-o'
+
 
 module.exports = new IconGetter()

@@ -49,4 +49,4 @@ module.exports.initReporting = ->
         error = args[args.length - 1]
         sendReport.call null, 'error', error
         # prevent native runtime error
-        return dev
+        return __DEV__

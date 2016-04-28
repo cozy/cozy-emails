@@ -75,13 +75,9 @@ class AccountStore extends Store
 
         mailboxID = data.id
         mailboxes = account.get('mailboxes')
-
         mailbox = mailboxes.get(mailboxID) or Immutable.Map()
         for field, value of data
             mailbox = mailbox.set field, value
-
-        if mailbox isnt mailboxes.get mailboxID
-            mailboxes = mailboxes.set mailboxID, mailbox
 
             # FIXME : is attaching mailboxes to account useless?
             account = account.set 'mailboxes', mailboxes
@@ -203,7 +199,7 @@ class AccountStore extends Store
 
 
     getByID: (accountID) ->
-        return _accounts.get accountID
+        return _accounts?.get accountID
 
 
     getByLabel: (label) ->
@@ -216,7 +212,6 @@ class AccountStore extends Store
                 account.get('mailboxes').get(mailboxID)
         return _accounts.first()
 
-
     getAccountID: ->
         return @getDefault()?.get 'id' unless _accountID
         return _accountID
@@ -227,8 +222,13 @@ class AccountStore extends Store
         return _mailboxID
 
 
+    getAccountID: ->
+        return @getDefault()?.get 'id' unless _accountID
+        return _accountID
+
+
     getSelected: ->
-        return _accounts.get _accountID
+        return _accounts?.get _accountID
 
 
     getAllMailboxes: (accountID) ->
@@ -254,7 +254,6 @@ class AccountStore extends Store
 
     isWaiting: -> return _newAccountWaiting
     isChecking: -> return _newAccountChecking
-
 
 
 module.exports = _self = new AccountStore()

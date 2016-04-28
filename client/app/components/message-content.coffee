@@ -1,37 +1,39 @@
-_     = require 'underscore'
 React = require 'react'
-ApiUtils = require '../utils/api_utils'
+{div, span, i, p, a, button, iframe} = React.DOM
 
-{
-    div, article, header, footer, ul, li, span, i, p, a, button, pre,
-    iframe
-} = React.DOM
-
+SettingsActionCreator = require '../actions/settings_action_creator'
 
 module.exports = MessageContent = React.createClass
     displayName: 'MessageContent'
 
+    displayImages: ->
+        displayImages = true
+        SettingsActionCreator.edit {displayImages}
+
     render: ->
-        if @props.displayHTML and @props.html
+        if @props.html?.length
             div null,
                 if @props.imagesWarning
                     div
+                        ref: "imagesWarning"
                         className: "imagesWarning alert alert-warning content-action",
-                        ref: "imagesWarning",
-                            i className: 'fa fa-shield'
-                            t 'message images warning'
-                            button
-                                className: 'btn btn-xs btn-warning',
-                                type: "button",
-                                ref: 'imagesDisplay',
-                                onClick: @props.displayImages,
-                                t 'message images display'
+
+                        i className: 'fa fa-shield',
+                        t 'message images warning'
+
+                        button
+                            ref: 'imagesDisplay'
+                            type: "button"
+                            className: 'btn btn-xs btn-warning'
+                            onClick: @displayImages,
+                            t 'message images display'
+
                 iframe
+                    ref: 'content'
                     name: "frame-#{@props.messageID}"
-                    className: 'content',
-                    ref: 'content',
+                    className: 'content'
                     src: 'about:blank'
-                    allowTransparency: false,
+                    allowTransparency: false
                     frameBorder: 0
         else
             div className: 'row',
@@ -43,7 +45,7 @@ module.exports = MessageContent = React.createClass
         # - resize the frame to the height of its content
         # - if images are not displayed, create the function to display them
         #   and resize the frame
-        if @props.displayHTML and @refs.content
+        if @props.html?.length and @refs.content
             frame = @refs.content
             doc = frame.contentDocument or frame.contentWindow?.document
             checkResize = false # disabled for now
@@ -56,7 +58,6 @@ module.exports = MessageContent = React.createClass
                 doc = frame.contentDocument or frame.contentWindow?.document
                 if doc?
                     doc.documentElement.innerHTML = @props.html
-                    ApiUtils.customEvent "MESSAGE_LOADED", @props.messageID
                     updateHeight = (e) ->
                         height = doc.documentElement.scrollHeight
                         if height < 60
@@ -85,14 +86,12 @@ module.exports = MessageContent = React.createClass
                         frame.contentWindow?.addEventListener 'resize', updateHeight, true
                 else
                     # try to display text only
-                    @props.displayHTML false
+                    @props.html = null
 
             if type is 'mount' and doc.readyState isnt 'complete'
                 frame.addEventListener 'load', loadContent
             else
                 loadContent()
-        else
-            ApiUtils.customEvent "MESSAGE_LOADED", @props.messageID
 
 
     componentDidMount: ->

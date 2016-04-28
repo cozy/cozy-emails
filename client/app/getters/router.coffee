@@ -5,11 +5,15 @@ SearchStore = require '../stores/search_store'
 RefreshesStore = require '../stores/refreshes_store'
 RouterStore = require '../stores/router_store'
 
+_ = require 'lodash'
 Immutable = require 'immutable'
+
 {sortByDate} = require '../utils/misc'
+MessageUtils = require '../utils/message_utils'
+
 {MessageFilter, MessageActions, MessageFlags, MailboxFlags} = require '../constants/app_constants'
 
-_ = require 'lodash'
+
 
 class RouteGetter
 
@@ -19,7 +23,10 @@ class RouteGetter
     isCurrentURL: (url) ->
         isServer = false
         currentURL = RouterStore.getCurrentURL {isServer}
-        currentURL is url
+
+        # Dont care about params
+        # such as: messageID or ?query
+        -1 < currentURL.indexOf url
 
     getURL: (params) ->
         RouterStore.getURL params
@@ -142,7 +149,7 @@ class RouteGetter
     getTags: (message) ->
         mailboxID = @getMailboxID()
         mailboxesIDs = Object.keys message.get 'mailboxIDs'
-        return _.uniq _.compact mailboxesIDs.map (id) =>
+        _.uniq _.compact mailboxesIDs.map (id) =>
             if (mailbox = @getMailbox id)
                 attribs = mailbox.get('attribs') or []
                 isGlobal = MailboxFlags.ALL in attribs
@@ -150,6 +157,9 @@ class RouteGetter
                 unless (isEqual or isGlobal)
                     return mailbox?.get 'label'
 
+
+    # TODO : move this into getter
+    # this has nothing to do with store
     getEmptyMessage: ->
         filter = @getFilter()
         if @isFlags 'UNSEEN', filter.flags
@@ -159,6 +169,29 @@ class RouteGetter
         if @isFlags 'ATTACH', filter.flags
             return t 'no filter message'
         return  t 'list empty'
+
+    getResources: (message) ->
+        if (files = message?.get 'attachments')
+            files.groupBy (file) ->
+                contentType = file.get 'contentType'
+                attachementType = MessageUtils.getAttachmentType contentType
+                if attachementType is 'image' then 'preview' else 'binary'
+
+    getAvatar: (message) ->
+        MessageUtils.getAvatar message
+
+    getCreatedAt: (message) ->
+        MessageUtils.formatDate message?.get 'createdAt'
+
+    getFileSize: (file) ->
+        length = parseInt file?.length, 10
+        if length < 1024
+            "#{length} #{t 'length bytes'}"
+        else if length < 1024*1024
+            "#{0 | length / 1024} #{t 'length kbytes'}"
+        else
+            "#{0 | length / (1024*1024)} #{t 'length mbytes'}"
+
 
     # Uniq Key from URL params
     #

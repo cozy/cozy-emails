@@ -29,7 +29,7 @@ class Router extends Backbone.Router
         'mailbox/:mailboxID/:messageID/reply':     'messageReply'
         'mailbox/:mailboxID/:messageID/reply-all': 'messageReplyAll'
         'mailbox/:mailboxID/:messageID(?:query)':  'messageShow'
-        '':                                        'defaultMailbox'
+        '':                                        'firstInbox'
 
 
     initialize: ->
@@ -48,8 +48,11 @@ class Router extends Backbone.Router
 
 
     defaultMailbox: ->
-        mailboxID = AccountStore.getMailboxID()
-        @navigate "mailbox/#{mailboxID}", trigger: true
+        url = if (mailboxID = AccountStore.getMailboxID())
+        then "mailbox/#{mailboxID}"
+        else "account/new"
+
+        @navigate url, trigger: true
 
 
     accountNew: ->
