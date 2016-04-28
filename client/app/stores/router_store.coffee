@@ -235,10 +235,7 @@ class RouterStore extends Store
             @emit 'change'
 
 
-        handle ActionTypes.REFRESH_SUCCESS, ({mailboxID, accountID}) ->
-            # Update URL after refresh,
-            # Views are updated but not URL
-            _router.navigate @getCurrentURL()
+        handle ActionTypes.REFRESH_SUCCESS, ->
             @emit 'change'
 
 
