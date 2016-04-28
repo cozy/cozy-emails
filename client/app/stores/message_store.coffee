@@ -95,17 +95,13 @@ class MessageStore extends Store
                 # Message doesnt belong to the result
                 # Go fetch next page
                 if messageID and not _messages?.get messageID
-                    AppDispatcher.dispatch
-                        type: ActionTypes.MESSAGE_FETCH_REQUEST
-                        value: {action, messageID, mailboxID}
-                else
                     action = MessageActions.PAGE_NEXT
                     AppDispatcher.handleViewAction
                         value: {action, messageID, mailboxID}
                 else
                     AppDispatcher.dispatch
                         type: ActionTypes.MESSAGE_FETCH_SUCCESS
-                        value: {action, messages, messageID, mailboxID}
+                        value: {action, messageID, mailboxID}
 
 
         if action is MessageActions.PAGE_NEXT
