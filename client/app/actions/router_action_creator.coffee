@@ -110,6 +110,15 @@ RouterActionCreator =
                     value: {target, ref, updated}
 
 
+    closeConversation: ->
+        action = MessageActions.SHOW_ALL
+        messageID = null
+        mailboxID = AccountStore.getMailboxID()
+        AppDispatcher.dispatch
+            type: ActionTypes.ROUTE_CHANGE
+            value: {action, messageID, mailboxID}
+
+
     navigate: (params={}) ->
         {url} = params
         url ?= RouterStore.getURL params
