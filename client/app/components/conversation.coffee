@@ -14,32 +14,43 @@ RouterGetter = require '../getters/router'
 
 RouterActionCreator = require '../actions/router_action_creator'
 
-# FIXME : use Getters instead of Stores
-AccountStore        = require '../stores/account_store'
-MessageStore        = require '../stores/message_store'
-SelectionStore       = require '../stores/selection_store'
-StoreWatchMixin      = require '../mixins/store_watch_mixin'
-
 module.exports = React.createClass
     displayName: 'Conversation'
 
+<<<<<<< bb0797d16bd4dec04517c9c7332b8ca14c316752
     mixins: [
         StoreWatchMixin [SelectionStore]
     ]
+=======
+
+    getInitialState: ->
+        # Build initial state
+        # from store values.
+        @getStateFromStores @props
+
+
+    componentWillReceiveProps: (nextProps={}) ->
+        @setState @getStateFromStores nextProps
+        nextProps
+
+>>>>>>> Remove calls to store int conversationCompoenent
 
     componentDidMount: ->
         @_initScroll()
 
+
     componentDidUpdate: ->
         @_initScroll()
 
-    getStateFromStores: (props) ->
+
+    getStateFromStores: ->
         return {
             message: RouterGetter.getMessage()
             conversation: RouterGetter.getConversation()
         }
 
-    renderMessage: (message) ->
+
+    renderMessage: (message, index) ->
         messageID = message.get 'id'
         props = MessageUtils.formatContent message
 
@@ -78,8 +89,7 @@ module.exports = React.createClass
                     @state.conversation.map @renderMessage
 
     closeConversation: ->
-        action = MessageActions.SHOW_ALL
-        RouterActionCreator.navigate {action}
+        RouterActionCreator.closeConversation()
 
     _initScroll: ->
         if not (scrollable = ReactDOM.findDOMNode @refs.scrollable) or scrollable.scrollTop
