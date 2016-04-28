@@ -544,6 +544,10 @@ class RouterStore extends Store
             @emit 'change'
 
 
+        handle ActionTypes.REFRESH_SUCCESS, ->
+            @emit 'change'
+
+
 _toCamelCase = (value) ->
     return value.replace /\.(\w)*/gi, (match) ->
         part1 = match.substring 1, 2
