@@ -191,4 +191,5 @@ _setNextURL = ({messages}) ->
         _nextURL[key] = RouterStore.getCurrentURL {filter, action}
 
 
+
 module.exports = RouterActionCreator
