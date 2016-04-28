@@ -209,8 +209,6 @@ class MessageStore extends Store
         handle ActionTypes.ROUTE_CHANGE, (payload={}) ->
             {action, mailboxID, messageID} = payload
 
-            console.log 'ROUTE_CHANGE', payload
-
             # Update currentMessageID
             _setCurrentID messageID
 
