@@ -13,24 +13,28 @@ RouterGetter = require '../getters/router'
 
 RouterActionCreator = require '../actions/router_action_creator'
 
-# FIXME : use Getters instead of Stores
-AccountStore        = require '../stores/account_store'
-MessageStore        = require '../stores/message_store'
-SelectionStore       = require '../stores/selection_store'
-StoreWatchMixin      = require '../mixins/store_watch_mixin'
-
 module.exports = React.createClass
     displayName: 'Conversation'
 
-    mixins: [
-        StoreWatchMixin [SelectionStore, MessageStore]
-    ]
+
+    getInitialState: ->
+        # Build initial state
+        # from store values.
+        @getStateFromStores @props
+
+
+    componentWillReceiveProps: (nextProps={}) ->
+        @setState @getStateFromStores nextProps
+        nextProps
+
 
     componentDidMount: ->
         @_initScroll()
 
+
     componentDidUpdate: ->
         @_initScroll()
+
 
     getStateFromStores: ->
         return {
@@ -38,8 +42,9 @@ module.exports = React.createClass
             conversation: RouterGetter.getConversation()
         }
 
+
     renderMessage: (message, index) ->
-        accounts = AccountStore.getAll()
+        accounts = RouterGetter.getAccounts()
         accountID = RouterGetter.getAccountID()
         messageID = message.get 'id'
 
@@ -80,8 +85,7 @@ module.exports = React.createClass
                     @state.conversation.map @renderMessage
 
     closeConversation: ->
-        action = MessageActions.SHOW_ALL
-        RouterActionCreator.navigate {action}
+        RouterActionCreator.closeConversation()
 
     _initScroll: ->
         if not (scrollable = ReactDOM.findDOMNode @refs.scrollable) or scrollable.scrollTop
