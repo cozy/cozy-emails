@@ -18,4 +18,5 @@ class IconGetter
             if mailboxID is account?.get type
                 return {type, value}
 
+
 module.exports = new IconGetter()

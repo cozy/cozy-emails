@@ -16,13 +16,10 @@ TRIMMEDFIELDS = ['imapServer', 'imapPort', 'smtpServer', 'smtpPort']
 module.exports = AccountConfigMain = React.createClass
     displayName: 'AccountConfigMain'
 
-    getDefaultProps: ->
-        imapPort: '993'
-        imapSSL: true
-        imapTLS: false
-        smtpPort: '465'
-        smtpSSL: true
-        imapAdvanced: false
+
+
+    getInitialState: ->
+        @getStateFromStores()
 
 
     getInitialState: ->
@@ -84,6 +81,13 @@ module.exports = AccountConfigMain = React.createClass
         # Overwrite Smtp port if TLS is (ever) selected
         isSmtpTLS = @state?.smtpTLS and nextState.smtpTLS is undefined
         nextState.smtpPort = '587' if nextState.smtpTLS or isSmtpTLS
+
+
+        # Check domain from login
+        if _.isString nextState.domain
+            gmailDomain = _.find GOOGLE_EMAIL, (value) ->
+                -1 < nextState.domain.indexOf value
+            nextState.isGmail = gmailDomain?
 
         nextState
 

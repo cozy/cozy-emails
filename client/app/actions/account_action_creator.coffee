@@ -101,6 +101,21 @@ module.exports = AccountActionCreator =
                     type: ActionTypes.DISCOVER_SUCCESS
                     value: {domain, provider}
 
+    discover: (domain) ->
+        AppDispatcher.handleViewAction
+            type: ActionTypes.DISCOVER_REQUEST
+            value: {domain}
+        XHRUtils.accountDiscover domain, (error, provider) ->
+            if error
+                AppDispatcher.handleViewAction
+                    type: ActionTypes.DISCOVER_FAILURE
+                    value: {error, domain}
+            else
+                AppDispatcher.handleViewAction
+                    type: ActionTypes.DISCOVER_SUCCESS
+                    value: {domain, provider}
+
+
     saveEditTab: (tab) ->
         AppDispatcher.dispatch
             type: ActionTypes.EDIT_ACCOUNT_TAB

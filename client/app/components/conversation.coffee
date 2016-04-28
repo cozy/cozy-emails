@@ -56,6 +56,7 @@ module.exports = React.createClass
             displayImages       : SettingsStore.get 'messageDisplayImages'
             confirmDelete       : SettingsStore.get 'messageConfirmDelete'
 
+
     render: ->
         unless @state.conversation?.length
             return section

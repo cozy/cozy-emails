@@ -22,6 +22,7 @@ module.exports = AccountInput = React.createClass
             hasChanged = not _.isEqual _props, _nextProps
         hasChanged
 
+
     onChange: (event) ->
         type = event.target.getAttribute 'type'
         value = event.target.value

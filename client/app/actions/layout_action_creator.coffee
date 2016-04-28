@@ -60,6 +60,7 @@ module.exports = LayoutActionCreator =
             type: ActionTypes.SEARCH_PARAMETER_CHANGED
             value: {accountID, search}
 
+
     saveMessage: (params) ->
         {accountID, mailboxID, messageID} = params
         accountID ?= RouterGetter.getAccountID()
