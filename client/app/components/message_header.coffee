@@ -35,9 +35,7 @@ module.exports = React.createClass
                 span className: 'metas indicators',
                     if @props.message.get('attachments').size
                         i
-                            className: 'btn fa fa-paperclip'
-                            'aria-describedby': Tooltips.OPEN_ATTACHMENTS
-                            'data-tooltip-direction': 'left'
+                            className: 'fa fa-paperclip'
 
                     if @props.active
                         if @props.isFlagged
