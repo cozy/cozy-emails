@@ -18,7 +18,13 @@ class RouteGetter
     isCurrentURL: (mailboxURL) ->
         isServer = false
         currentURL = RouterStore.getCurrentURL {isServer}
-        0 is currentURL.indexOf mailboxURL
+
+        current = currentURL.split('?')
+        mailbox = mailboxURL.split('?')
+        isSameMailbox = 0 is current[0].indexOf mailbox[0]
+        isSameQuery = current[1] is mailbox[1]
+
+        isSameMailbox and isSameQuery
 
     getURL: (params) ->
         RouterStore.getURL params
