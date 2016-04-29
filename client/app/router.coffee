@@ -29,7 +29,7 @@ class Router extends Backbone.Router
         'mailbox/:mailboxID/:messageID/reply':     'messageReply'
         'mailbox/:mailboxID/:messageID/reply-all': 'messageReplyAll'
         'mailbox/:mailboxID/:messageID(?:query)':  'messageShow'
-        '':                                        'defaultMailbox'
+        '':                                        'defaultView'
 
 
     initialize: ->
@@ -47,7 +47,7 @@ class Router extends Backbone.Router
         Backbone.history.start()
 
 
-    defaultMailbox: ->
+    defaultView: ->
         url = if (mailboxID = AccountStore.getMailboxID())
         then "mailbox/#{mailboxID}"
         else "account/new"
