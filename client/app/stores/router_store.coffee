@@ -156,7 +156,6 @@ class RouterStore extends Store
                 (result = {}).flags = flags
         return result
 
-
     _getURIQueryParams = (params={}) ->
         _filter = _.clone _defaultFilter
 
@@ -407,7 +406,6 @@ class RouterStore extends Store
             _modal = params
             @emit 'change'
 
-
         handle ActionTypes.HIDE_MODAL, (value) ->
             _modal = null
             @emit 'change'
@@ -415,13 +413,6 @@ class RouterStore extends Store
         handle ActionTypes.MESSAGE_TRASH_SUCCESS, ({target, updated, ref}) ->
             if (nextMessage = @getNextConversation())?.size
                 _setCurrentMessage nextMessage?.get 'id'
-            @emit 'change'
-
-
-        handle ActionTypes.REFRESH_SUCCESS, ({mailboxID, accountID}) ->
-            # Update URL after refresh,
-            # Views are updated but not URL
-            _router.navigate @getCurrentURL()
             @emit 'change'
 
 

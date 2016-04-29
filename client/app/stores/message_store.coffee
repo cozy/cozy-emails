@@ -90,19 +90,7 @@ class MessageStore extends Store
 
                 AppDispatcher.dispatch
                     type: ActionTypes.MESSAGE_FETCH_SUCCESS
-                    value: {action, result, messageID}
-
-                # Message doesnt belong to the result
-                # Go fetch next page
-                if messageID and not _messages?.get messageID
-                    AppDispatcher.dispatch
-                        type: ActionTypes.MESSAGE_FETCH_REQUEST
-                        value: {action, messageID, mailboxID}
-                else
-                    action = MessageActions.PAGE_NEXT
-                    AppDispatcher.handleViewAction
-                        type: ActionTypes.MESSAGE_FETCH_REQUEST
-                        value: {action, messageID}
+                    value: {messages, messageID}
 
         if url
             XHRUtils.fetchMessagesByFolder url, callback
