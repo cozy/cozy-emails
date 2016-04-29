@@ -443,6 +443,11 @@ class RouterStore extends Store
             if _isSearchAction()
                 _resetSearch()
 
+            # Update URL if it didnt
+            currentURL = @getCurrentURL isServer: false
+            if location.hash isnt currentURL
+                _router.navigate currentURL
+
             @emit 'change'
 
         handle ActionTypes.ROUTES_INITIALIZE, (router) ->
