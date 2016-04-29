@@ -57,7 +57,7 @@ module.exports = Utils =
 
 
     messageNew: ->
-        router.navigate('compose/', {trigger: true})
+        RouterActionCreator.gotoCompose()
 
 
     # update locate (without saving it into settings)

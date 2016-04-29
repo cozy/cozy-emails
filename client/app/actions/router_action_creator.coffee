@@ -60,6 +60,15 @@ RouterActionCreator =
         @gotoCurrentPage {url, page}
 
 
+    gotoCompose: (params={}) ->
+        {messageID, mailboxID} = params
+        action = MessageActions.NEW
+        mailboxID ?= RouterStore.getMailboxID()
+        AppDispatcher.dispatch
+            type: ActionTypes.ROUTE_CHANGE
+            value: {mailboxID, messageID, action}
+
+
     gotoMessage: (params={}) ->
         {messageID, mailboxID, action} = params
         messageID ?= RouterStore.getMessageID()
@@ -137,16 +146,6 @@ RouterActionCreator =
         AppDispatcher.dispatch
             type: ActionTypes.ROUTE_CHANGE
             value: {query, action}
-
-
-    navigate: (params={}) ->
-        {url} = params
-        url ?= RouterStore.getURL params
-
-        if url
-            # Update URL && context
-            router = RouterStore.getRouter()
-            router.navigate url, trigger: true
 
 
 _getPageKey = ->

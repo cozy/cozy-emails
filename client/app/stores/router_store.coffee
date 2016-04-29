@@ -443,6 +443,11 @@ class RouterStore extends Store
             if _isSearchAction()
                 _resetSearch()
 
+            # Update URL if it didnt
+            currentURL = @getCurrentURL isServer: false
+            if location.hash isnt currentURL
+                _router.navigate currentURL
+
             @emit 'change'
 
         handle ActionTypes.ROUTES_INITIALIZE, (router) ->
@@ -527,7 +532,7 @@ class RouterStore extends Store
         handle ActionTypes.MESSAGE_TRASH_SUCCESS, (params) ->
             if MessageActions.SHOW is _action
                 if (messageID = params?.next?.get 'id')
-                    _router.navigate @getURL {messageID}
+                    _setCurrentMessage messageID
                 else
                     _action = MessageActions.SHOW_ALL
                 @emit 'change'
