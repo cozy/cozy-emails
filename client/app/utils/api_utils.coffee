@@ -101,42 +101,39 @@ module.exports = Utils =
     # `top` key     -> direction is prev
     # `bottom` key  -> direction is next
     messageNavigate: (direction) ->
-        if 'prev' is direction
-            messageID = RouterStore.getNextConversation()?.get 'id'
-        else
-            messageID = RouterStore.getPreviousConversation()?.get 'id'
-        RouterActionCreator.navigate {messageID}
+        message = if 'prev' is direction
+        then RouterStore.getNextConversation()
+        else RouterStore.getPreviousConversation()
+
+        messageID = message?.get 'id'
+        mailboxID = message?.get 'mailboxID'
+        RouterActionCreator.gotoMessage {messageID, mailboxID}
 
 
     ##
     # Display a message
     # @params {Immutable} message the message (current one if null)
     messageDisplay: (message) ->
-        messageID = message?.get('id') or RouterStore.getMessageID()
-        RouterActionCreator.navigate {messageID}
+        messageID = message?.get 'id'
+        mailboxID = message?.get 'mailboxID'
+        RouterActionCreator.gotoMessage {messageID, mailboxID}
 
 
     messageClose: ->
-        url = window.location.href
-        url = url.replace /\/message\/[\w-]+/gi, ''
-        url = url.replace /\/conversation\/[\w-]+\/[\w-]+/gi, ''
-        url = url.replace /\/edit\/[\w-]+/gi, ''
-        RouterActionCreator.navigate {url}
+        RouterActionCreator.closeMessage()
+
 
     messageDeleteCurrent: ->
         messageID = RouterStore.getMessageID()
         if not onMessageList() or not messageID?
             return
 
-        deleteMessage = (isModal) ->
+        deleteMessage = ->
             MessageActionCreator.delete {messageID}
-            RouterActionCreator.navigate action: MessageActions.GROUP_NEXT
-
-        settings = SettingsStore.get()
 
         # Delete Message without modal
-        unless (confirm = settings.get 'messageConfirmDelete')
-            deleteMessage false
+        unless SettingsStore.get 'messageConfirmDelete'
+            deleteMessage()
             return
 
         # Display 'delete' modal

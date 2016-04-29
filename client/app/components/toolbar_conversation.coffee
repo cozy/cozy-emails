@@ -21,7 +21,6 @@ module.exports = React.createClass
 
     render: ->
         nav className: 'toolbar toolbar-conversation btn-toolbar',
-
             ToolboxActions
                 key                  : 'ToolboxActions-' + @props.conversationID
                 mode                 : 'conversation'
@@ -31,18 +30,14 @@ module.exports = React.createClass
                 onConversationMove   : @onMove
 
     onDelete: ->
-        # Remove conversation
         conversationID = @props.conversationID
-
         MessageActionCreator.delete {conversationID}
 
-        # Select previous conversation
-        RouterActionCreator.navigate action: 'conversation.previous'
 
-    # FIXME : this should be in message_action_creator
     onMark: (flag) ->
         conversationID = @props.conversationID
         MessageActionCreator.mark {conversationID}, flag
+
 
     onMove: (to) ->
         conversationID = @props.conversationID
