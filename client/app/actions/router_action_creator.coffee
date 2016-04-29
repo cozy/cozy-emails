@@ -12,7 +12,7 @@ _nextURL = {}
 
 RouterActionCreator =
 
-    getCurrentPage: (params={}) ->
+    gotoCurrentPage: (params={}) ->
         {url, page} = params
 
         # Always load messagesList
@@ -50,13 +50,13 @@ RouterActionCreator =
 
                 # Fetch missing messages
                 if RouterStore.isMissingMessages()
-                    @getNextPage()
+                    @gotoNextPage()
 
 
-    getNextPage: ->
+    gotoNextPage: ->
         url = _getNextURL()
         page = _addPage()
-        @getCurrentPage {url, page}
+        @gotoCurrentPage {url, page}
 
 
     getConversation: (conversationID) ->
