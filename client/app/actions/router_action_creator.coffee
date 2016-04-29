@@ -5,7 +5,7 @@ AppDispatcher = require '../libs/flux/dispatcher/dispatcher'
 RouterStore = require '../stores/router_store'
 XHRUtils = require '../utils/xhr_utils'
 
-{ActionTypes, MessageActions} = require '../constants/app_constants'
+{ActionTypes, MessageActions, SearchActions} = require '../constants/app_constants'
 
 _pages = {}
 _nextURL = {}
@@ -60,10 +60,10 @@ RouterActionCreator =
 
 
     gotoMessage: (params={}) ->
-        {messageID, mailboxID} = params
+        {messageID, mailboxID, action} = params
         messageID ?= RouterStore.getMessageID()
         mailboxID ?= RouterStore.getMailboxID()
-        action = MessageActions.SHOW
+        action ?= MessageActions.SHOW
         AppDispatcher.dispatch
             type: ActionTypes.ROUTE_CHANGE
             value: {messageID, mailboxID, action}
@@ -76,6 +76,10 @@ RouterActionCreator =
         AppDispatcher.dispatch
             type: ActionTypes.ROUTE_CHANGE
             value: {mailboxID, action}
+
+
+    showMessageList: (params={}) ->
+        @closeMessage params
 
 
     getConversation: (conversationID) ->
@@ -124,6 +128,14 @@ RouterActionCreator =
         # FIXME : use distacher instead
         # then into routerStore, use navigate
         @navigate url: RouterStore.getCurrentURL {filter, isServer: false}
+
+
+    searchAll: (params={}) ->
+        {query} = params
+        action = SearchActions.SHOW_ALL
+        AppDispatcher.dispatch
+            type: ActionTypes.ROUTE_CHANGE
+            value: {query, action}
 
 
     navigate: (params={}) ->
