@@ -1,7 +1,7 @@
 _         = require 'underscore'
 Immutable = require 'immutable'
 XHRUtils = require '../utils/xhr_utils'
-AppDispatcher = require '../app_dispatcher'
+AppDispatcher = require '../libs/flux/dispatcher/dispatcher'
 
 Store = require '../libs/flux/store/store'
 
