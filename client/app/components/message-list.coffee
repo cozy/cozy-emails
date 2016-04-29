@@ -86,7 +86,7 @@ module.exports = MessageList = React.createClass
 
 
     loadMoreMessage: ->
-        RouterActionCreator.getNextPage()
+        RouterActionCreator.gotoNextPage()
 
     _initScroll: ->
         if not (scrollable = ReactDOM.findDOMNode @refs.scrollable) or scrollable.scrollTop
