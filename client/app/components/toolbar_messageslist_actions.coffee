@@ -1,7 +1,7 @@
 React = require 'react'
 
 {div, i, button} = React.DOM
-{Tooltips = require '../constants/app_constants'
+{Tooltips} = require '../constants/app_constants'
 
 ToolboxActions = React.createFactory require './toolbox_actions'
 
