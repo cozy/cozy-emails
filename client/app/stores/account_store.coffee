@@ -71,7 +71,7 @@ class AccountStore extends Store
     _setMailbox = (data) ->
         # on account creation, sometime socket send mailboxes updates
         # before the account has been saved locally
-        return true unless (account = _accounts.get _accountID)?.size
+        return true unless (account = _accounts?.get _accountID)?.size
 
         mailboxID = data.id
         mailboxes = account.get('mailboxes')
@@ -86,7 +86,7 @@ class AccountStore extends Store
             # FIXME : is attaching mailboxes to account useless?
             account = account.set 'mailboxes', mailboxes
 
-            _accounts = _accounts.set _accountID, account
+            _accounts = _accounts?.set _accountID, account
 
 
     _mailboxSort = (mb1, mb2) ->
@@ -109,7 +109,7 @@ class AccountStore extends Store
     _updateAccount = (rawAccount) ->
         account = AccountTranslator.toImmutable rawAccount
         accountID = account.get 'id'
-        _accounts = _accounts.set accountID, account
+        _accounts = _accounts?.set accountID, account
 
 
     ###
@@ -182,7 +182,7 @@ class AccountStore extends Store
             @emit 'change'
 
         handle ActionTypes.REMOVE_ACCOUNT_SUCCESS, (accountID) ->
-            _accounts = _accounts.delete accountID
+            _accounts = _accounts?.delete accountID
             _setCurrentAccount()
             @emit 'change'
 
@@ -207,14 +207,14 @@ class AccountStore extends Store
 
 
     getByLabel: (label) ->
-        _accounts.find (account) -> account.get('label') is label
+        _accounts?.find (account) -> account.get('label') is label
 
 
     getDefault: (mailboxID) ->
         if mailboxID
-            return _accounts.find (account) ->
+            return _accounts?.find (account) ->
                 account.get('mailboxes').get(mailboxID)
-        return _accounts.first()
+        return _accounts?.first()
 
 
     getAccountID: ->
@@ -233,7 +233,7 @@ class AccountStore extends Store
 
     getAllMailboxes: (accountID) ->
         accountID ?= @getAccountID()
-        return _accounts.get accountID
+        return _accounts?.get accountID
             .get 'mailboxes'
             .sort _mailboxSort
 
