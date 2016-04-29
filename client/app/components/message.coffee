@@ -199,10 +199,6 @@ module.exports = React.createClass
             selectedMailboxID    : @props.selectedMailboxID
             onDelete             : @onDelete
             onMove               : @onMove
-            onMark               : @onMark
-            onConversationDelete : @onConversationDelete
-            onConversationMark   : @onConversationMark
-            onConversationMove   : @onConversationMove
             ref                  : 'toolbarMessage'
 
 
@@ -230,33 +226,12 @@ module.exports = React.createClass
                 LayoutActionCreator.hideModal()
                 success()
 
-    onConversationDelete: ->
-        conversationID = @props.message.get('conversationID')
-        MessageActionCreator.delete {conversationID}
-
-
-    onMark: (flag) ->
-        messageID = @props.message.get('id')
-        MessageActionCreator.mark {messageID}, flag
-
-
-    onConversationMark: (flag) ->
-        conversationID = @props.message.get('conversationID')
-        MessageActionCreator.mark {conversationID}, flag
-
 
     onMove: (to) ->
         messageID = @props.message.get('id')
         from = @props.selectedMailboxID
         subject = @props.message.get 'subject'
         MessageActionCreator.move {messageID}, from, to
-
-
-    onConversationMove: (to) ->
-        conversationID = @props.message.get('conversationID')
-        from = @props.selectedMailboxID
-        subject = @props.message.get 'subject'
-        MessageActionCreator.move {conversationID}, from, to
 
 
     onCopy: (args) ->
