@@ -2,7 +2,8 @@ Backbone = require 'backbone'
 React    = require 'react'
 ReactDOM = require 'react-dom'
 
-AccountStore = require './stores/account_store'
+RouterStore = require './stores/router_store'
+RouterActionCreator = require './actions/router_action_creator'
 
 AppDispatcher = require './libs/flux/dispatcher/dispatcher'
 
@@ -29,7 +30,7 @@ class Router extends Backbone.Router
         'mailbox/:mailboxID/:messageID/reply':     'messageReply'
         'mailbox/:mailboxID/:messageID/reply-all': 'messageReplyAll'
         'mailbox/:mailboxID/:messageID(?:query)':  'messageShow'
-        '':                                        'defaultMailbox'
+        '':                                        'defaultView'
 
 
     initialize: ->
@@ -47,8 +48,8 @@ class Router extends Backbone.Router
         Backbone.history.start()
 
 
-    defaultMailbox: ->
-        url = if (mailboxID = AccountStore.getMailboxID())
+    defaultView: ->
+        url = if (mailboxID = RouterStore.getMailboxID())
         then "mailbox/#{mailboxID}"
         else "account/new"
 
@@ -69,6 +70,7 @@ class Router extends Backbone.Router
 
     messageShow: (mailboxID, messageID, query) ->
         _dispatch {action: MessageActions.SHOW, mailboxID, messageID}, query
+
 
     messageEdit: (mailboxID, messageID) ->
         _dispatch {action: MessageActions.EDIT, mailboxID, messageID}
@@ -98,9 +100,15 @@ class Router extends Backbone.Router
 # Dispatch payload with extracted query if available
 _dispatch = (payload, query) ->
     payload.query = _parseQuery query if query
+
     AppDispatcher.dispatch
         type: ActionTypes.ROUTE_CHANGE
         value: payload
+
+    # Fetch Messages
+    if payload.action in [MessageActions.SHOW_ALL, MessageActions.SHOW]
+        RouterActionCreator.gotoCurrentPage()
+
 
 
 # Extract params from q queryString to an object that map `key` > `value`.

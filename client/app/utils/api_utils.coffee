@@ -13,8 +13,8 @@ RouterGetter = require '../getters/router'
 AccountStore  = require '../stores/account_store'
 MessageStore  = require '../stores/message_store'
 RouterStore  = require '../stores/router_store'
-
 SettingsStore = require '../stores/settings_store'
+
 LayoutActionCreator  = require '../actions/layout_action_creator'
 MessageActionCreator = require '../actions/message_action_creator'
 RouterActionCreator  = require '../actions/router_action_creator'
@@ -33,22 +33,20 @@ module.exports = Utils =
 
 
     getCurrentAccount: ->
-        AccountStore.getSelected()?.toJS()
+        RouterStore.getAccount()?.toJS()
 
 
     getCurrentMailbox: ->
-        AccountStore.getMailbox()?.toJS()
+        RouterStore.getMailbox()?.toJS()
 
 
     getCurrentMessage: ->
-        messageID = MessageStore.getCurrentID()
-        message = MessageStore.getByID messageID
-        return message?.toJS()
+        messageID = RouterStore.getMessageID()
+        Utils.getMessage messageID
 
 
-    getMessage: (id) ->
-        message = MessageStore.getByID id
-        return message?.toJS()
+    getMessage: (messageID) ->
+        MessageStore.getByID(messageID)?.toJS()
 
     getCurrentActions: ->
         res = []
@@ -59,7 +57,7 @@ module.exports = Utils =
 
 
     messageNew: ->
-        router.navigate('compose/', {trigger: true})
+        RouterActionCreator.gotoCompose()
 
 
     # update locate (without saving it into settings)
@@ -103,51 +101,39 @@ module.exports = Utils =
     # `top` key     -> direction is prev
     # `bottom` key  -> direction is next
     messageNavigate: (direction) ->
-        if 'prev' is direction
-            messageID = MessageStore.getNextConversation()?.get 'id'
-        else
-            messageID = MessageStore.getPreviousConversation()?.get 'id'
-        RouterActionCreator.navigate {messageID}
+        message = if 'prev' is direction
+        then RouterStore.getNextConversation()
+        else RouterStore.getPreviousConversation()
 
-
-    messageSetCurrent: (message) ->
-        return unless message?.get('id')
-
-        MessageActionCreator.setCurrent message.get('id'), true
-
-        if SettingsStore.get('displayPreview')
-            @messageDisplay message
+        messageID = message?.get 'id'
+        mailboxID = message?.get 'mailboxID'
+        RouterActionCreator.gotoMessage {messageID, mailboxID}
 
 
     ##
     # Display a message
     # @params {Immutable} message the message (current one if null)
     messageDisplay: (message) ->
-        messageID = message?.get('id') or MessageStore.getCurrentID()
-        RouterActionCreator.navigate {messageID}
+        messageID = message?.get 'id'
+        mailboxID = message?.get 'mailboxID'
+        RouterActionCreator.gotoMessage {messageID, mailboxID}
 
 
     messageClose: ->
-        url = window.location.href
-        url = url.replace /\/message\/[\w-]+/gi, ''
-        url = url.replace /\/conversation\/[\w-]+\/[\w-]+/gi, ''
-        url = url.replace /\/edit\/[\w-]+/gi, ''
-        RouterActionCreator.navigate {url}
+        RouterActionCreator.closeMessage()
+
 
     messageDeleteCurrent: ->
-        messageID = MessageStore.getCurrentID()
+        messageID = RouterStore.getMessageID()
         if not onMessageList() or not messageID?
             return
 
-        deleteMessage = (isModal) ->
+        deleteMessage = ->
             MessageActionCreator.delete {messageID}
-            RouterActionCreator.navigate action: MessageActions.GROUP_NEXT
-
-        settings = SettingsStore.get()
 
         # Delete Message without modal
-        unless (confirm = settings.get 'messageConfirmDelete')
-            deleteMessage false
+        unless SettingsStore.get 'messageConfirmDelete'
+            deleteMessage()
             return
 
         # Display 'delete' modal
@@ -169,8 +155,8 @@ module.exports = Utils =
     simulateUpdate: ->
         window.setInterval ->
             content =
-                "accountID": AccountStore.getAccountID()
-                "id": AccountStore.getMailboxID()
+                "accountID": RouterStore.getAccountID()
+                "id": RouterStore.getMailboxID()
                 "label": "INBOX",
                 "path": "INBOX",
                 "tree": ["INBOX"],

@@ -4,7 +4,6 @@ classNames = require 'classnames'
 {markdown} = require 'markdown'
 toMarkdown = require 'to-markdown'
 
-React     = require 'react'
 {
     div, article, header, footer, ul, li, span, i, p, a, button, pre,
     iframe, textarea
@@ -28,26 +27,6 @@ RGXP_PROTOCOL = /:\/\//
 
 module.exports = React.createClass
     displayName: 'Message'
-
-    propTypes:
-        active                 : React.PropTypes.bool
-        key                    : React.PropTypes.string.isRequired
-        message                : React.PropTypes.object.isRequired
-        selectedMailboxID      : React.PropTypes.string.isRequired
-        useIntents             : React.PropTypes.bool.isRequired
-
-    getInitialState: ->
-        return @getStateFromStores()
-
-    componentWillReceiveProps: ->
-        @setState @getStateFromStores()
-
-    getStateFromStores: ->
-        # FIXME : le toggle sur
-        # displayHTML et displayImages va casser
-        return {
-            prepared: @prepareMessage()
-        }
 
     prepareMessage: ->
         # display full headers
@@ -103,19 +82,6 @@ module.exports = React.createClass
             isDeleted   : mailboxes[trash]?
         }
 
-    componentWillUnMount: ->
-        @_markRead()
-
-    _markRead: ->
-        messageID = @props.message?.get('id')
-        console.log 'MARK_AS_READ', messageID
-        # # Only mark as read current active message if unseen
-        # flags = message.get('flags').slice()
-        # if flags.indexOf(MessageFlags.SEEN) is -1
-        #     setTimeout ->
-        #         MessageActionCreator.mark {messageID}, MessageFlags.SEEN
-        #     , 1
-
     prepareHTML: (html) ->
         displayHTML = true
         parser = new DOMParser()
@@ -160,16 +126,17 @@ module.exports = React.createClass
         @props.message.get('flags').indexOf(MessageFlags.SEEN) is -1
 
     onHeaderClicked: ->
-        RouterActionCreator.navigate {url} if (url = @props.url)?
+        messageID = @props.message.get 'id'
+        mailboxID = @props.message.get 'mailboxID'
+        RouterActionCreator.gotoMessage {messageID, mailboxID}
 
     render: ->
         message  = @props.message
-        prepared = @state.prepared
+        prepared = @prepareMessage()
 
         if @props.displayHTML and prepared.html?
             {displayHTML, images, html} = @prepareHTML prepared.html
-            imagesWarning = images.length > 0 and
-                            not @props.displayImages
+            imagesWarning = images.length > 0 and not @props.displayImages
         else
             displayHTML = false
             imagesWarning = false
@@ -187,6 +154,7 @@ module.exports = React.createClass
             key: @props.key,
             'data-message-active': @props.active
             'data-id': @props.message.get('id'),
+
                 header onClick: @onHeaderClicked,
                     MessageHeader
                         message: @props.message
@@ -208,8 +176,8 @@ module.exports = React.createClass
 
                     MessageContent
                         ref: 'messageContent'
-                        messageID: message.get 'id'
-                        displayHTML: displayHTML
+                        messageID: @props.message.get 'id'
+                        displayHTML: @props.displayHTML
                         html: html
                         text: prepared.text
                         rich: prepared.rich
@@ -238,14 +206,14 @@ module.exports = React.createClass
             ref                  : 'toolbarMessage'
 
 
-
     onDelete: (event) ->
         event.preventDefault()
         event.stopPropagation()
 
         success = =>
-            # Then remove message
-            MessageActionCreator.delete messageID: @props.message.get 'id'
+            messageID = @props.message.get 'id'
+            accountID = @props.message.get 'accountID'
+            MessageActionCreator.delete {messageID, accountID}
 
         unless @props.confirmDelete
             success()

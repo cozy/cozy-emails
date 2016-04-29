@@ -37,15 +37,15 @@ module.exports = ActionsToolbarMessagesList = React.createClass
         messageIDs = @props.selection
         MessageActionCreator.delete {messageIDs}
 
+
     onMove: (to) ->
         from = @props.mailboxID
-        MessageActionCreator.move options, from, to, =>
-            if options.count > 0 and @props.messages.size > 0
-                firstMessageID = @props.messages.first().get('id')
-                MessageActionCreator.setCurrent firstMessageID, true
+        MessageActionCreator.move options, from, to
+
 
     onMark: (flag) ->
         MessageActionCreator.mark options, flag
+
 
     onConversationDelete: ->
         @onDelete true

@@ -21,7 +21,7 @@ describe 'AccountStore initialized without account', ->
         should.not.exist AccountStore.getDefault()
 
     it 'Then AccountStore.isWaiting is true', ->
-        AccountStore.isWaiting().should.be.true
+        RouterStore.isWaiting().should.be.true
 
     it 'When i receive a successful response (with no mailboxes)', ->
         dispatch ActionTypes.ADD_ACCOUNT_SUCCESS, account:
@@ -41,10 +41,10 @@ describe 'AccountStore initialized without account', ->
         AccountStore.getAccountID().should.equal 'testid'
 
     it 'Then AccountStore.isWaiting is false', ->
-        AccountStore.isWaiting().should.be.false
+        RouterStore.isWaiting().should.be.false
 
     it 'Then AccountStore should have a nomailboxes error', ->
-        noMailboxErr = AccountStore.getErrors().get('nomailboxes')
+        noMailboxErr = RouterStore.getErrors().get('nomailboxes')
         noMailboxErr.message.should.equal 'translated config error nomailboxes'
 
     it 'When i send a request to create a second account', ->
@@ -54,7 +54,7 @@ describe 'AccountStore initialized without account', ->
         AccountStore.getDefault().get('id').should.equal 'testid'
 
     it 'Then AccountStore.isWaiting is true', ->
-        AccountStore.isWaiting().should.be.true
+        RouterStore.isWaiting().should.be.true
 
     it 'When i receive an error response', ->
         dispatch ActionTypes.ADD_ACCOUNT_FAILURE, error:
@@ -66,14 +66,14 @@ describe 'AccountStore initialized without account', ->
         AccountStore.getDefault().get('id').should.equal 'testid'
 
     it 'Then AccountStore.isWaiting is false', ->
-        AccountStore.isWaiting().should.be.false
+        RouterStore.isWaiting().should.be.false
 
     it 'Then AccountStore should have some errors', ->
-        should.exist AccountStore.getErrors().get('smtp')
-        error = AccountStore.getErrors().get('smtp')
+        should.exist RouterStore.getErrors().get('smtp')
+        error = RouterStore.getErrors().get('smtp')
         error.message.should.equal 'translated config error smtp'
-        error.should.equal AccountStore.getErrors().get('smtpLogin')
-        error.should.equal AccountStore.getErrors().get('smtpPort')
+        error.should.equal RouterStore.getErrors().get('smtpLogin')
+        error.should.equal RouterStore.getErrors().get('smtpPort')
 
 TEST_ACCOUNT =
     id: 'testid'

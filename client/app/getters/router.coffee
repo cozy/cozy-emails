@@ -6,20 +6,25 @@ RefreshesStore = require '../stores/refreshes_store'
 RouterStore = require '../stores/router_store'
 
 Immutable = require 'immutable'
-{sortByDate} = require '../utils/misc'
-{MessageFilter, MessageActions, MessageFlags, MailboxFlags} = require '../constants/app_constants'
+{MessageActions, MailboxFlags} = require '../constants/app_constants'
 
 _ = require 'lodash'
 
 class RouteGetter
 
     hasNextPage: ->
-        not MessageStore.isAllLoaded()
+        RouterStore.hasNextPage()
 
-    isCurrentURL: (url) ->
+    isCurrentURL: (mailboxURL) ->
         isServer = false
         currentURL = RouterStore.getCurrentURL {isServer}
-        currentURL is url
+
+        current = currentURL.split('?')
+        mailbox = mailboxURL.split('?')
+        isSameMailbox = 0 is current[0].indexOf mailbox[0]
+        isSameQuery = current[1] is mailbox[1]
+
+        isSameMailbox and isSameQuery
 
     getURL: (params) ->
         RouterStore.getURL params
@@ -42,11 +47,10 @@ class RouteGetter
             ]
         action in editables
 
-    getQueryParams: ->
-        RouterStore.getQueryParams()
 
     getFilter: ->
         RouterStore.getFilter()
+
 
     getSearch: ->
         SearchStore.getCurrentSearch()
@@ -62,82 +66,68 @@ class RouteGetter
         RefreshesStore.getRefreshing().get accountID
 
     getSelectedTab: ->
-        AccountStore.getSelectedTab()
+        RouterStore.getSelectedTab()
 
     getModal: ->
         RouterStore.getModalParams()
 
-    isFlags: (name) ->
-        flags = @getFilter()?.flags or []
-        MessageFilter[name] is flags or MessageFilter[name] in flags
 
     getMessagesList: (mailboxID) ->
         mailboxID ?= @getMailboxID()
-        return null unless mailboxID
+        RouterStore.getMessagesList mailboxID
 
-        messages = MessageStore.getMessagesList mailboxID
-
-        # We dont filter for type from and dest because it is
-        # complicated by collation and name vs address.
-        unless _.isEmpty (filter = @getFilter()).flags
-            messages = messages.filter (message, index) =>
-                if @isFlags 'FLAGGED'
-                    return MessageFlags.FLAGGED in message.get 'flags'
-                if @isFlags 'ATTACH'
-                    return message.get('attachments')?.size > 0
-                if @isFlags 'UNSEEN'
-                    return MessageFlags.SEEN not in message.get 'flags'
-                return true
-
-        # FIXME : use params ASC et DESC into URL
-        messages.sort sortByDate filter.order
 
     getMessage: (messageID) ->
+        messageID ?= RouterStore.getMessageID()
         MessageStore.getByID messageID
 
+
     getConversationLength: ({messageID, conversationID}) ->
-        MessageStore.getConversationLength {messageID, conversationID}
+        RouterStore.getConversationLength {messageID, conversationID}
 
     getConversation: (messageID) ->
-        conversation = MessageStore.getConversation messageID
-        conversation?.toArray()
+        RouterStore.getConversation(messageID)
 
     getCurrentMessageID: ->
-        MessageStore.getCurrentID()
+        RouterStore.getMessageID()
 
     getCurrentMessage: ->
-        MessageStore.getByID MessageStore.getCurrentID()
+        MessageStore.getByID RouterStore.getMessageID()
 
     isCurrentConversation: (conversationID) ->
         conversationID is @getCurrentMessage()?.get 'conversationID'
 
     getMailbox: (mailboxID) ->
-        AccountStore.getMailbox mailboxID
+        RouterStore.getMailbox mailboxID
 
     getCurrentMailbox: ->
-        AccountStore.getMailbox()
+        RouterStore.getMailbox()
 
     getInbox: (accountID) ->
-        AccountStore.getAllMailboxes(accountID)?.find (mailbox) ->
-            'INBOX' is mailbox.get 'label'
+        accountID ?= @getAccountID()
+        RouterStore.getInbox accountID
+
+    getTrashMailbox: (accountID) ->
+        accountID ?= @getAccountID()
+        RouterStore.getTrashMailbox accountID
 
     getAccounts: ->
         AccountStore.getAll()
 
     getAccountSignature: ->
-        AccountStore.getSelected()?.get 'signature'
+        RouterStore.getAccount()?.get 'signature'
 
     getAccountID: ->
-        AccountStore.getAccountID()
+        RouterStore.getAccountID()
 
     getMailboxID: ->
-        AccountStore.getMailboxID()
+        RouterStore.getMailboxID()
 
     getLogin: ->
         @getCurrentMailbox()?.get 'login'
 
     getMailboxes: ->
-        AccountStore.getAllMailboxes()
+        RouterStore.getAllMailboxes()
 
     getTags: (message) ->
         mailboxID = @getMailboxID()
@@ -151,24 +141,13 @@ class RouteGetter
                     return mailbox?.get 'label'
 
     getEmptyMessage: ->
-        filter = @getFilter()
-        if @isFlags 'UNSEEN', filter.flags
+        if RouterStore.isFlags 'UNSEEN'
             return  t 'no unseen message'
-        if @isFlags 'FLAGGED', filter.flags
+        if RouterStore.isFlags 'FLAGGED'
             return  t 'no flagged message'
-        if @isFlags 'ATTACH', filter.flags
+        if RouterStore.isFlags 'ATTACH'
             return t 'no filter message'
         return  t 'list empty'
 
-    # Uniq Key from URL params
-    #
-    # return a {string}
-    getKey: (str = '') ->
-        if (filter = RouterStore.getQueryParams())
-            keys = _.compact ['before', 'after'].map (key) ->
-                filter[key] if filter[key] isnt '-'
-            keys.unshift str unless _.isEmpty str
-            return keys.join('-')
-        return str
 
 module.exports = new RouteGetter()

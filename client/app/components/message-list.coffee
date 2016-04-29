@@ -58,7 +58,7 @@ module.exports = MessageList = React.createClass
                 isAllSelected: @state.isAllSelected
 
             # Message List
-            unless @props.messages.size
+            unless @props.messages?.size
                 p
                     className: 'list-empty'
                     ref: 'listEmpty'
@@ -85,7 +85,7 @@ module.exports = MessageList = React.createClass
                         p ref: 'listEnd', t 'list end'
 
     loadMoreMessage: ->
-        RouterActionCreator.getNextPage()
+        RouterActionCreator.gotoNextPage()
 
     _initScroll: ->
         if not (scrollable = ReactDOM.findDOMNode @refs.scrollable) or scrollable.scrollTop
