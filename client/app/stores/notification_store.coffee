@@ -197,8 +197,8 @@ class NotificationStore extends Store
         handle ActionTypes.ADD_ACCOUNT_FAILURE, ({error}) ->
             AppDispatcher.waitFor [AccountStore.dispatchToken]
             _showNotification
-               message: AccountStore.getAlertErrorMessage()
-               errors: AccountStore.getRawErrors()
+               message: RouterStore.getAlertErrorMessage()
+               errors: RouterStore.getRawErrors()
                autoclose: true
 
         handle ActionTypes.ADD_ACCOUNT_SUCCESS, ({areMailboxesConfigured}) ->
@@ -214,8 +214,8 @@ class NotificationStore extends Store
         handle ActionTypes.EDIT_ACCOUNT_FAILURE, ({error}) ->
             AppDispatcher.waitFor [AccountStore.dispatchToken]
             _showNotification
-               message: AccountStore.getAlertErrorMessage()
-               errors: AccountStore.getRawErrors()
+               message: RouterStore.getAlertErrorMessage()
+               errors: RouterStore.getRawErrors()
                autoclose: true
 
         handle ActionTypes.EDIT_ACCOUNT_SUCCESS, ->
@@ -226,8 +226,8 @@ class NotificationStore extends Store
         handle ActionTypes.CHECK_ACCOUNT_FAILURE, ({error}) ->
             AppDispatcher.waitFor [AccountStore.dispatchToken]
             _showNotification
-               message: AccountStore.getAlertErrorMessage()
-               errors: AccountStore.getRawErrors()
+               message: RouterStore.getAlertErrorMessage()
+               errors: RouterStore.getRawErrors()
                autoclose: true
 
         handle ActionTypes.CHECK_ACCOUNT_SUCCESS, ->

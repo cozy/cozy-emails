@@ -29,5 +29,10 @@ document.addEventListener 'DOMContentLoaded', ->
         initRealtime()
         initDesktopNotifications()
 
+        # starts perfs logging
+        if window.__DEV__
+            if (message = logPerformances())
+                ApiUtils.logInfo message
+
     catch err
         sendReport 'error', err

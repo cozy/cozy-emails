@@ -5,11 +5,10 @@ React = require 'react'
 SearchInput = React.createFactory require './search_input'
 AccountPicker = React.createFactory require './account_picker'
 
-AccountStore = require '../stores/account_store'
+RouterGetter = require '../getters/router'
 SearchStore = require '../stores/search_store'
 
 RouterActionCreator = require '../actions/router_action_creator'
-{MessageActions, SearchActions} = require '../constants/app_constants'
 
 module.exports = GlobalSearchBar = React.createClass
     displayName: 'GlobalSearchBar'
@@ -42,31 +41,26 @@ module.exports = GlobalSearchBar = React.createClass
                 onSubmit: @onSearchTriggered
 
     onSearchTriggered: (newvalue) ->
-        unless _.isEmpty newvalue
-            RouterActionCreator.navigate
-                action: SearchActions.SHOW_ALL
-                value: newvalue
-            return
-
-        @setState search: ''
-        RouterActionCreator.navigate
-            action: MessageActions.SHOW_ALL
+        unless _.isEmpty (query = newvalue)
+            RouterActionCreator.searchAll
+                value: {query}
+        else
+            RouterActionCreator.showMessageList()
 
     onAccountChanged: (accountID) ->
-        if @state.search isnt ''
-            RouterActionCreator.navigate
-                action: SearchActions.SHOW_ALL
-                value: @state.search
+        if (query = @state.search) isnt ''
+            RouterActionCreator.searchAll
+                value: {query}
         else
             @setState {accountID}
 
     getStateFromStores: ->
-        accounts = AccountStore.getAll()
+        accounts = RouterGetter.getAccounts()
         .map (account) -> account.get 'label'
         .toOrderedMap()
         .set 'all', t 'search all accounts'
 
-        accountID = AccountStore.getAccountID() or 'all'
-        search = SearchStore.getCurrentSearch()
+        accountID = RouterGetter.getAccountID() or 'all'
+        search = RouterGetter.getSearch()
 
         return {accounts, search, accountID}

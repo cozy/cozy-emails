@@ -1,15 +1,6 @@
 request = require 'superagent'
 _       = require 'underscore'
 
-AccountTranslator = require './translators/account_translator'
-
-SettingsStore = require '../stores/settings_store'
-RouterStore = require '../stores/router_store'
-AccountStore = require '../stores/account_store'
-MessageStore = require '../stores/message_store'
-
-{MessageActions} = require '../constants/app_constants'
-
 discovery2Fields = require '../utils/discovery_to_fields'
 
 
@@ -45,11 +36,15 @@ module.exports =
         .send settings
         .end handleResponse callback, 'changeSettings', settings
 
-    fetchConversation: (conversationID, callback) ->
-        request.get "messages/batchFetch?conversationID=#{conversationID}"
+    fetchConversation: ({messageID, conversationID}, callback) ->
+        query = if conversationID
+        then "conversationID=#{conversationID}"
+        else "messageID=#{messageID}"
+
+        request.get "messages/batchFetch?#{query}"
         .set 'Accept', 'application/json'
         .end (err, res) ->
-            _cb = handleResponse callback, 'fetchConversation', conversationID
+            _cb = handleResponse callback, 'fetchConversation', {messageID, conversationID}
             _cb err, res
 
     fetchMessagesByFolder: (url, callback) ->

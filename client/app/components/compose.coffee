@@ -203,7 +203,7 @@ module.exports = React.createClass
     # selection and message information.
     finalRedirect: ->
         # FIXME : it should be into message_action_creator
-        RouterActionCreator.navigate
+        RouterActionCreator.gotoMessage
             messageID: @state.id
 
     # Cancel brings back to default view.
@@ -265,14 +265,16 @@ module.exports = React.createClass
             # Check for Updates
             @resetChange message
 
-            # Refresh URL
-            # to save temporary info
             unless @state.id
+                # Update Info before the unmount
+                # that will autosave the message
                 @state.id = message.id
                 @state.conversationID = message.conversationID
-                RouterActionCreator.navigate
+
+                # Refresh page with the right messageID
+                RouterActionCreator.gotoMessage
                     action: MessageActions.EDIT
-                    messageID: @state.id
+                    messageID: message.id
                 return
 
             else if _.isFunction success

@@ -6,11 +6,6 @@ AppDispatcher = require '../libs/flux/dispatcher/dispatcher'
 
 module.exports = LayoutActionCreator =
 
-    setDisposition: (type) ->
-        AppDispatcher.dispatch
-            type: ActionTypes.SET_DISPOSITION
-            value: type
-
     toggleListMode: ->
         AppDispatcher.dispatch
             type: ActionTypes.TOGGLE_LIST_MODE
@@ -39,10 +34,6 @@ module.exports = LayoutActionCreator =
             type: ActionTypes.RESIZE_PREVIEW_PANE
             value: null
 
-    focus: (path) ->
-        AppDispatcher.dispatch
-            type: ActionTypes.FOCUS
-            value: path
 
     clearToasts: ->
         AppDispatcher.dispatch
@@ -59,6 +50,7 @@ module.exports = LayoutActionCreator =
         AppDispatcher.dispatch
             type: ActionTypes.SEARCH_PARAMETER_CHANGED
             value: {accountID, search}
+
 
     saveMessage: (params) ->
         {accountID, mailboxID, messageID} = params

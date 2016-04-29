@@ -7,12 +7,11 @@ MenuMailboxItem = React.createFactory require './menu_mailbox_item'
 
 classNames = require 'classnames'
 colorhash = require '../utils/colorhash'
-
-LayoutActionCreator  = require '../actions/layout_action_creator'
 {MessageFilter, Tooltips, AccountActions, MessageActions} = require '../constants/app_constants'
 
+LayoutActionCreator  = require '../actions/layout_action_creator'
+
 RouterStore = require '../stores/router_store'
-AccountStore = require '../stores/account_store'
 StoreWatchMixin = require '../mixins/store_watch_mixin'
 
 RouterGetter = require '../getters/router'
@@ -22,7 +21,7 @@ module.exports = Menu = React.createClass
     displayName: 'Menu'
 
     mixins: [
-        StoreWatchMixin [AccountStore, RouterStore]
+        StoreWatchMixin [RouterStore]
     ]
 
     getStateFromStores: ->
@@ -87,19 +86,12 @@ module.exports = Menu = React.createClass
                     onClick: -> Mousetrap.trigger '?'
 
     renderMailboxesFlags: (params={}) ->
-        {flags, type, progress, slug} = params
+        {flags, type, progress, slug, total, unread} = params
 
         mailbox = RouterGetter.getInbox()
         mailboxURL = RouterGetter.getURL
             mailboxID: (mailboxID = mailbox.get 'id')
             filter: {flags}
-
-        # No way to get this data for flagged email
-        # TODO : make a patch here:
-        # https://github.com/cozy/cozy-emails/blob/master/server/models/requests.coffee#L50-L52
-        total = if 'flagged' isnt slug then mailbox?.get('nbTotal') else 0
-        unread = if 'flagged' isnt slug then mailbox?.get('nbUnread') else 0
-        recent = if 'flagged' isnt slug then mailbox?.get('nbRecent') else 0
 
         MenuMailboxItem
             accountID:      RouterGetter.getAccountID()
@@ -113,7 +105,6 @@ module.exports = Menu = React.createClass
             progress:       progress
             total:          total
             unread:         unread
-            recent:         recent
             icon:           IconGetter.getMailboxIcon {type}
 
     # renders a single account and its submenu
@@ -122,9 +113,10 @@ module.exports = Menu = React.createClass
         # Goto the default mailbox of the account
         action = MessageActions.SHOW_ALL
         accountID = account.get 'id'
+
         mailbox = RouterGetter.getInbox(accountID)
         mailboxID = mailbox?.get 'id'
-        mailboxURL = RouterGetter.getURL {action, mailboxID}
+        mailboxURL = RouterGetter.getURL {action, mailboxID, resetFilter: true}
 
         props = {
             key: 'account-' + accountID
@@ -200,10 +192,14 @@ module.exports = Menu = React.createClass
                         type: 'unreadMailbox'
                         flags: MessageFilter.UNSEEN
                         progress: props.progress
+                        total: (total = RouterStore.getInbox().get 'nbUnread')
+                        unread: total
                         slug: 'unread'
 
                     @renderMailboxesFlags
                         type: 'flaggedMailbox'
                         flags: MessageFilter.FLAGGED
                         progress: props.progress
+                        total: (total = RouterStore.getInbox().get 'nbFlagged')
+                        unread: total
                         slug: 'flagged'

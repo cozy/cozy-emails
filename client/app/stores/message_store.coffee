@@ -1,21 +1,11 @@
 _         = require 'underscore'
 Immutable = require 'immutable'
-XHRUtils = require '../utils/xhr_utils'
 
 AppDispatcher = require '../libs/flux/dispatcher/dispatcher'
-
 Store = require '../libs/flux/store/store'
-AccountStore = require './account_store'
-RouterStore = require './router_store'
 
-RouterGetter = require '../getters/router'
+{ActionTypes, MessageActions} = require '../constants/app_constants'
 
-{changeRealtimeScope} = require '../utils/realtime_utils'
-{sortByDate} = require '../utils/misc'
-
-{ActionTypes, MessageFlags, MessageActions} = require '../constants/app_constants'
-
-EPOCH = (new Date(0)).toISOString()
 
 class MessageStore extends Store
 
@@ -27,17 +17,10 @@ class MessageStore extends Store
     _messages = Immutable.OrderedMap()
     _conversationLength = Immutable.Map()
 
-    _currentMessages = Immutable.OrderedMap()
-
-    _currentID = null
-
     _inFlightByRef = {}
     _inFlightByMessageID = {}
     _undoable = {}
 
-
-    _setCurrentID = (messageID) ->
-        _currentID = messageID
 
     _addInFlight = (request) ->
         _inFlightByRef[request.ref] = request
@@ -74,81 +57,61 @@ class MessageStore extends Store
             .toArray()
         else throw new Error 'Wrong Usage : unrecognized target AS.getMixed'
 
-    isAllLoaded: ->
-        total = AccountStore.getMailbox()?.get('nbTotal')
-        total is _currentMessages?.size
+
+    _updateMessages = (result={}, timestamp) ->
+        {messages, conversationLength} = result
+
+        # This prevent to override local updates
+        # with older ones from server
+        messages?.forEach (message) -> _saveMessage message, timestamp
+
+        # Shortcut to know conversationLength
+        # withount loading all massages of the conversation
+        if (conversationLength)
+            for conversationID, length of conversationLength
+                _conversationLength = _conversationLength.set conversationID, length
 
 
-    # Refresh Emails from Server
-    # This is a read data pattern
-    # ActionCreator is a write data pattern
-    _refreshMailbox = (params={}) ->
-        {mailboxID} = params
-        mailboxID ?= AccountStore.getMailboxID()
-        deep = true
+    _computeMailboxDiff = (oldmsg, newmsg) ->
+        return {} unless oldmsg
+        changed = false
 
-        XHRUtils.refreshMailbox mailboxID, {deep}, (error, updated) ->
-            if error?
-                AppDispatcher.dispatch
-                    type: ActionTypes.REFRESH_FAILURE
-                    value: {mailboxID, error}
-            else
-                AppDispatcher.dispatch
-                    type: ActionTypes.REFRESH_SUCCESS
-                    value: {mailboxID, updated}
+        wasRead = MessageFlags.SEEN in oldmsg.get 'flags'
+        isRead = MessageFlags.SEEN in newmsg.get 'flags'
 
+        accountID = newmsg.get 'accountID'
+        oldboxes = Object.keys oldmsg.get 'mailboxIDs'
+        newboxes = Object.keys newmsg.get 'mailboxIDs'
 
-    # Get Emails from Server
-    # This is a read data pattern
-    # ActionCreator is a write data pattern
-    _fetchMessages = (params={}) ->
-        {messageID, conversationID, action} = params
-        mailboxID = AccountStore.getMailboxID()
-        action ?= MessageActions.SHOW_ALL
-        timestamp = Date.now()
+        out = {}
+        added = _.difference(newboxes, oldboxes)
+        added.forEach (boxid) ->
+            changed = true
+            out[boxid] = nbTotal: +1, nbUnread: if isRead then 0 else +1
 
-        callback = (error, result) ->
-            if error?
-                AppDispatcher.dispatch
-                    type: ActionTypes.MESSAGE_FETCH_FAILURE
-                    value: {error, mailboxID}
-            else
-                # This prevent to override local updates
-                # with older ones from server
-                messages = if _.isArray(result) then result else result.messages
-                messages?.forEach (message) -> _saveMessage message, timestamp
+        removed = _.difference oldboxes, newboxes
+        removed.forEach (boxid) ->
+            changed = true
+            out[boxid] = nbTotal: -1, nbUnread: if wasRead then -1 else 0
 
-                # Shortcut to know conversationLength
-                # withount loading all massages of the conversation
-                if (conversationLength = result?.conversationLength)
-                    for conversationID, length of conversationLength
-                        _saveConversationLength conversationID, length
+        stayed = _.intersection oldboxes, newboxes
+        deltaUnread = if wasRead and not isRead then +1
+        else if not wasRead and isRead then -1
+        else 0
 
-                # Message should belong to the result
-                # If not : go fetch next messages
-                if not _self.isAllLoaded() and messageID and
-                        not _messages?.get messageID
-                    action = MessageActions.PAGE_NEXT
-                    AppDispatcher.dispatch
-                        type: ActionTypes.MESSAGE_FETCH_REQUEST
-                        value: {action, messageID, mailboxID}
-                else
-                    AppDispatcher.dispatch
-                        type: ActionTypes.MESSAGE_FETCH_SUCCESS
-                        value: {action, messages, messageID, mailboxID}
+        if deltaUnread isnt 0
+            changed = true
 
-        if action is MessageActions.PAGE_NEXT
-            action = MessageActions.SHOW_ALL
-            messages = _messages
-            url = RouterStore.getNextURL {action, messages, messageID}
-            XHRUtils.fetchMessagesByFolder url, callback
+        out[accountID] = nbUnread: deltaUnread
 
-        else if action is MessageActions.SHOW_ALL
-            url = RouterStore.getCurrentURL {action, mailboxID}
-            XHRUtils.fetchMessagesByFolder url, callback
+        stayed.forEach (boxid) ->
+            out[boxid] = nbTotal: 0, nbUnread: deltaUnread
 
+        if changed
+            return out
         else
-            XHRUtils.fetchConversation conversationID, callback
+            return false
+
 
     _saveMessage = (message, timestamp) ->
         oldmsg = _messages.get message.id
@@ -183,42 +146,18 @@ class MessageStore extends Store
 
             _messages = _messages.set message.id, messageMap
 
+
     _deleteMessage = (message) ->
         _messages = _messages.remove message.id
 
-
-    _saveConversationLength = (conversationID, length) ->
-        _conversationLength = _conversationLength.set conversationID, length
 
     ###
         Defines here the action handlers.
     ###
     __bindHandlers: (handle) ->
 
-        handle ActionTypes.ROUTE_CHANGE, (payload) ->
-            {action, mailboxID, messageID} = payload
-
-            # Update currentMessageID
-            _setCurrentID messageID
-
-            # Get messageList for 1rst panel
-            if action in [MessageActions.SHOW_ALL, MessageActions.SHOW]
-                _refreshMailbox payload
-                _fetchMessages payload
-
-            @emit 'change'
-
-
-        handle ActionTypes.MESSAGE_FETCH_REQUEST, (payload) ->
-            _fetchMessages payload
-            @emit 'change'
-
-
-        handle ActionTypes.MESSAGE_FETCH_SUCCESS, ({messages, mailboxID}) ->
-            lastdate = _messages.last()?.get 'date'
-            before = unless messages then EPOCH else lastdate
-            changeRealtimeScope {mailboxID, before}
-
+        handle ActionTypes.MESSAGE_FETCH_SUCCESS, ({error, result, timestamp}) ->
+            _updateMessages result, timestamp unless error
             @emit 'change'
 
 
@@ -241,23 +180,6 @@ class MessageStore extends Store
             .toOrderedMap()
             @emit 'change'
 
-        handle ActionTypes.MESSAGE_TRASH_REQUEST, ({target, ref}) ->
-            messages = _getMixed target
-            target.accountID = messages[0].get 'accountID'
-            trashBoxID = AccountStore.getSelected().get 'trashMailbox'
-            _addInFlight {type: 'trash', trashBoxID, messages, ref}
-            @emit 'change'
-
-        handle ActionTypes.MESSAGE_TRASH_SUCCESS, ({target, updated, ref}) ->
-            _undoable[ref] = _removeInFlight ref
-            for message in updated
-                if message._deleted
-                    _deleteMessage message
-                    if (nextMessage = @getNextConversation())?.size
-                        _setCurrentID nextMessage?.get 'id'
-                else
-                    _saveMessage message
-            @emit 'change'
 
         handle ActionTypes.MESSAGE_FLAGS_SUCCESS, ({target, updated, ref}) ->
             _removeInFlight ref
@@ -288,9 +210,6 @@ class MessageStore extends Store
         handle ActionTypes.MESSAGE_FETCH_FAILURE, ->
             @emit 'change'
 
-        handle ActionTypes.REFRESH_SUCCESS, ->
-            @emit 'change'
-
         handle ActionTypes.MESSAGE_SEND_SUCCESS, ({message}) ->
             _saveMessage message
             @emit 'change'
@@ -315,68 +234,28 @@ class MessageStore extends Store
     ###
         Public API
     ###
-    getCurrentID: ->
-        return _currentID
+    getAll: ->
+        _messages
 
     getByID: (messageID) ->
-        messageID ?= _currentID
-        _messages.get messageID
+        _messages.get(messageID)
 
-    _getCurrentConversations = (mailboxID) ->
-        __conv = {}
+
+    getConversation: (conversationID) ->
+        result = []
         _messages.filter (message) ->
-            conversationID = message.get 'conversationID'
-            __conv[conversationID] = true unless (exist = __conv[conversationID])
-            inMailbox = mailboxID of message.get 'mailboxIDs'
-            return inMailbox and not exist
-        .toList()
-
-    getMessagesList: (mailboxID) ->
-        _currentMessages = _getCurrentConversations(mailboxID)?.toOrderedMap()
-        return _currentMessages
-
-    getConversation: (messageID) ->
-        messageID ?= @getCurrentID()
-
-        # Get messages from loaded ones
-        # Do not fetch if messages isnt loaded yet
-        if (conversationID = @getByID(messageID)?.get 'conversationID')
-            conversation = _messages.filter (message) ->
-                conversationID is message.get 'conversationID'
-
-            # If missing messages, get them
-            if conversation?.size isnt @getConversationLength {conversationID}
-                action = MessageActions.SHOW
-                _fetchMessages {messageID, conversationID, action}
-
-            # Return loaded messages
-            return conversation
+            if (conversationID is message.get 'conversationID')
+                result.push message
+        result
 
 
-    getNextConversation: ->
-        index = _currentMessages.keyOf @getByID()
-        return _currentMessages.get --index
-
-
-    getPreviousConversation: ->
-        index = _currentMessages.keyOf @getByID()
-        return _currentMessages.get ++index
-
-
-    getConversationLength: ({messageID, conversationID}) ->
-        unless conversationID
-            messageID ?= @getCurrentID()
-            if messageID and (message = @getByID messageID)
-                conversationID = message.get 'conversationID'
-
-        if conversationID
-            return _conversationLength.get conversationID
+    getConversationLength: (conversationID) ->
+        _conversationLength?.get conversationID
 
 
     # FIXME : move this into RouterStore/RouterGetter
     getUndoableRequest: (ref) ->
         _undoable[ref]
 
-_self = new MessageStore()
 
-module.exports = _self
+module.exports = new MessageStore()

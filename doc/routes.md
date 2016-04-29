@@ -70,29 +70,19 @@ Complex filters (in opposite to boolean filters like previous) can have paramete
 
 ## Redirection
 
-2 cases exist :
- - a redirection from the view,
- - or a redirection from an `action`.
+Redirection is handled after updating `RouterStore`. Here is the list of properties that should update URL :
+ - `action`: get from `routes` the right URL pattern,
+ - `mailboxID`: the ID of the mailbox,
+ - `MessageID`: the ID of selected message,
+ - `query` : filters into messages list,
+ - `tab` : change `tabComponent` (ie. `accountEdit`)
 
-### Use a basic link into view
-You need to go to a specific page with a `click` action ?
- - `RouterGetter.getURL(params)` will return the right URL for `params`
- - define `params` as smaller as you can : `Stores` knows everything for you!
+ Whats happening into `routerStore`:
 
-### Make a redirection from stores
-A message is deleted, then you need to select the next message from the list?
-First of all: do not redirect into the view but listen to `ActionType.RECEIVE_MESSAGE_DELETE` into `RouterStore`, such as:
+ Each property related to route is changed after `ActionTypes.ROUTE_CHANGE` into `routerStore` file. After all updates are done, the URL is updated if needed :
 
  ```
- handle ActionTypes.MESSAGE_TRASH_SUCCESS, (params) ->
-     if MessageActions.SHOW is _action
-         if (messageID = params?.next?.get 'id')
-             _router.navigate @getURL {messageID}
-         else
-             _action = MessageActions.SHOW_ALL
-         @emit 'change'
+ currentURL = @getCurrentURL isServer: false
+ if location.hash isnt currentURL
+     _router.navigate currentURL
 ```
-
-If context (that should be updated) isnt from `RouterStore` (ie. `messageID` is `MessageStore`):
- - then use `_router.navigate` with the right params,
- - Otherwhise, update `local` variable, and emit a `change` event.

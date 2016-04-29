@@ -4,8 +4,6 @@ AppDispatcher = require '../libs/flux/dispatcher/dispatcher'
 
 Store = require '../libs/flux/store/store'
 
-AccountStore = require './account_store'
-
 {ActionTypes, Dispositions} = require '../constants/app_constants'
 
 class LayoutStore extends Store
@@ -18,8 +16,6 @@ class LayoutStore extends Store
 
     # TODO: Use a constant for default value?
     _previewSize = 60
-
-    _focus = null
 
     _shown = true
 
@@ -50,8 +46,6 @@ class LayoutStore extends Store
                 _previewSize = 50
             @emit 'change'
 
-        handle ActionTypes.FOCUS, (path) ->
-            _focus = path
 
         handle ActionTypes.REFRESH, ->
             @emit 'change'
@@ -76,16 +70,13 @@ class LayoutStore extends Store
     getDisposition: ->
         return _disposition
 
+
     getListModeCompact: ->
         return _listModeCompact
 
 
     getPreviewSize: ->
         return _previewSize
-
-
-    getFocus: ->
-        return _focus
 
 
     isShown: ->

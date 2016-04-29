@@ -3,7 +3,6 @@ AppDispatcher = require '../libs/flux/dispatcher/dispatcher'
 {ActionTypes} = require '../constants/app_constants'
 
 AccountStore = require '../stores/account_store'
-RouterStore = require '../stores/router_store'
 
 module.exports = AccountActionCreator =
 
@@ -100,6 +99,21 @@ module.exports = AccountActionCreator =
                 AppDispatcher.handleViewAction
                     type: ActionTypes.DISCOVER_SUCCESS
                     value: {domain, provider}
+
+    discover: (domain) ->
+        AppDispatcher.handleViewAction
+            type: ActionTypes.DISCOVER_REQUEST
+            value: {domain}
+        XHRUtils.accountDiscover domain, (error, provider) ->
+            if error
+                AppDispatcher.handleViewAction
+                    type: ActionTypes.DISCOVER_FAILURE
+                    value: {error, domain}
+            else
+                AppDispatcher.handleViewAction
+                    type: ActionTypes.DISCOVER_SUCCESS
+                    value: {domain, provider}
+
 
     saveEditTab: (tab) ->
         AppDispatcher.dispatch
