@@ -16,7 +16,6 @@ RouterStore  = require '../stores/router_store'
 SettingsStore = require '../stores/settings_store'
 
 LayoutActionCreator  = require '../actions/layout_action_creator'
-MessageActionCreator = require '../actions/message_action_creator'
 RouterActionCreator  = require '../actions/router_action_creator'
 NotificationActionsCreator = require '../actions/notification_action_creator'
 
@@ -127,7 +126,7 @@ module.exports = Utils =
             return
 
         deleteMessage = ->
-            MessageActionCreator.delete {messageID}
+            RouterActionCreator.delete {messageID}
 
         # Delete Message without modal
         unless SettingsStore.get 'messageConfirmDelete'

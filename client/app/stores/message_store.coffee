@@ -89,18 +89,6 @@ class MessageStore extends Store
         _messages = _messages.remove message.id
 
 
-    # Immediately synchronise some messages with the server
-    # Used if one of the action fail
-    _recover = (target, ref) ->
-        XHRUtils.batchFetch target, (err, messages) ->
-            if err
-                AppDispatcher.handleViewAction
-                    type: ActionTypes.MESSAGE_RECOVER_FAILURE
-                    value: {ref}
-            else
-                AppDispatcher.handleViewAction
-                    type: ActionTypes.MESSAGE_RECOVER_SUCCESS
-                    value: {ref}
 
     ###
         Defines here the action handlers.

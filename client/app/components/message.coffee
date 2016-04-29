@@ -18,7 +18,6 @@ MessageContent = React.createFactory require './message-content'
 
 LayoutActionCreator  = require '../actions/layout_action_creator'
 NotificationActionsCreator = require '../actions/notification_action_creator'
-MessageActionCreator = require '../actions/message_action_creator'
 ContactActionCreator = require '../actions/contact_action_creator'
 RouterActionCreator = require '../actions/router_action_creator'
 
@@ -231,7 +230,7 @@ module.exports = React.createClass
         messageID = @props.message.get('id')
         from = @props.selectedMailboxID
         subject = @props.message.get 'subject'
-        MessageActionCreator.move {messageID}, from, to
+        RouterActionCreator.move {messageID}, from, to
 
 
     onCopy: (args) ->
