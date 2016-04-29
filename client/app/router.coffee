@@ -108,7 +108,7 @@ _dispatch = (payload, query) ->
 
     # Fetch Messages
     if payload.action in [MessageActions.SHOW_ALL, MessageActions.SHOW]
-        RouterActionCreator.getCurrentPage()
+        RouterActionCreator.gotoCurrentPage()
 
 
 

@@ -59,6 +59,25 @@ RouterActionCreator =
         @gotoCurrentPage {url, page}
 
 
+    gotoMessage: (params={}) ->
+        {messageID, mailboxID} = params
+        messageID ?= RouterStore.getMessageID()
+        mailboxID ?= RouterStore.getMailboxID()
+        action = MessageActions.SHOW
+        AppDispatcher.dispatch
+            type: ActionTypes.ROUTE_CHANGE
+            value: {messageID, mailboxID, action}
+
+
+    closeMessage: (params={}) ->
+        {mailboxID} = params
+        mailboxID ?= RouterStore.getMailboxID()
+        action = MessageActions.SHOW_ALL
+        AppDispatcher.dispatch
+            type: ActionTypes.ROUTE_CHANGE
+            value: {mailboxID, action}
+
+
     getConversation: (conversationID) ->
         page = _getPage()
         timestamp = (new Date()).toISOString()

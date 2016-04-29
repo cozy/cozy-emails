@@ -104,7 +104,7 @@ module.exports = MessageItem = React.createClass
         LayoutActionCreator.updateSelection {id, value}
 
     onMessageClick: (event) ->
-        RouterActionCreator.navigate
+        RouterActionCreator.gotoMessage
             messageID: @props.message.get 'id'
 
     onDragStart: (event) ->
@@ -114,8 +114,9 @@ module.exports = MessageItem = React.createClass
         LayoutActionCreator.updateSelection {id, value}
 
     onMessageClick: (event) ->
-        RouterActionCreator.navigate
+        RouterActionCreator.gotoMessage
             messageID: @props.message.get 'id'
+            mailboxID: @props.message.get 'mailboxID'
 
     getParticipants: (message) ->
         from = message.get 'from'

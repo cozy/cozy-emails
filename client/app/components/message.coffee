@@ -126,7 +126,9 @@ module.exports = React.createClass
         @props.message.get('flags').indexOf(MessageFlags.SEEN) is -1
 
     onHeaderClicked: ->
-        RouterActionCreator.navigate {url} if (url = @props.url)?
+        messageID = @props.message.get 'id'
+        mailboxID = @props.message.get 'mailboxID'
+        RouterActionCreator.gotoMessage {messageID, mailboxID}
 
     render: ->
         message  = @props.message

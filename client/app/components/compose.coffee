@@ -203,7 +203,7 @@ module.exports = React.createClass
     # selection and message information.
     finalRedirect: ->
         # FIXME : it should be into message_action_creator
-        RouterActionCreator.navigate
+        RouterActionCreator.gotoMessage
             messageID: @state.id
 
     # Cancel brings back to default view.
