@@ -29,21 +29,24 @@ describe 'Mailbox fetching', ->
         testResultLength "/mailbox/#{store.inboxID}",
             (messages) ->
                 readCount += messages
-                            .filter (m) -> '\\Seen' in m.flags
-                            .length
+                    .filter (m) -> '\\Seen' in m.flags
+                    .length
 
-            (err, total) ->
+            (error, total) ->
                 inboxCount = total
-                done err
+                done error
+
 
     it "When I get a mailbox (filter by flag)", (done) ->
-        testResultLength "/mailbox/#{store.inboxID}?flag=seen", (err, total) ->
+        testResultLength "/mailbox/#{store.inboxID}?flag=seen",
+            (err, total) ->
                 total.should.equal readCount
                 done()
 
 
     it "When I get a mailbox (filter by not flag)", (done) ->
-        testResultLength "/mailbox/#{store.inboxID}?flag=unseen", (err, total) ->
+        testResultLength "/mailbox/#{store.inboxID}?flag=unseen",
+            (err, total) ->
                 total.should.equal inboxCount - readCount
                 done()
 
