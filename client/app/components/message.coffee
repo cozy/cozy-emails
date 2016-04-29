@@ -17,8 +17,6 @@ MessageContent = React.createFactory require './message-content'
 {MessageFlags, MessageActions} = require '../constants/app_constants'
 
 LayoutActionCreator  = require '../actions/layout_action_creator'
-NotificationActionsCreator = require '../actions/notification_action_creator'
-ContactActionCreator = require '../actions/contact_action_creator'
 RouterActionCreator = require '../actions/router_action_creator'
 
 RGXP_PROTOCOL = /:\/\//
@@ -26,6 +24,7 @@ RGXP_PROTOCOL = /:\/\//
 
 module.exports = React.createClass
     displayName: 'Message'
+
 
     prepareMessage: ->
         # display full headers
