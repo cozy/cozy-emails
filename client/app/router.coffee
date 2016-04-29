@@ -106,11 +106,8 @@ _dispatch = (payload, query) ->
         value: payload
 
     # Fetch Messages
-    if payload.action in
-    [MessageActions.SHOW_ALL, MessageActions.SHOW]
-        payload.filter = payload.query
-        delete payload.query
-        RouterActionCreator.getCurrentPage payload
+    if payload.action in [MessageActions.SHOW_ALL, MessageActions.SHOW]
+        RouterActionCreator.getCurrentPage()
 
 
 

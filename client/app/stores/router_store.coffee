@@ -9,7 +9,8 @@ MessageStore = require '../stores/message_store'
 AccountActions, SearchActions} = require '../constants/app_constants'
 
 {sortByDate} = require '../utils/misc'
-# {MSGBYPAGE} = require '../../../server/utils/constants'
+{MSGBYPAGE} = require '../../../server/utils/constants'
+{changeRealtimeScope} = require '../utils/realtime_utils'
 
 class RouterStore extends Store
 
@@ -268,6 +269,11 @@ class RouterStore extends Store
         _messagesLength + 1 < @getMailboxTotal()
 
 
+    isMissingMessages: ->
+        (_messagesLength + 1) < MSGBYPAGE and @hasNextPage()
+
+
+
     getMessagesList: (mailboxID) ->
         mailboxID ?= @getMailboxID()
         filter = @getFilter()
@@ -311,15 +317,7 @@ class RouterStore extends Store
     getConversation: (messageID) ->
         messageID ?= @getMessageID()
         conversationID = MessageStore.getByID(messageID)?.get 'conversationID'
-        conversationLength = @getConversationLength {messageID, conversationID}
-        conversation = MessageStore.getConversation conversationID
-
-        # Fetch missing messages
-        if not conversationID or conversation?.length isnt conversationLength
-            MessageStore.fetchConversation {messageID, conversationID}
-
-        conversation
-
+        MessageStore.getConversation conversationID
 
 
     getNextConversation: ->
@@ -398,7 +396,27 @@ class RouterStore extends Store
             @emit 'change'
 
 
-        handle ActionTypes.MESSAGE_FETCH_SUCCESS, ->
+        handle ActionTypes.MESSAGE_FETCH_SUCCESS, (payload) ->
+            {result, timestamp, mailboxID, messageID} = payload
+
+            # Update Realtime
+            before = if result?.messages?.size
+            then result?.messages?.last()?.get('date')
+            else timestamp
+            changeRealtimeScope {mailboxID, before}
+
+            # # conversationLength = RouterStore.getConversationLength {messageID}
+            # # conversation = RouterStore.getConversation()
+            # # if not conversationID or conversation?.length isnt conversationLength
+            # #     MessageStore.fetchConversation {messageID, conversationID}
+            #
+            # # Fetch missing messages
+            # # No messages are found
+            # # get next_page
+            # if RouterStore.isMissingMessages()
+            #     console.log 'FETCH_MORE'
+            #     # MessageStore.fetchMailbox @getNextURL()
+
             @emit 'change'
 
 

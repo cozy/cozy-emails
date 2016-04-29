@@ -3,26 +3,42 @@ _ = require 'lodash'
 AppDispatcher = require '../libs/flux/dispatcher/dispatcher'
 
 RouterStore = require '../stores/router_store'
+XHRUtils = require '../utils/xhr_utils'
 
 {ActionTypes, MessageActions} = require '../constants/app_constants'
 
 RouterActionCreator =
 
-    getCurrentPage: ->
+    getCurrentPage: (params={}) ->
+        {url} = params
+
         # Always load messagesList
         action = MessageActions.SHOW_ALL
-        url = RouterStore.getCurrentURL {action}
+        url ?= RouterStore.getCurrentURL {action}
+
+        mailboxID = RouterStore.getMailboxID()
+        messageID = RouterStore.getMessageID()
+        timestamp = (new Date()).toISOString()
+
         AppDispatcher.dispatch
             type: ActionTypes.MESSAGE_FETCH_REQUEST
-            value: {url}
+            value: {timestamp, messageID, mailboxID}
+
+        XHRUtils.fetchMessagesByFolder url, (error,result) ->
+            if error?
+                AppDispatcher.dispatch
+                    type: ActionTypes.MESSAGE_FETCH_FAILURE
+                    value: {error, timestamp}
+            else
+                AppDispatcher.dispatch
+                    type: ActionTypes.MESSAGE_FETCH_SUCCESS
+                    value: {result, timestamp, messageID, mailboxID}
 
 
     getNextPage: ->
-        if (hasNextPage = RouterStore.hasNextPage())
+        if RouterStore.hasNextPage()
             url = RouterStore.getNextURL()
-            AppDispatcher.dispatch
-                type: ActionTypes.MESSAGE_FETCH_REQUEST
-                value: {url}
+            @getCurrentPage {url}
 
 
     addFilter: (params) ->
