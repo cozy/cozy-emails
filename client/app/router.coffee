@@ -2,7 +2,6 @@ Backbone = require 'backbone'
 React    = require 'react'
 ReactDOM = require 'react-dom'
 
-# TODO : Call getter instead ?
 RouterStore = require './stores/router_store'
 RouterActionCreator = require './actions/router_action_creator'
 
@@ -50,7 +49,7 @@ class Router extends Backbone.Router
 
 
     defaultView: ->
-        url = if (mailboxID = AccountStore.getMailboxID())
+        url = if (mailboxID = RouterStore.getMailboxID())
         then "mailbox/#{mailboxID}"
         else "account/new"
 
