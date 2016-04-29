@@ -71,21 +71,21 @@ class AccountStore extends Store
 
     _updateMailbox = (data) ->
         mailboxID = data.id
-        account = _getByMailbox mailboxID
-        if (accountID = account?.get 'id')
-            mailboxes = account.get 'mailboxes'
-            mailbox = mailboxes?.get(mailboxID) or Immutable.Map()
+        return unless (account = _getByMailbox mailboxID)?.size
 
-            for field, value of data
-                mailbox = mailbox.set field, value
+        mailboxes = account.get('mailboxes')
+        mailbox = mailboxes.get(mailboxID) or Immutable.Map()
+
+        for field, value of data
+            mailbox = mailbox.set field, value
 
             if mailbox isnt mailboxes.get mailboxID
                 mailboxes = mailboxes.set mailboxID, mailbox
 
-                # FIXME : is attaching mailboxes to account usefull?
-                account = account.set 'mailboxes', mailboxes
+            # FIXME : is attaching mailboxes to account usefull?
+            account = account.set 'mailboxes', mailboxes
 
-                _accounts = _accounts.set accountID, account
+            _accounts = _accounts.set accountID, account
 
 
     _mailboxSort = (mb1, mb2) ->
