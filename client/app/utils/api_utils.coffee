@@ -104,11 +104,9 @@ module.exports = Utils =
         message = if 'prev' is direction
         then RouterStore.getNextConversation()
         else RouterStore.getPreviousConversation()
-
         messageID = message?.get 'id'
         mailboxID = message?.get 'mailboxID'
         RouterActionCreator.gotoMessage {messageID, mailboxID}
-
 
     ##
     # Display a message

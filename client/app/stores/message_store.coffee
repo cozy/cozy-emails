@@ -21,7 +21,6 @@ class MessageStore extends Store
     _inFlightByMessageID = {}
     _undoable = {}
 
-
     _addInFlight = (request) ->
         _inFlightByRef[request.ref] = request
         request.messages.forEach (message) ->
@@ -109,6 +108,44 @@ class MessageStore extends Store
         _messages = _messages.remove message.id
 
 
+<<<<<<< 662c4399a3ec60b4a59451cacab4ccbd6d5db03d
+=======
+    _saveConversationLength = (conversationID, length) ->
+        _conversationLength = _conversationLength.set conversationID, length
+
+
+    _batchFlag = (target, action) ->
+        return unless target?.messageID
+        console.log 'PLOP', target, action
+        timestamp = Date.now()
+        ref = 'batchFlag' + timestamp
+        XHRUtils.batchFlag {target, action}, (error, updated) =>
+            if error
+                AppDispatcher.handleViewAction
+                    type: ActionTypes.MESSAGE_FLAGS_FAILURE
+                    value: {target, ref, error, action}
+            else
+                message.updated = timestamp for message in updated
+                AppDispatcher.handleViewAction
+                    type: ActionTypes.MESSAGE_FLAGS_SUCCESS
+                    value: {target, ref, updated, action}
+
+
+    # Immediately synchronise some messages with the server
+    # Used if one of the action fail
+    _recover = (target, ref) ->
+        XHRUtils.batchFetch target, (err, messages) ->
+            if err
+                AppDispatcher.handleViewAction
+                    type: ActionTypes.MESSAGE_RECOVER_FAILURE
+                    value: {ref}
+            else
+                AppDispatcher.handleViewAction
+                    type: ActionTypes.MESSAGE_RECOVER_SUCCESS
+                    value: {ref}
+
+
+>>>>>>> Move recovering from ActionCreator to store
     ###
         Defines here the action handlers.
     ###
@@ -146,6 +183,18 @@ class MessageStore extends Store
             @emit 'change'
 
         handle ActionTypes.MESSAGE_FLAGS_FAILURE, ({target, ref}) ->
+            # we dont know if some succeeded or not,
+            # in doubt, recover the changed to messages to sync with
+            # server
+            _recover target, ref
+            _removeInFlight ref
+            @emit 'change'
+
+        handle ActionTypes.MESSAGE_FLAGS_FAILURE, ({target, ref}) ->
+            # we dont know if some succeeded or not,
+            # in doubt, recover the changed to messages to sync with
+            # server
+            _recover target, ref
             _removeInFlight ref
             @emit 'change'
 
@@ -160,11 +209,25 @@ class MessageStore extends Store
             @emit 'change'
 
         handle ActionTypes.MESSAGE_MOVE_FAILURE, ({target, ref}) ->
+            # we dont know if some succeeded or not,
+            # in doubt, recover the changed to messages to sync with
+            # server
+            _recover target, ref
             _removeInFlight ref
             @emit 'change'
 
-        handle ActionTypes.MESSAGE_UNDO_TIMEOUT, ({ref}) ->
+        handle ActionTypes.MESSAGE_UNDO_FAILURE, ({target, ref}) ->
+            # we dont know if some succeeded or not,
+            # in doubt, recover the changed to messages to sync with
+            # server
+            _recover target, ref
+            _removeInFlight ref
             delete _undoable[ref]
+            @emit 'change'
+
+        handle ActionTypes.MESSAGE_FETCH_REQUEST, (param)->
+            _fetchMessage param
+            @emit 'change'
 
         handle ActionTypes.MESSAGE_FETCH_FAILURE, ->
             @emit 'change'

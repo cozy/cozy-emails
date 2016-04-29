@@ -69,10 +69,6 @@ module.exports = LayoutActionCreator =
         # Set message as current
         if messageID
             AppDispatcher.dispatch
-                type: ActionTypes.MESSAGE_CURRENT
-                value: {messageID}
-
-            AppDispatcher.dispatch
                 type: ActionTypes.MESSAGE_FETCH_REQUEST
                 value: {messageID}
 
