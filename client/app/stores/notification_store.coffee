@@ -241,4 +241,26 @@ class NotificationStore extends Store
                 errors: [error]
                 autoclose: true
 
-module.exports = (_self = new NotificationStore())
+
+        handle ActionTypes.SEARCH_CONTACT_FAILURE, ({error}) ->
+            _showNotification
+                message: message
+                errors: [error]
+                autoclose: true
+
+
+        handle ActionTypes.CREATE_CONTACT_SUCCESS, ({error, result}) ->
+            _showNotification
+                message: t 'contact create success',
+                    contact: result?.name or result?.address
+                autoclose: true
+
+
+        handle ActionTypes.CREATE_CONTACT_FAILURE, ({error}) ->
+            _showNotification
+                message: t 'contact create error', {error}
+                errors: [error]
+                autoclose: rue
+
+
+module.exports = new NotificationStore()

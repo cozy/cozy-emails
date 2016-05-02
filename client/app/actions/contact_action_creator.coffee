@@ -2,10 +2,7 @@ AppDispatcher = require '../libs/flux/dispatcher/dispatcher'
 {ActionTypes} = require '../constants/app_constants'
 Activity = require '../utils/activity_utils'
 
-NotificationActionsCreator = require '../actions/notification_action_creator'
-
 module.exports = ContactActionCreator =
-
 
     searchContact: (query) ->
         options =
@@ -14,15 +11,21 @@ module.exports = ContactActionCreator =
                 type: 'contact'
                 query: query
 
+        AppDispatcher.dispatch
+            type: ActionTypes.SEARCH_CONTACT_REQUEST
+            value: options
+
         activity = new Activity options
 
-        activity.onsuccess = ->
+        activity.onsuccess = (error, result) ->
             AppDispatcher.dispatch
-                type: ActionTypes.RECEIVE_RAW_CONTACT_RESULTS
-                value: @result
+                type: ActionTypes.SEARCH_CONTACT_SUCCESS
+                value: result
 
-        activity.onerror = ->
-            console.log "KO", @error, @name
+        activity.onerror = (error) ->
+            AppDispatcher.dispatch
+                type: ActionTypes.SEARCH_CONTACT_FAILURE
+                value: error
 
 
     searchContactLocal: (query) ->
@@ -31,27 +34,31 @@ module.exports = ContactActionCreator =
             value: query
 
 
-    createContact: (contact, callback) ->
+    createContact: (contact) ->
         options =
             name: 'create'
             data:
                 type: 'contact'
                 contact: contact
 
+        AppDispatcher.dispatch
+            type: ActionTypes.CREATE_CONTACT_REQUEST
+            value: options
+
         activity = new Activity options
 
-        activity.onsuccess = (err, res) ->
+        activity.onsuccess = ->
             AppDispatcher.dispatch
-                type: ActionTypes.RECEIVE_RAW_CONTACT_RESULTS
-                value: @result
+                type: ActionTypes.CREATE_CONTACT_SUCCESS
+                value: contact
 
-            msg = t('contact create success',
-                {contact: contact.name or contact.address})
-            NotificationActionsCreator.alert msg, autoclose: true
-            callback?()
+        activity.onerror = (error) ->
+            AppDispatcher.dispatch
+                type: ActionTypes.CREATE_CONTACT_FAILURE
+                value: error
 
-        activity.onerror = ->
-            console.log @name
-            msg = t('contact create error', {error: @name})
-            NotificationActionsCreator.alertError msg, autoclose: true
-            callback?()
+
+    gotoContactList: (contact) ->
+        AppDispatcher.dispatch
+            type: ActionTypes.CONTACT_DISPLAY
+            value: {contact}

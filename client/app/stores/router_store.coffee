@@ -451,9 +451,11 @@ class RouterStore extends Store
 
             @emit 'change'
 
+
         handle ActionTypes.ROUTES_INITIALIZE, (router) ->
             _router = router
             @emit 'change'
+
 
         handle ActionTypes.REMOVE_ACCOUNT_SUCCESS, ->
             _action = AccountActions.CREATE
@@ -547,6 +549,12 @@ class RouterStore extends Store
 
         handle ActionTypes.REFRESH_SUCCESS, ->
             @emit 'change'
+
+
+        handle ActionTypes.CONTACT_DISPLAY, (contact) ->
+            # TODO : should display contact
+            # href: "/#apps/contacts/contact/#{model.get 'id'}",
+
 
 
 _toCamelCase = (value) ->
