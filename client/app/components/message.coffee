@@ -28,18 +28,21 @@ module.exports = React.createClass
 
 
     render: ->
+        messageID = @props.message.get 'id'
+
         article
+            ref: "messageContainer-#{messageID}"
+            key: "messageContainer-#{messageID}"
             className: classNames
                 message: true
                 active: @props.active
                 isDraft: @props.isDraft
                 isDeleted: @props.isDeleted
-                isUnread: @props.isUnread
-            key: "messageContainer-#{@props.message.get('id')}",
+                isUnread: @props.isUnread,
 
             MessageHeader
-                ref: 'messageHeader'
-                key: "messageHeader-#{@props.message.get('id')}"
+                ref: "messageHeader-#{messageID}"
+                key: "messageHeader-#{messageID}"
                 message: @props.message
                 avatar: RouterGetter.getAvatar @props.message
                 createdAt: RouterGetter.getCreatedAt @props.message
@@ -50,22 +53,26 @@ module.exports = React.createClass
 
             if @props.active
                 ToolbarMessage
-                    ref         : 'messageToolbar'
+                    ref         : "toolbarMessage-#{messageID}"
+                    key         : "toolbarMessage-#{messageID}"
                     isFull      : true
                     messageID   : @props.message.get('id')
 
             if @props.active
                 MessageContent
-                    ref: 'messageContent'
-                    messageID: @props.message.get 'id'
+                    ref: "messageContent-#{messageID}"
+                    key: "messageContent-#{messageID}"
+                    messageID: messageID
                     html: @props.html
                     text: @props.text
                     rich: @props.rich
                     imagesWarning: @props.imagesWarning
+                    update: @props.update
 
             if @props.active
                 footer
-                    ref: 'messageFooter'
+                    ref: "messageFooter-#{messageID}"
+                    key: "messageFooter-#{messageID}"
                     className: 'attachments',
                     ul null,
                         @props.resources.get('preview')?.map (file, index) =>

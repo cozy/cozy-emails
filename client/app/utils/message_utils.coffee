@@ -9,6 +9,7 @@ moment      = require 'moment'
 _           = require 'underscore'
 jQuery      = require 'jquery'
 
+
 {MessageActions, MessageFlags} = require '../constants/app_constants'
 
 # FIXME : appeler ici des getters à la place des stores
@@ -477,15 +478,17 @@ module.exports = MessageUtils =
         text = toMarkdown html or ''
         text = @cleanReplyText text or ''
 
-        html = @cleanHTML html
+        html = @cleanHTML {html}
         # html = @wrapReplyHtml html
 
         return {html, text}
 
 
     # set source of attached images
-    cleanHTML: (html, attachments) ->
+    cleanHTML: (props={}) ->
+        {html, attachments, displayImages} = props
         imagesWarning = false
+        displayImages ?= SettingsStore.get 'messageDisplayImages'
 
         # Add HTML to a document
         parser = new DOMParser()
@@ -501,8 +504,9 @@ module.exports = MessageUtils =
             console.error "Unable to parse HTML content of message"
             html = null
         else
+            # TODO : ne pas faire ce
             # Do not display images if we don't want to
-            if (displayImages = SettingsStore.get 'messageDisplayImages')
+            unless displayImages
                 imagesWarning = doc.querySelectorAll('IMG[src]').length?
 
             # Format links:
@@ -516,6 +520,12 @@ module.exports = MessageUtils =
             # because you can get it from attached menu
             for image in doc.querySelectorAll 'img[src]'
                 filePath = image.getAttribute 'src'
+
+                # Do not display pictures
+                # when user doesnt want to
+                if imagesWarning
+                    image.parentNode.removeChild image
+
                 file = attachments.find (attachment) ->
                     if filePath is attachment.get 'url'
                         image.parentNode.removeChild image
@@ -744,7 +754,9 @@ module.exports = MessageUtils =
         attachments = message.get 'attachments'
 
         if html?.length
-            {html, imagesWarning} = MessageUtils.cleanHTML html, attachments
+            displayImages = message.__displayImages
+            props = {html, attachments, displayImages}
+            {html, imagesWarning} = MessageUtils.cleanHTML props
 
         return {
             attachments     : attachments

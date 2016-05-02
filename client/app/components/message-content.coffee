@@ -3,15 +3,16 @@ React = require 'react'
 
 frame  = React.createFactory require '../components/frame'
 
-SettingsActionCreator = require '../actions/settings_action_creator'
 
-
-module.exports = MessageContent = React.createClass
+module.exports = React.createClass
     displayName: 'MessageContent'
+
 
     displayImages: ->
         displayImages = true
-        SettingsActionCreator.edit {displayImages}
+        messageID = @props.messageID
+        @props.update {displayImages, messageID}
+
 
     render: ->
         if @props.html?.length
@@ -20,13 +21,13 @@ module.exports = MessageContent = React.createClass
                     div
                         ref: "imagesWarning"
                         className: "imagesWarning alert alert-warning content-action",
-                        ref: "imagesWarning",
                             i className: 'fa fa-shield'
                             t 'message images warning'
                             button
+                                ref: 'imagesDisplay',
+                                key: "imagesDisplay-#{@props.messageID}",
                                 className: 'btn btn-xs btn-warning',
                                 type: "button",
-                                ref: 'imagesDisplay',
                                 onClick: @displayImages,
                                 t 'message images display'
 

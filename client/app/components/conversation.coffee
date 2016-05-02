@@ -44,16 +44,30 @@ module.exports = React.createClass
         }
 
 
-    renderMessage: (message, index) ->
+    changeMessageProps: (props) ->
+        {messageID, displayImages} = props
+
+        # Update conversation with new
+        # message Properties
+        conversation = @state.conversation.map (message) ->
+            if messageID is message.get 'id'
+                message.__displayImages = displayImages
+            message
+
+        @setState {conversation}
+
+
+    renderMessage: (message) ->
         messageID = message.get 'id'
         props = MessageUtils.formatContent message
 
         Message _.extend props, {
-            ref         : 'message'
+            ref         : "message-#{messageID}"
             key         : "message-#{messageID}"
             message     : message
             active      : @props.messageID is messageID
             resources   : RouterGetter.getResources message
+            update      : @changeMessageProps
         }
 
     render: ->
