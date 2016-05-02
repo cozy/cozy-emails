@@ -81,15 +81,15 @@ class Router extends Backbone.Router
 
 
     messageForward: (mailboxID, messageID) ->
-        _dispatch {action: MessageActions.FORWARD, mailboxID}
+        _dispatch {action: MessageActions.FORWARD, mailboxID, messageID}
 
 
     messageReply: (mailboxID, messageID) ->
-        _dispatch {action: MessageActions.REPLY, mailboxID}
+        _dispatch {action: MessageActions.REPLY, mailboxID, messageID}
 
 
     messageReplyAll: (mailboxID, messageID) ->
-        _dispatch {action: MessageActions.REPLY_ALL, mailboxID}
+        _dispatch {action: MessageActions.REPLY_ALL, mailboxID, messageID}
 
 
     # search: (accountID, mailboxID, value) ->
