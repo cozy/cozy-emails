@@ -13,7 +13,7 @@ module.exports = React.createClass
 
     deleteMessage: ->
         messageID = @props.messageID
-        RouterActionCreator.delete {messageID}
+        RouterActionCreator.deleteMessage {messageID}
 
     render: ->
         messageID = @props.messageID

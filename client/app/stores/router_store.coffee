@@ -436,6 +436,12 @@ class RouterStore extends Store
             _serverAccountErrorByField = Immutable.Map "unknown": error
 
 
+    _updateURL = ->
+        currentURL = _self.getCurrentURL isServer: false
+        if location.hash isnt currentURL
+            _router.navigate currentURL
+
+
     ###
         Defines here the action handlers.
     ###
@@ -471,9 +477,7 @@ class RouterStore extends Store
                 _resetSearch()
 
             # Update URL if it didnt
-            currentURL = @getCurrentURL isServer: false
-            if location.hash isnt currentURL
-                _router.navigate currentURL
+            _updateURL()
 
             @emit 'change'
 
@@ -568,8 +572,12 @@ class RouterStore extends Store
 
 
         handle ActionTypes.MESSAGE_TRASH_SUCCESS, ({target, updated, ref}) ->
-            if (nextMessage = @getNextConversation())?.size
-                _setCurrentMessage nextMessage?.get 'id'
+            # Update messageID
+            messageID = @getNextConversation()?.get 'id'
+            _setCurrentMessage messageID
+
+            # Update URL if it didnt
+            _updateURL()
             @emit 'change'
 
 

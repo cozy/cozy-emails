@@ -29,4 +29,4 @@ module.exports = React.createClass
 
      onDelete: ->
           messageIDs = @props.selection
-          RouterActionCreator.delete {messageIDs}
+          RouterActionCreator.deleteMessage {messageIDs}

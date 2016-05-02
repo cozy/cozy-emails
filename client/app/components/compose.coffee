@@ -221,7 +221,7 @@ module.exports = React.createClass
             @resetChange()
 
             messageID = @state.id
-            RouterActionCreator.delete {messageID}
+            RouterActionCreator.deleteMessage {messageID}
             LayoutActionCreator.hideModal()
 
             # specific callback

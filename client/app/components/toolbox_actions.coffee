@@ -26,7 +26,7 @@ module.exports = React.createClass
 
     doDelete: ->
         {conversationID, messageIDs} = @props
-        RouterActionCreator.delete {conversationID, messageIDs}
+        RouterActionCreator.deleteMessage {conversationID, messageIDs}
 
 
     render: ->

@@ -125,7 +125,7 @@ module.exports =
     batchDelete: (target, callback) ->
         body = _.extend {}, target
         request.put "messages/batchTrash"
-        .send target
+        .send body
         .end handleResponse callback, "batchDelete"
 
     batchMove: (target, from, to, callback) ->

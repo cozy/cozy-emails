@@ -121,7 +121,7 @@ module.exports = Utils =
             return
 
         deleteMessage = ->
-            RouterActionCreator.delete {messageID}
+            RouterActionCreator.deleteMessage {messageID}
 
         # Delete Message without modal
         unless SettingsStore.get 'messageConfirmDelete'

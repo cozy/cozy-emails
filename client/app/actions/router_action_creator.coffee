@@ -123,6 +123,32 @@ RouterActionCreator =
                 type: ActionTypes.MESSAGE_FLAGS_SUCCESS
                 value: {target, updated, action}
 
+    # Delete message(s)
+    # target:
+    # - messageID or
+    # - messageIDs or
+    # - conversationIDs or
+    # - conversationIDs
+    deleteMessage: (target) ->
+        timestamp = Date.now()
+        target.accountID ?= RouterStore.getAccountID()
+
+        AppDispatcher.dispatch
+            type: ActionTypes.MESSAGE_TRASH_REQUEST
+            value: {target}
+
+        # send request
+        XHRUtils.batchDelete target, (error, updated) =>
+            if error
+                AppDispatcher.dispatch
+                    type: ActionTypes.MESSAGE_TRASH_FAILURE
+                    value: {target, error}
+            else
+                message.updated = timestamp for message in updated
+                AppDispatcher.dispatch
+                    type: ActionTypes.MESSAGE_TRASH_SUCCESS
+                    value: {target, updated}
+
 
     addFilter: (params) ->
         filter = {}
