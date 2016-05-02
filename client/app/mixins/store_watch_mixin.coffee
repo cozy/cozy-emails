@@ -1,8 +1,5 @@
 _ = require 'underscore'
 
-RouterActionCreator = require '../actions/router_action_creator'
-{MessageFlags} = require '../constants/app_constants'
-
 module.exports = StoreWatchMixin = (stores) ->
 
     componentDidMount: ->
@@ -12,11 +9,6 @@ module.exports = StoreWatchMixin = (stores) ->
             store.addListener 'change', @_setStateFromStores
 
     componentWillUnmount: ->
-        # Mark message as read
-        if @state?.message?.size
-            messageID = @state.message.get 'id'
-            RouterActionCreator.mark {messageID}, MessageFlags.SEEN
-
         # Stop listening to the linked stores
         # when the component is unmounted.
         stores.forEach (store) =>

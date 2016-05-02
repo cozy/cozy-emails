@@ -11,8 +11,17 @@ RouterGetter = require '../getters/router'
 ContactGetter = require '../getters/contact'
 IconGetter = require '../getters/icon'
 
+RouterActionCreator = require '../actions/router_action_creator'
+{MessageFlags} = require '../constants/app_constants'
+
 module.exports = React.createClass
     displayName: 'Message'
+
+    componentWillUnmount: ->
+        # Mark message as read
+        if @props?.message?.size and @props.active
+            messageID = @props.message.get 'id'
+            RouterActionCreator.mark {messageID}, MessageFlags.SEEN
 
 
     renderAttachement: (file, index, isPreview=false) ->

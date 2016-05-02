@@ -105,6 +105,25 @@ RouterActionCreator =
                     value: {result, conversationID, timestamp, page}
 
 
+    mark: (target, action) ->
+        timestamp = Date.now()
+
+        AppDispatcher.dispatch
+        type: ActionTypes.MESSAGE_FLAGS_REQUEST
+        value: {target, action}
+
+        XHRUtils.batchFlag {target, action}, (error, updated) =>
+        if error
+            AppDispatcher.dispatch
+                type: ActionTypes.MESSAGE_FLAGS_FAILURE
+                value: {target, error, action}
+        else
+            message.updated = timestamp for message in updated
+            AppDispatcher.dispatch
+                type: ActionTypes.MESSAGE_FLAGS_SUCCESS
+                value: {target, updated, action}
+
+
     addFilter: (params) ->
         filter = {}
         separator = ','
