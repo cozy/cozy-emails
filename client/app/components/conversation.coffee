@@ -17,13 +17,23 @@ RouterActionCreator = require '../actions/router_action_creator'
 module.exports = React.createClass
     displayName: 'Conversation'
 
-
     componentDidMount: ->
         @_initScroll()
+        @_getFullConversation()
 
 
     componentDidUpdate: ->
         @_initScroll()
+        @_getFullConversation()
+
+
+    _getFullConversation: ->
+        if (conversationID = @props.message?.get 'conversationID')
+            length = RouterGetter.getConversationLength {conversationID}
+            if length isnt @props.conversation.length
+                setTimeout ->
+                    RouterActionCreator.getConversation conversationID
+                , 0
 
 
     renderMessage: (message) ->

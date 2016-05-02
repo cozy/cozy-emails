@@ -42,14 +42,6 @@ RouterActionCreator =
                 # for getNext handles
                 _setNextURL result
 
-                # Missing Messages into Conversation
-                messageID = RouterStore.getMessageID()
-                length = RouterStore.getConversationLength {messageID}
-                conversation = RouterStore.getConversation messageID
-                if (length and conversation?.length) and conversation?.length isnt length
-                    conversationID = conversation[0].get 'conversationID'
-                    @getConversation conversationID
-
                 # Fetch missing messages
                 if RouterStore.isMissingMessages()
                     @gotoNextPage()
