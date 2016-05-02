@@ -133,6 +133,16 @@ module.exports =
     SearchActions:
         'SHOW_ALL'      : 'search'
 
+    GmailDomains: [
+        'gmail.com'
+        'googlemail.com'
+    ]
+
+    ServersEncProtocols: [
+        'ssl'
+        'starttls'
+    ]
+
     AlertLevel:
         'SUCCESS'      : 'SUCCESS'
         'INFO'         : 'INFO'

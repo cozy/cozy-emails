@@ -6,14 +6,15 @@ React = require 'react'
 AriaTips = require '../../vendor/aria-tips/aria-tips'
 
 # React components
-Menu            = React.createFactory require './menu'
-Modal           = React.createFactory require './modal'
-ToastContainer  = React.createFactory require './toast_container'
-Tooltips        = React.createFactory require './tooltips-manager'
-MessageList     = React.createFactory require './message-list'
-Conversation    = React.createFactory require './conversation'
-AccountConfig   = React.createFactory require './account_config'
-Compose         = React.createFactory require './compose'
+Menu                  = React.createFactory require './menu'
+Modal                 = React.createFactory require './modal'
+ToastContainer        = React.createFactory require './toast_container'
+Tooltips              = React.createFactory require './tooltips-manager'
+MessageList           = React.createFactory require './message-list'
+Conversation          = React.createFactory require './conversation'
+AccountConfig         = React.createFactory require './account_config'
+Compose               = React.createFactory require './compose'
+AccountWizardCreation = React.createFactory require './accounts/wizard/creation'
 
 # React Mixins
 RouterStore          = require '../stores/router_store'
@@ -136,9 +137,8 @@ module.exports = React.createClass
                                 'aria-expanded': false
 
             if @state.action is AccountActions.CREATE
-                div role: 'complementary'
-                    # AccountConfig
-                    #     key: 'account-create'
+                div role: 'complementary',
+                    AccountWizardCreation()
 
             # Display feedback
             Modal @state.modal if @state.modal?
