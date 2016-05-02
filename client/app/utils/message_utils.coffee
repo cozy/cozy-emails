@@ -526,9 +526,6 @@ module.exports = MessageUtils =
                 if imagesWarning
                     image.parentNode.removeChild image
 
-                file = attachments.find (attachment) ->
-                    if filePath is attachment.get 'url'
-                        image.parentNode.removeChild image
 
             html = doc.documentElement.innerHTML
 
