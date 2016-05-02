@@ -3,10 +3,7 @@ React = require 'react'
 
 {Tooltips} = require '../constants/app_constants'
 
-# FIXME : ne pas appeler ici le store
-# passer par le Router.getter
-# Router.getAddress contactID
-ContactStore = require '../stores/contact_store'
+ContactGetter = require '../getters/contact'
 
 {AddressLabel} = require('./basic_components').factories
 
@@ -25,7 +22,7 @@ module.exports = React.createClass
         # -> regarder la forme que devrait avoir ce lien
         # -> le remplacer par une props avec pour value
         # -> une URL générée avec le contactID pour argument
-        if (model = ContactStore.getByAddress @props.contact.address)?
+        if (model = ContactGetter.getByAddress @props.contact)?
             return span
                 ref: 'contact'
                 AddressLabel
