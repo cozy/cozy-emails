@@ -18,26 +18,6 @@ class MessageStore extends Store
     _conversationLength = Immutable.Map()
 
 
-    # Retrieve a batch of message with various criteria
-    # target - is an {Object} with a property messageID or messageIDs or
-    #          conversationID or messageIDs
-    # target.accountID is needed to success Delete
-    #
-    # Returns an {Array} of {Immutable.Map} messages
-    _getMixed = (target) ->
-        if target.messageID
-            return [_messages.get(target.messageID)]
-        else if target.messageIDs
-            return target.messageIDs.map (id) ->
-                 _messages.get id
-            .filter (message) -> message?
-        else if target.conversationID
-            return _messages.filter (message) ->
-                message?.get('conversationID') is target?.conversationID
-            .toArray()
-        else throw new Error 'Wrong Usage : unrecognized target AS.getMixed'
-
-
     _updateMessages = (result={}, timestamp) ->
         {messages, conversationLength} = result
 
@@ -84,6 +64,7 @@ class MessageStore extends Store
                 """
 
             _messages = _messages.set message.id, messageMap
+
 
     _deleteMessage = (message) ->
         _messages = _messages.remove message.id
