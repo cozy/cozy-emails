@@ -106,12 +106,8 @@ class RouteGetter
         RouterStore.getMessageID()
 
 
-    getCurrentMessage: ->
-        MessageStore.getByID RouterStore.getMessageID()
-
-
     isCurrentConversation: (conversationID) ->
-        conversationID is @getCurrentMessage()?.get 'conversationID'
+        conversationID is @getMessage()?.get 'conversationID'
 
 
     getMailbox: (mailboxID) ->
@@ -144,6 +140,11 @@ class RouteGetter
         RouterStore.getAccountID()
 
 
+    getAccount: (accountID) ->
+        accountID ?= @getAccountID()
+        RouterStore.getAccount()
+
+
     getMailboxID: ->
         RouterStore.getMailboxID()
 
@@ -166,6 +167,22 @@ class RouteGetter
                 isEqual = mailboxID is id
                 unless (isEqual or isGlobal)
                     return mailbox?.get 'label'
+
+
+    isFlagged: (message) ->
+        RouterStore.isFlagged message
+
+
+    isDeleted: (message) ->
+        RouterStore.isDeleted message
+
+
+    isDraft: (message) ->
+        RouterStore.isDraft message
+
+
+    isUnread: (message) ->
+        RouterStore.isUnread message
 
 
     getEmptyMessage: ->

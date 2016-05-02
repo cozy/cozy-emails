@@ -6,16 +6,16 @@ React = require 'react'
 
 ContactLabel = React.createFactory require '../components/contact_label'
 
-ContactGetter = require '../getters/contact'
-
 RouterActionCreator = require '../actions/router_action_creator'
 
 module.exports = React.createClass
     displayName: 'MessageHeader'
 
+
     gotoMessage: ->
         messageID = @props.message?.get('id')
         RouterActionCreator.gotoMessage {messageID}
+
 
     render: ->
         header
@@ -55,8 +55,9 @@ module.exports = React.createClass
                 span className: 'metas date',
                     @props.createdAt
 
+
     renderAddress: (field) ->
-        if (contacts = @props.message.get field)?.length
+        if (contacts = @props.contacts[field])?.length
             span
                 className: "addresses #{field}"
                 key: "address-#{field}",
@@ -70,6 +71,6 @@ module.exports = React.createClass
                         ContactLabel
                             ref: "contact-#{field}"
                             key: "contact-#{field}-#{index}"
-                            model: ContactGetter.getByAddress contact
-                            address: ContactGetter.displayAddress contact
-                            contact: contact
+                            model: contact.model
+                            address: contact.address
+                            contact: contact.value

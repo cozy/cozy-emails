@@ -64,8 +64,16 @@ class ContactGetter
         addresses.join ", "
 
 
-    getAll: ->
-        ContactStore.getResults()
+    getAll: (message) ->
+        unless message
+            return ContactStore.getResults()
+
+        _.zipObject (keys = ['from', 'to' , 'cc']), _.map keys, (key) =>
+            _.map (contacts = message.get key), (value) =>
+                model = @getByAddress value
+                address = @displayAddress value
+                {value, model, address}
+
 
 
 module.exports = new ContactGetter()

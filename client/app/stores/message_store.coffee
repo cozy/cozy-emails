@@ -5,7 +5,9 @@ AppDispatcher = require '../libs/flux/dispatcher/dispatcher'
 
 Store = require '../libs/flux/store/store'
 
-{ActionTypes} = require '../constants/app_constants'
+
+# {MessageActions, AccountActions, MessageFlags} = require '../constants/app_constants'
+{ActionTypes, MessageFlags, MessageFilter} = require '../constants/app_constants'
 
 class MessageStore extends Store
 

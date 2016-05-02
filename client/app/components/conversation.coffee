@@ -46,6 +46,10 @@ module.exports = React.createClass
             message     : message
             active      : @props.messageID is messageID
             resources   : RouterGetter.getResources message
+            isDraft     : RouterGetter.isDraft message
+            isDeleted   : RouterGetter.isDeleted message
+            isFlagged   : RouterGetter.isFlagged message
+            isUnread    : RouterGetter.isUnread message
         }
 
     render: ->

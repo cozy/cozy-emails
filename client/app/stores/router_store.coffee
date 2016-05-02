@@ -257,7 +257,6 @@ class RouterStore extends Store
 
 
     getTrashMailbox: (accountID) ->
-        accountID ?= @getAccountID()
         @getAllMailboxes(accountID)?.find (mailbox) ->
             'trash' is mailbox.get('label').toLowerCase()
 
@@ -279,6 +278,33 @@ class RouterStore extends Store
     isFlags: (name) ->
         flags = @getFilter()?.flags or []
         MessageFilter[name] is flags or MessageFilter[name] in flags
+
+
+    isFlagged: (message) ->
+        MessageFlags.FLAGGED in message?.get 'flags'
+
+
+    isDeleted: (message) ->
+        # Message is in trashbox
+        trashID = @getAccount()?.get 'trashMailbox'
+        mailboxIDs = _.keys message?.get 'mailboxIDs'
+        if (trashID in mailboxIDs)
+            return true
+
+        # Message is not totally removed
+        deletedLabel = 'Deleted Messages'.toLowerCase()
+        label = @getMailbox()?.get('label')?.toLowerCase()
+        label is deletedLabel
+
+
+    isDraft: (message) ->
+        draftID = @getAccount()?.get 'draftMailbox'
+        mailboxIDs = _.keys message?.get 'mailboxIDs'
+        draftID in mailboxIDs
+
+
+    isUnread: (message) ->
+        MessageFlags.SEEN not in message?.get 'flags'
 
 
     getMailboxTotal: ->

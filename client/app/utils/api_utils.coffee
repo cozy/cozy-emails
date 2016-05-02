@@ -39,11 +39,6 @@ module.exports = Utils =
         RouterStore.getMailbox()?.toJS()
 
 
-    getCurrentMessage: ->
-        messageID = RouterStore.getMessageID()
-        Utils.getMessage messageID
-
-
     getMessage: (messageID) ->
         MessageStore.getByID(messageID)?.toJS()
 

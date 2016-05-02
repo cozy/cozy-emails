@@ -21,6 +21,7 @@ StoreWatchMixin      = require '../mixins/store_watch_mixin'
 TooltipRefesherMixin = require '../mixins/tooltip_refresher_mixin'
 
 RouterGetter = require '../getters/router'
+ContactGetter = require '../getters/contact'
 
 {MessageActions, AccountActions} = require '../constants/app_constants'
 
@@ -69,6 +70,8 @@ Application = React.createClass
 
         isAccount = -1 < @state.action?.indexOf 'account'
 
+        message = RouterGetter.getMessage()
+
         div className: @state.className,
             div className: 'app',
                 Menu
@@ -97,10 +100,10 @@ Application = React.createClass
                             key                  : @state.action + '-' + @state.messageID
                             id                   : @state.messageID
                             action               : @state.action
-                            message              : RouterGetter.getCurrentMessage()
+                            message              : message
                             inReplyTo            : RouterGetter.getReplyMessage @state.messageID
                             settings             : SettingsStore.get()
-                            account              : RouterGetter.getAccounts().get(@state.accountID)
+                            account              : RouterGetter.getAccount()
 
                     else
                         div
@@ -115,11 +118,11 @@ Application = React.createClass
 
                             if @state.action is MessageActions.SHOW
                                 Conversation
-                                    ref         : 'conversation'
-                                    key         : "conversation-#{@state.messageID}"
-                                    messageID   : @state.messageID
-                                    message     : RouterGetter.getMessage()
-                                    conversation: RouterGetter.getConversation()
+                                    ref             : 'conversation'
+                                    key             : "conversation-#{@state.messageID}"
+                                    messageID       : @state.messageID
+                                    message         : message
+                                    conversation    : RouterGetter.getConversation()
                             else
                                 section
                                     'key'          : 'placeholder'

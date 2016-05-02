@@ -7,8 +7,6 @@ ToolbarMessage = React.createFactory require './toolbar_message'
 MessageContent = React.createFactory require './message-content'
 AttachmentPreview = React.createFactory require './attachement_preview'
 
-{MessageFlags} = require '../constants/app_constants'
-
 RouterGetter = require '../getters/router'
 ContactGetter = require '../getters/contact'
 IconGetter = require '../getters/icon'
@@ -29,7 +27,9 @@ module.exports = React.createClass
 
 
     render: ->
-        messageID = @props.message.get 'id'
+        {message} = @props
+
+        messageID = message.get 'id'
 
         article
             ref: "messageContainer-#{messageID}"
@@ -44,20 +44,22 @@ module.exports = React.createClass
             MessageHeader
                 ref: "messageHeader-#{messageID}"
                 key: "messageHeader-#{messageID}"
-                message: @props.message
-                avatar: ContactGetter.getAvatar @props.message
-                createdAt: RouterGetter.getCreatedAt @props.message
+                message: message
+                contacts: ContactGetter.getAll message
+                avatar: ContactGetter.getAvatar message
+                createdAt: RouterGetter.getCreatedAt message
                 isDraft: @props.isDraft
                 isDeleted: @props.isDeleted
-                isFlagged: MessageFlags.FLAGGED in @props.message.get('flags')
+                isFlagged: @props.isFlagged
                 active: @props.active,
+
 
             if @props.active
                 ToolbarMessage
                     ref         : "toolbarMessage-#{messageID}"
                     key         : "toolbarMessage-#{messageID}"
                     isFull      : true
-                    messageID   : @props.message.get('id')
+                    messageID   : messageID
 
             if @props.active
                 MessageContent
