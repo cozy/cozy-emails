@@ -10,7 +10,6 @@ RouterGetter = require '../getters/router'
 
 # React Mixins
 MessageStore        = require '../stores/message_store'
-SettingsStore       = require '../stores/settings_store'
 SelectionStore      = require '../stores/selection_store'
 StoreWatchMixin     = require '../mixins/store_watch_mixin'
 
