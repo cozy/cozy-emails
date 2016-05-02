@@ -11,25 +11,12 @@ colorhash = require '../utils/colorhash'
 LayoutActionCreator  = require '../actions/layout_action_creator'
 {MessageFilter, Tooltips, AccountActions, MessageActions} = require '../constants/app_constants'
 
-RouterStore = require '../stores/router_store'
-StoreWatchMixin = require '../mixins/store_watch_mixin'
-
 RouterGetter = require '../getters/router'
 IconGetter = require '../getters/icon'
 
 module.exports = Menu = React.createClass
     displayName: 'Menu'
 
-    mixins: [
-        StoreWatchMixin [RouterStore]
-    ]
-
-    getStateFromStores: ->
-        # FIXME : mettre ici le nb de messages non lu
-        # de la mailbox courante
-        return {
-            mailboxes: RouterGetter.getMailboxes()
-        }
 
     # FIXME : déplacer ça dans ModalStore
     # et dispatcher un DISPLAY_MODAL
@@ -46,6 +33,7 @@ module.exports = Menu = React.createClass
                 "word-wrap": "normal",
                     errors.join "\n\n"
         LayoutActionCreator.displayModal modal
+
 
     render: ->
         aside
@@ -118,9 +106,7 @@ module.exports = Menu = React.createClass
         mailboxURL = RouterGetter.getURL {action, mailboxID, resetFilter: true}
 
         props = {
-            key: 'account-' + accountID
             isSelected: accountID is RouterGetter.getAccountID()
-            mailboxes: RouterGetter.getMailboxes()
             mailboxURL: mailboxURL
             configURL: RouterGetter.getURL
                 action: AccountActions.EDIT
@@ -130,11 +116,12 @@ module.exports = Menu = React.createClass
             progress: RouterGetter.getProgress accountID
         }
 
-        mailboxes = @state.mailboxes.toArray()
+        mailboxes = @props.mailboxes.toArray()
         className = classNames active: props.isSelected
         div
-            className: className,
-            key: props.key,
+            className: className
+            ref: "menuLink-account-#{accountID}"
+            key: "menuLink-account-#{accountID}",
             div className: 'account-title',
                 a
                     href: props.mailboxURL
@@ -167,7 +154,7 @@ module.exports = Menu = React.createClass
                     role: 'group'
                     className: 'list-unstyled mailbox-list',
 
-                    mailboxes.map (mailbox, key) =>
+                    mailboxes?.map (mailbox, key) =>
                         mailboxURL = RouterGetter.getURL
                             mailboxID: (mailboxID = mailbox.get 'id')
                             resetFilter: true
@@ -191,7 +178,7 @@ module.exports = Menu = React.createClass
                         type: 'unreadMailbox'
                         flags: MessageFilter.UNSEEN
                         progress: props.progress
-                        total: (total = RouterStore.getInbox().get 'nbUnread')
+                        total: (total = RouterGetter.getInbox().get 'nbUnread')
                         unread: total
                         slug: 'unread'
 
@@ -199,6 +186,6 @@ module.exports = Menu = React.createClass
                         type: 'flaggedMailbox'
                         flags: MessageFilter.FLAGGED
                         progress: props.progress
-                        total: (total = RouterStore.getInbox().get 'nbFlagged')
+                        total: (total = RouterGetter.getInbox().get 'nbFlagged')
                         unread: total
                         slug: 'flagged'

@@ -79,6 +79,7 @@ Application = React.createClass
                     accounts        : RouterGetter.getAccounts().toArray()
                     composeURL      : composeURL
                     newAccountURL   : newAccountURL
+                    mailboxes       : RouterGetter.getMailboxes()
 
                 main
                     className: @props.layout
