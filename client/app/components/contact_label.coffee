@@ -13,36 +13,28 @@ LayoutActionCreator = require '../actions/layout_action_creator'
 # a contact object in the Cozy for this contact.
 module.exports = React.createClass
 
-    gotoContact: ->
-        ContactActionCreator.gotoContactList @props.contact
-
     render: ->
-        if @props.model?
-            span
-                ref: 'contact'
-                AddressLabel
-                    contact: @props.contact
+        span
+            ref: 'contact'
+            className: 'participant',
+            AddressLabel
+                contact: @props.contact
+
+            if (contactID = @props.model?.get 'id')?
                 a
                     className: 'show-contact'
-                    onClick: @gotoContact
-
+                    href: "/#apps/contacts/contact/#{contactID}"
+                    target: "_blank"
                     button
                         className: 'fa fa-user'
                         'aria-describedby': Tooltips.SHOW_CONTACT
                         'data-tooltip-direction': 'top'
-
-        else
-            span
-                ref: 'contact'
-                className: 'participant',
-                AddressLabel
-                    contact: @props.contact,
-
+            else
                 span
-                    className: 'add-contact',
+                    className: 'add-contact'
+                    onClick: @addContact
                     button
                         className: 'fa fa-user-plus'
-                        onClick: @addContact
                         'aria-describedby': Tooltips.ADD_CONTACT
                         'data-tooltip-direction': 'top'
 

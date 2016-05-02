@@ -551,11 +551,6 @@ class RouterStore extends Store
             @emit 'change'
 
 
-        handle ActionTypes.CONTACT_DISPLAY, (contact) ->
-            # TODO : should display contact
-            # href: "/#apps/contacts/contact/#{model.get 'id'}",
-
-
 
 _toCamelCase = (value) ->
     return value.replace /\.(\w)*/gi, (match) ->

@@ -56,9 +56,3 @@ module.exports = ContactActionCreator =
             AppDispatcher.dispatch
                 type: ActionTypes.CREATE_CONTACT_FAILURE
                 value: error
-
-
-    gotoContactList: (contact) ->
-        AppDispatcher.dispatch
-            type: ActionTypes.CONTACT_DISPLAY
-            value: {contact}
