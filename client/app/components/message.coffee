@@ -37,10 +37,6 @@ module.exports = React.createClass
                 isUnread: @props.isUnread
             key: "messageContainer-#{@props.message.get('id')}",
 
-
-
-            # FIXME : le click ne fonctionne pas
-            # conflit avec 'MessageHeader'?!
             MessageHeader
                 ref: 'messageHeader'
                 key: "messageHeader-#{@props.message.get('id')}"

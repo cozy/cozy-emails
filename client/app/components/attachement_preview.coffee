@@ -2,8 +2,6 @@ React = require 'react'
 
 {li, img, a, i} = React.DOM
 
-MessageUtils = require '../utils/message_utils'
-
 {Tooltips} = require '../constants/app_constants'
 
 module.exports = React.createClass
