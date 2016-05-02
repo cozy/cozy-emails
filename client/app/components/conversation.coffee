@@ -18,43 +18,12 @@ module.exports = React.createClass
     displayName: 'Conversation'
 
 
-    getInitialState: ->
-        # Build initial state
-        # from store values.
-        @getStateFromStores @props
-
-
-    componentWillReceiveProps: (nextProps={}) ->
-        @setState @getStateFromStores nextProps
-        nextProps
-
-
     componentDidMount: ->
         @_initScroll()
 
 
     componentDidUpdate: ->
         @_initScroll()
-
-
-    getStateFromStores: ->
-        return {
-            message: RouterGetter.getMessage()
-            conversation: RouterGetter.getConversation()
-        }
-
-
-    changeMessageProps: (props) ->
-        {messageID, displayImages} = props
-
-        # Update conversation with new
-        # message Properties
-        conversation = @state.conversation.map (message) ->
-            if messageID is message.get 'id'
-                message.__displayImages = displayImages
-            message
-
-        @setState {conversation}
 
 
     renderMessage: (message) ->
@@ -67,11 +36,10 @@ module.exports = React.createClass
             message     : message
             active      : @props.messageID is messageID
             resources   : RouterGetter.getResources message
-            update      : @changeMessageProps
         }
 
     render: ->
-        unless @state.conversation?.length
+        unless @props.conversation?.length
             return section
                 key: 'conversation'
                 className: 'conversation panel'
@@ -86,7 +54,7 @@ module.exports = React.createClass
 
             header null,
                 h3 className: 'conversation-title',
-                    @state.message.get 'subject'
+                    @props.message.get 'subject'
 
                 button
                     className: 'clickable btn btn-default fa fa-close'
@@ -94,10 +62,12 @@ module.exports = React.createClass
 
             section
                 ref: 'scrollable',
-                    @state.conversation.map @renderMessage
+                    @props.conversation.map @renderMessage
+
 
     closeConversation: ->
         RouterActionCreator.closeConversation()
+
 
     _initScroll: ->
         if not (scrollable = ReactDOM.findDOMNode @refs.scrollable) or scrollable.scrollTop

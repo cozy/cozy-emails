@@ -15,10 +15,18 @@ MessageActionCreator =
             type: ActionTypes.RECEIVE_RAW_MESSAGES
             value: messages
 
+
     receiveRawMessage: (message) ->
         AppDispatcher.dispatch
             type: ActionTypes.RECEIVE_RAW_MESSAGE
             value: message
+
+
+    displayImages: (props={})->
+        AppDispatcher.dispatch
+            type: ActionTypes.SETTINGS_UPDATE_RESQUEST
+            value: props
+
 
     send: (action, message) ->
         conversationID = message.conversationID

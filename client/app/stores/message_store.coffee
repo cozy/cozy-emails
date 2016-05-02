@@ -130,10 +130,23 @@ class MessageStore extends Store
             .toOrderedMap()
             @emit 'change'
 
+
         handle ActionTypes.SEARCH_SUCCESS, ({result}) ->
             for message in result.rows when message?
                 _saveMessage message
             @emit 'change'
+
+
+        handle ActionTypes.SETTINGS_UPDATE_RESQUEST, ({messageID, displayImages}) ->
+            # Update settings into component,
+            # but not definitly into settingsStore
+            if (message = _messages.get messageID)
+                message.__displayImages = displayImages
+                _messages = _messages.set messageID, message
+            @emit 'change'
+
+
+
 
 
     ###

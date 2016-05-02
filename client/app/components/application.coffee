@@ -116,9 +116,10 @@ Application = React.createClass
                             if @state.action is MessageActions.SHOW
                                 Conversation
                                     ref         : 'conversation'
-                                    key         : 'conversation-' + @state.messageID
+                                    key         : "conversation-#{@state.messageID}"
                                     messageID   : @state.messageID
-                                    mailboxID   : @state.mailboxID
+                                    message     : RouterGetter.getMessage()
+                                    conversation: RouterGetter.getConversation()
                             else
                                 section
                                     'key'          : 'placeholder'

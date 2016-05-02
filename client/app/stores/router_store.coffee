@@ -551,6 +551,10 @@ class RouterStore extends Store
             @emit 'change'
 
 
+        handle ActionTypes.SETTINGS_UPDATE_RESQUEST, ->
+            @emit 'change'
+
+
 
 _toCamelCase = (value) ->
     return value.replace /\.(\w)*/gi, (match) ->

@@ -68,7 +68,6 @@ module.exports = React.createClass
                     text: @props.text
                     rich: @props.rich
                     imagesWarning: @props.imagesWarning
-                    update: @props.update
 
             if @props.active
                 footer
