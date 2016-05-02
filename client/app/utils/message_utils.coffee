@@ -400,15 +400,6 @@ module.exports = MessageUtils =
         return date.format formatter
 
 
-    # Return avatar corresponding to sender by matching his email address with
-    # addresses from existing contacts.
-    getAvatar: (message) ->
-        if message.get('from')[0]?
-            return ContactGetter.getAvatar message.get('from')[0]
-        else
-            return null
-
-
     getPreview: (message) ->
         text = message.get('text')
         if not text?

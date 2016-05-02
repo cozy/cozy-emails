@@ -12,10 +12,10 @@ MessageUtils                 = require '../utils/message_utils'
 RouterActionCreator = require '../actions/router_action_creator'
 LayoutActionCreator = require '../actions/layout_action_creator'
 
-LayoutActionCreator = require '../actions/layout_action_creator'
-
 {Icon}       = require('./basic_components').factories
 Participants = React.createFactory require './participants'
+
+ContactGetter = require '../getters/contact'
 
 
 module.exports = MessageItem = React.createClass
@@ -32,7 +32,7 @@ module.exports = MessageItem = React.createClass
 
         compact = @props.isCompact
         date    = MessageUtils.formatDate message.get('createdAt'), compact
-        avatar  = MessageUtils.getAvatar message
+        avatar  = ContactGetter.getAvatar message
 
         li
             className:              classes

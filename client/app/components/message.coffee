@@ -10,6 +10,7 @@ AttachmentPreview = React.createFactory require './attachement_preview'
 {MessageFlags} = require '../constants/app_constants'
 
 RouterGetter = require '../getters/router'
+ContactGetter = require '../getters/contact'
 IconGetter = require '../getters/icon'
 
 module.exports = React.createClass
@@ -44,7 +45,7 @@ module.exports = React.createClass
                 ref: "messageHeader-#{messageID}"
                 key: "messageHeader-#{messageID}"
                 message: @props.message
-                avatar: RouterGetter.getAvatar @props.message
+                avatar: ContactGetter.getAvatar @props.message
                 createdAt: RouterGetter.getCreatedAt @props.message
                 isDraft: @props.isDraft
                 isDeleted: @props.isDeleted

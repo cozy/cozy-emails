@@ -35,12 +35,15 @@ class RouteGetter
     getURL: (params) ->
         RouterStore.getURL params
 
+
     getAction: ->
         RouterStore.getAction()
+
 
     getReplyMessage: (messageID) ->
         if (isReply = @getAction() isnt 'message.edit')
             return MessageStore.getByID messageID
+
 
     isEditable: ->
         action = @getAction()
@@ -61,6 +64,7 @@ class RouteGetter
     getSearch: ->
         SearchStore.getCurrentSearch()
 
+
     getLayoutSettings: ->
         {
             disposition: LayoutStore.getDisposition()
@@ -71,8 +75,10 @@ class RouteGetter
     getProgress: (accountID) ->
         RefreshesStore.getRefreshing().get accountID
 
+
     getSelectedTab: ->
         RouterStore.getSelectedTab()
+
 
     getModal: ->
         RouterStore.getModalParams()
@@ -91,49 +97,64 @@ class RouteGetter
     getConversationLength: ({messageID, conversationID}) ->
         RouterStore.getConversationLength {messageID, conversationID}
 
+
     getConversation: (messageID) ->
         RouterStore.getConversation(messageID)
+
 
     getCurrentMessageID: ->
         RouterStore.getMessageID()
 
+
     getCurrentMessage: ->
         MessageStore.getByID RouterStore.getMessageID()
+
 
     isCurrentConversation: (conversationID) ->
         conversationID is @getCurrentMessage()?.get 'conversationID'
 
+
     getMailbox: (mailboxID) ->
         RouterStore.getMailbox mailboxID
 
+
     getCurrentMailbox: ->
         RouterStore.getMailbox()
+
 
     getInbox: (accountID) ->
         accountID ?= @getAccountID()
         RouterStore.getInbox accountID
 
+
     getTrashMailbox: (accountID) ->
         accountID ?= @getAccountID()
         RouterStore.getTrashMailbox accountID
 
+
     getAccounts: ->
         AccountStore.getAll()
+
 
     getAccountSignature: ->
         RouterStore.getAccount()?.get 'signature'
 
+
     getAccountID: ->
         RouterStore.getAccountID()
+
 
     getMailboxID: ->
         RouterStore.getMailboxID()
 
+
     getLogin: ->
         @getCurrentMailbox()?.get 'login'
 
+
     getMailboxes: ->
         RouterStore.getAllMailboxes()
+
 
     getTags: (message) ->
         mailboxID = @getMailboxID()
@@ -145,6 +166,7 @@ class RouteGetter
                 isEqual = mailboxID is id
                 unless (isEqual or isGlobal)
                     return mailbox?.get 'label'
+
 
     getEmptyMessage: ->
         if RouterStore.isFlags 'UNSEEN'
@@ -163,11 +185,10 @@ class RouteGetter
                 attachementType = MessageUtils.getAttachmentType contentType
                 if attachementType is 'image' then 'preview' else 'binary'
 
-    getAvatar: (message) ->
-        MessageUtils.getAvatar message
 
     getCreatedAt: (message) ->
         MessageUtils.formatDate message?.get 'createdAt'
+
 
     getFileSize: (file) ->
         length = parseInt file?.length, 10
