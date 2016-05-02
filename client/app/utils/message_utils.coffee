@@ -13,10 +13,11 @@ jQuery      = require 'jquery'
 {MessageActions, MessageFlags} = require '../constants/app_constants'
 
 # FIXME : appeler ici des getters à la place des stores
-ContactStore     = require '../stores/contact_store'
 SearchStore      = require '../stores/search_store'
 SettingsStore    = require '../stores/settings_store'
 RouterStore     = require '../stores/router_store'
+
+ContactGetter     = require '../getters/contact'
 
 QUOTE_STYLE = "margin-left: 0.8ex; padding-left: 1ex; border-left: 3px solid #34A6FF;"
 
@@ -30,39 +31,6 @@ pre {background: transparent; border: 0}
 """
 
 module.exports = MessageUtils =
-
-
-    # Build string showing address from an `adress` object. If a mail is given
-    # in the `address` object, the string return this:
-    #
-    # Sender Name <email@sender.com>
-    displayAddress: (address, full = false) ->
-        if full
-            if address.name? and address.name isnt ""
-                return "\"#{address.name}\" <#{address.address}>"
-            else
-                return "#{address.address}"
-        else
-            if address.name? and address.name isnt ""
-                return address.name
-            else
-                return address.address.split('@')[0]
-
-
-    # Build a string from a list of `adress` objects. Addresses are
-    # separated by a coma. An address is either the email adress either this:
-    #
-    # Sender Name <email@sender.com>
-    displayAddresses: (addresses, full = false) ->
-        if not addresses?
-            return ""
-        else
-            res = []
-            for item in addresses
-                if not item?
-                    break
-                res.push(MessageUtils.displayAddress item, full)
-            return res.join ", "
 
 
     # Highlight search pattern in a string
@@ -144,7 +112,7 @@ module.exports = MessageUtils =
         signature = account.signature
         isSignature = !!!_.isEmpty signature
         dateHuman = @formatReplyDate message.createdAt
-        sender = @displayAddresses message.from
+        sender = ContactGetter.displayAddresses message.from
         options = {
             message
             inReplyTo
@@ -436,7 +404,7 @@ module.exports = MessageUtils =
     # addresses from existing contacts.
     getAvatar: (message) ->
         if message.get('from')[0]?
-            return ContactStore.getAvatar message.get('from')[0].address
+            return ContactGetter.getAvatar message.get('from')[0]
         else
             return null
 
@@ -584,7 +552,7 @@ module.exports = MessageUtils =
             if node.dataset.tooltip
                 return
             node.dataset.tooltip = true
-            contact = ContactStore.getByAddress address.address
+            contact = ContactGetter.getByAddress address
             avatar  = contact?.get 'avatar'
             add   = ''
             image = ''

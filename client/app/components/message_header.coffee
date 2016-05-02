@@ -6,6 +6,8 @@ React = require 'react'
 
 ContactLabel = React.createFactory require '../components/contact_label'
 
+ContactGetter = require '../getters/contact'
+
 RouterActionCreator = require '../actions/router_action_creator'
 
 module.exports = React.createClass
@@ -68,4 +70,6 @@ module.exports = React.createClass
                         ContactLabel
                             ref: "contact-#{field}"
                             key: "contact-#{field}-#{index}"
+                            model: ContactGetter.getByAddress contact
+                            address: ContactGetter.displayAddress contact
                             contact: contact

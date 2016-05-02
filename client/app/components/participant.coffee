@@ -8,8 +8,6 @@ module.exports = Participant = React.createClass
     displayName: 'Participant'
 
     render: ->
-        name = MessageUtils.displayAddress @props.address
-
         if not @props.address?
             span null
         else
@@ -20,7 +18,7 @@ module.exports = Participant = React.createClass
                 title: @props.address.address
                 key: @props.key
 
-                MessageUtils.highlightSearch(name)...
+                MessageUtils.highlightSearch(@props.name)...
 
     _initTooltip: ->
         if @props.tooltip and @refs.participant?

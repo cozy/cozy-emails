@@ -5,12 +5,15 @@ ContactStore     = require '../stores/contact_store'
 
 class ContactGetter
 
-    getAvatar: ({address}) ->
+    getAvatar: (contact = {}) ->
+        {address} = contact
         ContactStore.getAvatar address
 
 
-    getByAddress: ({address}) ->
+    getByAddress: (contact = {}) ->
+        {address} = contact
         ContactStore.getByAddress address
+
 
     # From a text, build an `address` object (name and address).
     # Add a isValid field if the given email is well formed.
@@ -29,6 +32,36 @@ class ContactGetter
         address.isValid = address.address.match emailRe
 
         address
+
+
+    # Build string showing address from an `adress` object. If a mail is given
+    # in the `address` object, the string return this:
+    #
+    # Sender Name <email@sender.com>
+    displayAddress: (contact, full = false) ->
+        # console.log 'ADDRESS', contact
+        if full
+            if address.name? and address.name isnt ""
+                return "\"#{contact.name}\" <#{contact.address}>"
+            else
+                return "#{contact.address}"
+        else
+            if contact.name? and contact.name isnt ""
+                return contact.name
+            else
+                return contact.address.split('@')[0]
+
+
+    # Build a string from a list of `adress` objects. Addresses are
+    # separated by a coma. An address is either the email adress either this:
+    #
+    # Sender Name <email@sender.com>
+    displayAddresses: (contacts=[], full=false) ->
+        addresses = []
+        for contact in contacts
+            if (address = @displayAddress contact, full)
+                result.push address
+        addresses.join ", "
 
 
     getAll: ->

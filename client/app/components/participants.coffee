@@ -4,6 +4,8 @@ React = require 'react'
 
 Participant = React.createFactory require './participant'
 
+ContactGetter = require '../getters/contact'
+
 
 module.exports = Participants = React.createClass
     displayName: 'Participants'
@@ -18,5 +20,6 @@ module.exports = Participants = React.createClass
                             address: address,
                             onAdd:   @props.onAdd,
                             tooltip: @props.tooltip
+                            name:    ContactGetter.displayAddress address
                         if key < ( @props.participants.length - 1)
                             span null, ', '
