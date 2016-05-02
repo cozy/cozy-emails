@@ -3,7 +3,6 @@ _ = require 'lodash'
 {Icons} = require '../constants/app_constants'
 
 RouterStore = require '../stores/router_store'
-AccountStore = require '../stores/account_store'
 
 MessageUtils = require '../utils/message_utils'
 
@@ -16,7 +15,7 @@ class IconGetter
         if (value = Icons[type])
             return {type, value}
 
-        account ?= AccountStore.getSelected()
+        account ?= RouterStore.getAccount()
         for type, value of Icons
             if mailboxID is account?.get type
                 return {type, value}

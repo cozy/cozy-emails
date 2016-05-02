@@ -257,6 +257,7 @@ class RouterStore extends Store
 
 
     getTrashMailbox: (accountID) ->
+        accountID ?= @getAccountID()
         @getAllMailboxes(accountID)?.find (mailbox) ->
             'trash' is mailbox.get('label').toLowerCase()
 

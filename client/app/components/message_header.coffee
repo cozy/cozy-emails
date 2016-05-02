@@ -13,7 +13,7 @@ module.exports = React.createClass
 
     gotoMessage: ->
         messageID = @props.message?.get('id')
-        RouterActionCreator.navigate {messageID}
+        RouterActionCreator.gotoMessage {messageID}
 
     render: ->
         header

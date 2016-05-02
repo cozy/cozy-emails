@@ -17,11 +17,6 @@ RouterActionCreator = require '../actions/router_action_creator'
 module.exports = React.createClass
     displayName: 'Conversation'
 
-<<<<<<< bb0797d16bd4dec04517c9c7332b8ca14c316752
-    mixins: [
-        StoreWatchMixin [SelectionStore]
-    ]
-=======
 
     getInitialState: ->
         # Build initial state
@@ -33,7 +28,6 @@ module.exports = React.createClass
         @setState @getStateFromStores nextProps
         nextProps
 
->>>>>>> Remove calls to store int conversationCompoenent
 
     componentDidMount: ->
         @_initScroll()

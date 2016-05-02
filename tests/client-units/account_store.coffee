@@ -2,7 +2,7 @@ should = require 'should'
 helpers = require './helpers'
 
 helpers.initGlobals()
-AccountStore = dispatch = null
+RouterStore = AccountStore = dispatch = null
 {ActionTypes} = require '../../client/app/constants/app_constants'
 
 describe 'AccountStore initialized without account', ->
@@ -10,6 +10,7 @@ describe 'AccountStore initialized without account', ->
     before ->
         helpers.setWindowVariable accounts: []
         {Store: AccountStore, dispatch} = helpers.getCleanStore 'account_store'
+        {Store: RouterStore, dispatch} = helpers.getCleanStore 'router_store'
 
     it "Then default account is null", ->
         should.not.exist AccountStore.getDefault()
@@ -37,8 +38,7 @@ describe 'AccountStore initialized without account', ->
         defaultAccount.get('id').should.equal 'testid'
 
     it 'Then the created account should be selected', ->
-        AccountStore.getAccountID().should.equal 'testid'
-        AccountStore.getAccountID().should.equal 'testid'
+        RouterStore.getAccountID().should.equal 'testid'
 
     it 'Then AccountStore.isWaiting is false', ->
         RouterStore.isWaiting().should.be.false
@@ -65,10 +65,10 @@ describe 'AccountStore initialized without account', ->
     it 'Then the default account is still the same', ->
         AccountStore.getDefault().get('id').should.equal 'testid'
 
-    it 'Then AccountStore.isWaiting is false', ->
+    it 'Then RouterStore.isWaiting is false', ->
         RouterStore.isWaiting().should.be.false
 
-    it 'Then AccountStore should have some errors', ->
+    it 'Then RouterStore should have some errors', ->
         should.exist RouterStore.getErrors().get('smtp')
         error = RouterStore.getErrors().get('smtp')
         error.message.should.equal 'translated config error smtp'
@@ -91,7 +91,7 @@ describe 'AccountStore initialized with accounts', ->
         AccountStore.getDefault().get('id').should.equal 'testid'
 
     it "Then selected account should be null", ->
-        should.not.exist AccountStore.getSelected()
+        should.not.exist RouterStore.getAccount()
 
     it 'Then selectedOrDefault should be first', ->
-        AccountStore.getAccountID().should.equal 'testid'
+        RouterStore.getAccountID().should.equal 'testid'

@@ -117,7 +117,7 @@ module.exports = Utils =
 
 
     messageClose: ->
-        RouterActionCreator.closeMessage()
+        RouterActionCreator.closeConversation()
 
 
     messageDeleteCurrent: ->

@@ -15,7 +15,7 @@ jQuery      = require 'jquery'
 ContactStore     = require '../stores/contact_store'
 SearchStore      = require '../stores/search_store'
 SettingsStore    = require '../stores/settings_store'
-AccountStore     = require '../stores/account_store'
+RouterStore     = require '../stores/router_store'
 
 QUOTE_STYLE = "margin-left: 0.8ex; padding-left: 1ex; border-left: 3px solid #34A6FF;"
 
@@ -738,7 +738,7 @@ module.exports = MessageUtils =
         isUnread = -1 is message.get('flags').indexOf MessageFlags.SEEN
 
         # Does message belong to trashMailbox?
-        trashMailboxID = AccountStore.getSelected().get 'trashMailbox'
+        trashMailboxID = RouterStore.getTrashMailbox()?.get('id')
         isDeleted = message.get('mailboxIDs')?[trashMailboxID]?
 
         attachments = message.get 'attachments'

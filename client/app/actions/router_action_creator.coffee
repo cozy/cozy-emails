@@ -80,7 +80,7 @@ RouterActionCreator =
             value: {messageID, mailboxID, action}
 
 
-    closeMessage: (params={}) ->
+    closeConversation: (params={}) ->
         {mailboxID} = params
         mailboxID ?= RouterStore.getMailboxID()
         action = MessageActions.SHOW_ALL
@@ -90,7 +90,7 @@ RouterActionCreator =
 
 
     showMessageList: (params={}) ->
-        @closeMessage params
+        @closeConversation params
 
 
     getConversation: (conversationID) ->

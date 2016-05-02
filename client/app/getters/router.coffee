@@ -5,6 +5,8 @@ SearchStore = require '../stores/search_store'
 RefreshesStore = require '../stores/refreshes_store'
 RouterStore = require '../stores/router_store'
 
+MessageUtils = require '../utils/message_utils'
+
 _ = require 'lodash'
 Immutable = require 'immutable'
 
