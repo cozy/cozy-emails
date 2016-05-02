@@ -504,10 +504,8 @@ module.exports = MessageUtils =
             console.error "Unable to parse HTML content of message"
             html = null
         else
-            # TODO : ne pas faire ce
-            # Do not display images if we don't want to
             unless displayImages
-                imagesWarning = doc.querySelectorAll('IMG[src]').length?
+                imagesWarning = doc.querySelectorAll('IMG[src]').length isnt 0
 
             # Format links:
             # - open links into a new window
