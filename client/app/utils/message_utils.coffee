@@ -514,11 +514,7 @@ module.exports = MessageUtils =
                link.target = '_blank'
                _toAbsolutePath link, 'href'
 
-            # Remove picture if its attached
-            # because you can get it from attached menu
             for image in doc.querySelectorAll 'img[src]'
-                filePath = image.getAttribute 'src'
-
                 # Do not display pictures
                 # when user doesnt want to
                 if imagesWarning
