@@ -124,12 +124,13 @@ module.exports = React.createClass
                                 selection       : SelectionGetter.getSelection @state.messages
                                 hasNextPage     : RouterGetter.hasNextPage()
 
-                            if @state.action is MessageActions.SHOW
+                            if @state.messageID
                                 Conversation
                                     ref             : "conversation"
                                     key             : "conversation-#{@state.messageID}"
                                     messageID       : @state.messageID
-                                    message         : message
+                                    conversationID  : message?.get 'conversationID'
+                                    subject         : message?.get 'subject'
                                     conversation    : @state.conversation
                             else
                                 section

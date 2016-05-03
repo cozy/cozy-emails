@@ -26,12 +26,12 @@ module.exports = React.createClass
 
 
     _getFullConversation: ->
-        if (conversationID = @props.message?.get 'conversationID')
-            length = RouterGetter.getConversationLength {conversationID}
-            if length isnt @props.conversation.length
-                setTimeout ->
-                    RouterActionCreator.getConversation conversationID
-                , 0
+        {conversationID} = @props
+        length = RouterGetter.getConversationLength {conversationID}
+        if length and length isnt @props.conversation.length
+            setTimeout ->
+                RouterActionCreator.getConversation conversationID
+            , 0
 
 
     renderMessage: (message) ->
@@ -53,7 +53,7 @@ module.exports = React.createClass
 
             header null,
                 h3 className: 'conversation-title',
-                    @props.message.get 'subject'
+                    @props.subject
 
                 button
                     className: 'clickable btn btn-default fa fa-close'
