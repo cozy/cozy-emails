@@ -22,6 +22,7 @@ TooltipRefesherMixin = require '../mixins/tooltip_refresher_mixin'
 
 RouterGetter = require '../getters/router'
 ContactGetter = require '../getters/contact'
+SelectionGetter = require '../getters/selection'
 
 {MessageActions, AccountActions} = require '../constants/app_constants'
 
@@ -72,6 +73,8 @@ Application = React.createClass
 
         message = RouterGetter.getMessage()
 
+        isCompact = SettingsStore.get('listStyle') is 'compact'
+
         div className: @state.className,
             div className: 'app',
                 Menu
@@ -109,12 +112,17 @@ Application = React.createClass
                         div
                             className: 'panels'
                             MessageList
-                                ref         : 'messageList'
-                                key         : 'messageList-' + @state.mailboxID
-                                accountID   : @state.accountID
-                                mailboxID   : @state.mailboxID
-                                messageID   : @state.messageID
-                                messages    : @state.messages
+                                ref             : 'messageList'
+                                key             : "messageList-#{@state.mailboxID}"
+                                accountID       : @state.accountID
+                                mailboxID       : @state.mailboxID
+                                messageID       : @state.messageID
+                                messages        : @state.messages
+                                emptyMessages   : RouterGetter.getEmptyMessage()
+                                isAllSelected   : SelectionGetter.isAllSelected()
+                                selection       : SelectionGetter.getSelection @state.messages
+                                hasNextPage     : RouterGetter.hasNextPage()
+                                isCompact       : isCompact
 
                             if @state.action is MessageActions.SHOW
                                 Conversation
