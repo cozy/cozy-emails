@@ -4,8 +4,6 @@ _ = require 'lodash'
 
 RouterStore = require '../stores/router_store'
 
-MessageUtils = require '../utils/message_utils'
-
 module.exports =
 
     getMailboxIcon: (params={}) ->

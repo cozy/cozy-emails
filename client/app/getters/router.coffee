@@ -5,7 +5,7 @@ SearchStore = require '../stores/search_store'
 RefreshesStore = require '../stores/refreshes_store'
 RouterStore = require '../stores/router_store'
 
-MessageUtils = require '../utils/message_utils'
+MessageGetter = require '../getters/message'
 
 _ = require 'lodash'
 Immutable = require 'immutable'
@@ -187,7 +187,7 @@ module.exports =
 
 
     formatMessage: (message) ->
-        _.extend MessageUtils.formatContent(message), {
+        _.extend MessageGetter.formatContent(message), {
             resources   : @getResources message
             isDraft     : @isDraft message
             isDeleted   : @isDeleted message
