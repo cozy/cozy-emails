@@ -3,7 +3,7 @@ _ = require 'lodash'
 
 SelectionStore = require '../stores/selection_store'
 
-class SelectionGetter
+module.exports =
 
     isAllSelected: ->
         SelectionStore.getAllSelected()
@@ -13,5 +13,3 @@ class SelectionGetter
             messages = messages.map (message) -> message.get('id')
             return messages.toArray()
         return SelectionStore.getSelected()?.toArray()
-
-module.exports = new SelectionGetter()

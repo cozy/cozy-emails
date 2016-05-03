@@ -13,9 +13,7 @@ moment      = require 'moment'
 
 {MessageActions, MailboxFlags} = require '../constants/app_constants'
 
-
-
-class RouteGetter
+module.exports =
 
     hasNextPage: ->
         RouterStore.hasNextPage()
@@ -186,6 +184,10 @@ class RouteGetter
         RouterStore.isUnread message
 
 
+    highlightSearch: (text) ->
+        MessageUtils.highlightSearch text
+
+
     formatMessage: (message) ->
         _.extend MessageUtils.formatContent(message), {
             ressources  : @getResources message
@@ -240,17 +242,3 @@ class RouteGetter
             "#{0 | length / 1024} #{t 'length kbytes'}"
         else
             "#{0 | length / (1024*1024)} #{t 'length mbytes'}"
-
-
-    # Uniq Key from URL params
-    #
-    # return a {string}
-    getKey: (str = '') ->
-        if (filter = RouterStore.getQueryParams())
-            keys = _.compact ['before', 'after'].map (key) ->
-                filter[key] if filter[key] isnt '-'
-            keys.unshift str unless _.isEmpty str
-            return keys.join('-')
-        return str
-
-module.exports = new RouteGetter()

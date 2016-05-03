@@ -21,7 +21,6 @@ StoreWatchMixin      = require '../mixins/store_watch_mixin'
 TooltipRefesherMixin = require '../mixins/tooltip_refresher_mixin'
 
 RouterGetter = require '../getters/router'
-ContactGetter = require '../getters/contact'
 SelectionGetter = require '../getters/selection'
 
 {MessageActions, AccountActions} = require '../constants/app_constants'
@@ -35,7 +34,7 @@ SelectionGetter = require '../getters/selection'
           and re-render accordingly
 ###
 
-Application = React.createClass
+module.exports = React.createClass
     displayName: 'Application'
 
     mixins: [
@@ -145,5 +144,3 @@ Application = React.createClass
             # It's hidden so it doesn't break the layout. Other components
             # can then reference the tooltips by their ID to trigger them.
             Tooltips key: "tooltips"
-
-module.exports = Application

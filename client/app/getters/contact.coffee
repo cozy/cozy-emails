@@ -1,9 +1,9 @@
 
 _ = require 'lodash'
 
-ContactStore     = require '../stores/contact_store'
+ContactStore = require '../stores/contact_store'
 
-class ContactGetter
+module.exports = 
 
     getAvatar: (contact = {}) ->
         {address} = contact
@@ -73,7 +73,3 @@ class ContactGetter
                 model = @getByAddress value
                 address = @displayAddress value
                 {value, model, address}
-
-
-
-module.exports = new ContactGetter()

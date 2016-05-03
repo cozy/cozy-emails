@@ -7,9 +7,6 @@ AppDispatcher = require '../libs/flux/dispatcher/dispatcher'
 
 {sendReport} = require './error_manager'
 
-RouterGetter = require '../getters/router'
-
-# FIXME : remove all this from Stores to  RouterGetter
 AccountStore  = require '../stores/account_store'
 MessageStore  = require '../stores/message_store'
 RouterStore  = require '../stores/router_store'

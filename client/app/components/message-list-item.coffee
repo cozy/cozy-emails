@@ -6,8 +6,7 @@ classNames = require 'classnames'
 
 {MessageFlags} = require '../constants/app_constants'
 
-colorhash                    = require '../utils/colorhash'
-MessageUtils                 = require '../utils/message_utils'
+colorhash = require '../utils/colorhash'
 
 RouterActionCreator = require '../actions/router_action_creator'
 LayoutActionCreator = require '../actions/layout_action_creator'
@@ -17,7 +16,6 @@ Participants = React.createFactory require './participants'
 
 RouterGetter = require '../getters/router'
 ContactGetter = require '../getters/contact'
-
 
 module.exports = MessageItem = React.createClass
     displayName: 'MessagesItem'
@@ -101,7 +99,8 @@ module.exports = MessageItem = React.createClass
             text = message.get 'text'
             text ?= toMarkdown message.get('html') or ''
         text = text.substr 0, 1024
-        p options, MessageUtils.highlightSearch(text)...
+        props = RouterGetter.highlightSearch text
+        p options, props...
 
 
     onSelect: (event) ->

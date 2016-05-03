@@ -1,8 +1,6 @@
-RouterGetter = require '../getters/router'
-
 AppDispatcher = require '../libs/flux/dispatcher/dispatcher'
 
-{ActionTypes, MessageActions} = require '../constants/app_constants'
+{ActionTypes} = require '../constants/app_constants'
 
 module.exports = LayoutActionCreator =
 

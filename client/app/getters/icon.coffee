@@ -6,7 +6,7 @@ RouterStore = require '../stores/router_store'
 
 MessageUtils = require '../utils/message_utils'
 
-class IconGetter
+module.exports =
 
     getMailboxIcon: (params={}) ->
         {account, mailboxID, type} = params
@@ -23,6 +23,3 @@ class IconGetter
     getAttachmentIcon: (file) ->
         type = MessageUtils.getAttachmentType file.contentType
         Icons[type] or 'fa-file-o'
-
-
-module.exports = new IconGetter()

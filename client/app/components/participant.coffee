@@ -1,10 +1,11 @@
 React = require 'react'
 
 {span} = React.DOM
+
 MessageUtils   = require '../utils/message_utils'
+RouterGetter = require '../getters/router'
 
-
-module.exports = Participant = React.createClass
+module.exports = React.createClass
     displayName: 'Participant'
 
     render: ->
@@ -18,7 +19,7 @@ module.exports = Participant = React.createClass
                 title: @props.address.address
                 key: @props.key
 
-                MessageUtils.highlightSearch(@props.name)...
+                RouterGetter.highlightSearch(@props.name)...
 
     _initTooltip: ->
         if @props.tooltip and @refs.participant?
