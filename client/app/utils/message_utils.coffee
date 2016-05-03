@@ -376,30 +376,6 @@ module.exports = MessageUtils =
         date.format 'lll'
 
 
-    # Display date as a readable string.
-    # Make it shorter if compact is set to true.
-    formatDate: (date, compact) ->
-        return null unless date?
-
-        today = moment()
-        date  = moment date
-
-        if date.isBefore today, 'year'
-            formatter = 'DD/MM/YYYY'
-
-        else if date.isBefore today, 'day'
-
-            if compact? and compact
-                formatter = 'L'
-            else
-                formatter = 'MMM DD'
-
-        else
-            formatter = 'HH:mm'
-
-        return date.format formatter
-
-
     getPreview: (message) ->
         text = message.get('text')
         if not text?

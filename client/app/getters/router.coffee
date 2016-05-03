@@ -9,6 +9,7 @@ MessageUtils = require '../utils/message_utils'
 
 _ = require 'lodash'
 Immutable = require 'immutable'
+moment      = require 'moment'
 
 {MessageActions, MailboxFlags} = require '../constants/app_constants'
 
@@ -185,6 +186,16 @@ class RouteGetter
         RouterStore.isUnread message
 
 
+    formatMessage: (message) ->
+        _.extend MessageUtils.formatContent(message), {
+            ressources  : @getResources message
+            isDraft     : @isDraft message
+            isDeleted   : @isDeleted message
+            isFlagged   : @isFlagged message
+            isUnread    : @isUnread message
+        }
+
+
     getEmptyMessage: ->
         if RouterStore.isFlags 'UNSEEN'
             return  t 'no unseen message'
@@ -203,8 +214,22 @@ class RouteGetter
                 if attachementType is 'image' then 'preview' else 'binary'
 
 
-    getCreatedAt: (message) ->
-        MessageUtils.formatDate message?.get 'createdAt'
+    # Display date as a readable string.
+    # Make it shorter if compact is set to true.
+    getCreatedAt: (message, isCompact) ->
+        return unless (date = message?.get 'createdAt')?
+
+        today = moment()
+        date  = moment date
+
+        if date.isBefore today, 'year'
+            formatter = 'DD/MM/YYYY'
+        else if date.isBefore today, 'day'
+            formatter = if isCompact? and isCompact then 'L' else 'MMM DD'
+        else
+            formatter = 'HH:mm'
+
+        return date.format formatter
 
 
     getFileSize: (file) ->

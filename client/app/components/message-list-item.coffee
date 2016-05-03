@@ -15,6 +15,7 @@ LayoutActionCreator = require '../actions/layout_action_creator'
 {Icon}       = require('./basic_components').factories
 Participants = React.createFactory require './participants'
 
+RouterGetter = require '../getters/router'
 ContactGetter = require '../getters/contact'
 
 
@@ -30,8 +31,7 @@ module.exports = MessageItem = React.createClass
             unseen:     MessageFlags.SEEN not in flags
             active:     @props.isActive
 
-        compact = @props.isCompact
-        date    = MessageUtils.formatDate message.get('createdAt'), compact
+        date    = RouterGetter.getCreatedAt(message), @props.isCompact
         avatar  = ContactGetter.getAvatar message
 
         li

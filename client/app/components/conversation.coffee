@@ -4,7 +4,6 @@ ReactDOM  = require 'react-dom'
 
 {section, header, ul, li, span, i, p, h3, a, button} = React.DOM
 DomUtils = require '../utils/dom_utils'
-MessageUtils = require '../utils/message_utils'
 
 {MessageActions} = require '../constants/app_constants'
 
@@ -38,19 +37,13 @@ module.exports = React.createClass
 
     renderMessage: (message) ->
         messageID = message.get 'id'
-        props = MessageUtils.formatContent message
-
-        Message _.extend props, {
+        Message _.extend RouterGetter.formatMessage(message), {
             ref         : "message-#{messageID}"
             key         : "message-#{messageID}"
             message     : message
             active      : @props.messageID is messageID
-            resources   : RouterGetter.getResources message
-            isDraft     : RouterGetter.isDraft message
-            isDeleted   : RouterGetter.isDeleted message
-            isFlagged   : RouterGetter.isFlagged message
-            isUnread    : RouterGetter.isUnread message
         }
+
 
     render: ->
         unless @props.conversation?.length
