@@ -52,24 +52,6 @@ module.exports = MessageUtils =
         , []
 
 
-    # Extract a reply address from a `message` object.
-    getReplyToAddress: (message) ->
-        reply = message?.get 'replyTo'
-        from = message?.get 'from'
-        if (reply? and reply.length isnt 0)
-            return reply
-        else
-            return from
-
-    # Add signature at the end of the message
-    addSignature: (message, signature) ->
-        message.text += "\n\n-- \n#{signature}"
-        signatureHtml = signature.replace /\n/g, '<br>'
-        message.html += """
-        <p><br></p><p id="signature">-- \n<br>#{signatureHtml}</p>
-        <p><br></p>
-            """
-
     # Build message to put in the email composer depending on the context
     # (reply, reply to all, forward or simple message).
     # It add appropriate headers to the message. It adds style tags when
@@ -100,7 +82,7 @@ module.exports = MessageUtils =
             message.attachments = _message.get 'attachments'
 
         # Format text
-        {text, html} = MessageUtils.cleanContent message
+        {text, html} = _cleanContent message
 
         if (inReplyTo = props.inReplyTo)
             replyID = inReplyTo.get 'id'
@@ -161,7 +143,7 @@ module.exports = MessageUtils =
 
         params = date: dateHuman, sender: sender
         separator = t 'compose reply separator', params
-        message.to = @getReplyToAddress inReplyTo
+        message.to = _getReplyToAddress inReplyTo
         message.cc = []
         message.bcc = []
         message.subject = _getReplySubject inReplyTo
@@ -172,7 +154,7 @@ module.exports = MessageUtils =
         """
 
         if isSignature
-            @addSignature message, signature
+            _addSignature message, signature
 
         message.html += """
             <p>#{separator}<span class="originalToggle"> … </span></p>
@@ -199,7 +181,7 @@ module.exports = MessageUtils =
 
         params = date: dateHuman, sender: sender
         separator = t 'compose reply separator', params
-        message.to = @getReplyToAddress inReplyTo
+        message.to = _getReplyToAddress inReplyTo
         # filter to don't have same address twice
         toAddresses = message.to?.map (dest) -> return dest.address
 
@@ -219,7 +201,7 @@ module.exports = MessageUtils =
         """
 
         if isSignature
-            @addSignature message, signature
+            _addSignature message, signature
 
         message.html += """
             <p>#{separator}<span class="originalToggle"> … </span></p>
@@ -249,7 +231,7 @@ module.exports = MessageUtils =
         .map (address) -> address.address
         .join ', '
 
-        senderInfos = @getReplyToAddress inReplyTo
+        senderInfos = _getReplyToAddress inReplyTo
         senderName = ""
 
         senderAddress =
@@ -283,7 +265,7 @@ module.exports = MessageUtils =
         message.html = "#{COMPOSE_STYLE}"
 
         if isSignature
-            @addSignature message, signature
+            _addSignature message, signature
 
         message.html += """
 
@@ -317,115 +299,9 @@ module.exports = MessageUtils =
         message.html = "#{COMPOSE_STYLE}\n<p><br></p>"
 
         if isSignature
-            @addSignature message, signature
+            _addSignature message, signature
 
         return message
-
-
-    cleanContent: (message) ->
-        {html, text} = message
-
-        text = toMarkdown html or ''
-        text = @cleanReplyText text or ''
-
-        html = @cleanHTML {html}
-        # html = @wrapReplyHtml html
-
-        return {html, text}
-
-
-    # set source of attached images
-    cleanHTML: (props={}) ->
-        {html, attachments, displayImages} = props
-        imagesWarning = false
-        displayImages ?= SettingsStore.get 'messageDisplayImages'
-
-        # Add HTML to a document
-        parser = new DOMParser()
-        unless (doc = parser.parseFromString html, "text/html")
-            doc = document.implementation.createHTMLDocument("")
-            doc.documentElement.innerHTML = """<html><head>
-                   <link rel="stylesheet" href="./fonts/fonts.css" />
-                   <link rel="stylesheet" href="./mail_stylesheet.css" />
-                   <style>body { visibility: hidden; }</style>
-               </head><body>#{html}</body></html>"""
-
-        unless doc
-            console.error "Unable to parse HTML content of message"
-            html = null
-        else
-            unless displayImages
-                imagesWarning = doc.querySelectorAll('IMG[src]').length isnt 0
-
-            # Format links:
-            # - open links into a new window
-            # - convert relative URL to absolute
-            for link in doc.querySelectorAll 'a[href]'
-               link.target = '_blank'
-               _toAbsolutePath link, 'href'
-
-            for image in doc.querySelectorAll 'img[src]'
-                # Do not display pictures
-                # when user doesnt want to
-                if imagesWarning
-                    image.parentNode.removeChild image
-
-
-            html = doc.documentElement.innerHTML
-
-        return {html, imagesWarning}
-
-
-    # Remove from given string:
-    # * html tags
-    # * extra spaces between reply markers and text
-    # * empty reply lines
-    cleanReplyText: (html) ->
-
-        # Convert HTML to markdown
-        try
-            result = html.replace /<(style>)[^\1]*\1/gim, ''
-            result = toMarkdown result
-        catch
-            if html?
-                result = html.replace /<(style>)[^\1]*\1/gim, ''
-                result = html.replace /<[^>]*>/gi, ''
-
-        # convert HTML entities
-        tmp = document.createElement 'div'
-        tmp.innerHTML = result
-        result = tmp.textContent
-
-        # Make citation more human readable.
-        result = result.replace />[ \t]+/ig, '> '
-        result = result.replace /(> \n)+/g, '> \n'
-        result
-
-
-    # Add additional html tags to HTML replies:
-    # * add style block to change the blockquotes styles.
-    # * make "pre" without background
-    # * remove margins to "p"
-    wrapReplyHtml: (html) ->
-        parser = new DOMParser()
-        doc = parser.parseFromString html, "text/html"
-        content = doc.querySelectorAll '[class=wrappedContent]'
-        if content.length
-            html = content[0].innerHTML
-
-        html = html?.replace /<p>/g, '<p style="margin: 0">'
-        return """
-            <style type="text/css">
-            blockquote {
-                margin: 0.8ex;
-                padding-left: 1ex;
-                border-left: 3px solid #34A6FF;
-            }
-            p {margin: 0;}
-            pre {background: transparent; border: 0}
-            </style>
-            <span class="wrappedContent">#{html}</span>
-            """
 
 
     # To keep HTML markup light, create the contact tooltip dynamicaly
@@ -589,7 +465,7 @@ module.exports = MessageUtils =
         if html?.length
             displayImages = message.__displayImages
             props = {html, attachments, displayImages}
-            {html, imagesWarning} = MessageUtils.cleanHTML props
+            {html, imagesWarning} = _cleanHTML props
 
         return {
             attachments     : attachments
@@ -603,6 +479,132 @@ module.exports = MessageUtils =
             isUnread        : isUnread
         }
 
+
+
+_cleanContent = (message) ->
+    {html, text} = message
+
+    text = toMarkdown html or ''
+    text = _cleanReplyText text or ''
+
+    html = _cleanHTML {html}
+    # html = _wrapReplyHtml html
+
+    return {html, text}
+
+
+# set source of attached images
+_cleanHTML = (props={}) ->
+    {html, attachments, displayImages} = props
+    imagesWarning = false
+    displayImages ?= SettingsStore.get 'messageDisplayImages'
+
+    # Add HTML to a document
+    parser = new DOMParser()
+    unless (doc = parser.parseFromString html, "text/html")
+        doc = document.implementation.createHTMLDocument("")
+        doc.documentElement.innerHTML = """<html><head>
+               <link rel="stylesheet" href="./fonts/fonts.css" />
+               <link rel="stylesheet" href="./mail_stylesheet.css" />
+               <style>body { visibility: hidden; }</style>
+           </head><body>#{html}</body></html>"""
+
+    unless doc
+        console.error "Unable to parse HTML content of message"
+        html = null
+    else
+        unless displayImages
+            imagesWarning = doc.querySelectorAll('IMG[src]').length isnt 0
+
+        # Format links:
+        # - open links into a new window
+        # - convert relative URL to absolute
+        for link in doc.querySelectorAll 'a[href]'
+           link.target = '_blank'
+           _toAbsolutePath link, 'href'
+
+        for image in doc.querySelectorAll 'img[src]'
+            # Do not display pictures
+            # when user doesnt want to
+            if imagesWarning
+                image.parentNode.removeChild image
+
+
+        html = doc.documentElement.innerHTML
+
+    return {html, imagesWarning}
+
+
+# Remove from given string:
+# * html tags
+# * extra spaces between reply markers and text
+# * empty reply lines
+_cleanReplyText = (html) ->
+
+    # Convert HTML to markdown
+    try
+        result = html.replace /<(style>)[^\1]*\1/gim, ''
+        result = toMarkdown result
+    catch
+        if html?
+            result = html.replace /<(style>)[^\1]*\1/gim, ''
+            result = html.replace /<[^>]*>/gi, ''
+
+    # convert HTML entities
+    tmp = document.createElement 'div'
+    tmp.innerHTML = result
+    result = tmp.textContent
+
+    # Make citation more human readable.
+    result = result.replace />[ \t]+/ig, '> '
+    result = result.replace /(> \n)+/g, '> \n'
+    result
+
+
+# Add additional html tags to HTML replies:
+# * add style block to change the blockquotes styles.
+# * make "pre" without background
+# * remove margins to "p"
+_wrapReplyHtml = (html) ->
+    parser = new DOMParser()
+    doc = parser.parseFromString html, "text/html"
+    content = doc.querySelectorAll '[class=wrappedContent]'
+    if content.length
+        html = content[0].innerHTML
+
+    html = html?.replace /<p>/g, '<p style="margin: 0">'
+    return """
+        <style type="text/css">
+        blockquote {
+            margin: 0.8ex;
+            padding-left: 1ex;
+            border-left: 3px solid #34A6FF;
+        }
+        p {margin: 0;}
+        pre {background: transparent; border: 0}
+        </style>
+        <span class="wrappedContent">#{html}</span>
+        """
+
+
+# Add signature at the end of the message
+_addSignature = (message, signature) ->
+    message.text += "\n\n-- \n#{signature}"
+    signatureHtml = signature.replace /\n/g, '<br>'
+    message.html += """
+    <p><br></p><p id="signature">-- \n<br>#{signatureHtml}</p>
+    <p><br></p>
+        """
+
+
+# Extract a reply address from a `message` object.
+_getReplyToAddress = (message) ->
+    reply = message?.get 'replyTo'
+    from = message?.get 'from'
+    if (reply? and reply.length isnt 0)
+        return reply
+    else
+        return from
 
 # Add a reply prefix to the current subject.
 # Do not add it again if it's already there.
