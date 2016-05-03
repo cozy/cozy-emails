@@ -9,7 +9,7 @@ AttachmentPreview = React.createFactory require './attachement_preview'
 
 RouterGetter = require '../getters/router'
 ContactGetter = require '../getters/contact'
-IconGetter = require '../getters/icon'
+FileGetter = require '../getters/file'
 
 RouterActionCreator = require '../actions/router_action_creator'
 {MessageFlags} = require '../constants/app_constants'
@@ -31,7 +31,7 @@ module.exports = React.createClass
             key: "messageAttachement-#{file.checksum}"
             file: file
             fileSize: RouterGetter.getFileSize file
-            icon: IconGetter.getAttachmentIcon file
+            icon: FileGetter.getAttachmentIcon file
             isPreview: isPreview
 
 

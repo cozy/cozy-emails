@@ -5,7 +5,7 @@ React = require 'react'
 ApiUtils        = require '../utils/api_utils'
 {getFileURL}    = require '../utils/file_utils'
 
-IconGetter = require '../getters/icon'
+FileGetter = require '../getters/file'
 
 ###
 # Display a file item
@@ -45,7 +45,7 @@ module.exports = FileItem = React.createClass
             ApiUtils.log(new Error "Wrong file #{JSON.stringify(file)}")
             file.url = "message/#{@props.messageID}/attachments/#{file.generatedFileName}"
 
-        iconClass = IconGetter.getAttachmentIcon file
+        iconClass = FileGetter.getAttachmentIcon file
 
         li className: "file-item", key: @props.key,
             i className: "mime #{type} fa #{iconClass}"

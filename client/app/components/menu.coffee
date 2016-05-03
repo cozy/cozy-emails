@@ -12,7 +12,7 @@ LayoutActionCreator  = require '../actions/layout_action_creator'
 {MessageFilter, Tooltips, AccountActions, MessageActions} = require '../constants/app_constants'
 
 RouterGetter = require '../getters/router'
-IconGetter = require '../getters/icon'
+FileGetter = require '../getters/file'
 
 module.exports = Menu = React.createClass
     displayName: 'Menu'
@@ -93,7 +93,7 @@ module.exports = Menu = React.createClass
             progress:       progress
             total:          total
             unread:         unread
-            icon:           IconGetter.getMailboxIcon {type}
+            icon:           FileGetter.getMailboxIcon {type}
 
     # renders a single account and its submenu
     # TODO : make a component for this
@@ -172,7 +172,7 @@ module.exports = Menu = React.createClass
                             total:          mailbox.get 'nbTotal'
                             unread:         mailbox.get 'nbUnread'
                             recent:         mailbox.get 'nbRecent'
-                            icon:           IconGetter.getMailboxIcon {account, mailboxID}
+                            icon:           FileGetter.getMailboxIcon {account, mailboxID}
 
                     @renderMailboxesFlags
                         type: 'unreadMailbox'
