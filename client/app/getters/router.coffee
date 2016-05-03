@@ -186,10 +186,6 @@ module.exports =
         RouterStore.isUnread message
 
 
-    highlightSearch: (text) ->
-        MessageUtils.highlightSearch text
-
-
     formatMessage: (message) ->
         _.extend MessageUtils.formatContent(message), {
             resources   : @getResources message

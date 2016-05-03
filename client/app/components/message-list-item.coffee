@@ -16,6 +16,7 @@ Participants = React.createFactory require './participants'
 
 RouterGetter = require '../getters/router'
 ContactGetter = require '../getters/contact'
+SearchGetter = require '../getters/search'
 
 module.exports = MessageItem = React.createClass
     displayName: 'MessagesItem'
@@ -99,7 +100,7 @@ module.exports = MessageItem = React.createClass
             text = message.get 'text'
             text ?= toMarkdown message.get('html') or ''
         text = text.substr 0, 1024
-        props = RouterGetter.highlightSearch text
+        props = SearchGetter.highlightSearch text
         p options, props...
 
 

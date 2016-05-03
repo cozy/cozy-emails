@@ -3,7 +3,7 @@ React = require 'react'
 {span} = React.DOM
 
 MessageUtils   = require '../utils/message_utils'
-RouterGetter = require '../getters/router'
+SearchGetter = require '../getters/search'
 
 module.exports = React.createClass
     displayName: 'Participant'
@@ -19,7 +19,7 @@ module.exports = React.createClass
                 title: @props.address.address
                 key: @props.key
 
-                RouterGetter.highlightSearch(@props.name)...
+                SearchGetter.highlightSearch(@props.name)...
 
     _initTooltip: ->
         if @props.tooltip and @refs.participant?
