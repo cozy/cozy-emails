@@ -144,41 +144,6 @@ class RouterStore extends Store
             index = _.values(routes).indexOf(name)
             _.keys(routes)[index]
 
-    _getURLparams = (query) ->
-        # Get data from URL
-        if _.isString query
-            params = query.match /([\w]+=[-+\w,:.]+)+/gi
-            return unless params?.length
-            result = {}
-
-            _.each params, (param) ->
-                param = param.split '='
-                if -1 < (value = param[1]).indexOf ','
-                    value = value.split ','
-                else
-                    result[param[0]] = value
-
-            return result
-
-        # Get data from Views
-        switch query.type
-            when 'from', 'dest'
-                result = {}
-                result.before = query.value
-                result.after = "#{query.value}\uFFFF"
-
-            when 'flag'
-                # Keep previous filters
-                flags = _currentFilter.flags or []
-                flags = [flags] if _.isString flags
-
-                # Toggle value
-                if -1 < flags.indexOf query.value
-                    _.pull flags, query.value
-                else
-                    flags.push query.value
-                (result = {}).flags = flags
-        return result
 
     _getURIQueryParams = (params={}) ->
         _filter = _.clone _defaultFilter
@@ -197,8 +162,7 @@ class RouterStore extends Store
         if query.length then "?#{query.join '&'}" else ""
 
 
-
-    _setFilter = (query) ->
+    _setFilter = (query=_defaultFilter) ->
         # Update Filter
         _currentFilter = _.clone _defaultFilter
         _.extend _currentFilter, query
@@ -458,15 +422,16 @@ class RouterStore extends Store
             else
                 _action = AccountActions.CREATE
 
+
             # From AccountStore
-            accountID ?= AccountStore.getDefault(mailboxID)?.get('id')
+            accountID ?= AccountStore.getDefault(mailboxID)?.get 'id'
             _setCurrentAccount accountID, mailboxID, tab
 
             # From MessageStore
             # Update currentMessageID
             _setCurrentMessage messageID
 
-            # Handle all Sleection
+            # Handle all Selection
             # _resetSelection()
 
             # Save current filters
