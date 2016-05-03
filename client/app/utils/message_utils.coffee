@@ -322,42 +322,6 @@ module.exports = MessageUtils =
         return message
 
 
-    # Guess simple attachment type from mime type.
-    getAttachmentType: (type) ->
-        return null unless type
-        sub = type.split '/'
-
-        switch sub[0]
-
-            when 'audio', 'image', 'text', 'video'
-                return sub[0]
-
-            when "application"
-                switch sub[1]
-
-                    when "vnd.ms-excel",\
-                         "vnd.oasis.opendocument.spreadsheet",\
-                         "vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                        return "spreadsheet"
-
-                    when "msword",\
-                         "vnd.ms-word",\
-                         "vnd.oasis.opendocument.text",\
-                         "vnd.openxmlformats-officedocument.wordprocessingm" + \
-                         "l.document"
-                        return "word"
-
-                    when "vns.ms-powerpoint",\
-                         "vnd.oasis.opendocument.presentation",\
-                         "vnd.openxmlformats-officedocument.presentationml." + \
-                         "presentation"
-                        return "presentation"
-
-                    when "pdf" then return sub[1]
-
-                    when "gzip", "zip" then return 'archive'
-
-
     cleanContent: (message) ->
         {html, text} = message
 

@@ -11,6 +11,8 @@ _ = require 'lodash'
 Immutable = require 'immutable'
 moment      = require 'moment'
 
+FileGetter = require '../getters/file'
+
 {MessageActions, MailboxFlags} = require '../constants/app_constants'
 
 module.exports =
@@ -212,7 +214,7 @@ module.exports =
         if (files = message?.get 'attachments')
             files.groupBy (file) ->
                 contentType = file.get 'contentType'
-                attachementType = MessageUtils.getAttachmentType contentType
+                attachementType = FileGetter.getAttachmentType contentType
                 if attachementType is 'image' then 'preview' else 'binary'
 
 
