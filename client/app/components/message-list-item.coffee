@@ -31,7 +31,7 @@ module.exports = MessageItem = React.createClass
             unseen:     MessageFlags.SEEN not in flags
             active:     @props.isActive
 
-        date    = RouterGetter.getCreatedAt(message), @props.isCompact
+        date    = RouterGetter.getCreatedAt message, @props.isCompact
         avatar  = ContactGetter.getAvatar message
 
         li

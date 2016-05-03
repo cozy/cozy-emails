@@ -164,8 +164,8 @@ module.exports = MessageUtils =
         message.to = @getReplyToAddress inReplyTo
         message.cc = []
         message.bcc = []
-        message.subject = @getReplySubject inReplyTo
-        message.text = separator + @generateReplyText(inReplyTo) + "\n"
+        message.subject = _getReplySubject inReplyTo
+        message.text = separator + _generateReplyText(inReplyTo) + "\n"
         message.html = """
         #{COMPOSE_STYLE}
         <p><br></p>
@@ -211,8 +211,8 @@ module.exports = MessageUtils =
             return dest? and -1 is toAddresses.indexOf dest.address
         message.bcc = []
 
-        message.subject = @getReplySubject inReplyTo
-        message.text = separator + @generateReplyText(inReplyTo) + "\n"
+        message.subject = _getReplySubject inReplyTo
+        message.text = separator + _generateReplyText(inReplyTo) + "\n"
         message.html = """
             #{COMPOSE_STYLE}
             <p><br></p>
@@ -320,17 +320,6 @@ module.exports = MessageUtils =
             @addSignature message, signature
 
         return message
-
-
-    # Generate reply text by adding `>` before each line of the given text.
-    generateReplyText: (message) ->
-        unless (text = message?.get('text'))
-            return ''
-        text = text.split '\n'
-        res  = []
-        text.forEach (line) ->
-            res.push "> #{line}"
-        return res.join "\n"
 
 
     # Guess simple attachment type from mime type.
@@ -474,14 +463,6 @@ module.exports = MessageUtils =
             <span class="wrappedContent">#{html}</span>
             """
 
-    # Add a reply prefix to the current subject. Do not add it again if it's
-    # already there.
-    getReplySubject: (message) ->
-        subject =  message?.get('subject') or ''
-        prefix = t 'compose reply prefix'
-        if subject.indexOf(prefix) isnt 0
-            subject = "#{prefix}#{subject}"
-        subject
 
     # To keep HTML markup light, create the contact tooltip dynamicaly
     # on mouse over
@@ -657,6 +638,24 @@ module.exports = MessageUtils =
             isDeleted       : isDeleted
             isUnread        : isUnread
         }
+
+
+# Add a reply prefix to the current subject.
+# Do not add it again if it's already there.
+_getReplySubject = (message) ->
+    subject =  message?.get('subject') or ''
+    prefix = t 'compose reply prefix'
+    if subject.indexOf(prefix) isnt 0
+        subject = "#{prefix}#{subject}"
+    subject
+
+
+# Generate reply text by adding `>`
+# before each line of the given text.
+_generateReplyText = (message) ->
+    text = message?.get('text') or ''
+    result = _.map text.split('\n'), (line) -> "> #{line}"
+    result.join "\n"
 
 
 _toAbsolutePath = (elm, attribute, prefix='http://') ->
