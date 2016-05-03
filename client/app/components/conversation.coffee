@@ -5,8 +5,6 @@ ReactDOM  = require 'react-dom'
 {section, header, ul, li, span, i, p, h3, a, button} = React.DOM
 DomUtils = require '../utils/dom_utils'
 
-{MessageActions} = require '../constants/app_constants'
-
 Message = React.createFactory require './message'
 
 RouterGetter = require '../getters/router'
@@ -15,6 +13,7 @@ RouterActionCreator = require '../actions/router_action_creator'
 
 module.exports = React.createClass
     displayName: 'Conversation'
+
 
     componentDidMount: ->
         @_initScroll()
@@ -37,26 +36,18 @@ module.exports = React.createClass
 
     renderMessage: (message) ->
         messageID = message.get 'id'
-        Message _.extend RouterGetter.formatMessage(message), {
-            ref         : "message-#{messageID}"
-            key         : "message-#{messageID}"
-            message     : message
-            messageID   : @props.messageID
-            isActive    : @props.messageID is messageID
-        }
+        Message _.extend RouterGetter.formatMessage(message),
+            ref             : "message-#{messageID}"
+            key             : "message-#{messageID}"
+            messageID       : @props.messageID
+            isActive        : @props.messageID is messageID
+            message         : message
 
 
     render: ->
-        unless @props.conversation?.length
-            return section
-                key: 'conversation'
-                className: 'conversation panel'
-                'aria-expanded': true,
-                p null, t "app loading"
-
-        # Starts components rendering
         section
-            ref: 'conversation'
+            ref: "conversation-container"
+            key: "conversation-#{@props.messageID}-container"
             className: 'conversation panel'
             'aria-expanded': true,
 
@@ -69,6 +60,7 @@ module.exports = React.createClass
                     onClick: @closeConversation
 
             section
+                key: "conversation-#{@props.messageID}-content"
                 ref: 'scrollable',
                     @props.conversation.map @renderMessage
 

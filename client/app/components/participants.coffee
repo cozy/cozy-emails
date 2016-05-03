@@ -16,7 +16,6 @@ module.exports = React.createClass
                     Participant
                         key     : "participants-#{index}-#{address}"
                         address : address
-                        onAdd   : @props.onAdd
                         tooltip : @props.tooltip
                         name    : ContactGetter.displayAddress(address)
                     if index < ( @props.participants.length - 1)

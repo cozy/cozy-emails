@@ -1,5 +1,5 @@
-React      = require 'react'
-{div, article, footer, ul, i, p, a, textarea} = React.DOM
+React = require 'react'
+{article, footer, ul, i, p, a} = React.DOM
 classNames = require 'classnames'
 
 MessageHeader  = React.createFactory require './message_header'
@@ -12,6 +12,7 @@ ContactGetter = require '../getters/contact'
 FileGetter = require '../getters/file'
 
 RouterActionCreator = require '../actions/router_action_creator'
+
 {MessageFlags} = require '../constants/app_constants'
 
 module.exports = React.createClass
@@ -19,7 +20,7 @@ module.exports = React.createClass
 
     componentWillUnmount: ->
         # Mark message as read
-        if @props?.message?.size and @props.isActive
+        if @props.message?.size and @props.isActive
             messageID = @props.message.get 'id'
             RouterActionCreator.mark {messageID}, MessageFlags.SEEN
 
@@ -38,7 +39,7 @@ module.exports = React.createClass
     render: ->
         article
             ref: "message-#{@props.messageID}-container"
-            key: "message-#{@props.messageID}-container"
+            key: "message-#{@props.messageID}-container",
             className: classNames
                 message: true
                 active: @props.isActive

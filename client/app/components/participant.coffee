@@ -5,6 +5,8 @@ React = require 'react'
 MessageGetter = require '../getters/message'
 SearchGetter = require '../getters/search'
 
+ContactActionCreator = require '../actions/contact_action_creator'
+
 module.exports = React.createClass
     displayName: 'Participant'
 
@@ -21,9 +23,13 @@ module.exports = React.createClass
 
                 SearchGetter.highlightSearch(@props.name)...
 
+
+    addAddress: (address) ->
+        ContactActionCreator.createContact address
+
     _initTooltip: ->
         if @props.tooltip and @refs.participant?
-            MessageGetter.tooltip @refs.participant, @props.address, @props.onAdd
+            MessageGetter.tooltip @refs.participant, @props.address, @addAddress
 
     componentDidMount: ->
         @_initTooltip()

@@ -21,7 +21,6 @@ class ContactStore extends Store
     _results  = Immutable.OrderedMap()
 
     _import = (rawResults) ->
-        console.log 'IMPORT', rawResults
         if rawResults?
 
             if not Array.isArray rawResults

@@ -11,15 +11,20 @@ ToolbarMessagesList = React.createFactory require './toolbar_messageslist'
 MessageItem         = React.createFactory require './message-list-item'
 
 RouterGetter = require '../getters/router'
+SelectionGetter = require '../getters/selection'
+
 
 module.exports = React.createClass
     displayName: 'MessageList'
 
+
     componentDidMount: ->
         @_initScroll()
 
+
     componentDidUpdate: ->
         @_initScroll()
+
 
     render: ->
         section

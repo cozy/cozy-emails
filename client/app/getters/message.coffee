@@ -12,8 +12,6 @@ jQuery      = require 'jquery'
 
 {MessageActions, MessageFlags} = require '../constants/app_constants'
 
-# FIXME : appeler ici des getters à la place des stores
-SearchStore      = require '../stores/search_store'
 SettingsStore    = require '../stores/settings_store'
 RouterStore     = require '../stores/router_store'
 
@@ -30,7 +28,7 @@ pre {background: transparent; border: 0}
 </style>
 """
 
-module.exports = MessageUtils =
+module.exports =
 
     # Build message to put in the email composer depending on the context
     # (reply, reply to all, forward or simple message).
@@ -433,15 +431,7 @@ module.exports = MessageUtils =
             rich = rich.replace /^>>[^>]?.*$/gim, '<span class="quote2">$&</span><br />\r\n'
             rich = rich.replace /^>[^>]?.*$/gim, '<span class="quote1">$&</span><br />\r\n'
 
-        isDraft = -1 < message.get('flags').indexOf MessageFlags.DRAFT
-        isUnread = -1 is message.get('flags').indexOf MessageFlags.SEEN
-
-        # Does message belong to trashMailbox?
-        trashMailboxID = RouterStore.getTrashMailbox()?.get('id')
-        isDeleted = message.get('mailboxIDs')?[trashMailboxID]?
-
         attachments = message.get 'attachments'
-
         if html?.length
             displayImages = message.__displayImages
             props = {html, attachments, displayImages}
@@ -454,9 +444,6 @@ module.exports = MessageUtils =
             text            : text
             rich            : rich
             html            : html
-            isDraft         : isDraft
-            isDeleted       : isDeleted
-            isUnread        : isUnread
         }
 
 

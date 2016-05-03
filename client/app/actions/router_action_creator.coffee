@@ -46,10 +46,9 @@ RouterActionCreator =
                 if RouterStore.isMissingMessages()
                     @gotoNextPage()
 
-
     gotoNextPage: ->
+        page = _getPage()
         url = _getNextURL()
-        page = _addPage()
         @gotoCurrentPage {url, page}
 
 
@@ -67,6 +66,7 @@ RouterActionCreator =
         messageID ?= RouterStore.getMessageID()
         mailboxID ?= RouterStore.getMailboxID()
         action ?= MessageActions.SHOW
+
         AppDispatcher.dispatch
             type: ActionTypes.ROUTE_CHANGE
             value: {messageID, mailboxID, action}
@@ -113,15 +113,15 @@ RouterActionCreator =
         value: {target, action}
 
         XHRUtils.batchFlag {target, action}, (error, updated) =>
-        if error
-            AppDispatcher.dispatch
-                type: ActionTypes.MESSAGE_FLAGS_FAILURE
-                value: {target, error, action}
-        else
-            message.updated = timestamp for message in updated
-            AppDispatcher.dispatch
-                type: ActionTypes.MESSAGE_FLAGS_SUCCESS
-                value: {target, updated, action}
+            if error
+                AppDispatcher.dispatch
+                    type: ActionTypes.MESSAGE_FLAGS_FAILURE
+                    value: {target, error, action}
+            else
+                message.updated = timestamp for message in updated
+                AppDispatcher.dispatch
+                    type: ActionTypes.MESSAGE_FLAGS_SUCCESS
+                    value: {target, updated, action}
 
     # Delete message(s)
     # target:
@@ -206,7 +206,7 @@ _addPage = ->
 
 _getNextURI = ->
     key = _getPageKey()
-    page = _getPage() + 1
+    page = _getPage()
     "#{key}-#{page}"
 
 
@@ -218,6 +218,7 @@ _getNextURL = ->
 # Get URL from last fetch result
 # not from the list that is not reliable
 _setNextURL = ({messages}) ->
+    page = _addPage()
     key = _getNextURI()
 
     # Do not overwrite result

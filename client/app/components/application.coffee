@@ -59,6 +59,7 @@ module.exports = React.createClass
             modal           : RouterGetter.getModal()
             className       : className
             messages        : RouterGetter.getMessagesList mailboxID
+            conversation    : RouterGetter.getConversation()
         }
 
     render: ->
@@ -98,8 +99,8 @@ module.exports = React.createClass
 
                     else if @state.isEditable
                         Compose
-                            ref                  : 'compose-' + @state.action
-                            key                  : @state.action + '-' + @state.messageID
+                            ref                  : "compose-#{@state.action}-#{@state.messageID}"
+                            key                  : "compose-#{@state.action}-#{@state.messageID}"
                             id                   : @state.messageID
                             action               : @state.action
                             message              : message
@@ -111,25 +112,25 @@ module.exports = React.createClass
                         div
                             className: 'panels'
                             MessageList
-                                ref             : 'messageList'
+                                ref             : "messageList"
                                 key             : "messageList-#{@state.mailboxID}"
                                 accountID       : @state.accountID
                                 mailboxID       : @state.mailboxID
                                 messageID       : @state.messageID
                                 messages        : @state.messages
                                 emptyMessages   : RouterGetter.getEmptyMessage()
+                                isCompact       : isCompact
                                 isAllSelected   : SelectionGetter.isAllSelected()
                                 selection       : SelectionGetter.getSelection @state.messages
                                 hasNextPage     : RouterGetter.hasNextPage()
-                                isCompact       : isCompact
 
                             if @state.action is MessageActions.SHOW
                                 Conversation
-                                    ref             : 'conversation'
+                                    ref             : "conversation"
                                     key             : "conversation-#{@state.messageID}"
                                     messageID       : @state.messageID
                                     message         : message
-                                    conversation    : RouterGetter.getConversation()
+                                    conversation    : @state.conversation
                             else
                                 section
                                     'key'          : 'placeholder'
