@@ -77,7 +77,7 @@ module.exports = MessageItem = React.createClass
                         div className: 'participants ellipsable',
                             @getParticipants message
                         div className: 'subject ellipsable',
-                            @highlightSearch message.get('subject')
+                            @highlightSearch text: message.get 'subject'
                         div className: 'mailboxes',
                             @props.tags.map (tag) ->
                                 span className: 'mailbox-tag', tag
@@ -92,10 +92,17 @@ module.exports = MessageItem = React.createClass
                                 span className: 'conversation-length',
                                     "#{@props.conversationLengths}"
                         div className: 'preview ellipsable',
-                            @highlightSearch MessageUtils.getPreview(message)
+                            @highlightSearch {message}
 
-    highlightSearch: (text, opts = null) ->
-        return p opts, MessageUtils.highlightSearch(text)...
+
+    highlightSearch: (props, options = null) ->
+        {message, text} = props
+        if message
+            text = message.get 'text'
+            text ?= toMarkdown message.get('html') or ''
+        text = text.substr 0, 1024
+        p options, MessageUtils.highlightSearch(text)...
+
 
     onSelect: (event) ->
         event.stopPropagation()

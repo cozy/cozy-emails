@@ -111,7 +111,7 @@ module.exports = MessageUtils =
 
         signature = account.signature
         isSignature = !!!_.isEmpty signature
-        dateHuman = @formatReplyDate message.createdAt
+        dateHuman = moment(message.createdAt).format 'lll'
         sender = ContactGetter.displayAddresses message.from
         options = {
             message
@@ -367,25 +367,6 @@ module.exports = MessageUtils =
                     when "pdf" then return sub[1]
 
                     when "gzip", "zip" then return 'archive'
-
-
-    # Format date to a conventional format for reply headers.
-    formatReplyDate: (date) ->
-        date = moment() unless date?
-        date = moment date
-        date.format 'lll'
-
-
-    getPreview: (message) ->
-        text = message.get('text')
-        if not text?
-            html = message.get 'html'
-            if html?
-                text = toMarkdown html or ''
-            else
-                text = ''
-
-        return text.substr 0, 1024
 
 
     cleanContent: (message) ->
