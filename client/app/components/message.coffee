@@ -19,7 +19,7 @@ module.exports = React.createClass
 
     componentWillUnmount: ->
         # Mark message as read
-        if @props?.message?.size and @props.active
+        if @props?.message?.size and @props.isActive
             messageID = @props.message.get 'id'
             RouterActionCreator.mark {messageID}, MessageFlags.SEEN
 
@@ -36,57 +36,53 @@ module.exports = React.createClass
 
 
     render: ->
-        {message} = @props
-
-        messageID = message.get 'id'
-
         article
-            ref: "messageContainer-#{messageID}"
-            key: "messageContainer-#{messageID}"
+            ref: "message-#{@props.messageID}-container"
+            key: "message-#{@props.messageID}-container"
             className: classNames
                 message: true
-                active: @props.active
+                active: @props.isActive
                 isDraft: @props.isDraft
                 isDeleted: @props.isDeleted
                 isUnread: @props.isUnread,
 
             MessageHeader
-                ref: "messageHeader-#{messageID}"
-                key: "messageHeader-#{messageID}"
-                message: message
-                contacts: ContactGetter.getAll message
-                avatar: ContactGetter.getAvatar message
-                createdAt: RouterGetter.getCreatedAt message
+                ref: "message-#{@props.messageID}-header"
+                key: "message-#{@props.messageID}-header"
+                message: @props.message
+                contacts: ContactGetter.getAll  @props.message
+                avatar: ContactGetter.getAvatar @props.message
+                createdAt: RouterGetter.getCreatedAt @props.message
                 isDraft: @props.isDraft
                 isDeleted: @props.isDeleted
                 isFlagged: @props.isFlagged
-                active: @props.active,
+                isUnread: @props.isUnread
+                active: @props.isActive,
 
-
-            if @props.active
+            if @props.isActive
                 ToolbarMessage
-                    ref         : "toolbarMessage-#{messageID}"
-                    key         : "toolbarMessage-#{messageID}"
+                    ref         : "message-#{@props.messageID}-toolbar"
+                    key         : "message-#{@props.messageID}-toolbar"
                     isFull      : true
-                    messageID   : messageID
+                    messageID   : @props.messageID
 
-            if @props.active
+            if @props.isActive
                 MessageContent
-                    ref: "messageContent-#{messageID}"
-                    key: "messageContent-#{messageID}"
-                    messageID: messageID
+                    ref: "message-#{@props.messageID}-content"
+                    key: "message-#{@props.messageID}-content"
+                    messageID: @props.messageID
                     html: @props.html
                     text: @props.text
                     rich: @props.rich
                     imagesWarning: @props.imagesWarning
 
-            if @props.active
+            if @props.isActive
                 footer
-                    ref: "messageFooter-#{messageID}"
-                    key: "messageFooter-#{messageID}"
+                    ref: "message-#{@props.messageID}-footer"
+                    key: "message-#{@props.messageID}-footer"
                     className: 'attachments',
                     ul null,
-                        @props.resources.get('preview')?.map (file, index) =>
-                            @renderAttachement file, index, true
-                        @props.resources.get('binary')?.map (file, index) =>
-                            @renderAttachement file, index, false
+                    @props.resources.get('preview')?.map (file, index) =>
+                        @renderAttachement file, index, true
+                    @props.resources.get('binary')?.map (file, index) =>
+                        @renderAttachement file, index, false

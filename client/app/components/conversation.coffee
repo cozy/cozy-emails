@@ -41,7 +41,8 @@ module.exports = React.createClass
             ref         : "message-#{messageID}"
             key         : "message-#{messageID}"
             message     : message
-            active      : @props.messageID is messageID
+            messageID   : @props.messageID
+            isActive    : @props.messageID is messageID
         }
 
 
