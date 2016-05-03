@@ -190,7 +190,7 @@ module.exports =
 
     formatMessage: (message) ->
         _.extend MessageUtils.formatContent(message), {
-            ressources  : @getResources message
+            resources   : @getResources message
             isDraft     : @isDraft message
             isDeleted   : @isDeleted message
             isFlagged   : @isFlagged message
