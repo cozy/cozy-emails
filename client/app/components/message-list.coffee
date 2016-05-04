@@ -7,7 +7,6 @@ DomUtils = require '../utils/dom_utils'
 
 RouterActionCreator = require '../actions/router_action_creator'
 
-ToolbarMessagesList = React.createFactory require './toolbar_messageslist'
 MessageItem         = React.createFactory require './message-list-item'
 
 RouterGetter = require '../getters/router'
@@ -33,15 +32,6 @@ module.exports = React.createClass
             'data-mailbox-id'   : @props.mailboxID
             'className'         : 'messages-list panel'
 
-            # Toolbar
-            ToolbarMessagesList
-                ref: 'messageList-toolbar'
-                key: 'messageList-toolbar-' + @props.selection?.length
-                accountID: @props.accountID
-                mailboxID: @props.mailboxID
-                messages: @props.messages
-                selection: @props.selection
-                isAllSelected: @props.isAllSelected
 
             # Message List
             unless @props.messages?.size
