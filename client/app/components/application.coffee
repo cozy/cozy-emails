@@ -21,6 +21,7 @@ StoreWatchMixin      = require '../mixins/store_watch_mixin'
 TooltipRefesherMixin = require '../mixins/tooltip_refresher_mixin'
 
 RouterGetter = require '../getters/router'
+SelectionGetter = require '../getters/selection'
 
 {MessageActions, AccountActions} = require '../constants/app_constants'
 
@@ -33,7 +34,7 @@ RouterGetter = require '../getters/router'
           and re-render accordingly
 ###
 
-Application = React.createClass
+module.exports = React.createClass
     displayName: 'Application'
 
     mixins: [
@@ -58,6 +59,7 @@ Application = React.createClass
             modal           : RouterGetter.getModal()
             className       : className
             messages        : RouterGetter.getMessagesList mailboxID
+            conversation    : RouterGetter.getConversation()
         }
 
     render: ->
@@ -69,6 +71,10 @@ Application = React.createClass
 
         isAccount = -1 < @state.action?.indexOf 'account'
 
+        message = RouterGetter.getMessage()
+
+        isCompact = SettingsStore.get('listStyle') is 'compact'
+
         div className: @state.className,
             div className: 'app',
                 Menu
@@ -79,6 +85,7 @@ Application = React.createClass
                     accounts        : RouterGetter.getAccounts().toArray()
                     composeURL      : composeURL
                     newAccountURL   : newAccountURL
+                    mailboxes       : RouterGetter.getMailboxes()
 
                 main
                     className: @props.layout
@@ -92,32 +99,39 @@ Application = React.createClass
 
                     else if @state.isEditable
                         Compose
-                            ref                  : 'compose-' + @state.action
-                            key                  : @state.action + '-' + @state.messageID
+                            ref                  : "compose-#{@state.action}-#{@state.messageID}"
+                            key                  : "compose-#{@state.action}-#{@state.messageID}"
                             id                   : @state.messageID
                             action               : @state.action
-                            message              : RouterGetter.getCurrentMessage()
+                            message              : message
                             inReplyTo            : RouterGetter.getReplyMessage @state.messageID
                             settings             : SettingsStore.get()
-                            account              : RouterGetter.getAccounts().get(@state.accountID)
+                            account              : RouterGetter.getAccount()
 
                     else
                         div
                             className: 'panels'
                             MessageList
-                                ref         : 'messageList'
-                                key         : 'messageList-' + @state.mailboxID
-                                accountID   : @state.accountID
-                                mailboxID   : @state.mailboxID
-                                messageID   : @state.messageID
-                                messages    : @state.messages
+                                ref             : "messageList"
+                                key             : "messageList-#{@state.mailboxID}"
+                                accountID       : @state.accountID
+                                mailboxID       : @state.mailboxID
+                                messageID       : @state.messageID
+                                messages        : @state.messages
+                                emptyMessages   : RouterGetter.getEmptyMessage()
+                                isCompact       : isCompact
+                                isAllSelected   : SelectionGetter.isAllSelected()
+                                selection       : SelectionGetter.getSelection @state.messages
+                                hasNextPage     : RouterGetter.hasNextPage()
 
-                            if @state.action is MessageActions.SHOW
+                            if @state.messageID
                                 Conversation
-                                    ref         : 'conversation'
-                                    key         : 'conversation-' + @state.messageID
-                                    messageID   : @state.messageID
-                                    mailboxID   : @state.mailboxID
+                                    ref             : "conversation"
+                                    key             : "conversation-#{@state.messageID}"
+                                    messageID       : @state.messageID
+                                    conversationID  : message?.get 'conversationID'
+                                    subject         : message?.get 'subject'
+                                    conversation    : @state.conversation
                             else
                                 section
                                     'key'          : 'placeholder'
@@ -132,5 +146,3 @@ Application = React.createClass
             # It's hidden so it doesn't break the layout. Other components
             # can then reference the tooltips by their ID to trigger them.
             Tooltips key: "tooltips"
-
-module.exports = Application

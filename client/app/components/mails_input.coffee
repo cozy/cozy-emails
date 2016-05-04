@@ -4,8 +4,8 @@ classNames = require 'classnames'
 
 {div, label, textarea, span, ul, li, a, img, i} = React.DOM
 
-MessageUtils    = require '../utils/message_utils'
-ContactStore    = require '../stores/contact_store'
+ContactGetter    = require '../getters/contact'
+
 ContactActionCreator = require '../actions/contact_action_creator'
 NotificationActionsCreator = require '../actions/notification_action_creator'
 
@@ -17,7 +17,7 @@ module.exports = MailsInput = React.createClass
     displayName: 'MailsInput'
 
     getStateFromStores: ->
-        contacts: ContactStore.getResults()
+        contacts: ContactGetter.getAll()
 
     componentWillMount: ->
         @setState contacts: null, open: false
@@ -41,15 +41,6 @@ module.exports = MailsInput = React.createClass
         state.focus    = !!state.known?.length
         state
 
-    # Code from the StoreWatch Mixin. We don't use the mixin
-    # because we store other things into the state
-    componentDidMount: ->
-        ContactStore.on 'change', @_setStateFromStores
-
-    componentWillUnmount: ->
-        ContactStore.removeListener 'change', @_setStateFromStores
-
-    _setStateFromStores: -> @setState @getStateFromStores()
 
     render: ->
         renderTag = (address, idx) =>
@@ -98,7 +89,7 @@ module.exports = MailsInput = React.createClass
             value = event.target.value.split ','
             if value.length is 2
                 @setState
-                    known: MessageUtils.parseAddress value[0]
+                    known: ContactGetter.parseAddress value[0]
                     unknown: value[1].trim()
             else
                 @setState
@@ -261,7 +252,7 @@ module.exports = MailsInput = React.createClass
             # Add current value to list of addresses
             value = @refs.contactInput.value
             unless _.isEmpty value.trim()
-                address = MessageUtils.parseAddress value
+                address = ContactGetter.parseAddress value
                 if address.isValid
                     @update address
                 else

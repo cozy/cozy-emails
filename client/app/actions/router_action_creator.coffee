@@ -2,7 +2,9 @@ _ = require 'lodash'
 
 AppDispatcher = require '../libs/flux/dispatcher/dispatcher'
 
+AccountStore = require '../stores/account_store'
 RouterStore = require '../stores/router_store'
+
 XHRUtils = require '../utils/xhr_utils'
 
 {ActionTypes, MessageActions, SearchActions} = require '../constants/app_constants'
@@ -40,22 +42,13 @@ RouterActionCreator =
                 # for getNext handles
                 _setNextURL result
 
-                # Missing Messages into Conversation
-                messageID = RouterStore.getMessageID()
-                length = RouterStore.getConversationLength {messageID}
-                conversation = RouterStore.getConversation messageID
-                if (length and conversation?.length) and conversation?.length isnt length
-                    conversationID = conversation[0].get 'conversationID'
-                    @getConversation conversationID
-
                 # Fetch missing messages
                 if RouterStore.isMissingMessages()
                     @gotoNextPage()
 
-
     gotoNextPage: ->
+        page = _getPage()
         url = _getNextURL()
-        page = _addPage()
         @gotoCurrentPage {url, page}
 
 
@@ -73,12 +66,13 @@ RouterActionCreator =
         messageID ?= RouterStore.getMessageID()
         mailboxID ?= RouterStore.getMailboxID()
         action ?= MessageActions.SHOW
+
         AppDispatcher.dispatch
             type: ActionTypes.ROUTE_CHANGE
             value: {messageID, mailboxID, action}
 
 
-    closeMessage: (params={}) ->
+    closeConversation: (params={}) ->
         {mailboxID} = params
         mailboxID ?= RouterStore.getMailboxID()
         action = MessageActions.SHOW_ALL
@@ -88,7 +82,7 @@ RouterActionCreator =
 
 
     showMessageList: (params={}) ->
-        @closeMessage params
+        @closeConversation params
 
 
     getConversation: (conversationID) ->
@@ -109,6 +103,51 @@ RouterActionCreator =
                 AppDispatcher.dispatch
                     type: ActionTypes.MESSAGE_FETCH_SUCCESS
                     value: {result, conversationID, timestamp, page}
+
+
+    mark: (target, action) ->
+        timestamp = Date.now()
+
+        AppDispatcher.dispatch
+        type: ActionTypes.MESSAGE_FLAGS_REQUEST
+        value: {target, action}
+
+        XHRUtils.batchFlag {target, action}, (error, updated) =>
+            if error
+                AppDispatcher.dispatch
+                    type: ActionTypes.MESSAGE_FLAGS_FAILURE
+                    value: {target, error, action}
+            else
+                message.updated = timestamp for message in updated
+                AppDispatcher.dispatch
+                    type: ActionTypes.MESSAGE_FLAGS_SUCCESS
+                    value: {target, updated, action}
+
+    # Delete message(s)
+    # target:
+    # - messageID or
+    # - messageIDs or
+    # - conversationIDs or
+    # - conversationIDs
+    deleteMessage: (target) ->
+        timestamp = Date.now()
+        target.accountID ?= RouterStore.getAccountID()
+
+        AppDispatcher.dispatch
+            type: ActionTypes.MESSAGE_TRASH_REQUEST
+            value: {target}
+
+        # send request
+        XHRUtils.batchDelete target, (error, updated) =>
+            if error
+                AppDispatcher.dispatch
+                    type: ActionTypes.MESSAGE_TRASH_FAILURE
+                    value: {target, error}
+            else
+                message.updated = timestamp for message in updated
+                AppDispatcher.dispatch
+                    type: ActionTypes.MESSAGE_TRASH_SUCCESS
+                    value: {target, updated}
 
 
     addFilter: (params) ->
@@ -167,7 +206,7 @@ _addPage = ->
 
 _getNextURI = ->
     key = _getPageKey()
-    page = _getPage() + 1
+    page = _getPage()
     "#{key}-#{page}"
 
 
@@ -179,6 +218,7 @@ _getNextURL = ->
 # Get URL from last fetch result
 # not from the list that is not reliable
 _setNextURL = ({messages}) ->
+    page = _addPage()
     key = _getNextURI()
 
     # Do not overwrite result
@@ -187,6 +227,7 @@ _setNextURL = ({messages}) ->
         action = MessageActions.SHOW_ALL
         filter = pageAfter: _.last(messages)?.date
         _nextURL[key] = RouterStore.getCurrentURL {filter, action}
+
 
 
 module.exports = RouterActionCreator

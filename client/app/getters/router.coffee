@@ -5,15 +5,21 @@ SearchStore = require '../stores/search_store'
 RefreshesStore = require '../stores/refreshes_store'
 RouterStore = require '../stores/router_store'
 
-Immutable = require 'immutable'
-{MessageActions, MailboxFlags} = require '../constants/app_constants'
+MessageGetter = require '../getters/message'
 
 _ = require 'lodash'
+Immutable = require 'immutable'
+moment      = require 'moment'
 
-class RouteGetter
+FileGetter = require '../getters/file'
+
+{MessageActions, MailboxFlags} = require '../constants/app_constants'
+
+module.exports =
 
     hasNextPage: ->
         RouterStore.hasNextPage()
+
 
     isCurrentURL: (mailboxURL) ->
         isServer = false
@@ -26,15 +32,19 @@ class RouteGetter
 
         isSameMailbox and isSameQuery
 
+
     getURL: (params) ->
         RouterStore.getURL params
+
 
     getAction: ->
         RouterStore.getAction()
 
+
     getReplyMessage: (messageID) ->
         if (isReply = @getAction() isnt 'message.edit')
             return MessageStore.getByID messageID
+
 
     isEditable: ->
         action = @getAction()
@@ -55,6 +65,7 @@ class RouteGetter
     getSearch: ->
         SearchStore.getCurrentSearch()
 
+
     getLayoutSettings: ->
         {
             disposition: LayoutStore.getDisposition()
@@ -65,8 +76,10 @@ class RouteGetter
     getProgress: (accountID) ->
         RefreshesStore.getRefreshing().get accountID
 
+
     getSelectedTab: ->
         RouterStore.getSelectedTab()
+
 
     getModal: ->
         RouterStore.getModalParams()
@@ -85,49 +98,65 @@ class RouteGetter
     getConversationLength: ({messageID, conversationID}) ->
         RouterStore.getConversationLength {messageID, conversationID}
 
+
     getConversation: (messageID) ->
         RouterStore.getConversation(messageID)
+
 
     getCurrentMessageID: ->
         RouterStore.getMessageID()
 
-    getCurrentMessage: ->
-        MessageStore.getByID RouterStore.getMessageID()
 
     isCurrentConversation: (conversationID) ->
-        conversationID is @getCurrentMessage()?.get 'conversationID'
+        conversationID is @getMessage()?.get 'conversationID'
+
 
     getMailbox: (mailboxID) ->
         RouterStore.getMailbox mailboxID
 
+
     getCurrentMailbox: ->
         RouterStore.getMailbox()
+
 
     getInbox: (accountID) ->
         accountID ?= @getAccountID()
         RouterStore.getInbox accountID
 
+
     getTrashMailbox: (accountID) ->
         accountID ?= @getAccountID()
         RouterStore.getTrashMailbox accountID
 
+
     getAccounts: ->
         AccountStore.getAll()
+
 
     getAccountSignature: ->
         RouterStore.getAccount()?.get 'signature'
 
+
     getAccountID: ->
         RouterStore.getAccountID()
+
+
+    getAccount: (accountID) ->
+        accountID ?= @getAccountID()
+        RouterStore.getAccount()
+
 
     getMailboxID: ->
         RouterStore.getMailboxID()
 
+
     getLogin: ->
         @getCurrentMailbox()?.get 'login'
 
+
     getMailboxes: ->
         RouterStore.getAllMailboxes()
+
 
     getTags: (message) ->
         mailboxID = @getMailboxID()
@@ -140,6 +169,33 @@ class RouteGetter
                 unless (isEqual or isGlobal)
                     return mailbox?.get 'label'
 
+
+    isFlagged: (message) ->
+        RouterStore.isFlagged message
+
+
+    isDeleted: (message) ->
+        RouterStore.isDeleted message
+
+
+    isDraft: (message) ->
+        RouterStore.isDraft message
+
+
+    isUnread: (message) ->
+        RouterStore.isUnread message
+
+
+    formatMessage: (message) ->
+        _.extend MessageGetter.formatContent(message), {
+            resources   : @getResources message
+            isDraft     : @isDraft message
+            isDeleted   : @isDeleted message
+            isFlagged   : @isFlagged message
+            isUnread    : @isUnread message
+        }
+
+
     getEmptyMessage: ->
         if RouterStore.isFlags 'UNSEEN'
             return  t 'no unseen message'
@@ -150,4 +206,37 @@ class RouteGetter
         return  t 'list empty'
 
 
-module.exports = new RouteGetter()
+    getResources: (message) ->
+        if (files = message?.get 'attachments')
+            files.groupBy (file) ->
+                contentType = file.get 'contentType'
+                attachementType = FileGetter.getAttachmentType contentType
+                if attachementType is 'image' then 'preview' else 'binary'
+
+
+    # Display date as a readable string.
+    # Make it shorter if compact is set to true.
+    getCreatedAt: (message, isCompact) ->
+        return unless (date = message?.get 'createdAt')?
+
+        today = moment()
+        date  = moment date
+
+        if date.isBefore today, 'year'
+            formatter = 'DD/MM/YYYY'
+        else if date.isBefore today, 'day'
+            formatter = if isCompact? and isCompact then 'L' else 'MMM DD'
+        else
+            formatter = 'HH:mm'
+
+        return date.format formatter
+
+
+    getFileSize: (file) ->
+        length = parseInt file?.length, 10
+        if length < 1024
+            "#{length} #{t 'length bytes'}"
+        else if length < 1024*1024
+            "#{0 | length / 1024} #{t 'length kbytes'}"
+        else
+            "#{0 | length / (1024*1024)} #{t 'length mbytes'}"

@@ -1,18 +1,21 @@
 React      = require 'react'
-Immutable  = require 'immutable'
-moment     = require 'moment'
+{span} = React.DOM
+
 {markdown} = require 'markdown'
 toMarkdown = require 'to-markdown'
 
-{span} = React.DOM
+Immutable   = require 'immutable'
+moment      = require 'moment'
+_           = require 'underscore'
+jQuery      = require 'jquery'
 
-_      = require 'underscore'
-jQuery = require 'jquery'
 
-{MessageActions} = require '../constants/app_constants'
-ContactStore     = require '../stores/contact_store'
-SearchStore      = require '../stores/search_store'
+{MessageActions, MessageFlags} = require '../constants/app_constants'
 
+SettingsStore    = require '../stores/settings_store'
+RouterStore     = require '../stores/router_store'
+
+ContactGetter     = require '../getters/contact'
 
 QUOTE_STYLE = "margin-left: 0.8ex; padding-left: 1ex; border-left: 3px solid #34A6FF;"
 
@@ -25,99 +28,7 @@ pre {background: transparent; border: 0}
 </style>
 """
 
-
-
-module.exports = MessageUtils =
-
-
-    # Build string showing address from an `adress` object. If a mail is given
-    # in the `address` object, the string return this:
-    #
-    # Sender Name <email@sender.com>
-    displayAddress: (address, full = false) ->
-        if full
-            if address.name? and address.name isnt ""
-                return "\"#{address.name}\" <#{address.address}>"
-            else
-                return "#{address.address}"
-        else
-            if address.name? and address.name isnt ""
-                return address.name
-            else
-                return address.address.split('@')[0]
-
-
-    # Build a string from a list of `adress` objects. Addresses are
-    # separated by a coma. An address is either the email adress either this:
-    #
-    # Sender Name <email@sender.com>
-    displayAddresses: (addresses, full = false) ->
-        if not addresses?
-            return ""
-        else
-            res = []
-            for item in addresses
-                if not item?
-                    break
-                res.push(MessageUtils.displayAddress item, full)
-            return res.join ", "
-
-
-    # Highlight search pattern in a string
-    highlightSearch: (text) ->
-        return [] unless text
-        return [text] if SearchStore.getCurrentSearch() is ''
-
-        search  = new RegExp SearchStore.getCurrentSearch(), 'gi'
-        substrs = text.match search
-
-        return [text] unless substrs
-
-        text.split(search).reduce (memo, part, index) ->
-            if part.length
-                memo.push part
-            if substrs[index]
-                memo.push span className: 'hlt-search', substrs[index]
-            return memo
-        , []
-
-
-    # From a text, build an `address` object (name and address).
-    # Add a isValid field if the given email is well formed.
-    parseAddress: (text) ->
-        text = text.trim()
-        if match = text.match /"{0,1}(.*)"{0,1} <(.*)>/
-            address =
-                name: match[1]
-                address: match[2]
-        else
-            address =
-                address: text.replace(/^\s*/, '')
-
-        # Test email validity
-        emailRe = /^([A-Za-z0-9_\-\.])+\@([A-Za-z0-9_\-\.])+\.([A-Za-z]{2,4})$/
-        address.isValid = address.address.match emailRe
-
-        address
-
-
-    # Extract a reply address from a `message` object.
-    getReplyToAddress: (message) ->
-        reply = message?.get 'replyTo'
-        from = message?.get 'from'
-        if (reply? and reply.length isnt 0)
-            return reply
-        else
-            return from
-
-    # Add signature at the end of the message
-    addSignature: (message, signature) ->
-        message.text += "\n\n-- \n#{signature}"
-        signatureHtml = signature.replace /\n/g, '<br>'
-        message.html += """
-        <p><br></p><p id="signature">-- \n<br>#{signatureHtml}</p>
-        <p><br></p>
-            """
+module.exports =
 
     # Build message to put in the email composer depending on the context
     # (reply, reply to all, forward or simple message).
@@ -149,7 +60,7 @@ module.exports = MessageUtils =
             message.attachments = _message.get 'attachments'
 
         # Format text
-        {text, html} = MessageUtils.cleanContent message
+        {text, html} = _cleanContent message
 
         if (inReplyTo = props.inReplyTo)
             replyID = inReplyTo.get 'id'
@@ -160,8 +71,8 @@ module.exports = MessageUtils =
 
         signature = account.signature
         isSignature = !!!_.isEmpty signature
-        dateHuman = @formatReplyDate message.createdAt
-        sender = @displayAddresses message.from
+        dateHuman = moment(message.createdAt).format 'lll'
+        sender = ContactGetter.displayAddresses message.from
         options = {
             message
             inReplyTo
@@ -210,18 +121,18 @@ module.exports = MessageUtils =
 
         params = date: dateHuman, sender: sender
         separator = t 'compose reply separator', params
-        message.to = @getReplyToAddress inReplyTo
+        message.to = _getReplyToAddress inReplyTo
         message.cc = []
         message.bcc = []
-        message.subject = @getReplySubject inReplyTo
-        message.text = separator + @generateReplyText(inReplyTo) + "\n"
+        message.subject = _getReplySubject inReplyTo
+        message.text = separator + _generateReplyText(inReplyTo) + "\n"
         message.html = """
         #{COMPOSE_STYLE}
         <p><br></p>
         """
 
         if isSignature
-            @addSignature message, signature
+            _addSignature message, signature
 
         message.html += """
             <p>#{separator}<span class="originalToggle"> … </span></p>
@@ -248,7 +159,7 @@ module.exports = MessageUtils =
 
         params = date: dateHuman, sender: sender
         separator = t 'compose reply separator', params
-        message.to = @getReplyToAddress inReplyTo
+        message.to = _getReplyToAddress inReplyTo
         # filter to don't have same address twice
         toAddresses = message.to?.map (dest) -> return dest.address
 
@@ -260,15 +171,15 @@ module.exports = MessageUtils =
             return dest? and -1 is toAddresses.indexOf dest.address
         message.bcc = []
 
-        message.subject = @getReplySubject inReplyTo
-        message.text = separator + @generateReplyText(inReplyTo) + "\n"
+        message.subject = _getReplySubject inReplyTo
+        message.text = separator + _generateReplyText(inReplyTo) + "\n"
         message.html = """
             #{COMPOSE_STYLE}
             <p><br></p>
         """
 
         if isSignature
-            @addSignature message, signature
+            _addSignature message, signature
 
         message.html += """
             <p>#{separator}<span class="originalToggle"> … </span></p>
@@ -298,7 +209,7 @@ module.exports = MessageUtils =
         .map (address) -> address.address
         .join ', '
 
-        senderInfos = @getReplyToAddress inReplyTo
+        senderInfos = _getReplyToAddress inReplyTo
         senderName = ""
 
         senderAddress =
@@ -332,7 +243,7 @@ module.exports = MessageUtils =
         message.html = "#{COMPOSE_STYLE}"
 
         if isSignature
-            @addSignature message, signature
+            _addSignature message, signature
 
         message.html += """
 
@@ -366,204 +277,10 @@ module.exports = MessageUtils =
         message.html = "#{COMPOSE_STYLE}\n<p><br></p>"
 
         if isSignature
-            @addSignature message, signature
+            _addSignature message, signature
 
         return message
 
-
-    # Generate reply text by adding `>` before each line of the given text.
-    generateReplyText: (message) ->
-        unless (text = message?.get('text'))
-            return ''
-        text = text.split '\n'
-        res  = []
-        text.forEach (line) ->
-            res.push "> #{line}"
-        return res.join "\n"
-
-
-    # Guess simple attachment type from mime type.
-    getAttachmentType: (type) ->
-        return null unless type
-        sub = type.split '/'
-
-        switch sub[0]
-
-            when 'audio', 'image', 'text', 'video'
-                return sub[0]
-
-            when "application"
-                switch sub[1]
-
-                    when "vnd.ms-excel",\
-                         "vnd.oasis.opendocument.spreadsheet",\
-                         "vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                        return "spreadsheet"
-
-                    when "msword",\
-                         "vnd.ms-word",\
-                         "vnd.oasis.opendocument.text",\
-                         "vnd.openxmlformats-officedocument.wordprocessingm" + \
-                         "l.document"
-                        return "word"
-
-                    when "vns.ms-powerpoint",\
-                         "vnd.oasis.opendocument.presentation",\
-                         "vnd.openxmlformats-officedocument.presentationml." + \
-                         "presentation"
-                        return "presentation"
-
-                    when "pdf" then return sub[1]
-
-                    when "gzip", "zip" then return 'archive'
-
-
-    # Format date to a conventional format for reply headers.
-    formatReplyDate: (date) ->
-        date = moment() unless date?
-        date = moment date
-        date.format 'lll'
-
-
-    # Display date as a readable string.
-    # Make it shorter if compact is set to true.
-    formatDate: (date, compact) ->
-
-        unless date?
-            return null
-
-        else
-            today = moment()
-            date  = moment date
-
-            if date.isBefore today, 'year'
-                formatter = 'DD/MM/YYYY'
-
-            else if date.isBefore today, 'day'
-
-                if compact? and compact
-                    formatter = 'L'
-                else
-                    formatter = 'MMM DD'
-
-            else
-                formatter = 'HH:mm'
-
-            return date.format formatter
-
-
-    # Return avatar corresponding to sender by matching his email address with
-    # addresses from existing contacts.
-    getAvatar: (message) ->
-        if message.get('from')[0]?
-            return ContactStore.getAvatar message.get('from')[0].address
-        else
-            return null
-
-
-    getPreview: (message) ->
-        text = message.get('text')
-        if not text?
-            html = message.get 'html'
-            if html?
-                text = toMarkdown html or ''
-            else
-                text = ''
-
-        return text.substr 0, 1024
-
-
-    cleanContent: (message) ->
-        {html, text} = message
-
-        text = toMarkdown html or ''
-        text = @cleanReplyText text or ''
-
-        html = @cleanHTML html
-        # html = @wrapReplyHtml html
-
-        return {html, text}
-
-
-    # set source of attached images
-    cleanHTML: (html) ->
-        parser = new DOMParser()
-
-        unless (doc = parser.parseFromString html, "text/html")
-            doc = document.implementation.createHTMLDocument("")
-            doc.documentElement.innerHTML = html
-            unless doc
-                console.error "Unable to parse HTML content of message"
-                return html
-
-        # the contentID of attached images will be in the data-src attribute
-        # override image source with this attribute
-        imageSrc = (image) ->
-            image.setAttribute 'src', "cid:#{image.dataset.src}"
-        images = doc.querySelectorAll 'IMG[data-src]'
-        imageSrc image for image in images
-
-        doc.documentElement.innerHTML
-
-    # Remove from given string:
-    # * html tags
-    # * extra spaces between reply markers and text
-    # * empty reply lines
-    cleanReplyText: (html) ->
-
-        # Convert HTML to markdown
-        try
-            result = html.replace /<(style>)[^\1]*\1/gim, ''
-            result = toMarkdown result
-        catch
-            if html?
-                result = html.replace /<(style>)[^\1]*\1/gim, ''
-                result = html.replace /<[^>]*>/gi, ''
-
-        # convert HTML entities
-        tmp = document.createElement 'div'
-        tmp.innerHTML = result
-        result = tmp.textContent
-
-        # Make citation more human readable.
-        result = result.replace />[ \t]+/ig, '> '
-        result = result.replace /(> \n)+/g, '> \n'
-        result
-
-
-    # Add additional html tags to HTML replies:
-    # * add style block to change the blockquotes styles.
-    # * make "pre" without background
-    # * remove margins to "p"
-    wrapReplyHtml: (html) ->
-        parser = new DOMParser()
-        doc = parser.parseFromString html, "text/html"
-        content = doc.querySelectorAll '[class=wrappedContent]'
-        if content.length
-            html = content[0].innerHTML
-
-        html = html?.replace /<p>/g, '<p style="margin: 0">'
-        return """
-            <style type="text/css">
-            blockquote {
-                margin: 0.8ex;
-                padding-left: 1ex;
-                border-left: 3px solid #34A6FF;
-            }
-            p {margin: 0;}
-            pre {background: transparent; border: 0}
-            </style>
-            <span class="wrappedContent">#{html}</span>
-            """
-
-    # Add a reply prefix to the current subject. Do not add it again if it's
-    # already there.
-    getReplySubject: (message) ->
-        subject =  message?.get('subject') or ''
-        prefix = t 'compose reply prefix'
-        if subject.indexOf(prefix) isnt 0
-            subject = "#{prefix}#{subject}"
-        subject
 
     # To keep HTML markup light, create the contact tooltip dynamicaly
     # on mouse over
@@ -582,7 +299,7 @@ module.exports = MessageUtils =
             if node.dataset.tooltip
                 return
             node.dataset.tooltip = true
-            contact = ContactStore.getByAddress address.address
+            contact = ContactGetter.getByAddress address
             avatar  = contact?.get 'avatar'
             add   = ''
             image = ''
@@ -665,3 +382,217 @@ module.exports = MessageUtils =
             node.addEventListener 'click', (event) ->
                 event.stopPropagation()
                 addTooltip()
+
+
+    formatContent: (message) ->
+        displayHTML = SettingsStore.get 'messageDisplayHTML'
+
+        # display full headers
+        fullHeaders = []
+        for key, value of message.get 'headers'
+            value = value.join('\n ') if Array.isArray value
+            fullHeaders.push "#{key}: #{value}"
+
+        # Do not display content
+        # if message isnt active
+        text = message.get 'text'
+        html = message.get 'html'
+
+        # Some calendar invitation
+        # may contain neither text nor HTML part
+        if not text?.length and not html?.length
+            text = if (message.get 'alternatives')?.length
+                t 'calendar unknown format'
+
+        # TODO: Do we want to convert text only messages to HTML ?
+        # /!\ if displayHTML is set, this method should always return
+        # a value fo html, otherwise the content of the email flashes
+        if text?.length and not html?.length and displayHTML
+            try
+                html = markdown.toHTML text.replace(/(^>.*$)([^>]+)/gm, "$1\n$2")
+                html = "<div class='textOnly'>#{html}</div>"
+            catch e
+                html = "<div class='textOnly'>#{text}</div>"
+
+        # Convert text into markdown
+        if html?.length and not text?.length and not displayHTML
+            text = toMarkdown html
+
+        if text?.length
+            # Tranform URL into links
+            urls = /((([A-Za-z]{3,9}:(?:\/\/)?)(?:[-;:&=\+\$,\w]+@)?[A-Za-z0-9.-]+|(?:www.|[-;:&=\+\$,\w]+@)[A-Za-z0-9.-]+)((?:\/[\+~%\/.\w-_]*)?\??(?:[-\+=&;%@.\w_]*)#?(?:[\w]*))?)/gim
+
+            rich = text.replace urls, '<a href="$1" target="_blank">$1</a>'
+
+            # Tranform Separation chars into HTML
+            rich = rich.replace /^>>>>>[^>]?.*$/gim, '<span class="quote5">$&</span><br />\r\n'
+            rich = rich.replace /^>>>>[^>]?.*$/gim, '<span class="quote4">$&</span><br />\r\n'
+            rich = rich.replace /^>>>[^>]?.*$/gim, '<span class="quote3">$&</span><br />\r\n'
+            rich = rich.replace /^>>[^>]?.*$/gim, '<span class="quote2">$&</span><br />\r\n'
+            rich = rich.replace /^>[^>]?.*$/gim, '<span class="quote1">$&</span><br />\r\n'
+
+        attachments = message.get 'attachments'
+        if html?.length
+            displayImages = message.__displayImages
+            props = {html, attachments, displayImages}
+            {html, imagesWarning} = _cleanHTML props
+
+        return {
+            attachments     : attachments
+            fullHeaders     : fullHeaders
+            imagesWarning   : imagesWarning
+            text            : text
+            rich            : rich
+            html            : html
+        }
+
+
+
+_cleanContent = (message) ->
+    {html, text} = message
+
+    text = toMarkdown html or ''
+    text = _cleanReplyText text or ''
+
+    html = _cleanHTML {html}
+    # html = _wrapReplyHtml html
+
+    return {html, text}
+
+
+# set source of attached images
+_cleanHTML = (props={}) ->
+    {html, attachments, displayImages} = props
+    imagesWarning = false
+    displayImages ?= SettingsStore.get 'messageDisplayImages'
+
+    # Add HTML to a document
+    parser = new DOMParser()
+    unless (doc = parser.parseFromString html, "text/html")
+        doc = document.implementation.createHTMLDocument("")
+        doc.documentElement.innerHTML = """<html><head>
+               <link rel="stylesheet" href="./fonts/fonts.css" />
+               <link rel="stylesheet" href="./mail_stylesheet.css" />
+               <style>body { visibility: hidden; }</style>
+           </head><body>#{html}</body></html>"""
+
+    unless doc
+        console.error "Unable to parse HTML content of message"
+        html = null
+    else
+        unless displayImages
+            imagesWarning = doc.querySelectorAll('IMG[src]').length isnt 0
+
+        # Format links:
+        # - open links into a new window
+        # - convert relative URL to absolute
+        for link in doc.querySelectorAll 'a[href]'
+           link.target = '_blank'
+           _toAbsolutePath link, 'href'
+
+        for image in doc.querySelectorAll 'img[src]'
+            # Do not display pictures
+            # when user doesnt want to
+            if imagesWarning
+                image.parentNode.removeChild image
+
+
+        html = doc.documentElement.innerHTML
+
+    return {html, imagesWarning}
+
+
+# Remove from given string:
+# * html tags
+# * extra spaces between reply markers and text
+# * empty reply lines
+_cleanReplyText = (html) ->
+
+    # Convert HTML to markdown
+    try
+        result = html.replace /<(style>)[^\1]*\1/gim, ''
+        result = toMarkdown result
+    catch
+        if html?
+            result = html.replace /<(style>)[^\1]*\1/gim, ''
+            result = html.replace /<[^>]*>/gi, ''
+
+    # convert HTML entities
+    tmp = document.createElement 'div'
+    tmp.innerHTML = result
+    result = tmp.textContent
+
+    # Make citation more human readable.
+    result = result.replace />[ \t]+/ig, '> '
+    result = result.replace /(> \n)+/g, '> \n'
+    result
+
+
+# Add additional html tags to HTML replies:
+# * add style block to change the blockquotes styles.
+# * make "pre" without background
+# * remove margins to "p"
+_wrapReplyHtml = (html) ->
+    parser = new DOMParser()
+    doc = parser.parseFromString html, "text/html"
+    content = doc.querySelectorAll '[class=wrappedContent]'
+    if content.length
+        html = content[0].innerHTML
+
+    html = html?.replace /<p>/g, '<p style="margin: 0">'
+    return """
+        <style type="text/css">
+        blockquote {
+            margin: 0.8ex;
+            padding-left: 1ex;
+            border-left: 3px solid #34A6FF;
+        }
+        p {margin: 0;}
+        pre {background: transparent; border: 0}
+        </style>
+        <span class="wrappedContent">#{html}</span>
+        """
+
+
+# Add signature at the end of the message
+_addSignature = (message, signature) ->
+    message.text += "\n\n-- \n#{signature}"
+    signatureHtml = signature.replace /\n/g, '<br>'
+    message.html += """
+    <p><br></p><p id="signature">-- \n<br>#{signatureHtml}</p>
+    <p><br></p>
+        """
+
+
+# Extract a reply address from a `message` object.
+_getReplyToAddress = (message) ->
+    reply = message?.get 'replyTo'
+    from = message?.get 'from'
+    if (reply? and reply.length isnt 0)
+        return reply
+    else
+        return from
+
+# Add a reply prefix to the current subject.
+# Do not add it again if it's already there.
+_getReplySubject = (message) ->
+    subject =  message?.get('subject') or ''
+    prefix = t 'compose reply prefix'
+    if subject.indexOf(prefix) isnt 0
+        subject = "#{prefix}#{subject}"
+    subject
+
+
+# Generate reply text by adding `>`
+# before each line of the given text.
+_generateReplyText = (message) ->
+    text = message?.get('text') or ''
+    result = _.map text.split('\n'), (line) -> "> #{line}"
+    result.join "\n"
+
+
+_toAbsolutePath = (elm, attribute, prefix='http://') ->
+    RGXP_PROTOCOL = /:\/\//
+    value = elm.getAttribute attribute
+    if value?.length and not RGXP_PROTOCOL.test value
+        elm.setAttribute attribute, prefix + value

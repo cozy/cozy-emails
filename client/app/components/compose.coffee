@@ -14,8 +14,7 @@ AccountPicker  = React.createFactory require './account_picker'
 LayoutStore = require '../stores/layout_store'
 
 RouterGetter = require '../getters/router'
-
-MessageUtils = require '../utils/message_utils'
+MessageGetter = require '../getters/message'
 
 LayoutActionCreator  = require '../actions/layout_action_creator'
 MessageActionCreator = require '../actions/message_action_creator'
@@ -44,7 +43,7 @@ module.exports = React.createClass
         settings:   React.PropTypes.object.isRequired
 
     getInitialState: ->
-        MessageUtils.createBasicMessage @props
+        MessageGetter.createBasicMessage @props
 
     isNew: ->
         not @state.conversationID
@@ -53,7 +52,7 @@ module.exports = React.createClass
         'compose-' + (@state.id or 'new') + '-' + name
 
     componentWillReceiveProps: (nextProps) ->
-        @setState MessageUtils.createBasicMessage nextProps
+        @setState MessageGetter.createBasicMessage nextProps
         nextProps
 
     componentDidMount: ->
@@ -221,7 +220,7 @@ module.exports = React.createClass
             @resetChange()
 
             messageID = @state.id
-            MessageActionCreator.delete {messageID}
+            RouterActionCreator.deleteMessage {messageID}
             LayoutActionCreator.hideModal()
 
             # specific callback

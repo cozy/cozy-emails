@@ -1,6 +1,8 @@
 request = require 'superagent'
 _       = require 'underscore'
 
+{FlagsConstants} = require '../constants/app_constants'
+
 discovery2Fields = require '../utils/discovery_to_fields'
 
 
@@ -37,11 +39,11 @@ module.exports =
         .end handleResponse callback, 'changeSettings', settings
 
     fetchConversation: ({messageID, conversationID}, callback) ->
-        query = if conversationID
-        then "conversationID=#{conversationID}"
-        else "messageID=#{messageID}"
-
-        request.get "messages/batchFetch?#{query}"
+        if conversationID
+            url = "messages/batchFetch?conversationID=#{conversationID}"
+        else
+            url = "messages/batchFetch?messageID=#{messageID}"
+        request.get url
         .set 'Accept', 'application/json'
         .end (err, res) ->
             _cb = handleResponse callback, 'fetchConversation', {messageID, conversationID}
@@ -98,22 +100,32 @@ module.exports =
         .send target
         .end handleResponse callback, "batchFetch"
 
-    batchAddFlag: (target, flag, callback) ->
-        body = _.extend {flag}, target
-        request.put "messages/batchAddFlag"
-        .send body
-        .end handleResponse callback, "batchAddFlag"
+    batchFlag: ({target, action}, callback) ->
+        switch action
+            when FlagsConstants.SEEN
+                operation = 'batchAddFlag'
+                flag = FlagsConstants.SEEN
+            when FlagsConstants.FLAGGED
+                operation = 'batchAddFlag'
+                flag = FlagsConstants.FLAGGED
+            when FlagsConstants.UNSEEN
+                operation = 'batchRemoveFlag'
+                flag = FlagsConstants.SEEN
+            when FlagsConstants.NOFLAG
+                operation = 'batchRemoveFlag'
+                flag = FlagsConstants.FLAGGED
+            else
+                throw new Error "Wrong usage : unrecognized FlagsConstants"
 
-    batchRemoveFlag: (target, flag, callback) ->
         body = _.extend {flag}, target
-        request.put "messages/batchRemoveFlag"
+        request.put "messages/#{operation}"
         .send body
-        .end handleResponse callback, "batchRemoveFlag"
+        .end handleResponse callback, operation
 
     batchDelete: (target, callback) ->
         body = _.extend {}, target
         request.put "messages/batchTrash"
-        .send target
+        .send body
         .end handleResponse callback, "batchDelete"
 
     batchMove: (target, from, to, callback) ->

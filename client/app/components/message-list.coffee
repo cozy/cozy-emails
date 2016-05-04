@@ -2,80 +2,64 @@ Immutable = require 'immutable'
 React     = require 'react'
 ReactDOM  = require 'react-dom'
 
-{div, section, p, a} = React.DOM
+{div, section, p, a, ul} = React.DOM
 DomUtils = require '../utils/dom_utils'
-
-SelectionGetter = require '../getters/selection'
-RouterGetter = require '../getters/router'
-
-# React Mixins
-MessageStore        = require '../stores/message_store'
-SettingsStore       = require '../stores/settings_store'
-SelectionStore      = require '../stores/selection_store'
-StoreWatchMixin     = require '../mixins/store_watch_mixin'
 
 RouterActionCreator = require '../actions/router_action_creator'
 
 ToolbarMessagesList = React.createFactory require './toolbar_messageslist'
-MessageListBody     = React.createFactory require './message-list-body'
+MessageItem         = React.createFactory require './message-list-item'
 
-module.exports = MessageList = React.createClass
+RouterGetter = require '../getters/router'
+SelectionGetter = require '../getters/selection'
+
+
+module.exports = React.createClass
     displayName: 'MessageList'
 
-    mixins: [
-        StoreWatchMixin [SelectionStore, MessageStore]
-    ]
 
     componentDidMount: ->
         @_initScroll()
 
+
     componentDidUpdate: ->
         @_initScroll()
 
-    getStateFromStores: (props={}) ->
-        messages = props.messages or @props.messages
-        return {
-            isAllSelected   : SelectionGetter.isAllSelected()
-            selection       : SelectionGetter.getSelection messages
-            hasNextPage     : RouterGetter.hasNextPage()
-        }
 
     render: ->
         section
             'key'               : "messages-list-#{@props.mailboxID}"
-            'ref'               : 'list'
+            'ref'               : "messages-list"
             'data-mailbox-id'   : @props.mailboxID
             'className'         : 'messages-list panel'
 
             # Toolbar
             ToolbarMessagesList
                 ref: 'messageList-toolbar'
-                key: 'messageList-toolbar-' + @state.selection?.length
+                key: 'messageList-toolbar-' + @props.selection?.length
                 accountID: @props.accountID
                 mailboxID: @props.mailboxID
                 messages: @props.messages
-                selection: @state.selection
-                isAllSelected: @state.isAllSelected
+                selection: @props.selection
+                isAllSelected: @props.isAllSelected
 
             # Message List
             unless @props.messages?.size
                 p
                     className: 'list-empty'
                     ref: 'listEmpty'
-                    RouterGetter.getEmptyMessage()
+                    @props.emptyMessages
             else
                 div
                     className: 'main-content'
+                    key: 'scrollable',
                     ref: 'scrollable',
 
-                    MessageListBody
-                        messages: @props.messages
-                        accountID: @props.accountID
-                        mailboxID: @props.mailboxID
-                        selection: @state.selection
-                        ref: 'listBody'
+                    ul
+                        className: 'list-unstyled',
+                        @props.messages.map(@renderItem).toArray()
 
-                    if @state.hasNextPage
+                    if @props.hasNextPage
                         a
                             className: 'more-messages'
                             onClick: @loadMoreMessage,
@@ -84,8 +68,29 @@ module.exports = MessageList = React.createClass
                     else
                         p ref: 'listEnd', t 'list end'
 
+
+    renderItem: (message) ->
+        messageID = message.get 'id'
+        conversationID = message.get 'conversationID'
+        isSelected = -1 < @props.selection?.indexOf messageID
+        conversationLengths = RouterGetter.getConversationLength {conversationID}
+        isActive = RouterGetter.isCurrentConversation conversationID
+        MessageItem
+            key                 : "messageItem-#{messageID}"
+            message             : message
+            tags                : RouterGetter.getTags message
+            conversationLengths : conversationLengths
+            isSelected          : isSelected
+            isActive            : isActive
+            login               : RouterGetter.getLogin()
+            mailboxID           : @props.mailboxID
+            isCompact           : @props.isCompact
+            displayConversations: @props.displayConversations
+
+
     loadMoreMessage: ->
         RouterActionCreator.gotoNextPage()
+
 
     _initScroll: ->
         if not (scrollable = ReactDOM.findDOMNode @refs.scrollable) or scrollable.scrollTop

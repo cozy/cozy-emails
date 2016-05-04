@@ -21,8 +21,6 @@ class ContactStore extends Store
     _results  = Immutable.OrderedMap()
 
     _import = (rawResults) ->
-        _results = Immutable.OrderedMap()
-
         if rawResults?
 
             if not Array.isArray rawResults
@@ -61,7 +59,7 @@ class ContactStore extends Store
     ###
     __bindHandlers: (handle) ->
 
-        handle ActionTypes.RECEIVE_RAW_CONTACT_RESULTS, (rawResults) =>
+        handle ActionTypes.CREATE_CONTACT_SUCCESS, (rawResults) =>
             _import rawResults
             @emit 'change'
 

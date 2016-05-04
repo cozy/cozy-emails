@@ -144,41 +144,6 @@ class RouterStore extends Store
             index = _.values(routes).indexOf(name)
             _.keys(routes)[index]
 
-    _getURLparams = (query) ->
-        # Get data from URL
-        if _.isString query
-            params = query.match /([\w]+=[-+\w,:.]+)+/gi
-            return unless params?.length
-            result = {}
-
-            _.each params, (param) ->
-                param = param.split '='
-                if -1 < (value = param[1]).indexOf ','
-                    value = value.split ','
-                else
-                    result[param[0]] = value
-
-            return result
-
-        # Get data from Views
-        switch query.type
-            when 'from', 'dest'
-                result = {}
-                result.before = query.value
-                result.after = "#{query.value}\uFFFF"
-
-            when 'flag'
-                # Keep previous filters
-                flags = _currentFilter.flags or []
-                flags = [flags] if _.isString flags
-
-                # Toggle value
-                if -1 < flags.indexOf query.value
-                    _.pull flags, query.value
-                else
-                    flags.push query.value
-                (result = {}).flags = flags
-        return result
 
     _getURIQueryParams = (params={}) ->
         _filter = _.clone _defaultFilter
@@ -197,8 +162,7 @@ class RouterStore extends Store
         if query.length then "?#{query.join '&'}" else ""
 
 
-
-    _setFilter = (query) ->
+    _setFilter = (query=_defaultFilter) ->
         # Update Filter
         _currentFilter = _.clone _defaultFilter
         _.extend _currentFilter, query
@@ -278,6 +242,33 @@ class RouterStore extends Store
     isFlags: (name) ->
         flags = @getFilter()?.flags or []
         MessageFilter[name] is flags or MessageFilter[name] in flags
+
+
+    isFlagged: (message) ->
+        MessageFlags.FLAGGED in message?.get 'flags'
+
+
+    isDeleted: (message) ->
+        # Message is in trashbox
+        trashID = @getAccount()?.get 'trashMailbox'
+        mailboxIDs = _.keys message?.get 'mailboxIDs'
+        if (trashID in mailboxIDs)
+            return true
+
+        # Message is not totally removed
+        deletedLabel = 'Deleted Messages'.toLowerCase()
+        label = @getMailbox()?.get('label')?.toLowerCase()
+        label is deletedLabel
+
+
+    isDraft: (message) ->
+        draftID = @getAccount()?.get 'draftMailbox'
+        mailboxIDs = _.keys message?.get 'mailboxIDs'
+        draftID in mailboxIDs
+
+
+    isUnread: (message) ->
+        MessageFlags.SEEN not in message?.get 'flags'
 
 
     getMailboxTotal: ->
@@ -409,6 +400,12 @@ class RouterStore extends Store
             _serverAccountErrorByField = Immutable.Map "unknown": error
 
 
+    _updateURL = ->
+        currentURL = _self.getCurrentURL isServer: false
+        if location.hash isnt currentURL
+            _router.navigate currentURL
+
+
     ###
         Defines here the action handlers.
     ###
@@ -425,15 +422,16 @@ class RouterStore extends Store
             else
                 _action = AccountActions.CREATE
 
+
             # From AccountStore
-            accountID ?= AccountStore.getDefault(mailboxID)?.get('id')
+            accountID ?= AccountStore.getDefault(mailboxID)?.get 'id'
             _setCurrentAccount accountID, mailboxID, tab
 
             # From MessageStore
             # Update currentMessageID
             _setCurrentMessage messageID
 
-            # Handle all Sleection
+            # Handle all Selection
             # _resetSelection()
 
             # Save current filters
@@ -444,15 +442,15 @@ class RouterStore extends Store
                 _resetSearch()
 
             # Update URL if it didnt
-            currentURL = @getCurrentURL isServer: false
-            if location.hash isnt currentURL
-                _router.navigate currentURL
+            _updateURL()
 
             @emit 'change'
+
 
         handle ActionTypes.ROUTES_INITIALIZE, (router) ->
             _router = router
             @emit 'change'
+
 
         handle ActionTypes.REMOVE_ACCOUNT_SUCCESS, ->
             _action = AccountActions.CREATE
@@ -539,9 +537,22 @@ class RouterStore extends Store
 
 
         handle ActionTypes.MESSAGE_TRASH_SUCCESS, ({target, updated, ref}) ->
-            if (nextMessage = @getNextConversation())?.size
-                _setCurrentMessage nextMessage?.get 'id'
+            # Update messageID
+            messageID = @getNextConversation()?.get 'id'
+            _setCurrentMessage messageID
+
+            # Update URL if it didnt
+            _updateURL()
             @emit 'change'
+
+
+        handle ActionTypes.REFRESH_SUCCESS, ->
+            @emit 'change'
+
+
+        handle ActionTypes.SETTINGS_UPDATE_RESQUEST, ->
+            @emit 'change'
+
 
 
 _toCamelCase = (value) ->

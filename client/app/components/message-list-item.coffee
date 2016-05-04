@@ -6,36 +6,30 @@ classNames = require 'classnames'
 
 {MessageFlags} = require '../constants/app_constants'
 
-colorhash                    = require '../utils/colorhash'
-MessageUtils                 = require '../utils/message_utils'
+colorhash = require '../utils/colorhash'
 
 RouterActionCreator = require '../actions/router_action_creator'
-LayoutActionCreator = require '../actions/layout_action_creator'
-
 LayoutActionCreator = require '../actions/layout_action_creator'
 
 {Icon}       = require('./basic_components').factories
 Participants = React.createFactory require './participants'
 
+RouterGetter = require '../getters/router'
+ContactGetter = require '../getters/contact'
+SearchGetter = require '../getters/search'
 
-module.exports = MessageItem = React.createClass
+module.exports = React.createClass
     displayName: 'MessagesItem'
 
     render: ->
-        message = @props.message
-        flags = message.get 'flags'
-
-        classes = classNames
-            message:    true
-            unseen:     MessageFlags.SEEN not in flags
-            active:     @props.isActive
-
-        compact = @props.isCompact
-        date    = MessageUtils.formatDate message.get('createdAt'), compact
-        avatar  = MessageUtils.getAvatar message
-
+        date    = RouterGetter.getCreatedAt @props.message, @props.isCompact
+        avatar  = ContactGetter.getAvatar @props.message
+        flags   = @props.message.get 'flags'
         li
-            className:              classes
+            className:  classNames
+                message:    true
+                unseen:     MessageFlags.SEEN not in flags
+                active:     @props.isActive
             key:                    @props.key
             'data-message-active':  @props.isActive
             draggable:              false
@@ -59,12 +53,11 @@ module.exports = MessageItem = React.createClass
                         type: 'star'
                         className: 'hidden' if MessageFlags.FLAGGED not in flags
 
-
                 div className: 'avatar-wrapper select-target',
                     if avatar?
                         img className: 'avatar', src: avatar
                     else
-                        from  = message.get('from')[0]
+                        from  = @props.message.get('from')[0]
                         cHash = "#{from?.name} <#{from?.address}>"
                         i
                             className: 'avatar placeholder'
@@ -75,27 +68,34 @@ module.exports = MessageItem = React.createClass
                 div className: 'metas-wrapper',
                     div className: 'metas',
                         div className: 'participants ellipsable',
-                            @getParticipants message
+                            @getParticipants @props.message
                         div className: 'subject ellipsable',
-                            @highlightSearch message.get('subject')
+                            @highlightSearch text: @props.message.get 'subject'
                         div className: 'mailboxes',
                             @props.tags.map (tag) ->
                                 span className: 'mailbox-tag', tag
-
                         div className: 'date',
-                            # TODO: use time-elements component here for the date
                             date
                         div className: 'extras',
-                            if message.get 'hasAttachments'
+                            if @props.message.get 'hasAttachments'
                                 i className: 'attachments fa fa-paperclip'
                             if @props.conversationLengths > 1
                                 span className: 'conversation-length',
-                                    "#{@props.conversationLengths}"
+                                    @props.conversationLengths
                         div className: 'preview ellipsable',
-                            @highlightSearch MessageUtils.getPreview(message)
+                            @highlightSearch message: @props.message
 
-    highlightSearch: (text, opts = null) ->
-        return p opts, MessageUtils.highlightSearch(text)...
+
+    highlightSearch: (props, options = null) ->
+        {message, text} = props
+
+        if message and not (text = message.get 'text')
+            text = toMarkdown html if (html = message.get 'html')?
+
+        text = (text or '').substr 0, 1024
+        props = SearchGetter.highlightSearch text
+        p options, props...
+
 
     onSelect: (event) ->
         event.stopPropagation()
@@ -103,20 +103,11 @@ module.exports = MessageItem = React.createClass
         value = not @props.isSelected
         LayoutActionCreator.updateSelection {id, value}
 
-    onMessageClick: (event) ->
-        RouterActionCreator.gotoMessage
-            messageID: @props.message.get 'id'
-
-    onDragStart: (event) ->
-        event.stopPropagation()
-        id = @props.message.get 'id'
-        value = not @props.isSelected
-        LayoutActionCreator.updateSelection {id, value}
 
     onMessageClick: (event) ->
         RouterActionCreator.gotoMessage
             messageID: @props.message.get 'id'
-            mailboxID: @props.message.get 'mailboxID'
+
 
     getParticipants: (message) ->
         from = message.get 'from'
@@ -127,15 +118,10 @@ module.exports = MessageItem = React.createClass
         p null,
             Participants
                 participants: from
-                onAdd: @addAddress
                 ref: 'from'
                 tooltip: false
             span null, separator
             Participants
                 participants: to
-                onAdd: @addAddress
                 ref: 'to'
                 tooltip: false
-
-    addAddress: (address) ->
-        ContactActionCreator.createContact address

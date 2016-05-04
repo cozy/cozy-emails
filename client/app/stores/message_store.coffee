@@ -5,7 +5,9 @@ AppDispatcher = require '../libs/flux/dispatcher/dispatcher'
 
 Store = require '../libs/flux/store/store'
 
-{ActionTypes, MessageActions} = require '../constants/app_constants'
+
+# {MessageActions, AccountActions, MessageFlags} = require '../constants/app_constants'
+{ActionTypes, MessageFlags, MessageFilter} = require '../constants/app_constants'
 
 class MessageStore extends Store
 
@@ -16,46 +18,6 @@ class MessageStore extends Store
 
     _messages = Immutable.OrderedMap()
     _conversationLength = Immutable.Map()
-
-    _inFlightByRef = {}
-    _inFlightByMessageID = {}
-    _undoable = {}
-
-
-    _addInFlight = (request) ->
-        _inFlightByRef[request.ref] = request
-        request.messages.forEach (message) ->
-            id = message.get('id')
-            requests = (_inFlightByMessageID[id] ?= [])
-            requests.push request
-
-    _removeInFlight = (ref) ->
-        request = _inFlightByRef[ref]
-        delete _inFlightByRef[ref]
-        request?.messages.forEach (message) ->
-            id = message.get('id')
-            requests = _inFlightByMessageID[id]
-            _inFlightByMessageID[id] = _.without requests, request
-        return request
-
-    # Retrieve a batch of message with various criteria
-    # target - is an {Object} with a property messageID or messageIDs or
-    #          conversationID or messageIDs
-    # target.accountID is needed to success Delete
-    #
-    # Returns an {Array} of {Immutable.Map} messages
-    _getMixed = (target) ->
-        if target.messageID
-            return [_messages.get(target.messageID)]
-        else if target.messageIDs
-            return target.messageIDs.map (id) ->
-                 _messages.get id
-            .filter (message) -> message?
-        else if target.conversationID
-            return _messages.filter (message) ->
-                message?.get('conversationID') is target?.conversationID
-            .toArray()
-        else throw new Error 'Wrong Usage : unrecognized target AS.getMixed'
 
 
     _updateMessages = (result={}, timestamp) ->
@@ -105,15 +67,16 @@ class MessageStore extends Store
 
             _messages = _messages.set message.id, messageMap
 
+
     _deleteMessage = (message) ->
         _messages = _messages.remove message.id
+
 
 
     ###
         Defines here the action handlers.
     ###
     __bindHandlers: (handle) ->
-
 
         handle ActionTypes.MESSAGE_FETCH_SUCCESS, ({error, result, timestamp}) ->
             _updateMessages result, timestamp unless error
@@ -124,14 +87,17 @@ class MessageStore extends Store
             _saveMessage message
             @emit 'change'
 
+
         handle ActionTypes.RECEIVE_RAW_MESSAGE_REALTIME, (message) ->
             _saveMessage message
             @emit 'change'
+
 
         handle ActionTypes.RECEIVE_RAW_MESSAGES, (messages) ->
             for message in messages when message?
                 _saveMessage message
             @emit 'change'
+
 
         handle ActionTypes.REMOVE_ACCOUNT_SUCCESS, (accountID) ->
             _messages = _messages.filter (message) ->
@@ -140,37 +106,15 @@ class MessageStore extends Store
             @emit 'change'
 
 
-        handle ActionTypes.MESSAGE_FLAGS_SUCCESS, ({target, updated, ref}) ->
-            _removeInFlight ref
+        handle ActionTypes.MESSAGE_FLAGS_SUCCESS, ({updated}) ->
             _saveMessage message for message in updated
             @emit 'change'
 
-        handle ActionTypes.MESSAGE_FLAGS_FAILURE, ({target, ref}) ->
-            _removeInFlight ref
-            @emit 'change'
 
-        handle ActionTypes.MESSAGE_MOVE_REQUEST, ({target, from, to, ref}) ->
-            messages = _getMixed target
-            _addInFlight {type: 'move', from, to, messages, ref}
-            @emit 'change'
-
-        handle ActionTypes.MESSAGE_MOVE_SUCCESS, ({target, updated, ref}) ->
-            _undoable[ref] = _removeInFlight ref
+        handle ActionTypes.MESSAGE_MOVE_SUCCESS, ({updated}) ->
             _saveMessage message for message in updated
             @emit 'change'
 
-        handle ActionTypes.MESSAGE_MOVE_FAILURE, ({target, ref}) ->
-            _removeInFlight ref
-            @emit 'change'
-
-        handle ActionTypes.MESSAGE_UNDO_TIMEOUT, ({ref}) ->
-            delete _undoable[ref]
-
-        handle ActionTypes.MESSAGE_FETCH_FAILURE, ->
-            @emit 'change'
-
-        handle ActionTypes.REFRESH_SUCCESS, ->
-            @emit 'change'
 
         handle ActionTypes.MESSAGE_SEND_SUCCESS, ({message}) ->
             _saveMessage message
@@ -181,11 +125,13 @@ class MessageStore extends Store
             _deleteMessage {id}
             @emit 'change'
 
+
         handle ActionTypes.MAILBOX_EXPUNGE, (mailboxID) ->
             _messages = _messages.filter (message) ->
                 not (mailboxID of message.get 'mailboxIDs')
             .toOrderedMap()
             @emit 'change'
+
 
         handle ActionTypes.SEARCH_SUCCESS, ({result}) ->
             for message in result.rows when message?
@@ -193,11 +139,24 @@ class MessageStore extends Store
             @emit 'change'
 
 
+        handle ActionTypes.SETTINGS_UPDATE_RESQUEST, ({messageID, displayImages}) ->
+            # Update settings into component,
+            # but not definitly into settingsStore
+            if (message = _messages.get messageID)
+                message.__displayImages = displayImages
+                _messages = _messages.set messageID, message
+            @emit 'change'
+
+
+
+
+
     ###
         Public API
     ###
     getAll: ->
         _messages
+
 
     getByID: (messageID) ->
         _messages.get(messageID)
@@ -214,10 +173,6 @@ class MessageStore extends Store
     getConversationLength: (conversationID) ->
         _conversationLength?.get conversationID
 
-
-    # FIXME : move this into RouterStore/RouterGetter
-    getUndoableRequest: (ref) ->
-        _undoable[ref]
 
 
 module.exports = new MessageStore()

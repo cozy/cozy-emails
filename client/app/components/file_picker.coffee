@@ -5,7 +5,6 @@ React          = require 'react'
 
 FileItem = React.createFactory require './file_item'
 
-MessageUtils = require '../utils/message_utils'
 {getFileURL} = require '../utils/file_utils'
 
 

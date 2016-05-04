@@ -7,16 +7,12 @@ AppDispatcher = require '../libs/flux/dispatcher/dispatcher'
 
 {sendReport} = require './error_manager'
 
-RouterGetter = require '../getters/router'
-
-# FIXME : remove all this from Stores to  RouterGetter
 AccountStore  = require '../stores/account_store'
 MessageStore  = require '../stores/message_store'
 RouterStore  = require '../stores/router_store'
 SettingsStore = require '../stores/settings_store'
 
 LayoutActionCreator  = require '../actions/layout_action_creator'
-MessageActionCreator = require '../actions/message_action_creator'
 RouterActionCreator  = require '../actions/router_action_creator'
 NotificationActionsCreator = require '../actions/notification_action_creator'
 
@@ -38,11 +34,6 @@ module.exports = Utils =
 
     getCurrentMailbox: ->
         RouterStore.getMailbox()?.toJS()
-
-
-    getCurrentMessage: ->
-        messageID = RouterStore.getMessageID()
-        Utils.getMessage messageID
 
 
     getMessage: (messageID) ->
@@ -104,11 +95,9 @@ module.exports = Utils =
         message = if 'prev' is direction
         then RouterStore.getNextConversation()
         else RouterStore.getPreviousConversation()
-
         messageID = message?.get 'id'
         mailboxID = message?.get 'mailboxID'
         RouterActionCreator.gotoMessage {messageID, mailboxID}
-
 
     ##
     # Display a message
@@ -120,7 +109,7 @@ module.exports = Utils =
 
 
     messageClose: ->
-        RouterActionCreator.closeMessage()
+        RouterActionCreator.closeConversation()
 
 
     messageDeleteCurrent: ->
@@ -129,7 +118,7 @@ module.exports = Utils =
             return
 
         deleteMessage = ->
-            MessageActionCreator.delete {messageID}
+            RouterActionCreator.deleteMessage {messageID}
 
         # Delete Message without modal
         unless SettingsStore.get 'messageConfirmDelete'
@@ -146,10 +135,6 @@ module.exports = Utils =
             actionLabel : t 'app confirm'
             action      : deleteMessage
         LayoutActionCreator.displayModal modal
-
-
-    messageUndo: ->
-        MessageActionCreator.undo()
 
 
     simulateUpdate: ->

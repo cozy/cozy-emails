@@ -2,9 +2,10 @@ React = require 'react'
 
 {li, span, i, a} = React.DOM
 
-MessageUtils    = require '../utils/message_utils'
 ApiUtils        = require '../utils/api_utils'
 {getFileURL}    = require '../utils/file_utils'
+
+FileGetter = require '../getters/file'
 
 ###
 # Display a file item
@@ -43,20 +44,8 @@ module.exports = FileItem = React.createClass
         unless @state.tmpFileURL
             ApiUtils.log(new Error "Wrong file #{JSON.stringify(file)}")
             file.url = "message/#{@props.messageID}/attachments/#{file.generatedFileName}"
-        type = MessageUtils.getAttachmentType file.contentType
-        icons =
-            'archive'      : 'fa-file-archive-o'
-            'audio'        : 'fa-file-audio-o'
-            'code'         : 'fa-file-code-o'
-            'image'        : 'fa-file-image-o'
-            'pdf'          : 'fa-file-pdf-o'
-            'word'         : 'fa-file-word-o'
-            'presentation' : 'fa-file-powerpoint-o'
-            'spreadsheet'  : 'fa-file-excel-o'
-            'text'         : 'fa-file-text-o'
-            'video'        : 'fa-file-video-o'
-            'word'         : 'fa-file-word-o'
-        iconClass = icons[type] or 'fa-file-o'
+
+        iconClass = FileGetter.getAttachmentIcon file
 
         li className: "file-item", key: @props.key,
             i className: "mime #{type} fa #{iconClass}"

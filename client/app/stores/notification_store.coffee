@@ -73,7 +73,7 @@ class NotificationStore extends Store
         if options.autoclose
             setTimeout _removeNotification.bind(@, id), 5000
 
-    _makeMessage = (target, ref, actionAndOK, errMsg)->
+    _makeMessage = (target, actionAndOK, errMsg)->
         subject = target?.subject
 
         if target.messageID and target.isDraft
@@ -151,40 +151,33 @@ class NotificationStore extends Store
 
         handle ActionTypes.MESSAGE_TRASH_SUCCESS, ({target, ref, updated}) ->
             _showNotification
-                message: _makeMessage target, ref, 'delete ok'
+                message: _makeMessage target, 'delete ok'
                 actions: [_makeUndoAction ref]
                 autoclose: true
 
         handle ActionTypes.MESSAGE_TRASH_FAILURE, ({target, ref, error}) ->
             _showNotification
-                message: _makeMessage target, ref, 'delete ko', error
+                message: _makeMessage target, 'delete ko', error
                 errors: [error]
                 autoclose: true
 
         handle ActionTypes.MESSAGE_MOVE_SUCCESS, ({target, ref, updated}) ->
             unless target.silent
                 _showNotification
-                    message: _makeMessage target, ref, 'move ok'
+                    message: _makeMessage target, 'move ok'
                     actions: [_makeUndoAction ref]
                     autoclose: true
 
-        handle ActionTypes.MESSAGE_MOVE_FAILURE, ({target, ref, error}) ->
+        handle ActionTypes.MESSAGE_MOVE_FAILURE, ({target, error}) ->
             _showNotification
-                message: _makeMessage target, ref, 'move ko', error
+                message: _makeMessage target, 'move ko', error
                 errors: [error]
                 autoclose: true
 
         # dont display a notification for MESSAGE_FLAG_SUCCESS
-        handle ActionTypes.MESSAGE_FLAGS_FAILURE, ({target, ref, error}) ->
+        handle ActionTypes.MESSAGE_FLAGS_FAILURE, ({target, error}) ->
             _showNotification
-                message: _makeMessage target, ref, 'flag ko', error
-                errors: [error]
-                autoclose: true
-
-        # dont display a notification for MESSAGE_RECOVER_SUCCESS
-        handle ActionTypes.MESSAGE_RECOVER_FAILURE, ({target, ref, error}) ->
-            _showNotification
-                message: 'lost server connection'
+                message: _makeMessage target, 'flag ko', error
                 errors: [error]
                 autoclose: true
 
@@ -248,4 +241,26 @@ class NotificationStore extends Store
                 errors: [error]
                 autoclose: true
 
-module.exports = (_self = new NotificationStore())
+
+        handle ActionTypes.SEARCH_CONTACT_FAILURE, ({error}) ->
+            _showNotification
+                message: message
+                errors: [error]
+                autoclose: true
+
+
+        handle ActionTypes.CREATE_CONTACT_SUCCESS, ({error, result}) ->
+            _showNotification
+                message: t 'contact create success',
+                    contact: result?.name or result?.address
+                autoclose: true
+
+
+        handle ActionTypes.CREATE_CONTACT_FAILURE, ({error}) ->
+            _showNotification
+                message: t 'contact create error', {error}
+                errors: [error]
+                autoclose: rue
+
+
+module.exports = new NotificationStore()

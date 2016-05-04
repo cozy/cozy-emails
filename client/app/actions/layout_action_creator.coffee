@@ -1,8 +1,6 @@
-RouterGetter = require '../getters/router'
-
 AppDispatcher = require '../libs/flux/dispatcher/dispatcher'
 
-{ActionTypes, MessageActions} = require '../constants/app_constants'
+{ActionTypes} = require '../constants/app_constants'
 
 module.exports = LayoutActionCreator =
 
@@ -55,26 +53,6 @@ module.exports = LayoutActionCreator =
         AppDispatcher.dispatch
             type: ActionTypes.SEARCH_PARAMETER_CHANGED
             value: {accountID, search}
-
-    saveMessage: (params) ->
-        {accountID, mailboxID, messageID} = params
-        accountID ?= RouterGetter.getAccountID()
-        mailboxID ?= RouterGetter.getMailboxID()
-
-        # Select Mailbox
-        AppDispatcher.dispatch
-            type: ActionTypes.SELECT_ACCOUNT
-            value: {accountID, mailboxID}
-
-        # Set message as current
-        if messageID
-            AppDispatcher.dispatch
-                type: ActionTypes.MESSAGE_CURRENT
-                value: {messageID}
-
-            AppDispatcher.dispatch
-                type: ActionTypes.MESSAGE_FETCH_REQUEST
-                value: {messageID}
 
     toastsShow: ->
         AppDispatcher.dispatch
