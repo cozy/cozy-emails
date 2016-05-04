@@ -45,7 +45,6 @@ module.exports = React.createClass
         nstate.selectedAccount   = RouterStore.getAccount()
         nstate.isWaiting         = RouterStore.isWaiting()
         nstate.isChecking        = RouterStore.isChecking()
-        nstate.tab               = RouterGetter.getSelectedTab()
 
         unless (nstate.editedAccount = nstate.selectedAccount)
             nstate.editedAccount = AccountStore.makeEmptyAccount()
@@ -91,14 +90,14 @@ module.exports = React.createClass
             Title text: t title
             if (accountID = @state.editedAccount.get('id'))
                 Tabs tabs: TABS.map (name) =>
-                    class: if @state.tab is name then 'active' else ''
+                    class: if @props.tab is name then 'active' else ''
                     text: t "account tab #{name}"
                     url: RouterGetter.getURL
                         action: AccountActions.EDIT
                         accountID: accountID
                         tab: name
 
-            switch @state.tab
+            switch @props.tab
 
                 when 'signature'
                     AccountConfigSignature

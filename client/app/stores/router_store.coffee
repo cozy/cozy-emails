@@ -185,7 +185,7 @@ class RouterStore extends Store
         filter.type in ['from', 'dest']
 
 
-    _setCurrentAccount = (accountID, mailboxID, tab="mailboxes") ->
+    _setCurrentAccount = (accountID, mailboxID, tab="account") ->
         # Do not overwrite nextPage
         # if action changes from List to MessageShow
         if mailboxID isnt _mailboxID

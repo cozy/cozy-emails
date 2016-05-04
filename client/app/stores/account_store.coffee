@@ -139,9 +139,31 @@ class AccountStore extends Store
 
 
     getAllMailboxes: (accountID) ->
-        _accounts?.get accountID
-            .get 'mailboxes'
-            .sort _mailboxSort
+        if accountID
+            _accounts?.get accountID
+                .get 'mailboxes'
+                .sort _mailboxSort
+
+
+    makeEmptyAccount: ->
+        Immutable.Map
+            label: ''
+            login: ''
+            password: ''
+            imapServer: ''
+            imapLogin: ''
+            smtpServer: ''
+            label: ''
+            id: null
+            smtpPort: 465
+            smtpSSL: true
+            smtpTLS: false
+            smtpMethod: 'PLAIN'
+            imapPort: 993
+            imapSSL: true
+            imapTLS: false
+            accountType: 'IMAP'
+            favoriteMailboxes: null
 
 
 module.exports = new AccountStore()

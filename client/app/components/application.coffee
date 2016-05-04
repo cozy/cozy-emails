@@ -49,19 +49,25 @@ module.exports = React.createClass
             if settings.isCompact then "layout-compact"
             "layout-preview-#{settings.previewSize}"].join(' ')
 
-        mailbox = RouterGetter.getCurrentMailbox()
+        if (mailbox = RouterGetter.getCurrentMailbox())
+            return {
+                mailboxID       : (mailboxID = mailbox?.get 'id')
+                accountID       : RouterGetter.getAccountID()
+                messageID       : RouterGetter.getCurrentMessageID()
+                action          : RouterGetter.getAction()
+                isEditable      : RouterGetter.isEditable()
+                modal           : RouterGetter.getModal()
+                className       : className
+                messages        : RouterGetter.getMessagesList mailboxID
+                conversation    : RouterGetter.getConversation()
+                isMailbox       : mailbox.get('lastSync')?
+                isLoading       : RouterGetter.isMailboxLoading()
+            }
+
         return {
-            mailboxID       : (mailboxID = mailbox?.get 'id')
-            accountID       : RouterGetter.getAccountID()
-            messageID       : RouterGetter.getCurrentMessageID()
             action          : RouterGetter.getAction()
-            isEditable      : RouterGetter.isEditable()
             modal           : RouterGetter.getModal()
             className       : className
-            messages        : RouterGetter.getMessagesList mailboxID
-            conversation    : RouterGetter.getConversation()
-            isMailbox       : mailbox and mailbox.get('lastSync')?
-            isLoading       : RouterGetter.isMailboxLoading()
         }
 
 
@@ -85,7 +91,7 @@ module.exports = React.createClass
                     key             : 'menu-' + @state.accountID
                     accountID       : @state.accountID
                     mailboxID       : @state.mailboxID
-                    accounts        : RouterGetter.getAccounts().toArray()
+                    accounts        : RouterGetter.getAccounts()?.toArray()
                     composeURL      : composeURL
                     newAccountURL   : newAccountURL
                     mailboxes       : RouterGetter.getMailboxes()
@@ -96,9 +102,8 @@ module.exports = React.createClass
                     if isAccount
                         accountID = @state.accountID or 'new'
                         tab = RouterGetter.getSelectedTab()
-                        AccountConfig
-                            key: "account-config-#{accountID}-#{tab}"
-                            accountID: @state.accountID
+                        key = "account-config-#{accountID}-#{tab}"
+                        AccountConfig {key, accountID, tab}
 
                     else if @state.isEditable
                         Compose

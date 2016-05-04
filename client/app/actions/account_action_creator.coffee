@@ -6,7 +6,7 @@ AccountStore = require '../stores/account_store'
 
 module.exports = AccountActionCreator =
 
-    create: (value) ->
+    create: ({value}) ->
         AppDispatcher.dispatch
             type: ActionTypes.ADD_ACCOUNT_REQUEST
             value: {value}
