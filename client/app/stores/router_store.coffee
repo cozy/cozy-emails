@@ -39,6 +39,7 @@ class RouterStore extends Store
     _accountID = null
     _mailboxID = null
     _tab = null
+    _refreshMailbox = false
     _newAccountWaiting = false
     _newAccountChecking = false
     _serverAccountErrorByField = Immutable.Map()
@@ -91,6 +92,10 @@ class RouterStore extends Store
 
     isChecking: ->
         _newAccountChecking
+
+
+    isRefresh: ->
+        _refreshMailbox
 
 
     getURL: (params={}) ->
@@ -547,7 +552,18 @@ class RouterStore extends Store
             @emit 'change'
 
 
+        handle ActionTypes.REFRESH_REQUEST, ->
+            _refreshMailbox = true
+            @emit 'change'
+
+
         handle ActionTypes.REFRESH_SUCCESS, ->
+            _refreshMailbox = false
+            @emit 'change'
+
+
+        handle ActionTypes.REFRESH_FAILURE, ->
+            _refreshMailbox = false
             @emit 'change'
 
 

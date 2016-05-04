@@ -18,6 +18,7 @@ module.exports =
             if mailboxID is account?.get type
                 return {type, value}
 
+
     getAttachmentIcon: ({contentType}) ->
         type = @getAttachmentType contentType
         Icons[type] or 'fa-file-o'
