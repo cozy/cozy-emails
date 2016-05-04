@@ -2,7 +2,7 @@ Immutable = require 'immutable'
 React     = require 'react'
 ReactDOM  = require 'react-dom'
 
-{div, section, p, a, ul} = React.DOM
+{div, section, p, button, ul} = React.DOM
 DomUtils = require '../utils/dom_utils'
 
 RouterActionCreator = require '../actions/router_action_creator'
@@ -60,7 +60,7 @@ module.exports = React.createClass
                         @props.messages.map(@renderItem).toArray()
 
                     if @props.hasNextPage
-                        a
+                        button
                             className: 'more-messages'
                             onClick: @loadMoreMessage,
                             ref: 'nextPage',
