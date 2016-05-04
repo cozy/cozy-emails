@@ -45,7 +45,7 @@ class RouterStore extends Store
 
     _messageID = null
     _messagesLength = 0
-    _messagePage = 0
+    _hasNextPage = 0
 
 
     getRouter: ->
@@ -181,9 +181,15 @@ class RouterStore extends Store
 
 
     _setCurrentAccount = (accountID, mailboxID, tab="mailboxes") ->
+        # Do not overwrite nextPage
+        # if action changes from List to MessageShow
+        if mailboxID isnt _mailboxID
+            _hasNextPage = false
+
         _accountID = accountID
         _mailboxID = mailboxID
         _tab = tab
+
 
 
     getAccount: (accountID) ->
@@ -232,7 +238,6 @@ class RouterStore extends Store
     _setCurrentMessage = (messageID) ->
         _messageID = messageID
         _messagesLength = 0
-        _messagePage = 0
 
 
     getMessageID: ->
@@ -282,18 +287,14 @@ class RouterStore extends Store
 
 
     hasNextPage: ->
-        _messagePage < @getPagesLength()
+        _hasNextPage
 
 
-    getPagesLength: (params={}) ->
-        Math.ceil  @getMailboxTotal() / MSGBYPAGE
-
-
-    isMissingMessages: ->
+    isPageComplete: ->
         if (messageID = @getMessageID())
             unless (message = MessageStore.getByID(messageID))?.size
-                return true
-        (_messagesLength + 1) < MSGBYPAGE and @hasNextPage()
+                return false
+        (_messagesLength + 1) >= MSGBYPAGE
 
 
 
@@ -412,8 +413,8 @@ class RouterStore extends Store
     __bindHandlers: (handle) ->
 
         handle ActionTypes.ROUTE_CHANGE, (payload={}) ->
-            {accountID, mailboxID, messageID} = payload
-            {action, query, tab} = payload
+            {accountID, mailboxID, tab} = payload
+            {action, messageID, query} = payload
 
             # We cant display any informations
             # without accounts
@@ -421,7 +422,6 @@ class RouterStore extends Store
                 _action = action
             else
                 _action = AccountActions.CREATE
-
 
             # From AccountStore
             accountID ?= AccountStore.getDefault(mailboxID)?.get 'id'
@@ -513,9 +513,10 @@ class RouterStore extends Store
 
 
         handle ActionTypes.MESSAGE_FETCH_SUCCESS, (payload) ->
-            {result, timestamp, page} = payload
+            {result, timestamp, hasNextPage} = payload
 
-            _messagePage = page
+            if hasNextPage?
+                _hasNextPage = hasNextPage
 
             # Update Realtime
             mailboxID = @getMailboxID()
