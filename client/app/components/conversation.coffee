@@ -45,6 +45,13 @@ module.exports = React.createClass
 
 
     render: ->
+        unless @props.conversation?.length
+            return section
+                key: 'conversation'
+                className: 'conversation panel'
+                'aria-expanded': true,
+                p null, t "app loading"
+
         section
             ref: "conversation-container"
             key: "conversation-#{@props.messageID}-container"
