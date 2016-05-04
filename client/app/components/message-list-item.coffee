@@ -25,7 +25,6 @@ module.exports = React.createClass
         date    = RouterGetter.getCreatedAt @props.message, @props.isCompact
         avatar  = ContactGetter.getAvatar @props.message
         flags   = @props.message.get 'flags'
-
         li
             className:  classNames
                 message:    true
@@ -76,23 +75,23 @@ module.exports = React.createClass
                             @props.tags.map (tag) ->
                                 span className: 'mailbox-tag', tag
                         div className: 'date',
-                            # TODO: use time-elements component here for the date
                             date
                         div className: 'extras',
                             if @props.message.get 'hasAttachments'
                                 i className: 'attachments fa fa-paperclip'
                             if @props.conversationLengths > 1
                                 span className: 'conversation-length',
-                                    "#{@props.conversationLengths}"
+                                    @props.conversationLengths
                         div className: 'preview ellipsable',
                             @highlightSearch message: @props.message
 
 
     highlightSearch: (props, options = null) ->
         {message, text} = props
-        if message
-            text = message.get 'text'
-            text ?= toMarkdown message.get 'html'
+
+        if message and not (text = message.get 'text')
+            text = toMarkdown html if (html = message.get 'html')?
+
         text = (text or '').substr 0, 1024
         props = SearchGetter.highlightSearch text
         p options, props...
