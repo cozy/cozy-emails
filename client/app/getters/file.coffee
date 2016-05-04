@@ -10,7 +10,7 @@ module.exports =
         {account, mailboxID, type} = params
         mailboxID ?= RouterStore.getMailboxID()
 
-        if (value = Icons[type])
+        if type? and (value = Icons[type])
             return {type, value}
 
         account ?= RouterStore.getAccount()
