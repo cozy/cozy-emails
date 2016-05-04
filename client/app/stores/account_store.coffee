@@ -1,13 +1,11 @@
-_         = require 'underscore'
 Immutable = require 'immutable'
-XHRUtils = require '../utils/xhr_utils'
-AppDispatcher = require '../libs/flux/dispatcher/dispatcher'
 
 Store = require '../libs/flux/store/store'
 
 {ActionTypes} = require '../constants/app_constants'
 
 AccountTranslator = require '../utils/translators/account_translator'
+
 
 class AccountStore extends Store
 
@@ -74,30 +72,10 @@ class AccountStore extends Store
         _accounts = _accounts?.set accountID, account
 
 
-    # Refresh Emails from Server
-    # This is a read data pattern
-    # ActionCreator is a write data pattern
-    _refreshMailbox = (mailboxID) ->
-        deep = true
-        XHRUtils.refreshMailbox mailboxID, {deep}, (error, updated) ->
-            if error?
-                AppDispatcher.dispatch
-                    type: ActionTypes.REFRESH_FAILURE
-                    value: {mailboxID, error}
-            else
-                AppDispatcher.dispatch
-                    type: ActionTypes.REFRESH_SUCCESS
-                    value: {mailboxID, updated}
-
-
     ###
         Defines here the action handlers.
     ###
     __bindHandlers: (handle) ->
-        handle ActionTypes.ROUTE_CHANGE, ({mailboxID}) ->
-            _refreshMailbox mailboxID
-            @emit 'change'
-
 
         handle ActionTypes.ADD_ACCOUNT_SUCCESS, ({account}) ->
             _updateAccount account

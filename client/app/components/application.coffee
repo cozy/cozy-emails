@@ -60,7 +60,10 @@ module.exports = React.createClass
             className       : className
             messages        : RouterGetter.getMessagesList mailboxID
             conversation    : RouterGetter.getConversation()
+            isMailbox       : mailbox and mailbox.get('lastSync')?
+            isLoading       : RouterGetter.isMailboxLoading()
         }
+
 
     render: ->
         action = MessageActions.CREATE
@@ -123,8 +126,10 @@ module.exports = React.createClass
                                 isAllSelected   : SelectionGetter.isAllSelected()
                                 selection       : SelectionGetter.getSelection @state.messages
                                 hasNextPage     : RouterGetter.hasNextPage()
+                                isMailbox       : @state.isMailbox
+                                isLoading       : @state.isLoading
 
-                            if @state.messageID
+                            if @state.isMailbox and @state.messageID
                                 Conversation
                                     ref             : "conversation"
                                     key             : "conversation-#{@state.messageID}"
