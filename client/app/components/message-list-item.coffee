@@ -45,11 +45,6 @@ module.exports = React.createClass
                         className: 'hidden' if MessageFlags.SEEN in flags
 
                     Icon
-                        className: 'select'
-                        onClick:   @onSelect
-                        type: if @props.isSelected then 'check-square-o' else 'square-o'
-
-                    Icon
                         type: 'star'
                         className: 'hidden' if MessageFlags.FLAGGED not in flags
 

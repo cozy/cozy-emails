@@ -15,41 +15,42 @@ _nextURL = {}
 RouterActionCreator =
 
     gotoCurrentPage: (params={}) ->
-        {url, page} = params
+        {url} = params
 
         # Always load messagesList
         action = MessageActions.SHOW_ALL
         timestamp = (new Date()).toISOString()
         url ?= RouterStore.getCurrentURL {action}
-        page ?= _getPage()
 
         AppDispatcher.dispatch
             type: ActionTypes.MESSAGE_FETCH_REQUEST
-            value: {url, timestamp, page}
+            value: {url, timestamp}
 
         XHRUtils.fetchMessagesByFolder url, (error,result) =>
+            # Save messagesLength per page
+            # to get the correct pageAfter param
+            # for getNext handles
+            _setNextURL result
+            hasNextPage = _getNextURL()?
+
             if error?
                 AppDispatcher.dispatch
                     type: ActionTypes.MESSAGE_FETCH_FAILURE
-                    value: {error, url, timestamp, page}
+                    value: {error, url, timestamp, hasNextPage}
             else
                 AppDispatcher.dispatch
                     type: ActionTypes.MESSAGE_FETCH_SUCCESS
-                    value: {result, url, timestamp, page}
-
-                # Save messagesLength per page
-                # to get the correct pageAfter param
-                # for getNext handles
-                _setNextURL result
+                    value: {result, url, timestamp, hasNextPage}
 
                 # Fetch missing messages
-                if RouterStore.isMissingMessages()
+                isMissingMessages = not RouterStore.isPageComplete()
+                if RouterStore.hasNextPage() and isMissingMessages
                     @gotoNextPage()
 
+
     gotoNextPage: ->
-        page = _getPage()
         url = _getNextURL()
-        @gotoCurrentPage {url, page}
+        @gotoCurrentPage {url}
 
 
     gotoCompose: (params={}) ->
@@ -204,6 +205,12 @@ _addPage = ->
     ++_pages[key]
 
 
+_getPreviousURI = ->
+    if (page = _getPage()) > 0
+        key = _getPageKey()
+        "#{key}-#{--page}"
+
+
 _getNextURI = ->
     key = _getPageKey()
     page = _getPage()
@@ -226,8 +233,11 @@ _setNextURL = ({messages}) ->
     if _nextURL[key] is undefined
         action = MessageActions.SHOW_ALL
         filter = pageAfter: _.last(messages)?.date
-        _nextURL[key] = RouterStore.getCurrentURL {filter, action}
 
+        _previousURI = _getPreviousURI()
+        value = RouterStore.getCurrentURL {filter, action}
+        if not _previousURI or _nextURL[_previousURI] isnt value
+            _nextURL[key] = value
 
 
 module.exports = RouterActionCreator
