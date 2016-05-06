@@ -9,9 +9,16 @@ module.exports = BasicFormFieldset = React.createClass
         expanded: React.PropTypes.bool
         legend:   React.PropTypes.string
 
+    getInitialState: ->
+        expanded: if @props.expanded is null then true else @props.expanded
+
 
     render: ->
-        <fieldset aria-expanded={@props.expanded or true}>
-            {<legend>{@props.legend}</legend> if @props.legend}
+        <fieldset aria-expanded={@state.expanded}>
+            {<legend onClick={@toggleExpand}>{@props.legend}</legend> if @props.legend}
             {@props.children}
         </fieldset>
+
+
+    toggleExpand: ->
+        @setState expanded: !@state.expanded if @props.expanded isnt null

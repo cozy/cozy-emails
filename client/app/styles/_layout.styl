@@ -108,3 +108,89 @@ body
                 max-width 38em
             .conversation[aria-expanded=true]
                 max-width none
+
+
+.app + [role=complementary]
+    // Backdrop definition
+    position absolute
+    top      0
+    left     0
+    bottom   0
+    right    0
+    background-color rgba(0, 0, 0, .25)
+
+    // Modalbox
+    section
+        position  absolute
+        max-width 90vw
+        top       1em
+        left      50%
+        transform translateX(-50%)
+
+        padding 1em
+
+        background-color #fff
+
+        // Header
+        h1
+            margin         0 0 .5em
+            padding-bottom .5em
+            border-bottom  1px solid grey-01
+
+        // Actions
+        footer
+            margin-top  .5em
+            padding-top .5em
+            border-top  1px solid grey-01
+
+        nav
+            display flex
+
+        [role=button]
+            flex             1
+            padding          .55em .8em
+            background-color basecolor
+            color            white
+            text-align       center
+
+            &:hover
+                text-decoration  none
+
+        // Forms
+        label
+            display        flex
+            flex-direction column
+            margin         .5em 0
+
+    // Expanded fieldsets
+    fieldset[aria-expanded]
+        margin 2em 0 0
+
+        legend
+            margin         0
+            vertical-align baseline
+            color          basecolor
+            font-size      1em
+            border         0
+            cursor         pointer
+
+            &::before
+                font-size      .65em
+                margin-right   .35em
+
+    fieldset[aria-expanded=false]
+        legend
+            margin-bottom 0
+
+            &::before
+                content '➡'
+
+        .content
+            display none
+
+    fieldset[aria-expanded=true]
+        legend::before
+            content '⬇'
+
+    .content
+        padding-top 1em

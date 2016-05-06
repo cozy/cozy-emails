@@ -1,3 +1,4 @@
+_     = require 'underscore'
 React = require 'react'
 
 
@@ -21,10 +22,11 @@ module.exports = BasicFormSelect = React.createClass
 
     render: ->
         slug = (if @context.ns then "#{@context.ns}-" else '') + @props.name
+        props = _.pick @props, 'name', 'value', 'onChange'
 
         <label data-input={@props.type} htmlFor={slug}>
             {<span>{@props.label}</span> if @props.label}
-            <select id={slug} name={@props.name} value={@props.value}>
+            <select id={slug} {...props}>
                 {<option value={option.value}>
                     {t(option.label)}
                 </option> for option in @props.options}
