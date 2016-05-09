@@ -28,7 +28,6 @@ module.exports = React.createClass
 
         participants = @getParticipants @props.message
         subject = @highlightSearch text: @props.message.get 'subject'
-        message = @highlightSearch message: @props.message
 
         from  = @props.message.get('from')[0]
         backgroundColor = colorhash "#{from?.name} <#{from?.address}>"
@@ -84,16 +83,9 @@ module.exports = React.createClass
                             if @props.conversationLengths > 1
                                 span className: 'conversation-length',
                                     @props.conversationLengths
-                        div className: 'preview ellipsable',
-                            message
 
 
-    highlightSearch: (props, options = null) ->
-        {message, text} = props
-
-        if message and not (text = message.get 'text')
-            text = toMarkdown html if (html = message.get 'html')?
-
+    highlightSearch: ({text}, options = null) ->
         text = (text or '').substr 0, 1024
         props = SearchGetter.highlightSearch text
         p options, props...
