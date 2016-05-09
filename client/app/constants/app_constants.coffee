@@ -80,11 +80,8 @@ module.exports =
         'ROUTE_CHANGE'          : 'ROUTE_CHANGE'
 
         # Layout
-        'RESIZE_PREVIEW_PANE'       : 'RESIZE_PREVIEW_PANE'
         'DISPLAY_MODAL'             : 'DISPLAY_MODAL'
         'HIDE_MODAL'                : 'HIDE_MODAL'
-        'REFRESH'                   : 'REFRESH'
-        'FOCUS'                     : 'FOCUS'
         'INTENT_AVAILABLE'          : 'INTENT_AVAILABLE'
 
         # Settings

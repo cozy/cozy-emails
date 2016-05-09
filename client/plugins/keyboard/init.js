@@ -47,15 +47,6 @@ if (typeof window.plugins !== "object") {
     container.addEventListener('click', closeHelp);
     Mousetrap.bind("esc", closeHelp);
   }
-  function layoutRatio(direction) {
-    if (direction > 0) {
-      LayoutActionCreator.increasePreviewPanel(direction);
-    } else if (direction < 0) {
-      LayoutActionCreator.decreasePreviewPanel(direction);
-    } else {
-      LayoutActionCreator.resetPreviewPanel();
-    }
-  }
   function mailAction(action) {
     var current, btn;
     Array.prototype.forEach.call(document.querySelectorAll('article.message .content, article.message .preview'), function (e) {
@@ -184,41 +175,6 @@ if (typeof window.plugins !== "object") {
           if (panel) {
             panel.scrollTop += panel.clientHeight * 0.8;
           }
-        }
-      },
-      '(': {
-        name: 'Increase message layout size',
-        action: function (e) {
-          if (e && e instanceof Event) { e.preventDefault(); }
-          layoutRatio(1);
-        }
-      },
-      'alt+(': {
-        name: 'Increase by 10 message layout size',
-        action: function (e) {
-          if (e && e instanceof Event) { e.preventDefault(); }
-          layoutRatio(10);
-        }
-      },
-      ')': {
-        name: 'Decrease message layout size',
-        action: function (e) {
-          if (e && e instanceof Event) { e.preventDefault(); }
-          layoutRatio(-1);
-        }
-      },
-      'alt+)': {
-        name: 'Decrease by 10 message layout size',
-        action: function (e) {
-          if (e && e instanceof Event) { e.preventDefault(); }
-          layoutRatio(-10);
-        }
-      },
-      '=': {
-        name: 'Reset message layout size',
-        action: function (e) {
-          if (e && e instanceof Event) { e.preventDefault(); }
-          layoutRatio();
         }
       },
       'ctrl+up': {

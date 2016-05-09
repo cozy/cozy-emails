@@ -4,34 +4,14 @@ AppDispatcher = require '../libs/flux/dispatcher/dispatcher'
 
 module.exports = LayoutActionCreator =
 
-    toggleListMode: ->
-        AppDispatcher.dispatch
-            type: ActionTypes.TOGGLE_LIST_MODE
-
-
     selectAll: (value) ->
         type = ActionTypes.MAILBOX_SELECT_ALL
         AppDispatcher.dispatch {type}
 
+
     updateSelection: (value) ->
         type = ActionTypes.MAILBOX_SELECT
         AppDispatcher.dispatch {type, value}
-
-    # TODO: use a global method to DRY this 3-ones
-    increasePreviewPanel: (factor = 1) ->
-        AppDispatcher.dispatch
-            type: ActionTypes.RESIZE_PREVIEW_PANE
-            value: Math.abs factor
-
-    decreasePreviewPanel: (factor = 1) ->
-        AppDispatcher.dispatch
-            type: ActionTypes.RESIZE_PREVIEW_PANE
-            value: -1 * Math.abs factor
-
-    resetPreviewPanel: ->
-        AppDispatcher.dispatch
-            type: ActionTypes.RESIZE_PREVIEW_PANE
-            value: null
 
 
     clearToasts: ->
@@ -58,10 +38,12 @@ module.exports = LayoutActionCreator =
         AppDispatcher.dispatch
             type: ActionTypes.TOASTS_HIDE
 
+
     intentAvailability: (availability) ->
         AppDispatcher.dispatch
             type: ActionTypes.INTENT_AVAILABLE
             value: availability
+
 
     displayModal: (params) ->
         params.closeModal ?= -> LayoutActionCreator.hideModal()

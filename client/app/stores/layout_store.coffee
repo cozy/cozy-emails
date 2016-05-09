@@ -27,19 +27,6 @@ class LayoutStore extends Store
     ###
     __bindHandlers: (handle) ->
 
-        handle ActionTypes.RESIZE_PREVIEW_PANE, (factor) ->
-            if factor
-                _previewSize += factor
-                # set limits
-                _previewSize = 20 if _previewSize < 20
-                _previewSize = 80 if _previewSize > 80
-            else
-                _previewSize = 50
-            @emit 'change'
-
-        handle ActionTypes.REFRESH, ->
-            @emit 'change'
-
         handle ActionTypes.TOASTS_SHOW, ->
             _shown = true
             @emit 'change'
