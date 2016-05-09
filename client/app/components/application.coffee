@@ -46,7 +46,6 @@ module.exports = React.createClass
         settings = RouterGetter.getLayoutSettings()
         className = ['layout'
             "layout-#{settings.disposition}"
-            if settings.isCompact then "layout-compact"
             "layout-preview-#{settings.previewSize}"].join(' ')
 
         if (mailbox = RouterGetter.getCurrentMailbox())
@@ -80,8 +79,6 @@ module.exports = React.createClass
         isAccount = -1 < @state.action?.indexOf 'account'
 
         message = RouterGetter.getMessage()
-
-        isCompact = SettingsStore.get('listStyle') is 'compact'
 
         div className: @state.className,
             div className: 'app',
@@ -126,7 +123,6 @@ module.exports = React.createClass
                                 messageID       : @state.messageID
                                 messages        : @state.messages
                                 emptyMessages   : RouterGetter.getEmptyMessage()
-                                isCompact       : isCompact
                                 isAllSelected   : SelectionGetter.isAllSelected()
                                 selection       : SelectionGetter.getSelection @state.messages
                                 hasNextPage     : RouterGetter.hasNextPage()

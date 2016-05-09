@@ -100,7 +100,6 @@ module.exports = React.createClass
             isActive            : isActive
             login               : RouterGetter.getLogin()
             mailboxID           : @props.mailboxID
-            isCompact           : @props.isCompact
             displayConversations: @props.displayConversations
 
 

@@ -4,14 +4,10 @@ AppDispatcher = require '../libs/flux/dispatcher/dispatcher'
 
 module.exports = LayoutActionCreator =
 
-    setDisposition: (type) ->
-        AppDispatcher.dispatch
-            type: ActionTypes.SET_DISPOSITION
-            value: type
-
     toggleListMode: ->
         AppDispatcher.dispatch
             type: ActionTypes.TOGGLE_LIST_MODE
+
 
     selectAll: (value) ->
         type = ActionTypes.MAILBOX_SELECT_ALL

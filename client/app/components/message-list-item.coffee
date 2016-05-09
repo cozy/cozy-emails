@@ -22,7 +22,7 @@ module.exports = React.createClass
     displayName: 'MessagesItem'
 
     render: ->
-        date    = RouterGetter.getCreatedAt @props.message, @props.isCompact
+        date    = RouterGetter.getCreatedAt @props.message
         avatar  = ContactGetter.getAvatar @props.message
         flags   = @props.message.get 'flags'
 

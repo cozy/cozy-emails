@@ -68,8 +68,6 @@ module.exports =
 
     getLayoutSettings: ->
         {
-            disposition: LayoutStore.getDisposition()
-            isCompact: LayoutStore.getListModeCompact()
             previewSize: LayoutStore.getPreviewSize()
         }
 
@@ -220,7 +218,7 @@ module.exports =
 
     # Display date as a readable string.
     # Make it shorter if compact is set to true.
-    getCreatedAt: (message, isCompact) ->
+    getCreatedAt: (message) ->
         return unless (date = message?.get 'createdAt')?
 
         today = moment()
@@ -229,7 +227,7 @@ module.exports =
         if date.isBefore today, 'year'
             formatter = 'DD/MM/YYYY'
         else if date.isBefore today, 'day'
-            formatter = if isCompact? and isCompact then 'L' else 'MMM DD'
+            formatter = 'MMM DD'
         else
             formatter = 'HH:mm'
 

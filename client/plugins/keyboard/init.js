@@ -5,7 +5,6 @@ require('./js/mousetrap.js');
 
 var LayoutActionCreator = require('../../app/actions/layout_action_creator');
 var LayoutStore = require('../../app/stores/layout_store');
-var Dispositions = require('../../app/constants/app_constants').Dispositions;
 var MessageActionCreator = require('../../app/actions/message_action_creator');
 
 ApiUtils = require '../../app/utils/api_utils'
@@ -220,28 +219,6 @@ if (typeof window.plugins !== "object") {
         action: function (e) {
           if (e && e instanceof Event) { e.preventDefault(); }
           layoutRatio();
-        }
-      },
-      'w': {
-        name: "Toggle layout",
-        action: function (e) {
-          if (e && e instanceof Event) { e.preventDefault(); }
-
-          switch (LayoutStore.getDisposition()) {
-          case Dispositions.ROW:
-            LayoutActionCreator.setDisposition(Dispositions.COL);
-            break;
-          case Dispositions.COL:
-            LayoutActionCreator.setDisposition(Dispositions.ROW);
-            break;
-          }
-        }
-      },
-      'W': {
-        name: 'Toggle messages list mode',
-        action: function (e) {
-            if (e && e instanceof Event) { e.preventDefault(); }
-            LayoutActionCreator.toggleListMode();
         }
       },
       'ctrl+up': {
