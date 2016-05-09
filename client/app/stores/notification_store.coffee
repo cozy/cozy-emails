@@ -265,7 +265,8 @@ class NotificationStore extends Store
 
         handle ActionTypes.RECEIVE_REFRESH_NOTIF, ({message}) ->
             _showNotification
-                message: _makeMessage message, t('notif new title')
+                message: "#{t 'notif new title'} #{message}"
+                autoclose: true
 
 
 module.exports = new NotificationStore()
