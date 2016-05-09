@@ -20,6 +20,17 @@ module.exports = React.createClass
     displayName: 'MessageList'
 
 
+    getInitialState: ->
+        displayProgress = true
+        {displayProgress}
+
+
+    componentWillReceiveProps: ->
+        displayProgress = RouterGetter.isMailboxLoading()
+        if displayProgress isnt @state?.displayProgress
+            @setState {displayProgress}
+
+
     componentDidMount: ->
         @_initScroll()
 
@@ -29,14 +40,12 @@ module.exports = React.createClass
 
 
     render: ->
-
         unless @props.isMailbox
             return div className: 'mailbox-loading',
                 Spinner color: 'blue'
                 strong null, t 'emails are fetching'
                 p null, t 'thanks for patience'
 
-        progressValue = if @props.isLoading then 0 else 1
 
         section
             'key'               : "messages-list-#{@props.mailboxID}"
@@ -44,9 +53,11 @@ module.exports = React.createClass
             'data-mailbox-id'   : @props.mailboxID
             'className'         : 'messages-list panel'
 
-
             # Progress Bar of mailbox refresh
-            Progress value: progressValue, max: 1
+            if @state?.displayProgress
+                Progress
+                    value: 0
+                    max: 1
 
             # Message List
             unless @props.messages?.size
