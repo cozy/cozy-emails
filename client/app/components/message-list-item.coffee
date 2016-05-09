@@ -25,6 +25,15 @@ module.exports = React.createClass
         date    = RouterGetter.getCreatedAt @props.message, @props.isCompact
         avatar  = ContactGetter.getAvatar @props.message
         flags   = @props.message.get 'flags'
+
+        participants = @getParticipants @props.message
+        subject = @highlightSearch text: @props.message.get 'subject'
+        message = @highlightSearch message: @props.message
+
+        from  = @props.message.get('from')[0]
+        backgroundColor = colorhash "#{from?.name} <#{from?.address}>"
+        name = if from?.name then from?.name[0] else from?.address[0]
+
         li
             className:  classNames
                 message:    true
@@ -52,22 +61,23 @@ module.exports = React.createClass
                     if avatar?
                         img className: 'avatar', src: avatar
                     else
-                        from  = @props.message.get('from')[0]
-                        cHash = "#{from?.name} <#{from?.address}>"
                         i
                             className: 'avatar placeholder'
-                            style:
-                                backgroundColor: colorhash(cHash)
-                            if from?.name then from?.name[0] else from?.address[0]
+                            style: {backgroundColor},
+                            name
 
                 div className: 'metas-wrapper',
                     div className: 'metas',
+
                         div className: 'participants ellipsable',
-                            @getParticipants @props.message
+                            participants
+
                         div className: 'subject ellipsable',
-                            @highlightSearch text: @props.message.get 'subject'
+                            subject
+
                         div className: 'date',
                             date
+
                         div className: 'extras',
                             if @props.message.get 'hasAttachments'
                                 i className: 'attachments fa fa-paperclip'
@@ -75,7 +85,7 @@ module.exports = React.createClass
                                 span className: 'conversation-length',
                                     @props.conversationLengths
                         div className: 'preview ellipsable',
-                            @highlightSearch message: @props.message
+                            message
 
 
     highlightSearch: (props, options = null) ->
