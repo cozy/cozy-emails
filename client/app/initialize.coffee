@@ -8,7 +8,6 @@ require 'imports?jQuery=jquery!bootstrap/dist/js/bootstrap.js'
 {initReporting, sendReport} = require './utils/error_manager'
 {initPerformances} = require './utils/perfs_measurement_utils'
 {initRealtime} = require './utils/realtime_utils'
-{initDesktopNotifications} = require './utils/notification_utils'
 
 Router = require './router'
 
@@ -27,7 +26,6 @@ document.addEventListener 'DOMContentLoaded', ->
 
         # Initialize discussions
         initRealtime()
-        initDesktopNotifications()
 
     catch err
         sendReport 'error', err
