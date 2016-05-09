@@ -43,10 +43,8 @@ module.exports = React.createClass
     ]
 
     getStateFromStores: (props) ->
-        settings = RouterGetter.getLayoutSettings()
-        className = ['layout'
-            "layout-#{settings.disposition}"
-            "layout-preview-#{settings.previewSize}"].join(' ')
+        {previewSize} = RouterGetter.getLayoutSettings()
+        className = "layout layout-column layout-preview-#{previewSize}"
 
         if (mailbox = RouterGetter.getCurrentMailbox())
             return {
