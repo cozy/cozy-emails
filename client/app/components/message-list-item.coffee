@@ -66,9 +66,6 @@ module.exports = React.createClass
                             @getParticipants @props.message
                         div className: 'subject ellipsable',
                             @highlightSearch text: @props.message.get 'subject'
-                        div className: 'mailboxes',
-                            @props.tags.map (tag) ->
-                                span className: 'mailbox-tag', tag
                         div className: 'date',
                             date
                         div className: 'extras',
