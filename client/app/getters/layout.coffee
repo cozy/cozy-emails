@@ -1,5 +1,4 @@
-
-module.exports = DomUtils =
+module.exports =
 
     # Check if an element is inside visible viewport
     # @params DOMElement node
@@ -16,5 +15,3 @@ module.exports = DomUtils =
             return false
         else
             return rect.bottom <= ( height + 0 ) and rect.top >= 0
-
-
