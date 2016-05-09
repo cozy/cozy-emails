@@ -6,7 +6,6 @@ require 'bootstrap/dist/css/bootstrap.css'
 require 'imports?jQuery=jquery!bootstrap/dist/js/bootstrap.js'
 
 {initReporting, sendReport} = require './utils/error_manager'
-{initPerformances} = require './utils/perfs_measurement_utils'
 {initRealtime} = require './utils/realtime_utils'
 
 Router = require './router'
@@ -19,7 +18,6 @@ document.addEventListener 'DOMContentLoaded', ->
 
         # Initialize system
         initReporting()
-        initPerformances()
 
         # Routing management
         new Router()
