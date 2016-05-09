@@ -1,5 +1,6 @@
 Perf = require 'react-addons-perf'
-ApiUtils = require '../utils/api_utils'
+
+NotificationActionsCreator = require '../actions/notification_action_creator'
 
 # expose an API for performance
 # performance is not defined in phantomJS
@@ -31,4 +32,4 @@ module.exports.initPerformances = ->
             Onload: #{timing.loadEventStart - timing.navigationStart}ms
             Page loaded: #{now}ms
         "
-        ApiUtils.logInfo message
+        NotificationActionsCreator.alert message

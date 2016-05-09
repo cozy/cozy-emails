@@ -2,8 +2,9 @@ React = require 'react'
 
 {li, span, i, a} = React.DOM
 
-ApiUtils        = require '../utils/api_utils'
 {getFileURL}    = require '../utils/file_utils'
+
+NotificationActionsCreator = require '../actions/notification_action_creator'
 
 FileGetter = require '../getters/file'
 
@@ -42,7 +43,7 @@ module.exports = FileItem = React.createClass
     render: ->
         file = @props.file
         unless @state.tmpFileURL
-            ApiUtils.log(new Error "Wrong file #{JSON.stringify(file)}")
+            NotificationActionsCreator.alertError "Wrong file #{JSON.stringify(file)}"
             file.url = "message/#{@props.messageID}/attachments/#{file.generatedFileName}"
 
         iconClass = FileGetter.getAttachmentIcon file

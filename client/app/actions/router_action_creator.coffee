@@ -93,6 +93,35 @@ RouterActionCreator =
             value: {messageID, mailboxID, action}
 
 
+    gotoPreviousMessage: ->
+        message = RouterStore.gotoPreviousMessage()
+        messageID = message?.get 'id'
+        mailboxID = message?.get 'mailboxID'
+        @gotoMessage {messageID, mailboxID}
+
+
+    gotoNextMessage: ->
+        message = RouterStore.gotoNextMessage()
+        messageID = message?.get 'id'
+        mailboxID = message?.get 'mailboxID'
+        @gotoMessage {messageID, mailboxID}
+
+
+    gotoPreviousConversation: ->
+        message = RouterStore.getNextConversation()
+        messageID = message?.get 'id'
+        mailboxID = message?.get 'mailboxID'
+        @gotoMessage {messageID, mailboxID}
+
+
+    gotoNextConversation: ->
+        message = RouterStore.getNextConversation()
+        messageID = message?.get 'id'
+        mailboxID = message?.get 'mailboxID'
+        @gotoMessage {messageID, mailboxID}
+
+
+
     closeConversation: (params={}) ->
         {mailboxID} = params
         mailboxID ?= RouterStore.getMailboxID()
@@ -150,8 +179,9 @@ RouterActionCreator =
     # - messageIDs or
     # - conversationIDs or
     # - conversationIDs
-    deleteMessage: (target) ->
+    deleteMessage: (target={}) ->
         timestamp = Date.now()
+        target.messageID ?= RouterStore.getMessageID()
         target.accountID ?= RouterStore.getAccountID()
 
         AppDispatcher.dispatch

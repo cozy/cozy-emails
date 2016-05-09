@@ -376,6 +376,24 @@ class RouterStore extends Store
         MessageStore.getConversationLength conversationID
 
 
+    gotoNextMessage: ->
+        messages = MessageStore.getAll()
+        keys = _.keys messages?.toObject()
+        values = messages?.toArray()
+
+        index = keys.indexOf @getMessageID()
+        values[--index]
+
+
+    gotoPreviousMessage: ->
+        messages = MessageStore.getAll()
+        keys = _.keys messages?.toObject()
+        values = messages?.toArray()
+
+        index = keys.indexOf @getMessageID()
+        values[++index]
+
+
     _clearError = ->
         _serverAccountErrorByField = Immutable.Map()
 

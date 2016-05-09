@@ -6,8 +6,7 @@ require('./js/mousetrap.js');
 var LayoutActionCreator = require('../../app/actions/layout_action_creator');
 var LayoutStore = require('../../app/stores/layout_store');
 var MessageActionCreator = require('../../app/actions/message_action_creator');
-
-ApiUtils = require '../../app/utils/api_utils'
+var RouterActionCreator = require('../../app/actions/router_action_creator');
 
 if (typeof window.plugins !== "object") {
   window.plugins = {};
@@ -16,7 +15,7 @@ if (typeof window.plugins !== "object") {
   "use strict";
   function bindingNew(e) {
     if (e && e instanceof Event) { e.preventDefault(); }
-    ApiUtils.messageNew();
+    RouterActionCreator.gotoCompose()
   }
   function bindingHelp() {
     var container, help;
@@ -85,12 +84,6 @@ if (typeof window.plugins !== "object") {
           var btnConfirm = document.querySelector('.modal .modal-footer .modal-action');
           if (btnConfirm !== null) {
             btnConfirm.dispatchEvent(new MouseEvent('click', { 'view': window, 'bubbles': true, 'cancelable': true }));
-          } else {
-            if (ApiUtils.getCurrentActions().indexOf('account.mailbox.messages') === 0 &&
-               ['INPUT', 'BUTTON'].indexOf(document.activeElement.tagName) === -1) {
-              if (e && e instanceof Event) { e.preventDefault(); }
-              ApiUtils.messageDisplay();
-            }
           }
         }
       },
@@ -103,7 +96,7 @@ if (typeof window.plugins !== "object") {
             btnClose.dispatchEvent(new MouseEvent('click', { 'view': window, 'bubbles': true, 'cancelable': true }));
           } else {
             if (e && e instanceof Event) { e.preventDefault(); }
-            ApiUtils.messageClose();
+            RouterActionCreator.closeConversation()
           }
         }
       },
@@ -142,14 +135,14 @@ if (typeof window.plugins !== "object") {
         alias: ['down'],
         action: function (e) {
           if (e && e instanceof Event) { e.preventDefault(); }
-          ApiUtils.messageNavigate('next');
+          RouterActionCreator.gotoPreviousConversation();
         }
       },
       'right': {
         name: "Next Message in conversation",
         action: function (e) {
           if (e && e instanceof Event) { e.preventDefault(); }
-          ApiUtils.messageNavigate('next', true);
+          RouterActionCreator.gotoPreviousMessage();
         }
       },
       'k': {
@@ -157,14 +150,14 @@ if (typeof window.plugins !== "object") {
         alias: ['up'],
         action: function (e) {
           if (e && e instanceof Event) { e.preventDefault(); }
-          ApiUtils.messageNavigate('prev');
+          RouterActionCreator.gotoNextConversation();
         }
       },
       'left': {
         name: "Previous Message in conversation",
         action: function (e) {
           if (e && e instanceof Event) { e.preventDefault(); }
-          ApiUtils.messageNavigate('prev', true);
+          RouterActionCreator.gotoNextMessage();
         }
       },
       'ctrl+down': {
@@ -197,7 +190,7 @@ if (typeof window.plugins !== "object") {
         alias: ['backspace', 'del'],
         action: function (e) {
           if (e && e instanceof Event) { e.preventDefault(); }
-          ApiUtils.messageDeleteCurrent();
+          RouterActionCreator.deleteMessage();
         }
       },
       'ctrl+z': {

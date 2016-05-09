@@ -8,7 +8,9 @@ RouterActionCreator = require './actions/router_action_creator'
 AppDispatcher = require './libs/flux/dispatcher/dispatcher'
 
 {ActionTypes, MessageActions, AccountActions, SearchActions} = require './constants/app_constants'
-{setLocale} = require './utils/api_utils'
+
+Polyglot = require 'node-polyglot'
+moment   = require 'moment'
 
 # MessageList :
 # ?sort=asc&filters=&status=unseen&start=2016-02-27T23:00:00.000Z&end=2016-03-05T22:59:59.999Z
@@ -34,7 +36,7 @@ class Router extends Backbone.Router
 
 
     initialize: ->
-        setLocale()
+        _setLocale()
 
         # Save Routes in Stores
         AppDispatcher.dispatch
@@ -138,5 +140,21 @@ _displayApplication = ->
     Application = React.createFactory require './components/application'
     ReactDOM.render Application(), document.querySelector '[role=application]'
 
+
+# update locate (without saving it into settings)
+_setLocale = (lang) ->
+    lang ?= window.locale or window.navigator.language or 'en'
+    moment.locale lang
+    locales = {}
+    try
+        locales = require "./locales/#{lang}"
+    catch err
+        console.log err
+        locales = require "./locales/en"
+    polyglot = new Polyglot()
+    # we give polyglot the data
+    polyglot.extend locales
+    # handy shortcut
+    window.t = polyglot.t.bind polyglot
 
 module.exports = Router
