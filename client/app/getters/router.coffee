@@ -158,6 +158,10 @@ module.exports =
         RouterStore.getAllMailboxes()
 
 
+    isMailboxLoading: ->
+        RouterStore.isRefresh()
+
+
     getTags: (message) ->
         mailboxID = @getMailboxID()
         mailboxesIDs = Object.keys message.get 'mailboxIDs'

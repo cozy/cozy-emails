@@ -13,6 +13,26 @@ _pages = {}
 _nextURL = {}
 
 RouterActionCreator =
+    # Refresh Emails from Server
+    # This is a read data pattern
+    # ActionCreator is a write data pattern
+    refreshMailbox: ({mailboxID, deep}) ->
+        deep ?= true
+
+        AppDispatcher.dispatch
+            type: ActionTypes.REFRESH_REQUEST
+            value: {mailboxID, deep}
+
+        XHRUtils.refreshMailbox mailboxID, {deep}, (error, updated) ->
+            if error?
+                AppDispatcher.dispatch
+                    type: ActionTypes.REFRESH_FAILURE
+                    value: {mailboxID, error, deep}
+            else
+                AppDispatcher.dispatch
+                    type: ActionTypes.REFRESH_SUCCESS
+                    value: {mailboxID, updated, deep}
+
 
     gotoCurrentPage: (params={}) ->
         {url} = params

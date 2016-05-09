@@ -2,12 +2,15 @@ Immutable = require 'immutable'
 React     = require 'react'
 ReactDOM  = require 'react-dom'
 
-{div, section, p, button, ul} = React.DOM
+{div, section, p, a, button, ul, strong} = React.DOM
 DomUtils = require '../utils/dom_utils'
 
 RouterActionCreator = require '../actions/router_action_creator'
 
 MessageItem         = React.createFactory require './message-list-item'
+
+{Spinner, Progress} = require('./basic_components').factories
+MessageListLoader   = React.createFactory require './message-list-loader'
 
 RouterGetter = require '../getters/router'
 SelectionGetter = require '../getters/selection'
@@ -15,6 +18,17 @@ SelectionGetter = require '../getters/selection'
 
 module.exports = React.createClass
     displayName: 'MessageList'
+
+
+    getInitialState: ->
+        displayProgress = true
+        {displayProgress}
+
+
+    componentWillReceiveProps: ->
+        displayProgress = RouterGetter.isMailboxLoading()
+        if displayProgress isnt @state?.displayProgress
+            @setState {displayProgress}
 
 
     componentDidMount: ->
@@ -26,12 +40,24 @@ module.exports = React.createClass
 
 
     render: ->
+        unless @props.isMailbox
+            return div className: 'mailbox-loading',
+                Spinner color: 'blue'
+                strong null, t 'emails are fetching'
+                p null, t 'thanks for patience'
+
+
         section
             'key'               : "messages-list-#{@props.mailboxID}"
             'ref'               : "messages-list"
             'data-mailbox-id'   : @props.mailboxID
             'className'         : 'messages-list panel'
 
+            # Progress Bar of mailbox refresh
+            if @state?.displayProgress
+                Progress
+                    value: 0
+                    max: 1
 
             # Message List
             unless @props.messages?.size
