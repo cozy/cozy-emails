@@ -28,10 +28,10 @@ module.exports.initRealtime = ->
     _socket.on 'connect', -> setServerScope()
     _socket.on 'reconnect', -> setServerScope()
 
-    # _socket.on 'refresh.status', dispatchAs ActionTypes.RECEIVE_REFRESH_STATUS
-    # _socket.on 'refresh.create', dispatchAs ActionTypes.RECEIVE_REFRESH_UPDATE
-    # _socket.on 'refresh.update', dispatchAs ActionTypes.RECEIVE_REFRESH_UPDATE
-    # _socket.on 'refresh.delete', dispatchAs ActionTypes.RECEIVE_REFRESH_DELETE
+    _socket.on 'refresh.status', dispatchAs ActionTypes.RECEIVE_REFRESH_STATUS
+    _socket.on 'refresh.create', dispatchAs ActionTypes.RECEIVE_REFRESH_UPDATE
+    _socket.on 'refresh.update', dispatchAs ActionTypes.RECEIVE_REFRESH_UPDATE
+    _socket.on 'refresh.delete', dispatchAs ActionTypes.RECEIVE_REFRESH_DELETE
 
     _socket.on 'message.create',
         dispatchAs ActionTypes.RECEIVE_RAW_MESSAGE_REALTIME
