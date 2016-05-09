@@ -263,4 +263,9 @@ class NotificationStore extends Store
                 autoclose: rue
 
 
+        handle ActionTypes.RECEIVE_REFRESH_NOTIF, ({message}) ->
+            _showNotification
+                message: _makeMessage message, t('notif new title')
+
+
 module.exports = new NotificationStore()
