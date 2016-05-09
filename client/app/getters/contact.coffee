@@ -2,8 +2,9 @@
 _ = require 'lodash'
 
 ContactStore = require '../stores/contact_store'
+colorhash = require '../utils/colorhash'
 
-module.exports = 
+module.exports =
 
     getAvatar: (contact = {}) ->
         {address} = contact
@@ -73,3 +74,7 @@ module.exports =
                 model = @getByAddress value
                 address = @displayAddress value
                 {value, model, address}
+
+
+    getTagColor: (tag) ->
+        colorhash tag

@@ -6,12 +6,12 @@ React      = require 'react'
 MenuMailboxItem = React.createFactory require './menu_mailbox_item'
 
 classNames = require 'classnames'
-colorhash = require '../utils/colorhash'
 
 LayoutActionCreator  = require '../actions/layout_action_creator'
 {MessageFilter, Tooltips, AccountActions, MessageActions} = require '../constants/app_constants'
 
 RouterGetter = require '../getters/router'
+ContactGetter = require '../getters/contact'
 FileGetter = require '../getters/file'
 
 module.exports = Menu = React.createClass
@@ -112,7 +112,7 @@ module.exports = Menu = React.createClass
                 action: AccountActions.EDIT
                 accountID: accountID
             nbUnread: account.get 'totalUnread'
-            color: colorhash account.get 'label'
+            color: ContactGetter.getTagColor account.get 'label'
             progress: RouterGetter.getProgress accountID
         }
 

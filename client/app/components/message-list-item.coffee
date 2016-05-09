@@ -6,8 +6,6 @@ classNames = require 'classnames'
 
 {MessageFlags} = require '../constants/app_constants'
 
-colorhash = require '../utils/colorhash'
-
 RouterActionCreator = require '../actions/router_action_creator'
 LayoutActionCreator = require '../actions/layout_action_creator'
 
@@ -30,7 +28,8 @@ module.exports = React.createClass
         subject = @highlightSearch text: @props.message.get 'subject'
 
         from  = @props.message.get('from')[0]
-        backgroundColor = colorhash "#{from?.name} <#{from?.address}>"
+        tag = "#{from?.name} <#{from?.address}>"
+        backgroundColor = ContactGetter.getTagColor tag
         name = if from?.name then from?.name[0] else from?.address[0]
 
         li
