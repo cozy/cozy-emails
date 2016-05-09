@@ -2,7 +2,7 @@ Immutable = require 'immutable'
 React     = require 'react'
 ReactDOM  = require 'react-dom'
 
-{div, section, p, button, ul, strong} = React.DOM
+{div, section, p, a, button, ul, strong} = React.DOM
 DomUtils = require '../utils/dom_utils'
 
 RouterActionCreator = require '../actions/router_action_creator'

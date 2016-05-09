@@ -16,8 +16,7 @@ RouterActionCreator =
     # Refresh Emails from Server
     # This is a read data pattern
     # ActionCreator is a write data pattern
-    refreshMailbox: (params={}) ->
-        {mailboxID, deep} = params
+    refreshMailbox: ({mailboxID, deep}) ->
         deep ?= true
 
         AppDispatcher.dispatch
