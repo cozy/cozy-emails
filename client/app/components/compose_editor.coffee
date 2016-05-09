@@ -6,7 +6,7 @@ React  = require 'react'
 
 LinkedStateMixin = require 'react-addons-linked-state-mixin'
 
-FileUtils    = require '../utils/file_utils'
+FileGetter    = require '../getters/file'
 
 module.exports = ComposeEditor = React.createClass
     displayName: 'ComposeEditor'
@@ -348,13 +348,14 @@ module.exports = ComposeEditor = React.createClass
                             document.querySelector('.rt-editor').innerHTML += img
                     else
                         document.execCommand 'insertHTML', false, img
-                    FileUtils.fileToDataURI file, (result) =>
+                    FileGetter.fileToDataURI file, (result) =>
                         img = document.getElementById id
                         if img
                             img.removeAttribute 'id'
                             img.src = result
                             # force update of React component
                             @onHTMLChange()
+
         @setState target: false
 
 
@@ -375,7 +376,7 @@ module.exports = ComposeEditor = React.createClass
     choosePhoto_answer : (message) ->
         answer = message.data
         if answer.newPhotoChosen
-            data      = FileUtils.dataURItoBlob answer.dataUrl
+            data      = FileGetter.dataURItoBlob answer.dataUrl
             blob      = new Blob([data.blob, {type: data.mime}])
             blob.name = answer.name
             picker    = @props.getPicker()
