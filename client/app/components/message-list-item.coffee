@@ -7,7 +7,6 @@ classNames = require 'classnames'
 {MessageFlags} = require '../constants/app_constants'
 
 colorhash = require '../utils/colorhash'
-toMarkdown = require 'to-markdown'
 
 RouterActionCreator = require '../actions/router_action_creator'
 LayoutActionCreator = require '../actions/layout_action_creator'
