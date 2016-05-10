@@ -26,30 +26,43 @@ class NotificationStore extends Store
     _initialize()
 
 
+
+    ###
+        Public API
+    ###
     getToasts: ->
         return _tasks
 
-    alert: (message) ->
-        @notify message,
+
+    ###
+        Private API
+    ###
+
+    _alert = (message) ->
+        _notify message,
             level: AlertLevel.INFO
             autoclose: true
 
-    alertSuccess: (message) ->
-        @notify message,
+
+    _alertSuccess = (message) ->
+        _notify message,
             level: AlertLevel.SUCCESS
             autoclose: true
 
-    alertWarning: (message) ->
-        @notify message,
+
+    _alertWarning = (message) ->
+        _notify message,
             level: AlertLevel.WARNING
             autoclose: true
 
-    alertError: (message) ->
-        @notify message,
+
+    _alertError = (message) ->
+        _notify message,
             level: AlertLevel.ERROR
             autoclose: true
 
-    notify: (message, options) ->
+
+    _notify = (message, options) ->
         if not message? or message.toString().trim() is ''
             # Throw an error to get the stack trace in server logs
             throw new Error 'Empty notification'
@@ -68,9 +81,7 @@ class NotificationStore extends Store
 
             _showNotification task
 
-    ###
-        Private API
-    ###
+
     _removeNotification = (id) ->
         _tasks = _tasks.remove id
 
@@ -160,7 +171,7 @@ class NotificationStore extends Store
                 Onload: #{timing.loadEventStart - timing.navigationStart}ms
                 Page loaded: #{now}ms
             "
-            NotificationActionsCreator.alert message
+            _alert message
 
 
     ###
@@ -169,32 +180,32 @@ class NotificationStore extends Store
     __bindHandlers: (handle) ->
 
         handle ActionTypes.SETTINGS_UPDATE_FAILURE, ({error}) ->
-            @alertError t('settings save error') + error
+            _alertError t('settings save error') + error
 
         handle ActionTypes.MAILBOX_CREATE_SUCCESS, ->
-            @alertSuccess t("mailbox create ok")
+            _alertSuccess t("mailbox create ok")
 
         handle ActionTypes.MAILBOX_CREATE_FAILURE, ->
             message = "#{t("mailbox create ko")} #{error.message or error}"
-            @alertError message
+            _alertError message
 
         handle ActionTypes.MAILBOX_UPDATE_SUCCESS, ->
-            @alertSuccess t("mailbox update ok")
+            _alertSuccess t("mailbox update ok")
 
         handle ActionTypes.MAILBOX_UPDATE_FAILURE, ->
             message = "#{t("mailbox update ko")} #{error.message or error}"
-            @alertError message
+            _alertError message
 
         handle ActionTypes.MAILBOX_EXPUNGE_SUCCESS, ->
-            @alert t("mailbox expunge ok"), autoclose: true
+            _alert t("mailbox expunge ok"), autoclose: true
 
         handle ActionTypes.MAILBOX_EXPUNGE_FAILURE, ({error, mailboxID, accountID}) ->
-            @alertError """
+            _alertError """
                 #{t("mailbox expunge ko")} #{error.message or error}
             """
 
         handle ActionTypes.REMOVE_ACCOUNT_SUCCESS, ->
-            @alertError t('account removed')
+            _alertError t('account removed')
 
         handle ActionTypes.CLEAR_TOASTS, ->
             _tasks = Immutable.OrderedMap()
@@ -210,7 +221,7 @@ class NotificationStore extends Store
                 msgKo = t "message action sent ko"
             else
                 msgKo = t "message action draft ko"
-            @alertError "#{msgKo} #{error}"
+            _alertError "#{msgKo} #{error}"
 
         handle ActionTypes.MESSAGE_TRASH_SUCCESS, ({target, ref, updated}) ->
             _showNotification
