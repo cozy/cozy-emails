@@ -1,6 +1,6 @@
 AppDispatcher = require '../libs/flux/dispatcher/dispatcher'
 {ActionTypes} = require '../constants/app_constants'
-Activity = require '../utils/activity_utils'
+Activity = require '../libs/activity'
 
 module.exports = ContactActionCreator =
 
