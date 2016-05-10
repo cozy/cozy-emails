@@ -88,3 +88,13 @@ module.exports =
         if file.rawFileObject and not file.url
             return URL.createObjectURL file.rawFileObject
         file.url
+
+
+    getFileSize: (file) ->
+        length = parseInt file?.length, 10
+        if length < 1024
+            "#{length} #{t 'length bytes'}"
+        else if length < 1024*1024
+            "#{0 | length / 1024} #{t 'length kbytes'}"
+        else
+            "#{0 | length / (1024*1024)} #{t 'length mbytes'}"

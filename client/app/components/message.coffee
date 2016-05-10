@@ -7,7 +7,7 @@ ToolbarMessage = React.createFactory require './toolbar_message'
 MessageContent = React.createFactory require './message-content'
 AttachmentPreview = React.createFactory require './attachement_preview'
 
-RouterGetter = require '../getters/router'
+MessageGetter = require '../getters/message'
 ContactGetter = require '../getters/contact'
 FileGetter = require '../getters/file'
 
@@ -31,7 +31,7 @@ module.exports = React.createClass
             ref: "attachmentPreview-#{index}"
             key: "messageAttachement-#{file.checksum}"
             file: file
-            fileSize: RouterGetter.getFileSize file
+            fileSize: FileGetter.getFileSize file
             icon: FileGetter.getAttachmentIcon file
             isPreview: isPreview
 
@@ -53,7 +53,7 @@ module.exports = React.createClass
                 message: @props.message
                 contacts: ContactGetter.getAll  @props.message
                 avatar: ContactGetter.getAvatar @props.message
-                createdAt: RouterGetter.getCreatedAt @props.message
+                createdAt: MessageGetter.getCreatedAt @props.message
                 isDraft: @props.isDraft
                 isDeleted: @props.isDeleted
                 isFlagged: @props.isFlagged
