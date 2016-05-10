@@ -9,7 +9,7 @@ MessageStore = require '../stores/message_store'
 AccountActions, SearchActions} = require '../constants/app_constants'
 
 {MSGBYPAGE} = require '../../../server/utils/constants'
-{changeRealtimeScope} = require '../utils/realtime_utils'
+{initRealtime, changeRealtimeScope} = require '../utils/realtime_utils'
 
 class RouterStore extends Store
 
@@ -46,6 +46,10 @@ class RouterStore extends Store
     _messageID = null
     _messagesLength = 0
     _hasNextPage = 0
+
+
+    # Initialize discussions
+    initRealtime()
 
 
     getRouter: ->

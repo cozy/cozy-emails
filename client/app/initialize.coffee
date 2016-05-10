@@ -6,7 +6,6 @@ require 'bootstrap/dist/css/bootstrap.css'
 require 'imports?jQuery=jquery!bootstrap/dist/js/bootstrap.js'
 
 {initReporting, sendReport} = require './utils/error_manager'
-{initRealtime} = require './utils/realtime_utils'
 
 Router = require './router'
 
@@ -22,8 +21,6 @@ document.addEventListener 'DOMContentLoaded', ->
         # Routing management
         new Router()
 
-        # Initialize discussions
-        initRealtime()
 
     catch err
         sendReport 'error', err
