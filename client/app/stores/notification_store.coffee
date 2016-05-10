@@ -261,10 +261,9 @@ class NotificationStore extends Store
             {result, timestamp} = payload
 
             # Update Realtime
-            mailboxID = @getMailboxID()
-            before = if result?.messages?.size
-            then result?.messages?.last()?.get('date')
-            else timestamp
+            lastMessage = result?.messages?.last()
+            mailboxID = lastMessage?.get 'mailboxID'
+            before = lastMessage?.get('date') or timestamp
             changeRealtimeScope {mailboxID, before}
 
             @emit 'change'
