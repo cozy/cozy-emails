@@ -2,7 +2,7 @@
 _ = require 'lodash'
 
 ContactStore = require '../stores/contact_store'
-colorhash = require '../utils/colorhash'
+colorhash = require '../libs/colorhash'
 
 module.exports =
 
