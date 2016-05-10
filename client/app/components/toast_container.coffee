@@ -7,7 +7,7 @@ React      = require 'react'
 Animate             = React.createFactory require 'rc-animate'
 Toast               = React.createFactory require './toast'
 
-LayoutStore         = require '../stores/layout_store'
+LayoutGetter        = require '../getters/layout'
 NotificationStore   = require '../stores/notification_store'
 LayoutActionCreator = require '../actions/layout_action_creator'
 
@@ -30,7 +30,7 @@ module.exports = ToastContainer = React.createClass
     getStateFromStores: ->
         return {
             toasts: NotificationStore.getToasts()
-            hidden: not LayoutStore.isShown()
+            hidden: LayoutGetter.isToastHidden()
         }
 
 

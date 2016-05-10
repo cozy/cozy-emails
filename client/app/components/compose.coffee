@@ -11,8 +11,7 @@ FilePicker     = React.createFactory require './file_picker'
 MailsInput     = React.createFactory require './mails_input'
 AccountPicker  = React.createFactory require './account_picker'
 
-LayoutStore = require '../stores/layout_store'
-
+LayoutGetter = require '../getters/layout'
 RouterGetter = require '../getters/router'
 MessageGetter = require '../getters/message'
 
@@ -171,7 +170,7 @@ module.exports = React.createClass
                         onSend            : @sendMessage
                         composeInHTML     : @state.composeInHTML
                         getPicker         : @getPicker
-                        useIntents        : LayoutStore.intentAvailable()
+                        useIntents        : LayoutGetter.isIntentAvailable()
                         ref               : 'editor'
                         key               : @getChildKey 'editor'
 

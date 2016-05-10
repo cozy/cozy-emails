@@ -66,11 +66,6 @@ module.exports =
         SearchStore.getCurrentSearch()
 
 
-    getLayoutSettings: ->
-        {
-            previewSize: LayoutStore.getPreviewSize()
-        }
-
     getProgress: (accountID) ->
         RefreshesStore.getRefreshing().get accountID
 

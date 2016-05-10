@@ -1,4 +1,20 @@
+
+LayoutStore = require '../stores/layout_store'
+
 module.exports =
+
+
+    getPreviewSize: ->
+        LayoutStore.getPreviewSize()
+
+
+    isIntentAvailable: ->
+        LayoutStore.isIntentAvailable()
+
+
+    isToastHidden: ->
+        LayoutStore.isToastHidden()
+
 
     # Check if an element is inside visible viewport
     # @params DOMElement node

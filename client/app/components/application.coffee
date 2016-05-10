@@ -21,6 +21,7 @@ StoreWatchMixin      = require '../mixins/store_watch_mixin'
 TooltipRefesherMixin = require '../mixins/tooltip_refresher_mixin'
 
 RouterGetter = require '../getters/router'
+LayoutGetter = require '../getters/layout'
 SelectionGetter = require '../getters/selection'
 
 {MessageActions, AccountActions} = require '../constants/app_constants'
@@ -43,7 +44,7 @@ module.exports = React.createClass
     ]
 
     getStateFromStores: (props) ->
-        {previewSize} = RouterGetter.getLayoutSettings()
+        previewSize = LayoutGetter.getPreviewSize()
         className = "layout layout-column layout-preview-#{previewSize}"
 
         if (mailbox = RouterGetter.getCurrentMailbox())

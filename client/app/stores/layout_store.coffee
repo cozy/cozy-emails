@@ -17,7 +17,7 @@ class LayoutStore extends Store
     # TODO: Use a constant for default value?
     _previewSize = 60
 
-    _shown = true
+    _hidden = true
 
     _intentAvailable = false
 
@@ -28,11 +28,11 @@ class LayoutStore extends Store
     __bindHandlers: (handle) ->
 
         handle ActionTypes.TOASTS_SHOW, ->
-            _shown = true
+            _hidden = false
             @emit 'change'
 
         handle ActionTypes.TOASTS_HIDE, ->
-            _shown = false
+            _hidden = true
             @emit 'change'
 
         handle ActionTypes.INTENT_AVAILABLE, (avaibility) ->
@@ -46,15 +46,15 @@ class LayoutStore extends Store
 
 
     getPreviewSize: ->
-        return _previewSize
+        _previewSize
 
 
-    isShown: ->
-        return _shown
+    isToastHidden: ->
+        _hidden
 
 
-    intentAvailable: ->
-        return _intentAvailable
+    isIntentAvailable: ->
+        _intentAvailable
 
 
 module.exports = new LayoutStore()
