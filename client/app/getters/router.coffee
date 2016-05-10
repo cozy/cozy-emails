@@ -1,9 +1,10 @@
+
 AccountStore = require '../stores/account_store'
 MessageStore = require '../stores/message_store'
-LayoutStore = require '../stores/layout_store'
 SearchStore = require '../stores/search_store'
 RefreshesStore = require '../stores/refreshes_store'
 RouterStore = require '../stores/router_store'
+NotificationStore = require '../stores/notification_store'
 
 MessageGetter = require '../getters/message'
 
@@ -237,3 +238,7 @@ module.exports =
             "#{0 | length / 1024} #{t 'length kbytes'}"
         else
             "#{0 | length / (1024*1024)} #{t 'length mbytes'}"
+
+
+    getToasts: ->
+        NotificationStore.getToasts()
