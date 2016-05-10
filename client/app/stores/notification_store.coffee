@@ -23,9 +23,6 @@ class NotificationStore extends Store
     _tasks = Immutable.OrderedMap()
 
 
-    _initialize()
-
-
 
     ###
         Public API
@@ -172,6 +169,9 @@ class NotificationStore extends Store
                 Page loaded: #{now}ms
             "
             _alert message
+
+
+    _initialize()
 
 
     ###
