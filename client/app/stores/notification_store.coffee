@@ -260,7 +260,13 @@ class NotificationStore extends Store
             _showNotification
                 message: t 'contact create error', {error}
                 errors: [error]
-                autoclose: rue
+                autoclose: true
+
+
+        handle ActionTypes.RECEIVE_REFRESH_NOTIF, ({message}) ->
+            _showNotification
+                message: "#{t 'notif new title'} #{message}"
+                autoclose: true
 
 
 module.exports = new NotificationStore()
