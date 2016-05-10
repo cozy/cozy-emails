@@ -4,7 +4,7 @@ AppDispatcher = require '../libs/flux/dispatcher/dispatcher'
 
 RouterStore = require '../stores/router_store'
 
-XHRUtils = require '../utils/xhr_utils'
+XHRUtils = require '../libs/xhr'
 
 {ActionTypes, MessageActions, SearchActions} = require '../constants/app_constants'
 

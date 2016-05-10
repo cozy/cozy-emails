@@ -1,4 +1,4 @@
-XHRUtils = require '../utils/xhr_utils'
+XHRUtils = require '../libs/xhr'
 AppDispatcher = require '../libs/flux/dispatcher/dispatcher'
 {ActionTypes} = require '../constants/app_constants'
 
