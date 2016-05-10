@@ -1,7 +1,6 @@
-ioclient = require('socket.io-client')
-
-_         = require 'underscore'
+ioclient = require 'socket.io-client'
 Immutable = require 'immutable'
+_ = require 'underscore'
 
 Store = require '../libs/flux/store/store'
 AccountStore = require '../stores/account_store'
@@ -72,11 +71,6 @@ class NotificationStore extends Store
             _dispatchAs ActionTypes.RECEIVE_MAILBOX_UPDATE
         _socket.on 'refresh.notify',
             _dispatchAs ActionTypes.RECEIVE_REFRESH_NOTIF
-
-
-    _updateScope = (args) ->
-        {mailboxID, before} = args
-        setServerScope {mailboxID, before}
 
 
     _initReporting = ->
@@ -355,10 +349,10 @@ class NotificationStore extends Store
             {result, timestamp} = payload
 
             # Update Realtime
-            lastMessage = result?.messages?.last()
-            mailboxID = lastMessage?.get 'mailboxID'
-            before = lastMessage?.get('date') or timestamp
-            _updateScope {mailboxID, before}
+            lastMessage = _.last result.messages
+            mailboxID = lastMessage?.mailboxID
+            before = lastMessage?.date or timestamp
+            _setServerScope {mailboxID, before}
 
             @emit 'change'
 
@@ -450,6 +444,7 @@ class NotificationStore extends Store
             _showNotification
                 message: "#{t 'notif new title'} #{message}"
                 autoclose: true
+
 
 
 module.exports = new NotificationStore()
