@@ -8,6 +8,9 @@ AppDispatcher = require '../libs/flux/dispatcher/dispatcher'
 
 {ActionTypes, AlertLevel} = require '../constants/app_constants'
 
+{initRealtime, changeRealtimeScope} = require '../utils/realtime_utils'
+
+
 class NotificationStore extends Store
 
     ###
@@ -19,6 +22,7 @@ class NotificationStore extends Store
     _tasks = Immutable.OrderedMap()
 
 
+    initRealtime()
     _initPermissions()
     _initPerformances()
 
@@ -221,6 +225,7 @@ class NotificationStore extends Store
                 errors: [error]
                 autoclose: true
 
+
         # dont display a notification for MESSAGE_FLAG_SUCCESS
         handle ActionTypes.MESSAGE_FLAGS_FAILURE, ({target, error}) ->
             _showNotification
@@ -228,11 +233,26 @@ class NotificationStore extends Store
                 errors: [error]
                 autoclose: true
 
+
+        handle ActionTypes.MESSAGE_FETCH_SUCCESS, (payload) ->
+            {result, timestamp} = payload
+
+            # Update Realtime
+            mailboxID = @getMailboxID()
+            before = if result?.messages?.size
+            then result?.messages?.last()?.get('date')
+            else timestamp
+            changeRealtimeScope {mailboxID, before}
+
+            @emit 'change'
+
+
         handle ActionTypes.MESSAGE_FETCH_FAILURE, ({error}) ->
             _showNotification
                 message: 'message fetch failure'
                 errors: [error]
                 autoclose: true
+
 
         handle ActionTypes.ADD_ACCOUNT_FAILURE, ({error}) ->
             AppDispatcher.waitFor [AccountStore.dispatchToken]

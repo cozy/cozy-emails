@@ -9,7 +9,7 @@ MessageStore = require '../stores/message_store'
 AccountActions, SearchActions} = require '../constants/app_constants'
 
 {MSGBYPAGE} = require '../../../server/utils/constants'
-{initRealtime, changeRealtimeScope} = require '../utils/realtime_utils'
+
 
 class RouterStore extends Store
 
@@ -46,10 +46,6 @@ class RouterStore extends Store
     _messageID = null
     _messagesLength = 0
     _hasNextPage = 0
-
-
-    # Initialize discussions
-    initRealtime()
 
 
     getRouter: ->
@@ -551,18 +547,8 @@ class RouterStore extends Store
 
 
         handle ActionTypes.MESSAGE_FETCH_SUCCESS, (payload) ->
-            {result, timestamp, hasNextPage} = payload
-
-            if hasNextPage?
-                _hasNextPage = hasNextPage
-
-            # Update Realtime
-            mailboxID = @getMailboxID()
-            before = if result?.messages?.size
-            then result?.messages?.last()?.get('date')
-            else timestamp
-            changeRealtimeScope {mailboxID, before}
-
+            {hasNextPage} = payload
+            _hasNextPage = hasNextPage if hasNextPage?
             @emit 'change'
 
 
