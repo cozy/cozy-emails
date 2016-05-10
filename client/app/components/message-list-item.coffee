@@ -22,9 +22,17 @@ module.exports = React.createClass
     displayName: 'MessagesItem'
 
     render: ->
-        date    = RouterGetter.getCreatedAt @props.message, @props.isCompact
+        date    = RouterGetter.getCreatedAt @props.message
         avatar  = ContactGetter.getAvatar @props.message
         flags   = @props.message.get 'flags'
+
+        participants = @getParticipants @props.message
+        subject = @highlightSearch text: @props.message.get 'subject'
+
+        from  = @props.message.get('from')[0]
+        backgroundColor = colorhash "#{from?.name} <#{from?.address}>"
+        name = if from?.name then from?.name[0] else from?.address[0]
+
         li
             className:  classNames
                 message:    true
@@ -52,41 +60,32 @@ module.exports = React.createClass
                     if avatar?
                         img className: 'avatar', src: avatar
                     else
-                        from  = @props.message.get('from')[0]
-                        cHash = "#{from?.name} <#{from?.address}>"
                         i
                             className: 'avatar placeholder'
-                            style:
-                                backgroundColor: colorhash(cHash)
-                            if from?.name then from?.name[0] else from?.address[0]
+                            style: {backgroundColor},
+                            name
 
                 div className: 'metas-wrapper',
                     div className: 'metas',
+
                         div className: 'participants ellipsable',
-                            @getParticipants @props.message
+                            participants
+
                         div className: 'subject ellipsable',
-                            @highlightSearch text: @props.message.get 'subject'
-                        div className: 'mailboxes',
-                            @props.tags.map (tag) ->
-                                span className: 'mailbox-tag', tag
+                            subject
+
                         div className: 'date',
                             date
+
                         div className: 'extras',
                             if @props.message.get 'hasAttachments'
                                 i className: 'attachments fa fa-paperclip'
                             if @props.conversationLengths > 1
                                 span className: 'conversation-length',
                                     @props.conversationLengths
-                        div className: 'preview ellipsable',
-                            @highlightSearch message: @props.message
 
 
-    highlightSearch: (props, options = null) ->
-        {message, text} = props
-
-        if message and not (text = message.get 'text')
-            text = toMarkdown html if (html = message.get 'html')?
-
+    highlightSearch: ({text}, options = null) ->
         text = (text or '').substr 0, 1024
         props = SearchGetter.highlightSearch text
         p options, props...

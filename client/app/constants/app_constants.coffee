@@ -80,13 +80,8 @@ module.exports =
         'ROUTE_CHANGE'          : 'ROUTE_CHANGE'
 
         # Layout
-        'SET_DISPOSITION'           : 'SET_DISPOSITION'
-        'TOGGLE_LIST_MODE'          : 'TOGGLE_LIST_MODE'
-        'RESIZE_PREVIEW_PANE'       : 'RESIZE_PREVIEW_PANE'
         'DISPLAY_MODAL'             : 'DISPLAY_MODAL'
         'HIDE_MODAL'                : 'HIDE_MODAL'
-        'REFRESH'                   : 'REFRESH'
-        'FOCUS'                     : 'FOCUS'
         'INTENT_AVAILABLE'          : 'INTENT_AVAILABLE'
 
         # Settings
@@ -167,10 +162,6 @@ module.exports =
         UNSEEN : 'Unseen'
         FLAGGED: '\\Flagged'
         NOFLAG : 'Noflag'
-
-    Dispositions:
-        COL:  'column'
-        ROW:  'row'
 
     Icons:
         'inboxMailbox'  : 'fa-inbox'

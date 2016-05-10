@@ -5,7 +5,6 @@ require('./js/mousetrap.js');
 
 var LayoutActionCreator = require('../../app/actions/layout_action_creator');
 var LayoutStore = require('../../app/stores/layout_store');
-var Dispositions = require('../../app/constants/app_constants').Dispositions;
 var MessageActionCreator = require('../../app/actions/message_action_creator');
 
 ApiUtils = require '../../app/utils/api_utils'
@@ -47,15 +46,6 @@ if (typeof window.plugins !== "object") {
     }
     container.addEventListener('click', closeHelp);
     Mousetrap.bind("esc", closeHelp);
-  }
-  function layoutRatio(direction) {
-    if (direction > 0) {
-      LayoutActionCreator.increasePreviewPanel(direction);
-    } else if (direction < 0) {
-      LayoutActionCreator.decreasePreviewPanel(direction);
-    } else {
-      LayoutActionCreator.resetPreviewPanel();
-    }
   }
   function mailAction(action) {
     var current, btn;
@@ -185,63 +175,6 @@ if (typeof window.plugins !== "object") {
           if (panel) {
             panel.scrollTop += panel.clientHeight * 0.8;
           }
-        }
-      },
-      '(': {
-        name: 'Increase message layout size',
-        action: function (e) {
-          if (e && e instanceof Event) { e.preventDefault(); }
-          layoutRatio(1);
-        }
-      },
-      'alt+(': {
-        name: 'Increase by 10 message layout size',
-        action: function (e) {
-          if (e && e instanceof Event) { e.preventDefault(); }
-          layoutRatio(10);
-        }
-      },
-      ')': {
-        name: 'Decrease message layout size',
-        action: function (e) {
-          if (e && e instanceof Event) { e.preventDefault(); }
-          layoutRatio(-1);
-        }
-      },
-      'alt+)': {
-        name: 'Decrease by 10 message layout size',
-        action: function (e) {
-          if (e && e instanceof Event) { e.preventDefault(); }
-          layoutRatio(-10);
-        }
-      },
-      '=': {
-        name: 'Reset message layout size',
-        action: function (e) {
-          if (e && e instanceof Event) { e.preventDefault(); }
-          layoutRatio();
-        }
-      },
-      'w': {
-        name: "Toggle layout",
-        action: function (e) {
-          if (e && e instanceof Event) { e.preventDefault(); }
-
-          switch (LayoutStore.getDisposition()) {
-          case Dispositions.ROW:
-            LayoutActionCreator.setDisposition(Dispositions.COL);
-            break;
-          case Dispositions.COL:
-            LayoutActionCreator.setDisposition(Dispositions.ROW);
-            break;
-          }
-        }
-      },
-      'W': {
-        name: 'Toggle messages list mode',
-        action: function (e) {
-            if (e && e instanceof Event) { e.preventDefault(); }
-            LayoutActionCreator.toggleListMode();
         }
       },
       'ctrl+up': {
