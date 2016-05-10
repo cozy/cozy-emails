@@ -42,7 +42,7 @@ class NotificationStore extends Store
         AppDispatcher.dispatch {type, value}
 
 
-    __setServerScope = (params={}) ->
+    _setServerScope = (params={}) ->
         _scope = params
         _socket.emit 'change_scope', _scope if _socket
 
