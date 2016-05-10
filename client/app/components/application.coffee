@@ -1,7 +1,9 @@
 require '../styles/application.styl'
+require '../../vendor/aria-tips/aria-tips.css'
 
 React = require 'react'
 {div, section, main} = React.DOM
+AriaTips = require '../../vendor/aria-tips/aria-tips'
 
 # React components
 Menu            = React.createFactory require './menu'
@@ -18,7 +20,6 @@ RouterStore          = require '../stores/router_store'
 SettingsStore        = require '../stores/settings_store'
 RefreshesStore       = require '../stores/refreshes_store'
 StoreWatchMixin      = require '../mixins/store_watch_mixin'
-TooltipRefesherMixin = require '../mixins/tooltip_refresher_mixin'
 
 RouterGetter = require '../getters/router'
 LayoutGetter = require '../getters/layout'
@@ -39,7 +40,6 @@ module.exports = React.createClass
     displayName: 'Application'
 
     mixins: [
-        TooltipRefesherMixin
         StoreWatchMixin [SettingsStore, RefreshesStore, RouterStore]
     ]
 
@@ -66,6 +66,13 @@ module.exports = React.createClass
             modal           : RouterGetter.getModal()
             className       : className
         }
+
+
+    # AriaTips must bind the elements declared as tooltip to their
+    # respective tooltip when the component is mounted (DOM elements exist).
+    componentDidMount: ->
+        AriaTips.bind()
+
 
 
     render: ->
