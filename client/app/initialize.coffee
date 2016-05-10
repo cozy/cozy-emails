@@ -5,22 +5,12 @@ require 'bootstrap/dist/css/bootstrap.css'
 # Bootstrap loads (need jQuery to be injected)
 require 'imports?jQuery=jquery!bootstrap/dist/js/bootstrap.js'
 
-{initReporting, sendReport} = require './utils/error_manager'
-
 Router = require './router'
 
 # Waits for the DOM to be ready
 document.addEventListener 'DOMContentLoaded', ->
 
-    try
-        window.__DEV__ = window.location.hostname is 'localhost'
+    window.__DEV__ = window.location.hostname is 'localhost'
 
-        # Initialize system
-        initReporting()
-
-        # Routing management
-        new Router()
-
-
-    catch err
-        sendReport 'error', err
+    # Routing management
+    new Router()

@@ -8,6 +8,7 @@ AppDispatcher = require '../libs/flux/dispatcher/dispatcher'
 
 {ActionTypes, AlertLevel} = require '../constants/app_constants'
 
+{initReporting, sendReport} = require '../utils/error_manager'
 {initRealtime, changeRealtimeScope} = require '../utils/realtime_utils'
 
 
@@ -22,9 +23,7 @@ class NotificationStore extends Store
     _tasks = Immutable.OrderedMap()
 
 
-    initRealtime()
-    _initPermissions()
-    _initPerformances()
+    _initialize()
 
 
     getToasts: ->
@@ -110,8 +109,21 @@ class NotificationStore extends Store
         onClick: -> getMessageActionCreator().undo ref
 
 
+    _initialize = ->
+        try
+            # Initialize system
+            initReporting()
+            _initPerformances()
 
-    _initPermissions = ->
+            # Initialize discussions
+            initRealtime()
+            _initDesktopNotifications()
+
+        catch err
+            sendReport 'error', err
+
+
+    _initDesktopNotifications = ->
         if window.settings.desktopNotifications and window.Notification
             Notification.requestPermission (status) ->
                 # This allows to use Notification.permission
