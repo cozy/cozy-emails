@@ -46,12 +46,12 @@ module.exports = ToastContainer = React.createClass
             ["toast-#{id}", Toast {key: id, toast}]
         .toArray()
 
-        classes = classNames
-            'toasts-container': true
-            'action-hidden': @state.hidden
-            'has-toasts': toasts.size isnt 0
-
-        div className: classes,
+        div
+            className: classNames
+                'toasts-container': true
+                'has-toasts': toasts.size isnt 0
+            'aria-hidden': @state.hidden,
+            
             Animate transitionName: 'toast', toasts
 
 
