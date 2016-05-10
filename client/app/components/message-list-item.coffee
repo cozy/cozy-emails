@@ -12,7 +12,7 @@ LayoutActionCreator = require '../actions/layout_action_creator'
 {Icon}       = require('./basic_components').factories
 Participants = React.createFactory require './participants'
 
-RouterGetter = require '../getters/router'
+MessageGetter = require '../getters/message'
 ContactGetter = require '../getters/contact'
 SearchGetter = require '../getters/search'
 
@@ -20,7 +20,7 @@ module.exports = React.createClass
     displayName: 'MessagesItem'
 
     render: ->
-        date    = RouterGetter.getCreatedAt @props.message
+        date    = MessageGetter.getCreatedAt @props.message
         avatar  = ContactGetter.getAvatar @props.message
         flags   = @props.message.get 'flags'
 
