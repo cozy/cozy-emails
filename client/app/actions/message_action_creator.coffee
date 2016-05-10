@@ -2,7 +2,7 @@ AppDispatcher = require '../libs/flux/dispatcher/dispatcher'
 
 {ActionTypes} = require '../constants/app_constants'
 
-XHRUtils      = require '../utils/xhr_utils'
+XHRUtils      = require '../libs/xhr'
 
 MessageStore  = require '../stores/message_store'
 
