@@ -1,3 +1,5 @@
+ioclient = require('socket.io-client')
+
 _         = require 'underscore'
 Immutable = require 'immutable'
 
@@ -8,9 +10,7 @@ AppDispatcher = require '../libs/flux/dispatcher/dispatcher'
 
 {ActionTypes, AlertLevel} = require '../constants/app_constants'
 
-{initReporting, sendReport} = require '../utils/error_manager'
-{initRealtime, changeRealtimeScope} = require '../utils/realtime_utils'
-
+LOG_URL = 'activity'
 
 class NotificationStore extends Store
 
@@ -19,9 +19,12 @@ class NotificationStore extends Store
         Defines private variables here.
     ###
     _uniqID = 0
-
     _tasks = Immutable.OrderedMap()
 
+    _scope  = {}
+    _socket = undefined
+
+    _lastError = undefined
 
 
     ###
@@ -34,6 +37,97 @@ class NotificationStore extends Store
     ###
         Private API
     ###
+
+    _dispatchAs = (type) -> (value) ->
+        AppDispatcher.dispatch {type, value}
+
+
+    __setServerScope = (params={}) ->
+        _scope = params
+        _socket.emit 'change_scope', _scope if _socket
+
+
+    _initRealtime = ->
+        _socket = ioclient.connect window.location.origin,
+            path: "#{window.location.pathname}socket.io"
+            reconnectionDelayMax: 60000
+            reconectionDelay: 2000
+            reconnectionAttempts: 3
+
+        _socket.on 'connect', -> _setServerScope()
+        _socket.on 'reconnect', -> _setServerScope()
+
+        _socket.on 'refresh.status', _dispatchAs ActionTypes.RECEIVE_REFRESH_STATUS
+        _socket.on 'refresh.create', _dispatchAs ActionTypes.RECEIVE_REFRESH_UPDATE
+        _socket.on 'refresh.update', _dispatchAs ActionTypes.RECEIVE_REFRESH_UPDATE
+        _socket.on 'refresh.delete', _dispatchAs ActionTypes.RECEIVE_REFRESH_DELETE
+
+        _socket.on 'message.create',
+            _dispatchAs ActionTypes.RECEIVE_RAW_MESSAGE_REALTIME
+        _socket.on 'message.update',
+            _dispatchAs ActionTypes.RECEIVE_RAW_MESSAGE_REALTIME
+        _socket.on 'message.delete',
+            _dispatchAs ActionTypes.RECEIVE_MESSAGE_DELETE
+        _socket.on 'mailbox.update',
+            _dispatchAs ActionTypes.RECEIVE_MAILBOX_UPDATE
+        _socket.on 'refresh.notify',
+            _dispatchAs ActionTypes.RECEIVE_REFRESH_NOTIF
+
+
+    _updateScope = (args) ->
+        {mailboxID, before} = args
+        setServerScope {mailboxID, before}
+
+
+    _initReporting = ->
+        console = window.console or {}
+
+        levels = ['debug', 'log', 'info', 'warn', 'error']
+
+        wrapLog = (level) ->
+            consolefn = console[level]
+
+            (args...) ->
+                if __DEV__ or level in ['warn', 'error']
+                    _sendReport level, JSON.stringify args
+                # display in console if not in production mode
+                consolefn.apply console, args if __DEV__
+
+        console[level] = wrapLog level for level in levels
+
+        window.onerror = (args...) ->
+            error = args[args.length - 1]
+            _sendReport.call null, 'error', error
+            # prevent native runtime error
+            return __DEV__
+
+    _sendReport = (level, err) ->
+        return if err is _lastError
+
+        data =
+            type:  level
+            href:  window.location.href
+
+        if err instanceof Error
+            data.line  = err.lineNumber
+            data.col   = err.columnNumber
+            data.url   = err.fileName
+            data.error =
+                msg:   err.message
+                name:  err.name
+                stack: err.stack
+        else if level is 'error'
+            data.error = msg: err
+        else
+            data.msg = err
+
+        xhr = new XMLHttpRequest()
+        xhr.open 'POST', LOG_URL, true
+        xhr.setRequestHeader "Content-Type", "application/json;charset=UTF-8"
+        xhr.send JSON.stringify {data}
+
+        _lastError = err
+
 
     _alert = (message) ->
         _notify message,
@@ -120,15 +214,15 @@ class NotificationStore extends Store
     _initialize = ->
         try
             # Initialize system
-            initReporting()
+            _initReporting()
             _initPerformances()
 
             # Initialize discussions
-            initRealtime()
+            _initRealtime()
             _initDesktopNotifications()
 
         catch err
-            sendReport 'error', err
+            _sendReport 'error', err
 
 
     _initDesktopNotifications = ->
@@ -264,7 +358,7 @@ class NotificationStore extends Store
             lastMessage = result?.messages?.last()
             mailboxID = lastMessage?.get 'mailboxID'
             before = lastMessage?.get('date') or timestamp
-            changeRealtimeScope {mailboxID, before}
+            _updateScope {mailboxID, before}
 
             @emit 'change'
 
