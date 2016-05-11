@@ -19,8 +19,9 @@ class RouterStore extends Store
     ###
     _router = null
     _action = null
-    _nextURL = null
-    _lastDate = null
+    _URI = null
+
+    _lastPage = {}
 
     _modal = null
 
@@ -45,7 +46,6 @@ class RouterStore extends Store
 
     _messageID = null
     _messagesLength = 0
-    _hasNextPage = 0
 
 
     getRouter: ->
@@ -196,11 +196,6 @@ class RouterStore extends Store
 
 
     _setCurrentAccount = (accountID, mailboxID, tab="account") ->
-        # Do not overwrite nextPage
-        # if action changes from List to MessageShow
-        if mailboxID isnt _mailboxID
-            _hasNextPage = false
-
         _accountID = accountID
         _mailboxID = mailboxID
         _tab = tab
@@ -302,7 +297,11 @@ class RouterStore extends Store
 
 
     hasNextPage: ->
-        _hasNextPage
+        not _lastPage[_URI]?.isComplete
+
+
+    getLastPage: ->
+        _lastPage[_URI]
 
 
     isPageComplete: ->
@@ -457,6 +456,8 @@ class RouterStore extends Store
             else
                 _action = AccountActions.CREATE
 
+            _URI = window.location.hash
+
             # From AccountStore
             accountID ?= AccountStore.getDefault(mailboxID)?.get 'id'
             _setCurrentAccount accountID, mailboxID, tab
@@ -547,8 +548,21 @@ class RouterStore extends Store
 
 
         handle ActionTypes.MESSAGE_FETCH_SUCCESS, (payload) ->
-            {hasNextPage} = payload
-            _hasNextPage = hasNextPage if hasNextPage?
+            {result, timestamp, lastPage} = payload
+
+
+            if lastPage?
+                {key, start, page, isComplete} = lastPage
+                _lastPage[key] = {start, page, isComplete}
+
+
+            # Update Realtime
+            mailboxID = @getMailboxID()
+            before = if result?.messages?.size
+            then result?.messages?.last()?.get('date')
+            else timestamp
+            changeRealtimeScope {mailboxID, before}
+
             @emit 'change'
 
 
