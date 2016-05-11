@@ -23,8 +23,12 @@ class AccountStore extends Store
             (new RegExp tag).test label.toLowerCase()
 
 
-    # Creates Immutable OrderedMap of mailboxes
     _toImmutable = (account) ->
+
+        # Do not get NoSelect mailbox
+        # cf https://tools.ietf.org/html/rfc3501#page-69
+        mailboxes = _.filter account.mailboxes, (mailbox) ->
+            -1 is mailbox.attribs.indexOf '\\Noselect'
 
         account.mailboxes = Immutable.Iterable mailboxes
         .toKeyedSeq()
