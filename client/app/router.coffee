@@ -3,7 +3,9 @@ React    = require 'react'
 ReactDOM = require 'react-dom'
 
 RouterStore = require './stores/router_store'
+
 RouterActionCreator = require './actions/router_action_creator'
+NotificationActionCreator = require './actions/notification_action_creator'
 
 AppDispatcher = require './libs/flux/dispatcher/dispatcher'
 
@@ -37,6 +39,8 @@ class Router extends Backbone.Router
 
     initialize: ->
         _setLocale()
+
+        NotificationActionCreator.initRealtime()
 
         # Save Routes in Stores
         AppDispatcher.dispatch

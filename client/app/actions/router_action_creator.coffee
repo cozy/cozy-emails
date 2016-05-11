@@ -4,12 +4,15 @@ AppDispatcher = require '../libs/flux/dispatcher/dispatcher'
 
 RouterStore = require '../stores/router_store'
 
+NotificationActionCreator = require '../actions/notification_action_creator'
+
 XHRUtils = require '../libs/xhr'
 
 {ActionTypes, MessageActions, SearchActions} = require '../constants/app_constants'
 
 _pages = {}
 _nextURL = {}
+
 
 RouterActionCreator =
     # Refresh Emails from Server
@@ -45,7 +48,7 @@ RouterActionCreator =
             type: ActionTypes.MESSAGE_FETCH_REQUEST
             value: {url, timestamp}
 
-        XHRUtils.fetchMessagesByFolder url, (error,result) =>
+        XHRUtils.fetchMessagesByFolder url, (error, result) =>
             # Save messagesLength per page
             # to get the correct pageAfter param
             # for getNext handles
@@ -57,6 +60,12 @@ RouterActionCreator =
                     type: ActionTypes.MESSAGE_FETCH_FAILURE
                     value: {error, url, timestamp, hasNextPage}
             else
+                # Update Realtime
+                lastMessage = _.last result?.messages
+                mailboxID = lastMessage?.mailboxID
+                before = lastMessage?.date or timestamp
+                NotificationActionCreator.setServerScope {mailboxID, before}
+
                 AppDispatcher.dispatch
                     type: ActionTypes.MESSAGE_FETCH_SUCCESS
                     value: {result, url, timestamp, hasNextPage}
@@ -149,6 +158,13 @@ RouterActionCreator =
                     value: {error, conversationID, timestamp, page}
             else
                 result = {messages}
+
+                # Update Realtime
+                lastMessage = _.last messages
+                mailboxID = lastMessage?.mailboxID
+                before = lastMessage?.date or timestamp
+                NotificationActionCreator.setServerScope {mailboxID, before}
+
                 AppDispatcher.dispatch
                     type: ActionTypes.MESSAGE_FETCH_SUCCESS
                     value: {result, conversationID, timestamp, page}

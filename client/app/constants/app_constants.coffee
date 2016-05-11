@@ -60,6 +60,11 @@ module.exports =
         'MESSAGE_FETCH_SUCCESS'         : 'MESSAGE_FETCH_SUCCESS'
         'MESSAGE_FETCH_FAILURE'         : 'MESSAGE_FETCH_FAILURE'
 
+
+        # performance
+        'PERFORMANCE_LOAD_SUCCESS'      : 'PERFORMANCE_LOAD_SUCCESS'
+
+
         # Search
         'SEARCH_PARAMETER_CHANGED' : 'SEARCH_PARAMETER_CHANGED'
         'SEARCH_REQUEST'           : 'SEARCH_REQUEST'
