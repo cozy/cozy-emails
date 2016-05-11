@@ -35,7 +35,6 @@ class AccountStore extends Store
             return 2
         .map (mailbox) ->
             mailbox.depth = mailbox.tree.length - 1
-            console.log mailbox
             delete mailbox.tree
             Immutable.Map mailbox
         .toOrderedMap()
