@@ -66,12 +66,6 @@ module.exports = Menu = React.createClass
                         span className: 'item-label',
                         t 'menu account new'
 
-                button
-                    role: 'menuitem'
-                    className: 'btn fa fa-question-circle help'
-                    'aria-describedby': Tooltips.HELP_SHORTCUTS
-                    'data-tooltip-direction': 'top'
-                    onClick: -> Mousetrap.trigger '?'
 
     renderMailboxesFlags: (params={}) ->
         {flags, type, progress, slug, total, unread} = params
