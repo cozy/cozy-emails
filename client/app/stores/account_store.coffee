@@ -25,7 +25,12 @@ class AccountStore extends Store
 
     # Creates Immutable OrderedMap of mailboxes
     _toImmutable = (account) ->
-        account.mailboxes = Immutable.Iterable account.mailboxes
+
+        # Remove duplicated mailbox
+        labels = _.groupBy account.mailboxes, 'label'
+        mailboxes = _.map labels, (values, key) -> values[0]
+
+        account.mailboxes = Immutable.Iterable mailboxes
         .toKeyedSeq()
         .mapKeys (_, mailbox) -> mailbox.id
         .sort (mailbox) ->
