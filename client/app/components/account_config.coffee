@@ -121,7 +121,7 @@ module.exports = React.createClass
                         account: @state.editedAccount
                         requestChange: @onTabChanges
                         isWaiting: @state.isWaiting
-                        checking: @state.isChecking
+                        # checking: @state.isChecking
                         onSubmit: @onSubmit
                         errors: @state.errors
 

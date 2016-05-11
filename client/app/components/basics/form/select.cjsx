@@ -12,8 +12,8 @@ module.exports = BasicFormSelect = React.createClass
     displayName: 'BasicFormSelect'
 
     propTypes:
-        name:  React.PropTypes.string.isRequired
-        label: React.PropTypes.string
+        name:    React.PropTypes.string.isRequired
+        label:   React.PropTypes.string
         options: React.PropTypes.arrayOf(OPTION_SHAPE).isRequired
 
     contextTypes:
@@ -27,8 +27,8 @@ module.exports = BasicFormSelect = React.createClass
         <label data-input={@props.type} htmlFor={slug}>
             {<span>{@props.label}</span> if @props.label}
             <select id={slug} {...props}>
-                {<option value={option.value}>
+                {<option value={option.value} key="#{slug}-option-#{key}">
                     {t(option.label)}
-                </option> for option in @props.options}
+                </option> for option, key in @props.options}
             </select>
         </label>

@@ -50,27 +50,27 @@ module.exports = AccountActionCreator =
                     type: ActionTypes.EDIT_ACCOUNT_SUCCESS
                     value: {rawAccount}
 
-    check: ({value, accountID}) ->
-        if accountID?
-            account = AccountStore.getByID accountID
-            newAccount = account.mergeDeep(value).toJS()
-        else
-            newAccount = value
-
-        AppDispatcher.dispatch
-            type: ActionTypes.CHECK_ACCOUNT_REQUEST
-            value: {value, newAccount}
-
-        XHRUtils.checkAccount newAccount, (error, rawAccount) ->
-            if error?
-                AppDispatcher.dispatch
-                    type: ActionTypes.CHECK_ACCOUNT_FAILURE
-                    value: {error}
-
-            else
-                AppDispatcher.dispatch
-                    type: ActionTypes.CHECK_ACCOUNT_SUCCESS
-                    value: {rawAccount}
+    # check: ({value, accountID}) ->
+    #     if accountID?
+    #         account = AccountStore.getByID accountID
+    #         newAccount = account.mergeDeep(value).toJS()
+    #     else
+    #         newAccount = value
+    #
+    #     AppDispatcher.dispatch
+    #         type: ActionTypes.CHECK_ACCOUNT_REQUEST
+    #         value: {value, newAccount}
+    #
+    #     XHRUtils.checkAccount newAccount, (error, rawAccount) ->
+    #         if error?
+    #             AppDispatcher.dispatch
+    #                 type: ActionTypes.CHECK_ACCOUNT_FAILURE
+    #                 value: {error}
+    #
+    #         else
+    #             AppDispatcher.dispatch
+    #                 type: ActionTypes.CHECK_ACCOUNT_SUCCESS
+    #                 value: {rawAccount}
 
     remove: (accountID) ->
         AppDispatcher.dispatch
@@ -90,6 +90,7 @@ module.exports = AccountActionCreator =
         AppDispatcher.dispatch
             type: ActionTypes.DISCOVER_REQUEST
             value: {domain}
+
         XHRUtils.accountDiscover domain, (error, provider) ->
             if error
                 AppDispatcher.dispatch

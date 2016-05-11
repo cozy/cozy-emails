@@ -2,9 +2,9 @@ module.exports =
 
     ActionTypes:
         # Account
-        'CHECK_ACCOUNT_REQUEST'     : 'CHECK_ACCOUNT_REQUEST'
-        'CHECK_ACCOUNT_SUCCESS'     : 'CHECK_ACCOUNT_SUCCESS'
-        'CHECK_ACCOUNT_FAILURE'     : 'CHECK_ACCOUNT_FAILURE'
+        # 'CHECK_ACCOUNT_REQUEST'     : 'CHECK_ACCOUNT_REQUEST'
+        # 'CHECK_ACCOUNT_SUCCESS'     : 'CHECK_ACCOUNT_SUCCESS'
+        # 'CHECK_ACCOUNT_FAILURE'     : 'CHECK_ACCOUNT_FAILURE'
         'ADD_ACCOUNT_REQUEST'       : 'ADD_ACCOUNT_REQUEST'
         'ADD_ACCOUNT_SUCCESS'       : 'ADD_ACCOUNT_SUCCESS'
         'ADD_ACCOUNT_FAILURE'       : 'ADD_ACCOUNT_FAILURE'
@@ -108,6 +108,10 @@ module.exports =
         # Toasts
         'TOASTS_SHOW'               : 'TOASTS_SHOW'
         'TOASTS_HIDE'               : 'TOASTS_HIDE'
+
+
+    Requests:
+        'DISCOVER': 'DISCOVER'
 
 
     PayloadSources:

@@ -1,10 +1,10 @@
-
-AccountStore = require '../stores/account_store'
-MessageStore = require '../stores/message_store'
-SearchStore = require '../stores/search_store'
-RefreshesStore = require '../stores/refreshes_store'
-RouterStore = require '../stores/router_store'
-NotificationStore = require '../stores/notification_store'
+AccountStore          = require '../stores/account_store'
+MessageStore          = require '../stores/message_store'
+NotificationStore     = require '../stores/notification_store'
+RefreshesStore        = require '../stores/refreshes_store'
+RequestsInFlightStore = require '../stores/requests_in_flight_store'
+RouterStore           = require '../stores/router_store'
+SearchStore           = require '../stores/search_store'
 
 MessageGetter = require '../getters/message'
 
@@ -41,6 +41,8 @@ module.exports =
     getAction: ->
         RouterStore.getAction()
 
+    getRequestStatus: (request) ->
+        RequestsInFlightStore.getRequests().get request
 
     getReplyMessage: (messageID) ->
         isReply = @getAction() is MessageActions.EDIT

@@ -249,7 +249,7 @@ module.exports = AccountConfigMain = React.createClass
                 # Check for errors before.
                 FormButton
                     class: 'action-check'
-                    spinner: @props.checking
+                    # spinner: @props.checking
                     onClick: (event) => @props.onSubmit event, true
                     icon: 'ellipsis-h'
                     text: t 'account check'

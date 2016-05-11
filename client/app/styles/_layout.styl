@@ -133,28 +133,38 @@ body
 
         // Header
         h1
-            margin         0 0 .5em
+            margin         0
             padding-bottom .5em
             border-bottom  1px solid grey-01
 
         // Actions
         footer
-            margin-top  .5em
-            padding-top .5em
+            margin-top  1em
+            padding-top 1em
             border-top  1px solid grey-01
 
         nav
             display flex
 
+        button
         [role=button]
             flex             1
             padding          .55em .8em
+            border           none
             background-color basecolor
             color            white
             text-align       center
 
             &:hover
                 text-decoration  none
+
+            &[disabled]
+                opacity .35
+
+        .alert
+            margin       2em 0
+            border-color red
+            color        red
 
         // Forms
         label
@@ -193,4 +203,5 @@ body
             content '⬇'
 
     .content
+        margin      0
         padding-top 1em

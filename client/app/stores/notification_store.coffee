@@ -229,17 +229,17 @@ class NotificationStore extends Store
                 message: t 'account updated'
                 autoclose: true
 
-        handle ActionTypes.CHECK_ACCOUNT_FAILURE, ({error}) ->
-            AppDispatcher.waitFor [AccountStore.dispatchToken]
-            _showNotification
-               message: RouterStore.getAlertErrorMessage()
-               errors: RouterStore.getRawErrors()
-               autoclose: true
-
-        handle ActionTypes.CHECK_ACCOUNT_SUCCESS, ->
-            _showNotification
-                message: t 'account checked'
-                autoclose: true
+        # handle ActionTypes.CHECK_ACCOUNT_FAILURE, ({error}) ->
+        #     AppDispatcher.waitFor [AccountStore.dispatchToken]
+        #     _showNotification
+        #        message: RouterStore.getAlertErrorMessage()
+        #        errors: RouterStore.getRawErrors()
+        #        autoclose: true
+        #
+        # handle ActionTypes.CHECK_ACCOUNT_SUCCESS, ->
+        #     _showNotification
+        #         message: t 'account checked'
+        #         autoclose: true
 
         handle ActionTypes.REFRESH_FAILURE, ({error}) ->
             AppDispatcher.waitFor [AccountStore.dispatchToken]

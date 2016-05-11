@@ -18,7 +18,7 @@ module.exports = BasicsForm = React.createClass
 
 
     render: ->
-        <form id={@props.ns} method={@props.method or 'POST'}>
+        <form id={@props.ns} method={@props.method or 'POST'} {..._.omit @props, 'ns', 'method'}>
             {@props.children}
         </form>
 
