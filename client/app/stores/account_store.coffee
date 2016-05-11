@@ -19,8 +19,8 @@ class AccountStore extends Store
 
 
     _isSpecialMailbox = (mailbox) ->
-        label = mailbox.label.toLowerCase()
-        _.find [/draft/, /sent/, /trash/], (regExp) -> regExp.test label
+        _.find ['draft', 'sent', 'trash'], (tag) ->
+            (new RegExp tag).test label.toLowerCase()
 
 
     # Creates Immutable OrderedMap of mailboxes
