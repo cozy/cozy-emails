@@ -62,15 +62,11 @@ _initPerformances = ->
     timing = window.performance?.timing
     now = Math.ceil window.performance?.now()
     if timing?
-        message = "
+        console.info "
             Response: #{timing.responseEnd - timing.navigationStart}ms
             Onload: #{timing.loadEventStart - timing.navigationStart}ms
             Page loaded: #{now}ms
         "
-
-        AppDispatcher.dispatch
-            type: ActionTypes.PERFORMANCE_LOAD_SUCCESS
-            value: {message}
 
 
 _initRealtime = ->

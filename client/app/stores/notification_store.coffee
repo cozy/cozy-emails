@@ -115,10 +115,6 @@ class NotificationStore extends Store
     ###
     __bindHandlers: (handle) ->
 
-        handle ActionTypes.PERFORMANCE_LOAD_SUCCESS, ({message}) ->
-            _alert message
-
-
         handle ActionTypes.SETTINGS_UPDATE_FAILURE, ({error}) ->
             _alertError t('settings save error') + error
 
