@@ -26,7 +26,7 @@ module.exports = AccountServer = React.createClass
         server:    React.PropTypes.string
         port:      React.PropTypes.number
         security:  React.PropTypes.string
-        username:  React.PropTypes.string
+        login:     React.PropTypes.string
         password:  React.PropTypes.string
         onChange:  React.PropTypes.func
 
@@ -81,10 +81,10 @@ module.exports = AccountServer = React.createClass
                          value={@state.security}
                          onChange={@onSecurityChange} />
             <Form.Input type="text"
-                        name="#{@props._protocol}-username"
-                        label={t("account wizard creation #{@props._protocol} username")}
-                        value={@props.username}
-                        onChange={_.partial @props.onChange, "#{@props._protocol}Username"} />
+                        name="#{@props._protocol}-login"
+                        label={t("account wizard creation #{@props._protocol} login")}
+                        value={@props.login}
+                        onChange={_.partial @props.onChange, "#{@props._protocol}Login"} />
             <Form.Input type="password"
                         name="#{@props._protocol}-password"
                         label={t("account wizard creation #{@props._protocol} password")}

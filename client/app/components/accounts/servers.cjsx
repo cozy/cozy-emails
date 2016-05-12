@@ -12,11 +12,12 @@ module.exports = AccountServers = React.createClass
     propTypes:
         expanded: React.PropTypes.bool
         legend:   React.PropTypes.string
+        onExpand: React.PropTypes.func
         onChange: React.PropTypes.func
 
 
     render: ->
-        <Form.Fieldset {..._.pick @props, 'expanded', 'legend'}>
+        <Form.Fieldset {..._.pick @props, 'expanded', 'legend', 'onExpand'}>
             <Server {...@_getPropsForContext 'imap'} />
             <Server {...@_getPropsForContext 'smtp'} />
         </Form.Fieldset>
@@ -28,6 +29,6 @@ module.exports = AccountServers = React.createClass
         server:    @props["#{ctx}Server"]
         port:      @props["#{ctx}Port"]
         security:  @props["#{ctx}Security"]
-        username:  @props["#{ctx}Username"]
+        login:     @props["#{ctx}Login"]
         password:  @props["#{ctx}Password"]
         onChange:  @props.onChange

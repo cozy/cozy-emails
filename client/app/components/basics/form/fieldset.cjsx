@@ -8,6 +8,7 @@ module.exports = BasicFormFieldset = React.createClass
     propTypes:
         expanded: React.PropTypes.bool
         legend:   React.PropTypes.string
+        onExpand: React.PropTypes.func
 
 
     getInitialState: ->
@@ -27,8 +28,11 @@ module.exports = BasicFormFieldset = React.createClass
 
 
     toggleExpand: ->
-        @setState (state) ->
-            expanded: if state?.expanded isnt null
+        @setState (state, props) ->
+            expanded = if state?.expanded isnt null
                 !state.expanded
             else
                 !@props.expanded
+
+            props.onExpand expanded if props.onExpand
+            expanded: expanded

@@ -2,13 +2,14 @@ Immutable = require 'immutable'
 
 Store = require '../libs/flux/store/store'
 
-{ActionTypes, Requests} = require '../constants/app_constants'
+{ActionTypes, Requests, RequestStatus} = require '../constants/app_constants'
 
 
 class RequestsInFlightStore extends Store
 
     _requests = new Immutable.Map
-        "#{Requests.DISCOVER}": false
+        "#{Requests.DISCOVER_ACCOUNT}": status: null, res: undefined
+        "#{Requests.CHECK_ACCOUNT}":    status: null, res: undefined
 
 
     getRequests: ->
@@ -17,18 +18,39 @@ class RequestsInFlightStore extends Store
 
     __bindHandlers: (handle) ->
 
-        handle ActionTypes.DISCOVER_REQUEST, ({domain}) ->
-            _requests = _requests.set Requests.DISCOVER,  true
+        handle ActionTypes.DISCOVER_ACCOUNT_REQUEST, ->
+            _requests = _requests.set Requests.DISCOVER_ACCOUNT,
+                status: RequestStatus.INFLIGHT, res: undefined
             @emit 'change'
 
 
-        handle ActionTypes.DISCOVER_FAILURE, ({error, domain}) ->
-            _requests = _requests.set Requests.DISCOVER, error
+        handle ActionTypes.DISCOVER_ACCOUNT_FAILURE, ({error}) ->
+            _requests = _requests.set Requests.DISCOVER_ACCOUNT,
+                status: RequestStatus.ERROR, res: error
             @emit 'change'
 
 
-        handle ActionTypes.DISCOVER_SUCCESS, ({domain, provider}) ->
-            _requests = _requests.set Requests.DISCOVER, provider
+        handle ActionTypes.DISCOVER_ACCOUNT_SUCCESS, ({provider}) ->
+            _requests = _requests.set Requests.DISCOVER_ACCOUNT,
+                status: RequestStatus.SUCCESS, res: provider
+            @emit 'change'
+
+
+        handle ActionTypes.CHECK_ACCOUNT_REQUEST, ->
+            _requests = _requests.set Requests.CHECK_ACCOUNT,
+                status: RequestStatus.INFLIGHT, res: undefined
+            @emit 'change'
+
+
+        handle ActionTypes.CHECK_ACCOUNT_FAILURE, ({error, oauth}) ->
+            _requests = _requests.set Requests.CHECK_ACCOUNT,
+                status: RequestStatus.ERROR, res: {error, oauth}
+            @emit 'change'
+
+
+        handle ActionTypes.CHECK_ACCOUNT_SUCCESS, ({account}) ->
+            _requests = _requests.set Requests.CHECK_ACCOUNT,
+                status: RequestStatus.SUCCESS, res: account
             @emit 'change'
 
 
