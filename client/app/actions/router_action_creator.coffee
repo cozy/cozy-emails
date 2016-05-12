@@ -4,7 +4,7 @@ AppDispatcher = require '../libs/flux/dispatcher/dispatcher'
 
 RouterStore = require '../stores/router_store'
 
-NotificationActionCreator = require '../actions/notification_action_creator'
+Notification = require '../libs/notification'
 
 XHRUtils = require '../libs/xhr'
 
@@ -64,7 +64,7 @@ RouterActionCreator =
                 lastMessage = _.last result?.messages
                 mailboxID = lastMessage?.mailboxID
                 before = lastMessage?.date or timestamp
-                NotificationActionCreator.setServerScope {mailboxID, before}
+                Notification.setServerScope {mailboxID, before}
 
                 AppDispatcher.dispatch
                     type: ActionTypes.MESSAGE_FETCH_SUCCESS
@@ -163,7 +163,7 @@ RouterActionCreator =
                 lastMessage = _.last messages
                 mailboxID = lastMessage?.mailboxID
                 before = lastMessage?.date or timestamp
-                NotificationActionCreator.setServerScope {mailboxID, before}
+                Notification.setServerScope {mailboxID, before}
 
                 AppDispatcher.dispatch
                     type: ActionTypes.MESSAGE_FETCH_SUCCESS

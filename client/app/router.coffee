@@ -40,8 +40,6 @@ class Router extends Backbone.Router
     initialize: ->
         _setLocale()
 
-        NotificationActionCreator.initRealtime()
-
         # Save Routes in Stores
         AppDispatcher.dispatch
             type: ActionTypes.ROUTES_INITIALIZE
