@@ -51,11 +51,6 @@ module.exports = React.createClass
                 className: "#{classesChild} lv-#{@props.depth}"
                 role: 'menuitem'
                 'data-mailbox-id': @props.mailboxID
-                onDragEnter: @onDragEnter
-                onDragLeave: @onDragLeave
-                onDragOver: @onDragOver
-                onDrop: (e) =>
-                    @onDrop e, @props.mailboxID
                 title: @getTitle()
                 'data-toggle': 'tooltip'
                 'data-placement' : 'right'
@@ -81,23 +76,6 @@ module.exports = React.createClass
             if not @props.progress and @props.unread
                 span className: 'badge', @props.unread
 
-
-    onDragEnter: (e) ->
-        if not @state.target
-            @setState target: true
-
-    onDragLeave: (e) ->
-        if @state.target
-            @setState target: false
-
-    onDragOver: (e) ->
-        e.preventDefault()
-
-    onDrop: (event, to) ->
-        data = event.dataTransfer.getData('text')
-        {messageID, mailboxID, conversationID} = JSON.parse data
-        @setState target: false
-        RouterActionCreator.move {messageID, conversationID}, mailboxID, to
 
     expungeMailbox: (event) ->
         event.preventDefault()
