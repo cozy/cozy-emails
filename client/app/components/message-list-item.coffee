@@ -1,4 +1,3 @@
-_          = require 'underscore'
 React      = require 'react'
 classNames = require 'classnames'
 
@@ -15,6 +14,7 @@ Participants = React.createFactory require './participants'
 MessageGetter = require '../getters/message'
 ContactGetter = require '../getters/contact'
 SearchGetter = require '../getters/search'
+
 
 module.exports = React.createClass
     displayName: 'MessagesItem'
@@ -88,13 +88,6 @@ module.exports = React.createClass
         text = (text or '').substr 0, 1024
         props = SearchGetter.highlightSearch text
         p options, props...
-
-
-    onSelect: (event) ->
-        event.stopPropagation()
-        id = @props.message.get 'id'
-        value = not @props.isSelected
-        LayoutActionCreator.updateSelection {id, value}
 
 
     onMessageClick: (event) ->

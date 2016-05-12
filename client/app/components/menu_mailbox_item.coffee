@@ -14,8 +14,10 @@ AccountActionCreator = require '../actions/account_action_creator'
 module.exports = React.createClass
     displayName: 'MenuMailboxItem'
 
+
     getInitialState: ->
         return target: false
+
 
     getDefaultProps: ->
         return {
@@ -25,6 +27,7 @@ module.exports = React.createClass
             }
         }
 
+
     getTitle: ->
         title = t "menu mailbox total", @props.total
         if @props.unread
@@ -32,6 +35,7 @@ module.exports = React.createClass
         if @props.recent
             title += t "menu mailbox new", @props.recent
         return title
+
 
     render: ->
         classesParent = classNames
@@ -51,11 +55,6 @@ module.exports = React.createClass
                 className: "#{classesChild} lv-#{@props.depth}"
                 role: 'menuitem'
                 'data-mailbox-id': @props.mailboxID
-                onDragEnter: @onDragEnter
-                onDragLeave: @onDragLeave
-                onDragOver: @onDragOver
-                onDrop: (e) =>
-                    @onDrop e, @props.mailboxID
                 title: @getTitle()
                 'data-toggle': 'tooltip'
                 'data-placement' : 'right'
@@ -69,45 +68,6 @@ module.exports = React.createClass
                     span className: 'refresh-error', onClick: displayError,
                         i className: 'fa fa-warning', null
 
-            if 'trashMailbox' is @props.icon?.type
-                button
-                    className:                'menu-subaction'
-                    'aria-describedby':       Tooltips.EXPUNGE_MAILBOX
-                    'data-tooltip-direction': 'right'
-                    onClick: @expungeMailbox
-
-                    span className: 'fa fa-recycle'
 
             if not @props.progress and @props.unread
                 span className: 'badge', @props.unread
-
-
-    onDragEnter: (e) ->
-        if not @state.target
-            @setState target: true
-
-    onDragLeave: (e) ->
-        if @state.target
-            @setState target: false
-
-    onDragOver: (e) ->
-        e.preventDefault()
-
-    onDrop: (event, to) ->
-        data = event.dataTransfer.getData('text')
-        {messageID, mailboxID, conversationID} = JSON.parse data
-        @setState target: false
-        RouterActionCreator.move {messageID, conversationID}, mailboxID, to
-
-    expungeMailbox: (event) ->
-        event.preventDefault()
-        LayoutActionCreator.displayModal
-            title       : t 'app confirm delete'
-            subtitle    : t 'account confirm delbox'
-            closeLabel  : t 'app cancel'
-            actionLabel : t 'app confirm'
-            action      : =>
-                LayoutActionCreator.hideModal()
-                AccountActionCreator.mailboxExpunge
-                    accountID: @props.accountID
-                    mailboxID: @props.mailboxID

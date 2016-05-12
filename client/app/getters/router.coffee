@@ -118,6 +118,18 @@ module.exports =
         RouterStore.getInbox accountID
 
 
+    getTotalLength: ->
+        @getInbox()?.get 'nbTotal'
+
+
+    getUnreadLength: ->
+        @getInbox()?.get 'nbUnread'
+
+
+    getRecentLength: ->
+        @getInbox()?.get 'nbRecent'
+
+
     getTrashMailbox: (accountID) ->
         accountID ?= @getAccountID()
         RouterStore.getTrashMailbox accountID

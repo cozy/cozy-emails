@@ -97,6 +97,10 @@ module.exports = React.createClass
                     composeURL      : composeURL
                     newAccountURL   : newAccountURL
                     mailboxes       : RouterGetter.getMailboxes()
+                    nbTotal         : RouterGetter.getTotalLength()
+                    nbUnread        : RouterGetter.getUnreadLength()
+                    nbRecent        : RouterGetter.getRecentLength()
+
 
                 main
                     className: @props.layout

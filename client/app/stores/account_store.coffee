@@ -1,4 +1,5 @@
 Immutable = require 'immutable'
+_ = require 'lodash'
 
 Store = require '../libs/flux/store/store'
 
@@ -12,49 +13,37 @@ class AccountStore extends Store
     ###
     _accounts = Immutable.Iterable()
 
-    _sortMailbox = (mailbox) ->
-        last = {}
-        weight1 = 900
-        weight2 = 400
 
-        mailbox.depth = mailbox.tree.length - 1
+    _isInbox = (label) ->
+        'inbox' is label.toLowerCase()
 
-        # fake weight for sort
-        if mailbox.depth is 0
-            if 'inbox' is (label = mailbox.label.toLowerCase())
-                mailbox.weight = 1000
 
-            else if (mailbox.attribs.length > 0 or
-                    /draft/.test(label) or
-                    /sent/.test(label) or
-                    /trash/.test(label))
-                mailbox.weight = weight1
-                weight1 -= 5
-
-            else
-                mailbox.weight = weight2
-                weight2 -= 5
-
-            last[mailbox.depth] = mailbox.weight
-        else
-            mailbox.weight = last[mailbox.depth - 1] - 0.1
-            last[mailbox.depth] = mailbox.weight
-
-        mailbox
+    _isSpecialMailbox = (label) ->
+        _.find ['draft', 'sent', 'trash'], (tag) ->
+            (new RegExp tag).test label.toLowerCase()
 
 
     _toImmutable = (account) ->
-        # Creates Immutable OrderedMap of mailboxes
-        mailboxes = Immutable.Iterable account.mailboxes
+
+        # Do not get NoSelect mailbox
+        # cf https://tools.ietf.org/html/rfc3501#page-69
+        mailboxes = _.filter account.mailboxes, (mailbox) ->
+            -1 is mailbox.attribs.indexOf '\\Noselect'
+
+        account.mailboxes = Immutable.Iterable mailboxes
         .toKeyedSeq()
         .mapKeys (_, mailbox) -> mailbox.id
-
-        # Sort mailboxes by depth
-        .map (mailbox) -> Immutable.Map _sortMailbox mailbox
+        .sort (mailbox) ->
+            return 0 if _isInbox mailbox.tree[0]
+            return 1 if _isSpecialMailbox mailbox.tree[0]
+            return 2
+        .map (mailbox) ->
+            mailbox.depth = mailbox.tree.length - 1
+            delete mailbox.tree
+            Immutable.Map mailbox
         .toOrderedMap()
 
         delete account.totalUnread
-        account.mailboxes = mailboxes
         return Immutable.Map account
 
 
@@ -98,17 +87,6 @@ class AccountStore extends Store
                 account = account.set 'mailboxes', mailboxes
 
                 _accounts = _accounts.set accountID, account
-
-
-    _mailboxSort = (mb1, mb2) ->
-        w1 = mb1.get 'weight'
-        w2 = mb2.get 'weight'
-        if w1 < w2 then return 1
-        else if w1 > w2 then return -1
-        else
-            if mb1.get 'label' < mb2.get 'label' then return 1
-            else if mb1.get 'label' > mb2.get 'label' then return -1
-            else return 0
 
 
     _updateAccount = (rawAccount) ->
@@ -194,7 +172,6 @@ class AccountStore extends Store
         if accountID
             _accounts?.get accountID
                 .get 'mailboxes'
-                .sort _mailboxSort
 
 
     makeEmptyAccount: ->
