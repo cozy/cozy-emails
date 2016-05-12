@@ -14,11 +14,11 @@ class AccountStore extends Store
     _accounts = Immutable.Iterable()
 
 
-    _isInbox = ({label}) ->
+    _isInbox = (label) ->
         'inbox' is label.toLowerCase()
 
 
-    _isSpecialMailbox = (mailbox) ->
+    _isSpecialMailbox = (label) ->
         _.find ['draft', 'sent', 'trash'], (tag) ->
             (new RegExp tag).test label.toLowerCase()
 
@@ -34,8 +34,8 @@ class AccountStore extends Store
         .toKeyedSeq()
         .mapKeys (_, mailbox) -> mailbox.id
         .sort (mailbox) ->
-            return 0 if _isInbox {label: mailbox.tree[0]}
-            return 1 if _isSpecialMailbox mailbox
+            return 0 if _isInbox mailbox.tree[0]
+            return 1 if _isSpecialMailbox mailbox.tree[0]
             return 2
         .map (mailbox) ->
             mailbox.depth = mailbox.tree.length - 1
