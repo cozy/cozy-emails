@@ -14,8 +14,10 @@ AccountActionCreator = require '../actions/account_action_creator'
 module.exports = React.createClass
     displayName: 'MenuMailboxItem'
 
+
     getInitialState: ->
         return target: false
+
 
     getDefaultProps: ->
         return {
@@ -25,6 +27,7 @@ module.exports = React.createClass
             }
         }
 
+
     getTitle: ->
         title = t "menu mailbox total", @props.total
         if @props.unread
@@ -32,6 +35,7 @@ module.exports = React.createClass
         if @props.recent
             title += t "menu mailbox new", @props.recent
         return title
+
 
     render: ->
         classesParent = classNames

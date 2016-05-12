@@ -135,13 +135,6 @@ module.exports = Menu = React.createClass
                                     className: 'item-label display-login'
                                     account.get 'login'
 
-                a
-                    href: props.configURL
-                    className: 'mailbox-config menu-subaction',
-                    i
-                        'className': 'fa fa-cog'
-                        'aria-describedby': Tooltips.ACCOUNT_PARAMETERS
-                        'data-tooltip-direction': 'right'
 
             if props.isSelected
                 ul
