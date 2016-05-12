@@ -20,7 +20,6 @@ class RouterStore extends Store
     _router = null
     _action = null
     _URI = null
-
     _lastPage = {}
 
     _modal = null
@@ -39,6 +38,7 @@ class RouterStore extends Store
     _accountID = null
     _mailboxID = null
     _tab = null
+
     _refreshMailbox = false
     _newAccountWaiting = false
     _newAccountChecking = false
@@ -54,11 +54,6 @@ class RouterStore extends Store
 
     getAction: ->
         return _action
-
-
-    getQuery: ->
-        filter = @getFilter()
-        _getURIQueryParams {filter}
 
 
     getFilter: ->
@@ -236,6 +231,15 @@ class RouterStore extends Store
             'inbox' is mailbox.get('label').toLowerCase()
 
 
+    isInbox: (mailboxID) ->
+        mailboxID ?= _mailboxID
+        mailboxIDs = @getAllMailboxes()?.filter (mailbox) ->
+            'inbox' is mailbox.get('label').toLowerCase()
+        .map (mailbox) -> mailbox.get 'id'
+        .toArray()
+        -1 < mailboxIDs?.indexOf mailboxID
+
+
     getTrashMailbox: (accountID) ->
         @getAllMailboxes(accountID)?.find (mailbox) ->
             'trash' is mailbox.get('label').toLowerCase()
@@ -297,7 +301,7 @@ class RouterStore extends Store
 
 
     hasNextPage: ->
-        not _lastPage[_URI]?.isComplete
+        not @getLastPage()?.isComplete
 
 
     getLastPage: ->
@@ -309,7 +313,6 @@ class RouterStore extends Store
             unless (message = MessageStore.getByID(messageID))?.size
                 return false
         (_messagesLength + 1) >= MSGBYPAGE
-
 
 
     getMessagesList: (mailboxID) ->
@@ -403,6 +406,10 @@ class RouterStore extends Store
         values[++index]
 
 
+    getURI: ->
+        _URI
+
+
     _clearError = ->
         _serverAccountErrorByField = Immutable.Map()
 
@@ -439,6 +446,24 @@ class RouterStore extends Store
             _router.navigate currentURL
 
 
+    _setURI = ->
+        # Special Case ie. OVH mails
+        # sometime there are several INBOX with different id
+        # but only one is references as real INBOX
+        # Get reference INBOX_ID to keep _nextURL works
+        # sith this onther INBOX
+        if _self.isInbox()
+            mailboxID = _self.getInbox().get 'id'
+        else
+            mailboxID = _self.getMailboxID()
+
+        # Get queryString of URI params
+        filter = _self.getFilter()
+        query = _getURIQueryParams {filter}
+
+        _URI = "#{mailboxID}#{query}"
+
+
 
     ###
         Defines here the action handlers.
@@ -455,8 +480,6 @@ class RouterStore extends Store
                 _action = action
             else
                 _action = AccountActions.CREATE
-
-            _URI = window.location.hash
 
             # From AccountStore
             accountID ?= AccountStore.getDefault(mailboxID)?.get 'id'
@@ -478,6 +501,10 @@ class RouterStore extends Store
 
             # Update URL if it didnt
             _updateURL()
+
+            # Save URI
+            # used for paginate
+            _setURI()
 
             @emit 'change'
 
@@ -550,18 +577,8 @@ class RouterStore extends Store
         handle ActionTypes.MESSAGE_FETCH_SUCCESS, (payload) ->
             {result, timestamp, lastPage} = payload
 
-
-            if lastPage?
-                {key, start, page, isComplete} = lastPage
-                _lastPage[key] = {start, page, isComplete}
-
-
-            # Update Realtime
-            mailboxID = @getMailboxID()
-            before = if result?.messages?.size
-            then result?.messages?.last()?.get('date')
-            else timestamp
-            changeRealtimeScope {mailboxID, before}
+            # Save last message references
+            _lastPage[_URI] = lastPage if lastPage?
 
             @emit 'change'
 

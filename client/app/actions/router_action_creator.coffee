@@ -44,9 +44,6 @@ RouterActionCreator =
         timestamp = (new Date()).toISOString()
         url ?= RouterStore.getCurrentURL {action}
 
-        oldMessages = RouterStore.getMessagesList()
-        oldPageAfter = oldMessages?.last()?.get 'date'
-
         AppDispatcher.dispatch
             type: ActionTypes.MESSAGE_FETCH_REQUEST
             value: {url, timestamp}
@@ -55,25 +52,22 @@ RouterActionCreator =
             # Save messagesLength per page
             # to get the correct pageAfter param
             # for getNext handles
-            {messages} = result
-            pageKey = _getPageKey()
-            pageAfter = _.last(messages)?.date
+            pageAfter = _.last(result.messages)?.date
 
             # Sometimes MessageList content
             # has more reslts than request has
-            if oldPageAfter? and oldPageAfter < pageAfter
-                pageAfter = oldPageAfter
-                messages = oldMessages
-                lastPage = RouterStore.getLastPage pageKey
+            oldLastPage = RouterStore.getLastPage()
+
+            if oldLastPage?.start? and oldLastPage.start < pageAfter
+                pageAfter = oldLastPage.start
+                lastPage = oldLastPage
 
             # Prepare next load
             _setNextURL {pageAfter}
 
-            messages ?= []
             lastPage ?= {
                 page: _getPage()
-                key: pageKey
-                start: _.last(messages)?.date
+                start: pageAfter
                 isComplete: _getNextURL() is undefined
             }
 
@@ -273,26 +267,20 @@ RouterActionCreator =
             value: {query, action}
 
 
-_getPageKey = ->
-    mailboxID = RouterStore.getMailboxID()
-    query = RouterStore.getQuery()
-    "#mailbox/#{mailboxID}#{query}"
-
-
 _getPage = ->
-    key = _getPageKey()
+    key = RouterStore.getURI()
     _pages[key] ?= -1
     _pages[key]
 
 
 _addPage = ->
-    key = _getPageKey()
+    key = RouterStore.getURI()
     _pages[key] ?= -1
     ++_pages[key]
 
 
 _getNextURI = ->
-    key = _getPageKey()
+    key = RouterStore.getURI()
     page = _getPage()
     "#{key}-#{page}"
 
@@ -304,7 +292,7 @@ _getNextURL = ->
 
 _getPreviousURI = ->
     if (page = _getPage()) > 0
-        key = _getPageKey()
+        key = RouterStore.getURI()
         "#{key}-#{--page}"
 
 
