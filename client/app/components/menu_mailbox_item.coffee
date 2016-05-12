@@ -64,28 +64,6 @@ module.exports = React.createClass
                     span className: 'refresh-error', onClick: displayError,
                         i className: 'fa fa-warning', null
 
-            if 'trashMailbox' is @props.icon?.type
-                button
-                    className:                'menu-subaction'
-                    'aria-describedby':       Tooltips.EXPUNGE_MAILBOX
-                    'data-tooltip-direction': 'right'
-                    onClick: @expungeMailbox
-
-                    span className: 'fa fa-recycle'
 
             if not @props.progress and @props.unread
                 span className: 'badge', @props.unread
-
-
-    expungeMailbox: (event) ->
-        event.preventDefault()
-        LayoutActionCreator.displayModal
-            title       : t 'app confirm delete'
-            subtitle    : t 'account confirm delbox'
-            closeLabel  : t 'app cancel'
-            actionLabel : t 'app confirm'
-            action      : =>
-                LayoutActionCreator.hideModal()
-                AccountActionCreator.mailboxExpunge
-                    accountID: @props.accountID
-                    mailboxID: @props.mailboxID
