@@ -1,7 +1,9 @@
 require '../styles/application.styl'
+require '../../vendor/aria-tips/aria-tips.css'
 
 React = require 'react'
 {div, section, main} = React.DOM
+AriaTips = require '../../vendor/aria-tips/aria-tips'
 
 # React components
 Menu            = React.createFactory require './menu'
@@ -18,9 +20,9 @@ RouterStore          = require '../stores/router_store'
 SettingsStore        = require '../stores/settings_store'
 RefreshesStore       = require '../stores/refreshes_store'
 StoreWatchMixin      = require '../mixins/store_watch_mixin'
-TooltipRefesherMixin = require '../mixins/tooltip_refresher_mixin'
 
 RouterGetter = require '../getters/router'
+LayoutGetter = require '../getters/layout'
 SelectionGetter = require '../getters/selection'
 
 {MessageActions, AccountActions} = require '../constants/app_constants'
@@ -38,12 +40,11 @@ module.exports = React.createClass
     displayName: 'Application'
 
     mixins: [
-        TooltipRefesherMixin
         StoreWatchMixin [SettingsStore, RefreshesStore, RouterStore]
     ]
 
     getStateFromStores: (props) ->
-        {previewSize} = RouterGetter.getLayoutSettings()
+        previewSize = LayoutGetter.getPreviewSize()
         className = "layout layout-column layout-preview-#{previewSize}"
 
         if (mailbox = RouterGetter.getCurrentMailbox())
@@ -65,6 +66,13 @@ module.exports = React.createClass
             modal           : RouterGetter.getModal()
             className       : className
         }
+
+
+    # AriaTips must bind the elements declared as tooltip to their
+    # respective tooltip when the component is mounted (DOM elements exist).
+    componentDidMount: ->
+        AriaTips.bind()
+
 
 
     render: ->

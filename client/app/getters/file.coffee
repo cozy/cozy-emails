@@ -57,3 +57,44 @@ module.exports =
 
                     when "gzip", "zip"
                         return 'archive'
+
+
+    dataURItoBlob: (dataURI) ->
+        if (dataURI.split(',')[0].indexOf('base64') >= 0)
+            byteString = atob(dataURI.split(',')[1])
+
+        else
+            byteString = window.unescape(dataURI.split(',')[1])
+
+        res =
+            mime: dataURI.split(',')[0].split(':')[1].split(';')[0],
+            blob: new Uint8Array(byteString.length)
+
+        for i in [0..byteString.length]
+            res.blob[i] = byteString.charCodeAt(i)
+
+        return res
+
+
+    fileToDataURI: (file, cb) ->
+        fileReader = new FileReader()
+        fileReader.readAsDataURL file
+
+        fileReader.onload = ->
+            cb fileReader.result
+
+
+    getFileURL: (file) ->
+        if file.rawFileObject and not file.url
+            return URL.createObjectURL file.rawFileObject
+        file.url
+
+
+    getFileSize: (file) ->
+        length = parseInt file?.length, 10
+        if length < 1024
+            "#{length} #{t 'length bytes'}"
+        else if length < 1024*1024
+            "#{0 | length / 1024} #{t 'length kbytes'}"
+        else
+            "#{0 | length / (1024*1024)} #{t 'length mbytes'}"

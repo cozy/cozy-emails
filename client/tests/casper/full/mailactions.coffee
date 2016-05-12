@@ -5,7 +5,6 @@ else
     require.globals.casper = casper
 init  = require(fs.workingDirectory + "/client/tests/casper/common").init
 utils = require "utils.js"
-ApiUtils = require '/client/app/utils/api_utils'
 x     = require('casper.js').selectXPath
 
 selectInConv = (account, folder, subject, messageID, cb) ->

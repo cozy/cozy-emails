@@ -2,8 +2,7 @@ React = require 'react'
 
 {li, span, i, a} = React.DOM
 
-ApiUtils        = require '../utils/api_utils'
-{getFileURL}    = require '../utils/file_utils'
+NotificationActionsCreator = require '../actions/notification_action_creator'
 
 FileGetter = require '../getters/file'
 
@@ -37,12 +36,12 @@ module.exports = FileItem = React.createClass
         }
 
     getInitialState: ->
-        return 'tmpFileURL': getFileURL @props.file
+        return 'tmpFileURL': FileGetter.getFileURL @props.file
 
     render: ->
         file = @props.file
         unless @state.tmpFileURL
-            ApiUtils.log(new Error "Wrong file #{JSON.stringify(file)}")
+            NotificationActionsCreator.alertError "Wrong file #{JSON.stringify(file)}"
             file.url = "message/#{@props.messageID}/attachments/#{file.generatedFileName}"
 
         iconClass = FileGetter.getAttachmentIcon file
@@ -63,7 +62,7 @@ module.exports = FileItem = React.createClass
                 a
                     'className' : 'fa fa-download'
                     'download'  : file.generatedFileName
-                    'href'      : getFileURL file
+                    'href'      : FileGetter.getFileURL file
                 if @props.editable
                     i className: "fa fa-times delete", onClick: @doDelete
 

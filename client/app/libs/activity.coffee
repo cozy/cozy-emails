@@ -1,4 +1,4 @@
-XHRUtils = require '../utils/xhr_utils'
+XHRUtils = require '../libs/xhr'
 
 ActivityUtils = (options) ->
 

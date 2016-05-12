@@ -2,15 +2,17 @@ _ = require 'lodash'
 
 AppDispatcher = require '../libs/flux/dispatcher/dispatcher'
 
-AccountStore = require '../stores/account_store'
 RouterStore = require '../stores/router_store'
 
-XHRUtils = require '../utils/xhr_utils'
+Notification = require '../libs/notification'
+
+XHRUtils = require '../libs/xhr'
 
 {ActionTypes, MessageActions, SearchActions} = require '../constants/app_constants'
 
 _pages = {}
 _nextURL = {}
+
 
 RouterActionCreator =
     # Refresh Emails from Server
@@ -46,7 +48,7 @@ RouterActionCreator =
             type: ActionTypes.MESSAGE_FETCH_REQUEST
             value: {url, timestamp}
 
-        XHRUtils.fetchMessagesByFolder url, (error,result) =>
+        XHRUtils.fetchMessagesByFolder url, (error, result) =>
             # Save messagesLength per page
             # to get the correct pageAfter param
             # for getNext handles
@@ -58,6 +60,12 @@ RouterActionCreator =
                     type: ActionTypes.MESSAGE_FETCH_FAILURE
                     value: {error, url, timestamp, hasNextPage}
             else
+                # Update Realtime
+                lastMessage = _.last result?.messages
+                mailboxID = lastMessage?.mailboxID
+                before = lastMessage?.date or timestamp
+                Notification.setServerScope {mailboxID, before}
+
                 AppDispatcher.dispatch
                     type: ActionTypes.MESSAGE_FETCH_SUCCESS
                     value: {result, url, timestamp, hasNextPage}
@@ -93,6 +101,35 @@ RouterActionCreator =
             value: {messageID, mailboxID, action}
 
 
+    gotoPreviousMessage: ->
+        message = RouterStore.gotoPreviousMessage()
+        messageID = message?.get 'id'
+        mailboxID = message?.get 'mailboxID'
+        @gotoMessage {messageID, mailboxID}
+
+
+    gotoNextMessage: ->
+        message = RouterStore.gotoNextMessage()
+        messageID = message?.get 'id'
+        mailboxID = message?.get 'mailboxID'
+        @gotoMessage {messageID, mailboxID}
+
+
+    gotoPreviousConversation: ->
+        message = RouterStore.getNextConversation()
+        messageID = message?.get 'id'
+        mailboxID = message?.get 'mailboxID'
+        @gotoMessage {messageID, mailboxID}
+
+
+    gotoNextConversation: ->
+        message = RouterStore.getNextConversation()
+        messageID = message?.get 'id'
+        mailboxID = message?.get 'mailboxID'
+        @gotoMessage {messageID, mailboxID}
+
+
+
     closeConversation: (params={}) ->
         {mailboxID} = params
         mailboxID ?= RouterStore.getMailboxID()
@@ -121,6 +158,13 @@ RouterActionCreator =
                     value: {error, conversationID, timestamp, page}
             else
                 result = {messages}
+
+                # Update Realtime
+                lastMessage = _.last messages
+                mailboxID = lastMessage?.mailboxID
+                before = lastMessage?.date or timestamp
+                Notification.setServerScope {mailboxID, before}
+
                 AppDispatcher.dispatch
                     type: ActionTypes.MESSAGE_FETCH_SUCCESS
                     value: {result, conversationID, timestamp, page}
@@ -150,8 +194,9 @@ RouterActionCreator =
     # - messageIDs or
     # - conversationIDs or
     # - conversationIDs
-    deleteMessage: (target) ->
+    deleteMessage: (target={}) ->
         timestamp = Date.now()
+        target.messageID ?= RouterStore.getMessageID()
         target.accountID ?= RouterStore.getAccountID()
 
         AppDispatcher.dispatch

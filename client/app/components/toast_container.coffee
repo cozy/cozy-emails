@@ -7,8 +7,8 @@ React      = require 'react'
 Animate             = React.createFactory require 'rc-animate'
 Toast               = React.createFactory require './toast'
 
-LayoutStore         = require '../stores/layout_store'
-NotificationStore   = require '../stores/notification_store'
+LayoutGetter        = require '../getters/layout'
+RouterGetter        = require '../getters/router'
 LayoutActionCreator = require '../actions/layout_action_creator'
 
 
@@ -29,8 +29,8 @@ module.exports = ToastContainer = React.createClass
 
     getStateFromStores: ->
         return {
-            toasts: NotificationStore.getToasts()
-            hidden: not LayoutStore.isShown()
+            toasts: RouterGetter.getToasts()
+            hidden: LayoutGetter.isToastHidden()
         }
 
 
@@ -46,12 +46,12 @@ module.exports = ToastContainer = React.createClass
             ["toast-#{id}", Toast {key: id, toast}]
         .toArray()
 
-        classes = classNames
-            'toasts-container': true
-            'action-hidden': @state.hidden
-            'has-toasts': toasts.size isnt 0
-
-        div className: classes,
+        div
+            className: classNames
+                'toasts-container': true
+                'has-toasts': toasts.size isnt 0
+            'aria-hidden': @state.hidden,
+            
             Animate transitionName: 'toast', toasts
 
 

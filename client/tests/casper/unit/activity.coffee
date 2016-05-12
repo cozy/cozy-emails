@@ -19,7 +19,7 @@ doActivity = (options, cb) ->
     if not Array.isArray(options)
         options = [ options ]
     casper.evaluate (options) ->
-        Activity = require 'utils/activity_utils'
+        Activity = require 'libs/activity'
         window.testActivity = []
         if not Array.isArray(options)
             options = [ options ]
@@ -59,7 +59,7 @@ casper.test.begin 'Test Activities', (test) ->
     casper.then ->
         test.comment "Search all contacts"
         casper.evaluate ->
-            Activity = require 'utils/activity_utils'
+            Activity = require 'libs/activity'
             options =
                 name: 'search'
                 data:
@@ -90,7 +90,7 @@ casper.test.begin 'Test Activities', (test) ->
     casper.then ->
         test.comment "Should return an error on wrong activity name"
         casper.evaluate ->
-            Activity = require 'utils/activity_utils'
+            Activity = require 'libs/activity'
             options =
                 name: 'cozy'
                 data:
@@ -110,7 +110,7 @@ casper.test.begin 'Test Activities', (test) ->
     casper.then ->
         test.comment "Should return an error on wrong activity type"
         casper.evaluate ->
-            Activity = require 'utils/activity_utils'
+            Activity = require 'libs/activity'
             options =
                 name: 'search'
                 data:
@@ -177,7 +177,7 @@ casper.test.begin 'Test Activities', (test) ->
             options = toDelete.map (e) -> getOptions 'delete', 'id', e
             doActivity options, (res) ->
                 casper.evaluate ->
-                    Activity = require 'utils/activity_utils'
+                    Activity = require 'libs/activity'
                     options =
                         name: 'search'
                         data:

@@ -4,31 +4,76 @@ Store = require '../libs/flux/store/store'
 
 {ActionTypes} = require '../constants/app_constants'
 
-AccountTranslator = require '../utils/translators/account_translator'
-
 
 class AccountStore extends Store
 
     ###
-        Initialization.
         Defines private variables here.
     ###
+    _accounts = Immutable.Iterable()
+
+    _sortMailbox = (mailbox) ->
+        last = {}
+        weight1 = 900
+        weight2 = 400
+
+        mailbox.depth = mailbox.tree.length - 1
+
+        # fake weight for sort
+        if mailbox.depth is 0
+            if 'inbox' is (label = mailbox.label.toLowerCase())
+                mailbox.weight = 1000
+
+            else if (mailbox.attribs.length > 0 or
+                    /draft/.test(label) or
+                    /sent/.test(label) or
+                    /trash/.test(label))
+                mailbox.weight = weight1
+                weight1 -= 5
+
+            else
+                mailbox.weight = weight2
+                weight2 -= 5
+
+            last[mailbox.depth] = mailbox.weight
+        else
+            mailbox.weight = last[mailbox.depth - 1] - 0.1
+            last[mailbox.depth] = mailbox.weight
+
+        mailbox
+
+
+    _toImmutable = (account) ->
+        # Creates Immutable OrderedMap of mailboxes
+        mailboxes = Immutable.Iterable account.mailboxes
+        .toKeyedSeq()
+        .mapKeys (_, mailbox) -> mailbox.id
+
+        # Sort mailboxes by depth
+        .map (mailbox) -> Immutable.Map _sortMailbox mailbox
+        .toOrderedMap()
+
+        delete account.totalUnread
+        account.mailboxes = mailboxes
+        return Immutable.Map account
+
 
     # Creates an OrderedMap of accounts
     # this map will contains the base information for an account
-    _accounts = Immutable.Iterable window.accounts
-        .toKeyedSeq()
+    _initialize = ->
+        _accounts = Immutable.Iterable window.accounts
+            .toKeyedSeq()
 
-        # sort first
-        .sort (mb1, mb2) -> mb1.label.localeCompare mb2.label
+            # sort first
+            .sort (mb1, mb2) -> mb1.label.localeCompare mb2.label
 
-        # sets account ID as index
-        .mapKeys (_, account) -> account.id
+            # sets account ID as index
+            .mapKeys (_, account) -> account.id
 
-        # makes account object an immutable Map
-        .map (account) -> AccountTranslator.toImmutable account
+            # makes account object an immutable Map
+            .map _toImmutable
 
-        .toOrderedMap()
+            .toOrderedMap()
 
 
     _getByMailbox = (mailboxID) ->
@@ -70,6 +115,13 @@ class AccountStore extends Store
         account = AccountTranslator.toImmutable rawAccount
         accountID = account.get 'id'
         _accounts = _accounts?.set accountID, account
+
+
+
+    ###
+        Initialize private variables here.
+    ###
+    _initialize()
 
 
     ###

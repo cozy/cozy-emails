@@ -8,9 +8,8 @@ MessageStore = require '../stores/message_store'
 {ActionTypes, MessageFilter, MessageFlags, MessageActions,
 AccountActions, SearchActions} = require '../constants/app_constants'
 
-{sortByDate} = require '../utils/misc'
 {MSGBYPAGE} = require '../../../server/utils/constants'
-{changeRealtimeScope} = require '../utils/realtime_utils'
+
 
 class RouterStore extends Store
 
@@ -174,6 +173,17 @@ class RouterStore extends Store
         return _currentFilter
 
 
+    _sortByDate = (order) ->
+        criteria = 'date'
+        order = if order is '+' then -1 else 1
+        return sortFunction = (message1, message2) ->
+            val1 = message1.get criteria
+            val2 = message2.get criteria
+            if val1 > val2 then return -1 * order
+            else if val1 < val2 then return 1 * order
+            else return 0
+
+
     _isSearchAction = ->
         _action is SearchActions.SHOW_ALL
 
@@ -335,7 +345,7 @@ class RouterStore extends Store
             inMailbox = mailboxID of message.get 'mailboxIDs'
 
             return inMailbox and not exist and hasSameFlag
-        .sort sortByDate sortOrder
+        .sort _sortByDate sortOrder
         .toOrderedMap()
 
         _messagesLength = messages.size
@@ -376,6 +386,24 @@ class RouterStore extends Store
         MessageStore.getConversationLength conversationID
 
 
+    gotoNextMessage: ->
+        messages = MessageStore.getAll()
+        keys = _.keys messages?.toObject()
+        values = messages?.toArray()
+
+        index = keys.indexOf @getMessageID()
+        values[--index]
+
+
+    gotoPreviousMessage: ->
+        messages = MessageStore.getAll()
+        keys = _.keys messages?.toObject()
+        values = messages?.toArray()
+
+        index = keys.indexOf @getMessageID()
+        values[++index]
+
+
     _clearError = ->
         _serverAccountErrorByField = Immutable.Map()
 
@@ -410,6 +438,7 @@ class RouterStore extends Store
         currentURL = _self.getCurrentURL isServer: false
         if location.hash isnt currentURL
             _router.navigate currentURL
+
 
 
     ###
@@ -518,18 +547,8 @@ class RouterStore extends Store
 
 
         handle ActionTypes.MESSAGE_FETCH_SUCCESS, (payload) ->
-            {result, timestamp, hasNextPage} = payload
-
-            if hasNextPage?
-                _hasNextPage = hasNextPage
-
-            # Update Realtime
-            mailboxID = @getMailboxID()
-            before = if result?.messages?.size
-            then result?.messages?.last()?.get('date')
-            else timestamp
-            changeRealtimeScope {mailboxID, before}
-
+            {hasNextPage} = payload
+            _hasNextPage = hasNextPage if hasNextPage?
             @emit 'change'
 
 

@@ -1,9 +1,10 @@
+
 AccountStore = require '../stores/account_store'
 MessageStore = require '../stores/message_store'
-LayoutStore = require '../stores/layout_store'
 SearchStore = require '../stores/search_store'
 RefreshesStore = require '../stores/refreshes_store'
 RouterStore = require '../stores/router_store'
+NotificationStore = require '../stores/notification_store'
 
 MessageGetter = require '../getters/message'
 
@@ -65,11 +66,6 @@ module.exports =
     getSearch: ->
         SearchStore.getCurrentSearch()
 
-
-    getLayoutSettings: ->
-        {
-            previewSize: LayoutStore.getPreviewSize()
-        }
 
     getProgress: (accountID) ->
         RefreshesStore.getRefreshing().get accountID
@@ -216,29 +212,5 @@ module.exports =
                 if attachementType is 'image' then 'preview' else 'binary'
 
 
-    # Display date as a readable string.
-    # Make it shorter if compact is set to true.
-    getCreatedAt: (message) ->
-        return unless (date = message?.get 'createdAt')?
-
-        today = moment()
-        date  = moment date
-
-        if date.isBefore today, 'year'
-            formatter = 'DD/MM/YYYY'
-        else if date.isBefore today, 'day'
-            formatter = 'MMM DD'
-        else
-            formatter = 'HH:mm'
-
-        return date.format formatter
-
-
-    getFileSize: (file) ->
-        length = parseInt file?.length, 10
-        if length < 1024
-            "#{length} #{t 'length bytes'}"
-        else if length < 1024*1024
-            "#{0 | length / 1024} #{t 'length kbytes'}"
-        else
-            "#{0 | length / (1024*1024)} #{t 'length mbytes'}"
+    getToasts: ->
+        NotificationStore.getToasts()

@@ -6,16 +6,13 @@ classNames = require 'classnames'
 
 {MessageFlags} = require '../constants/app_constants'
 
-colorhash = require '../utils/colorhash'
-toMarkdown = require 'to-markdown'
-
 RouterActionCreator = require '../actions/router_action_creator'
 LayoutActionCreator = require '../actions/layout_action_creator'
 
 {Icon}       = require('./basic_components').factories
 Participants = React.createFactory require './participants'
 
-RouterGetter = require '../getters/router'
+MessageGetter = require '../getters/message'
 ContactGetter = require '../getters/contact'
 SearchGetter = require '../getters/search'
 
@@ -23,7 +20,7 @@ module.exports = React.createClass
     displayName: 'MessagesItem'
 
     render: ->
-        date    = RouterGetter.getCreatedAt @props.message
+        date    = MessageGetter.getCreatedAt @props.message
         avatar  = ContactGetter.getAvatar @props.message
         flags   = @props.message.get 'flags'
 
@@ -31,7 +28,8 @@ module.exports = React.createClass
         subject = @highlightSearch text: @props.message.get 'subject'
 
         from  = @props.message.get('from')[0]
-        backgroundColor = colorhash "#{from?.name} <#{from?.address}>"
+        tag = "#{from?.name} <#{from?.address}>"
+        backgroundColor = ContactGetter.getTagColor tag
         name = if from?.name then from?.name[0] else from?.address[0]
 
         li

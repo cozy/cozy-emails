@@ -3,11 +3,11 @@ React     = require 'react'
 ReactDOM  = require 'react-dom'
 
 {section, header, ul, li, span, i, p, h3, a, button} = React.DOM
-DomUtils = require '../utils/dom_utils'
 
 Message = React.createFactory require './message'
 
 RouterGetter = require '../getters/router'
+LayoutGetter = require '../getters/layout'
 
 RouterActionCreator = require '../actions/router_action_creator'
 
@@ -81,6 +81,6 @@ module.exports = React.createClass
             return
 
         if (activeElement = scrollable.querySelector '[data-message-active="true"]')
-            unless DomUtils.isVisible activeElement
+            unless LayoutGetter.isVisible activeElement
                 coords = activeElement.getBoundingClientRect()
                 scrollable.scrollTop = coords.top

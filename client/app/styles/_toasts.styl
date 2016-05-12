@@ -96,7 +96,7 @@
             z-index 1
 
     .toast-actions
-        padding 0.5em 0 0 0 
+        padding 0.5em 0 0 0
 
     .toasts-actions
         display none
@@ -111,8 +111,8 @@
         opacity 0
         transition opacity 10s
 
-.toasts-container.action-hidden
-    top 100%
+.toasts-container[aria-hidden=true]
+    left -5000px
 
 .toasts-container.has-toasts
     .toasts-actions

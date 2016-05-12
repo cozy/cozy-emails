@@ -1,4 +1,3 @@
-_         = require 'underscore'
 Immutable = require 'immutable'
 
 Store = require '../libs/flux/store/store'
@@ -15,33 +14,45 @@ class NotificationStore extends Store
         Defines private variables here.
     ###
     _uniqID = 0
-
     _tasks = Immutable.OrderedMap()
 
+
+    ###
+        Public API
+    ###
     getToasts: ->
         return _tasks
 
-    alert: (message) ->
-        @notify message,
+
+    ###
+        Private API
+    ###
+
+    _alert = (message) ->
+        _notify message,
             level: AlertLevel.INFO
             autoclose: true
 
-    alertSuccess: (message) ->
-        @notify message,
+
+    _alertSuccess = (message) ->
+        _notify message,
             level: AlertLevel.SUCCESS
             autoclose: true
 
-    alertWarning: (message) ->
-        @notify message,
+
+    _alertWarning = (message) ->
+        _notify message,
             level: AlertLevel.WARNING
             autoclose: true
 
-    alertError: (message) ->
-        @notify message,
+
+    _alertError = (message) ->
+        _notify message,
             level: AlertLevel.ERROR
             autoclose: true
 
-    notify: (message, options) ->
+
+    _notify = (message, options) ->
         if not message? or message.toString().trim() is ''
             # Throw an error to get the stack trace in server logs
             throw new Error 'Empty notification'
@@ -60,9 +71,7 @@ class NotificationStore extends Store
 
             _showNotification task
 
-    ###
-        Private API
-    ###
+
     _removeNotification = (id) ->
         _tasks = _tasks.remove id
 
@@ -100,38 +109,39 @@ class NotificationStore extends Store
         label: t 'action undo'
         onClick: -> getMessageActionCreator().undo ref
 
+
     ###
         Defines here the action handlers.
     ###
     __bindHandlers: (handle) ->
 
         handle ActionTypes.SETTINGS_UPDATE_FAILURE, ({error}) ->
-            @alertError t('settings save error') + error
+            _alertError t('settings save error') + error
 
         handle ActionTypes.MAILBOX_CREATE_SUCCESS, ->
-            @alertSuccess t("mailbox create ok")
+            _alertSuccess t("mailbox create ok")
 
         handle ActionTypes.MAILBOX_CREATE_FAILURE, ->
             message = "#{t("mailbox create ko")} #{error.message or error}"
-            @alertError message
+            _alertError message
 
         handle ActionTypes.MAILBOX_UPDATE_SUCCESS, ->
-            @alertSuccess t("mailbox update ok")
+            _alertSuccess t("mailbox update ok")
 
         handle ActionTypes.MAILBOX_UPDATE_FAILURE, ->
             message = "#{t("mailbox update ko")} #{error.message or error}"
-            @alertError message
+            _alertError message
 
         handle ActionTypes.MAILBOX_EXPUNGE_SUCCESS, ->
-            @alert t("mailbox expunge ok"), autoclose: true
+            _alert t("mailbox expunge ok"), autoclose: true
 
         handle ActionTypes.MAILBOX_EXPUNGE_FAILURE, ({error, mailboxID, accountID}) ->
-            @alertError """
+            _alertError """
                 #{t("mailbox expunge ko")} #{error.message or error}
             """
 
         handle ActionTypes.REMOVE_ACCOUNT_SUCCESS, ->
-            @alertError t('account removed')
+            _alertError t('account removed')
 
         handle ActionTypes.CLEAR_TOASTS, ->
             _tasks = Immutable.OrderedMap()
@@ -147,7 +157,7 @@ class NotificationStore extends Store
                 msgKo = t "message action sent ko"
             else
                 msgKo = t "message action draft ko"
-            @alertError "#{msgKo} #{error}"
+            _alertError "#{msgKo} #{error}"
 
         handle ActionTypes.MESSAGE_TRASH_SUCCESS, ({target, ref, updated}) ->
             _showNotification
@@ -174,6 +184,7 @@ class NotificationStore extends Store
                 errors: [error]
                 autoclose: true
 
+
         # dont display a notification for MESSAGE_FLAG_SUCCESS
         handle ActionTypes.MESSAGE_FLAGS_FAILURE, ({target, error}) ->
             _showNotification
@@ -181,11 +192,13 @@ class NotificationStore extends Store
                 errors: [error]
                 autoclose: true
 
+
         handle ActionTypes.MESSAGE_FETCH_FAILURE, ({error}) ->
             _showNotification
                 message: 'message fetch failure'
                 errors: [error]
                 autoclose: true
+
 
         handle ActionTypes.ADD_ACCOUNT_FAILURE, ({error}) ->
             AppDispatcher.waitFor [AccountStore.dispatchToken]
@@ -267,6 +280,7 @@ class NotificationStore extends Store
             _showNotification
                 message: "#{t 'notif new title'} #{message}"
                 autoclose: true
+
 
 
 module.exports = new NotificationStore()
