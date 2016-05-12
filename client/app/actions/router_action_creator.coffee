@@ -52,13 +52,29 @@ RouterActionCreator =
             # Save messagesLength per page
             # to get the correct pageAfter param
             # for getNext handles
-            _setNextURL result
-            hasNextPage = _getNextURL()?
+            pageAfter = _.last(result.messages)?.date
+
+            # Sometimes MessageList content
+            # has more reslts than request has
+            oldLastPage = RouterStore.getLastPage()
+
+            if oldLastPage?.start? and oldLastPage.start < pageAfter
+                pageAfter = oldLastPage.start
+                lastPage = oldLastPage
+
+            # Prepare next load
+            _setNextURL {pageAfter}
+
+            lastPage ?= {
+                page: _getPage()
+                start: pageAfter
+                isComplete: _getNextURL() is undefined
+            }
 
             if error?
                 AppDispatcher.dispatch
                     type: ActionTypes.MESSAGE_FETCH_FAILURE
-                    value: {error, url, timestamp, hasNextPage}
+                    value: {error, url, timestamp, lastPage}
             else
                 # Update Realtime
                 lastMessage = _.last result?.messages
@@ -68,7 +84,7 @@ RouterActionCreator =
 
                 AppDispatcher.dispatch
                     type: ActionTypes.MESSAGE_FETCH_SUCCESS
-                    value: {result, url, timestamp, hasNextPage}
+                    value: {result, url, timestamp, lastPage}
 
                 # Fetch missing messages
                 isMissingMessages = not RouterStore.isPageComplete()
@@ -77,8 +93,8 @@ RouterActionCreator =
 
 
     gotoNextPage: ->
-        url = _getNextURL()
-        @gotoCurrentPage {url}
+        if (url = _getNextURL())?
+            @gotoCurrentPage {url}
 
 
     gotoCompose: (params={}) ->
@@ -144,18 +160,17 @@ RouterActionCreator =
 
 
     getConversation: (conversationID) ->
-        page = _getPage()
         timestamp = (new Date()).toISOString()
 
         AppDispatcher.dispatch
             type: ActionTypes.MESSAGE_FETCH_REQUEST
-            value: {conversationID, timestamp, page}
+            value: {conversationID, timestamp}
 
         XHRUtils.fetchConversation {conversationID}, (error, messages) =>
             if error?
                 AppDispatcher.dispatch
                     type: ActionTypes.MESSAGE_FETCH_FAILURE
-                    value: {error, conversationID, timestamp, page}
+                    value: {error, conversationID, timestamp}
             else
                 result = {messages}
 
@@ -167,7 +182,7 @@ RouterActionCreator =
 
                 AppDispatcher.dispatch
                     type: ActionTypes.MESSAGE_FETCH_SUCCESS
-                    value: {result, conversationID, timestamp, page}
+                    value: {result, conversationID, timestamp}
 
 
     mark: (target, action) ->
@@ -252,32 +267,20 @@ RouterActionCreator =
             value: {query, action}
 
 
-_getPageKey = ->
-    mailboxID = RouterStore.getMailboxID()
-    query = RouterStore.getQuery()
-    "#{mailboxID}#{query}"
-
-
 _getPage = ->
-    key = _getPageKey()
+    key = RouterStore.getURI()
     _pages[key] ?= -1
     _pages[key]
 
 
 _addPage = ->
-    key = _getPageKey()
+    key = RouterStore.getURI()
     _pages[key] ?= -1
     ++_pages[key]
 
 
-_getPreviousURI = ->
-    if (page = _getPage()) > 0
-        key = _getPageKey()
-        "#{key}-#{--page}"
-
-
 _getNextURI = ->
-    key = _getPageKey()
+    key = RouterStore.getURI()
     page = _getPage()
     "#{key}-#{page}"
 
@@ -287,21 +290,32 @@ _getNextURL = ->
     _nextURL[key]
 
 
+_getPreviousURI = ->
+    if (page = _getPage()) > 0
+        key = RouterStore.getURI()
+        "#{key}-#{--page}"
+
+
+_getPreviousURL = ->
+    if (key = _getPreviousURI())?
+        return _nextURL[key]
+
+
 # Get URL from last fetch result
 # not from the list that is not reliable
-_setNextURL = ({messages}) ->
+_setNextURL = ({pageAfter}) ->
     page = _addPage()
     key = _getNextURI()
 
     # Do not overwrite result
     # that has no reasons to changes
-    if _nextURL[key] is undefined
+    if _getNextURL() is undefined
         action = MessageActions.SHOW_ALL
-        filter = pageAfter: _.last(messages)?.date
+        filter = {pageAfter}
 
-        _previousURI = _getPreviousURI()
         value = RouterStore.getCurrentURL {filter, action}
-        if not _previousURI or _nextURL[_previousURI] isnt value
+        previousValue = _getPreviousURL()
+        if not previousValue? or previousValue isnt value
             _nextURL[key] = value
 
 
