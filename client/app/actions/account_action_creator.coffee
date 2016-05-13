@@ -1,5 +1,7 @@
 {ActionTypes, OAuthDomains} = require '../constants/app_constants'
 
+_ = require 'underscore'
+
 XHRUtils      = require '../libs/xhr'
 AppDispatcher = require '../libs/flux/dispatcher/dispatcher'
 
@@ -71,7 +73,9 @@ module.exports = AccountActionCreator =
             if error?
                 AppDispatcher.dispatch
                     type: ActionTypes.CHECK_ACCOUNT_FAILURE
-                    value: {error, oauth: domain in OAuthDomains}
+                    value:
+                        error: error
+                        oauth: domain if domain in _.keys OAuthDomains
 
             else
                 AccountActionCreator.create value: account

@@ -145,10 +145,9 @@ module.exports =
     SearchActions:
         'SHOW_ALL'      : 'search'
 
-    OAuthDomains: [
-        'gmail.com'
-        'googlemail.com'
-    ]
+    OAuthDomains:
+        'gmail.com':      'https://www.google.com/settings/security/lesssecureapps'
+        'googlemail.com': 'https://www.google.com/settings/security/lesssecureapps'
 
     ServersEncProtocols: [
         'ssl'

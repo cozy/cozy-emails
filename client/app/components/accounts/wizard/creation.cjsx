@@ -1,5 +1,7 @@
 {IMAP_OPTIONS} = require '../../../constants/defaults'
-{Requests, RequestStatus} = require '../../../constants/app_constants'
+{Requests
+RequestStatus
+OAuthDomains} = require '../../../constants/app_constants'
 
 _     = require 'underscore'
 React = require 'react'
@@ -121,7 +123,10 @@ module.exports = AccountWizardCreation = React.createClass
 
                 {<div className="alert">
                     <p>{t("account wizard alert #{@state.alert}")}</p>
-                    {<p>{t("account wizard alert oauth")}</p> if @state.OAuth}
+                    {<p>
+                        {t("account wizard alert oauth")}
+                        <a href={OAuthDomains[@state.OAuth]} target="_blank">{t("account wizard alert oauth link label")}</a>.
+                    </p> if @state.OAuth}
                 </div> if @state.alert}
 
                 <Servers expanded={not @state.isDiscoverable}
