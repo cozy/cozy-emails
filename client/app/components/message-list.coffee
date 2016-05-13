@@ -16,6 +16,17 @@ SelectionGetter = require '../getters/selection'
 LayoutGetter = require '../getters/layout'
 
 
+_scrollToActive = ->
+    return unless (el = @refs?['message-list-content'])?
+    activeElement = el.querySelector '[data-message-active="true"]'
+    if activeElement? and not LayoutGetter.isVisible activeElement
+        el.scrollTop = activeElement.offsetTop - activeElement.offsetHeight
+
+
+_loadMoreMessage = ->
+    RouterActionCreator.gotoNextPage()
+
+
 module.exports = React.createClass
     displayName: 'MessageList'
 
@@ -32,11 +43,11 @@ module.exports = React.createClass
 
 
     componentDidMount: ->
-        @_initScroll()
+        _scrollToActive.call @
 
 
     componentDidUpdate: ->
-        @_initScroll()
+        _scrollToActive.call @
 
 
     render: ->
@@ -68,8 +79,7 @@ module.exports = React.createClass
             else
                 div
                     className: 'main-content'
-                    key: 'scrollable',
-                    ref: 'scrollable',
+                    ref: 'message-list-content',
 
                     ul
                         className: 'list-unstyled',
@@ -78,7 +88,7 @@ module.exports = React.createClass
                     if @props.hasNextPage
                         button
                             className: 'more-messages'
-                            onClick: @loadMoreMessage,
+                            onClick: _loadMoreMessage,
                             ref: 'nextPage',
                             t 'list next page'
                     else
@@ -101,17 +111,3 @@ module.exports = React.createClass
             login               : RouterGetter.getLogin()
             mailboxID           : @props.mailboxID
             displayConversations: @props.displayConversations
-
-
-    loadMoreMessage: ->
-        RouterActionCreator.gotoNextPage()
-
-
-    _initScroll: ->
-        if not (scrollable = ReactDOM.findDOMNode @refs.scrollable) or scrollable.scrollTop
-            return
-
-        if (activeElement = scrollable.querySelector '[data-message-active="true"]')
-            unless LayoutGetter.isVisible activeElement
-                coords = activeElement.getBoundingClientRect()
-                scrollable.scrollTop = coords.top - coords.height

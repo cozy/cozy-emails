@@ -5,12 +5,21 @@
 */
 
 .conversation
-    padding 1.5em
+    position relative
+
+    & > section
+        position relative
+        z-index 0
+        padding 1.5em 1.5em 1em
+
 
     & > header
         display       flex
         align-items   flex-start
-        margin-bottom 1em
+
+        padding 1.5em 1.5em 1em
+        z-index 1
+        background-color white
 
         h3
             flex 1
