@@ -22,12 +22,15 @@ module.exports = BasicFormFieldset = React.createClass
 
     render: ->
         <fieldset aria-expanded={@state.expanded}>
-            {<legend onClick={@toggleExpand}>{@props.legend}</legend> if @props.legend}
+            {<legend onClick={@toggleExpand}
+                     onKeyDown={@toggleExpand}
+                     tabIndex="0">{@props.legend}</legend> if @props.legend}
             {@props.children}
         </fieldset>
 
 
-    toggleExpand: ->
+    toggleExpand: (event) ->
+        return if event.keyCode and event.keyCode not in [13, 32]
         @setState (state, props) ->
             expanded = if state?.expanded isnt null
                 !state.expanded
