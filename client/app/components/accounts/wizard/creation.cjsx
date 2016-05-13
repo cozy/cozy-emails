@@ -20,6 +20,7 @@ AccountMixin    = require '../../../mixins/account_mixin'
 ALERTS =
     'DISCOVER_FAILED': 'DISCOVER_FAILED'
     'CHECK_FAILED':    'CHECK_FAILED'
+    'CREATE_FAILED':   'CREATE_FAILED'
 
 
 module.exports = AccountWizardCreation = React.createClass
@@ -38,24 +39,24 @@ module.exports = AccountWizardCreation = React.createClass
         state       = {}
         discoverReq = RouterGetter.getRequestStatus Requests.DISCOVER_ACCOUNT
         checkReq    = RouterGetter.getRequestStatus Requests.CHECK_ACCOUNT
+        createReq   = RouterGetter.getRequestStatus Requests.ADD_ACCOUNT
 
-        isBusy = RequestStatus.INFLIGHT in [discoverReq.status, checkReq.status]
+        isBusy = RequestStatus.INFLIGHT in [
+            discoverReq.status
+            checkReq.status
+            createReq.status
+        ]
 
-        # autodiscover have returned a provider informations (an array of
-        # settings): extract settings from given provider for IMAP and SMTP and
-        # fill state
-        if discoverReq.status is RequestStatus.SUCCESS
+        # Account creation step
+        if createReq.status is RequestStatus.SUCCESS
             _.extend state,
-                isDiscoverable: true
-                @parseProviders discoverReq.res
+                success: true
 
-        # autodiscover failed : switch to manual config and set an alert
-        else if discoverReq.status is RequestStatus.ERROR
+        else if createReq.status is RequestStatus.ERROR
             _.extend state,
-                isDiscoverable: false
-                alert:          ALERTS.DISCOVER_FAILED
+                alert: ALERTS.CREATE_FAILED
 
-        # check account failed:
+        # Check account failed
         # - set error message
         # - if domain is one of known OAuth-aware domain, display reminder about
         # OAuth token
@@ -65,12 +66,32 @@ module.exports = AccountWizardCreation = React.createClass
                 alert: ALERTS.CHECK_FAILED
                 OAuth: oauth
 
-        # returns state whith its fallback default values.
-        # `isBusy` need discover to be explicitely set to `true` (request in
-        # flight)
+        # Autodiscover have returned a provider informations (an array of
+        # settings): extract settings from given provider for IMAP and SMTP
+        # and fill state
+        if discoverReq.status is RequestStatus.SUCCESS
+            _.extend state,
+                isDiscoverable: true
+                @parseProviders discoverReq.res
+
+        # autodiscover failed : switch to manual config and set an alert only if
+        # checkReq.status isn't already performed
+        else if discoverReq.status is RequestStatus.ERROR and
+        checkReq.status is null
+            _.extend state,
+                alert: ALERTS.DISCOVER_FAILED
+                isDiscoverable: false
+
+
+        # returns state with its fallback default values.
+        #
+        # `isDiscoverable` is true by default since no check has been performed
+        # (else, it means a previous config - discovered or manual - was
+        # submitted and discovering must be manually set by closing advanced
+        # settings panel)
         _.defaults state,
             isBusy:         isBusy
-            isDiscoverable: true
+            isDiscoverable: checkReq.status is null
             alert:          null
 
 
@@ -111,11 +132,14 @@ module.exports = AccountWizardCreation = React.createClass
 
                 <footer>
                     <nav>
-                        <button type="submit"
+                        {<button type="submit"
                                 onClick={@create}
                                 disabled={not @state.enableSubmit}>
                             {t('account wizard creation save')}
-                        </button>
+                        </button> unless @state.success}
+                        {<a href="#" className="alert success">
+                            {t('account wizard creation success')}
+                        </a> if @state.success}
                     </nav>
                 </footer>
             </Form>

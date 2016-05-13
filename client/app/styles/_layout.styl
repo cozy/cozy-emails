@@ -146,9 +146,13 @@ body
         nav
             display flex
 
+            button
+            .alert
+                flex   1
+                margin 0
+
         button
         [role=button]
-            flex             1
             padding          .55em .8em
             border           none
             background-color basecolor
@@ -165,6 +169,17 @@ body
             margin       2em 0
             border-color red
             color        red
+
+        .success
+            border-color green
+
+        a.success
+            color green
+
+            &:hover
+                text-decoration  none
+                background-color contrastcolor
+                color            white
 
         // Forms
         label

@@ -76,6 +76,7 @@ module.exports =
             'alert'
             'isBusy'
             'isDiscoverable'
+            'success'
             'enableSubmit'
             'imapSecurity'
             'smtpSecurity'

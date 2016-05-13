@@ -10,6 +10,7 @@ class RequestsInFlightStore extends Store
     _requests = new Immutable.Map
         "#{Requests.DISCOVER_ACCOUNT}": status: null, res: undefined
         "#{Requests.CHECK_ACCOUNT}":    status: null, res: undefined
+        "#{Requests.ADD_ACCOUNT}":      status: null, res: undefined
 
 
     getRequests: ->
@@ -51,6 +52,24 @@ class RequestsInFlightStore extends Store
         handle ActionTypes.CHECK_ACCOUNT_SUCCESS, ({account}) ->
             _requests = _requests.set Requests.CHECK_ACCOUNT,
                 status: RequestStatus.SUCCESS, res: account
+            @emit 'change'
+
+
+        handle ActionTypes.ADD_ACCOUNT_REQUEST, ->
+            _requests = _requests.set Requests.ADD_ACCOUNT,
+                status: RequestStatus.INFLIGHT, res: undefined
+            @emit 'change'
+
+
+        handle ActionTypes.ADD_ACCOUNT_FAILURE, ({error}) ->
+            _requests = _requests.set Requests.ADD_ACCOUNT,
+                status: RequestStatus.ERROR, res: {error}
+            @emit 'change'
+
+
+        handle ActionTypes.ADD_ACCOUNT_SUCCESS, (res) ->
+            _requests = _requests.set Requests.ADD_ACCOUNT,
+                status: RequestStatus.SUCCESS, res: res
             @emit 'change'
 
 

@@ -67,16 +67,17 @@ module.exports = AccountActionCreator =
             type: ActionTypes.CHECK_ACCOUNT_REQUEST
             value: {account}
 
-        XHRUtils.checkAccount account, (error, account) ->
+        XHRUtils.checkAccount account, (error, res) ->
             if error?
                 AppDispatcher.dispatch
                     type: ActionTypes.CHECK_ACCOUNT_FAILURE
                     value: {error, oauth: domain in OAuthDomains}
 
             else
+                AccountActionCreator.create value: account
                 AppDispatcher.dispatch
                     type: ActionTypes.CHECK_ACCOUNT_SUCCESS
-                    value: {account}
+                    value: {res}
 
     remove: (accountID) ->
         AppDispatcher.dispatch

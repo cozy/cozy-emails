@@ -200,22 +200,19 @@ class NotificationStore extends Store
                 autoclose: true
 
 
-        handle ActionTypes.ADD_ACCOUNT_FAILURE, ({error}) ->
-            AppDispatcher.waitFor [AccountStore.dispatchToken]
-            _showNotification
-               message: RouterStore.getAlertErrorMessage()
-               errors: RouterStore.getRawErrors()
-               autoclose: true
+        # handle ActionTypes.ADD_ACCOUNT_FAILURE, ({error}) ->
+        #     AppDispatcher.waitFor [AccountStore.dispatchToken]
+        #     _showNotification
+        #        message: RouterStore.getAlertErrorMessage()
+        #        errors: RouterStore.getRawErrors()
+        #        autoclose: true
 
-        handle ActionTypes.ADD_ACCOUNT_SUCCESS, ({areMailboxesConfigured}) ->
-            if areMailboxesConfigured
-                key = "account creation ok"
-            else
-                key = "account creation ok configuration needed"
+        # handle ActionTypes.ADD_ACCOUNT_SUCCESS, ({areMailboxesConfigured}) ->
+        #     if areMailboxesConfigured
+        #         key = "account creation ok"
+        #     else
+        #         key = "account creation ok configuration needed"
 
-            _showNotification
-                message: t key
-                autoclose: true
 
         handle ActionTypes.EDIT_ACCOUNT_FAILURE, ({error}) ->
             AppDispatcher.waitFor [AccountStore.dispatchToken]

@@ -113,6 +113,7 @@ module.exports =
     Requests:
         'DISCOVER_ACCOUNT': 'DISCOVER_ACCOUNT'
         'CHECK_ACCOUNT':    'CHECK_ACCOUNT'
+        'ADD_ACCOUNT':      'ADD_ACCOUNT'
 
 
     RequestStatus:

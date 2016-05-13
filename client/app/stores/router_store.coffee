@@ -5,8 +5,12 @@ Store = require '../libs/flux/store/store'
 AccountStore = require '../stores/account_store'
 MessageStore = require '../stores/message_store'
 
-{ActionTypes, MessageFilter, MessageFlags, MessageActions,
-AccountActions, SearchActions} = require '../constants/app_constants'
+{AccountActions
+ActionTypes
+MessageActions
+MessageFilter
+MessageFlags
+SearchActions} = require '../constants/app_constants'
 
 {MSGBYPAGE} = require '../../../server/utils/constants'
 
@@ -464,6 +468,11 @@ class RouterStore extends Store
         _URI = "#{mailboxID}#{query}"
 
 
+    _gotoAccountMailbox = (account) ->
+        _newAccountWaiting = false
+        _checkForNoMailbox account
+        _action = MessageActions.SHOW_ALL
+
 
     ###
         Defines here the action handlers.
@@ -525,13 +534,11 @@ class RouterStore extends Store
             @emit 'change'
 
 
-        handle ActionTypes.ADD_ACCOUNT_SUCCESS, ({account, areMailboxesConfigured}) ->
-            _newAccountWaiting = false
-            _checkForNoMailbox account
-            _action = if areMailboxesConfigured
-            then MessageActions.SHOW_ALL
-            else AccountActions.EDIT
-            @emit 'change'
+        handle ActionTypes.ADD_ACCOUNT_SUCCESS, ({account}) ->
+            setTimeout =>
+                _gotoAccountMailbox account
+                @emit 'change'
+            , 5000
 
 
         handle ActionTypes.ADD_ACCOUNT_FAILURE, ({error}) ->

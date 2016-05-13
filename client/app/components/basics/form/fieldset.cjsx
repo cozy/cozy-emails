@@ -17,11 +17,11 @@ module.exports = BasicFormFieldset = React.createClass
 
     componentWillReceiveProps: (nextProps) ->
         # update internal state w/ passed props
-        @setState expanded: nextProps.expanded if @state?.expanded is null
+        @setState expanded: nextProps.expanded
 
 
     render: ->
-        <fieldset aria-expanded={@state?.expanded or @props.expanded}>
+        <fieldset aria-expanded={@state.expanded}>
             {<legend onClick={@toggleExpand}>{@props.legend}</legend> if @props.legend}
             {@props.children}
         </fieldset>
