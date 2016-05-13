@@ -39,7 +39,8 @@ module.exports = React.createClass
     render: ->
         article
             ref: "message-#{@props.messageID}-container"
-            key: "message-#{@props.messageID}-container",
+            key: "message-#{@props.messageID}-container"
+            'data-message-active': @props.isActive,
             className: classNames
                 message: true
                 active: @props.isActive

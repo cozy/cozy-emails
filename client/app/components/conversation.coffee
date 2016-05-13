@@ -11,27 +11,48 @@ LayoutGetter = require '../getters/layout'
 
 RouterActionCreator = require '../actions/router_action_creator'
 
+
+_getFullConversation = ->
+    {conversationID, conversation} = @props
+    length = RouterGetter.getConversationLength {conversationID}
+    if length and length isnt conversation?.length
+        setTimeout ->
+            RouterActionCreator.getConversation conversationID
+        , 0
+
+
+_scrollToActive = ->
+    el = ReactDOM.findDOMNode @
+    activeElement = el.querySelector '[data-message-active="true"]'
+    if activeElement? and not LayoutGetter.isVisible activeElement
+        minHeight = @refs?['conversation-header'].scrollHeight
+        el.scrollTop = activeElement.offsetTop - minHeight
+
+
+_freezeHeader = ->
+    headerEl = @refs?['conversation-header']
+    contentEl = @refs?['conversation-content']
+    isFixed = -1 < headerEl?.className.indexOf 'affix'
+    if headerEl? and contentEl? and not isFixed
+        contentEl.style.paddingTop = headerEl.scrollHeight
+        headerEl.style.width = contentEl.offsetWidth
+        headerEl.classList.add 'affix'
+
+
 module.exports = React.createClass
     displayName: 'Conversation'
 
 
     componentDidMount: ->
-        @_initScroll()
-        @_getFullConversation()
+        _getFullConversation.call @
+        _freezeHeader.call @
+        _scrollToActive.call @
 
 
     componentDidUpdate: ->
-        @_initScroll()
-        @_getFullConversation()
-
-
-    _getFullConversation: ->
-        {conversationID} = @props
-        length = RouterGetter.getConversationLength {conversationID}
-        if length and length isnt @props.conversation.length
-            setTimeout ->
-                RouterActionCreator.getConversation conversationID
-            , 0
+        _getFullConversation.call @
+        _freezeHeader.call @
+        _scrollToActive.call @
 
 
     renderMessage: (message) ->
@@ -53,12 +74,11 @@ module.exports = React.createClass
                 p null, t "app loading"
 
         section
-            ref: "conversation-container"
-            key: "conversation-#{@props.messageID}-container"
             className: 'conversation panel'
             'aria-expanded': true,
 
-            header null,
+            header ref: "conversation-header",
+
                 h3 className: 'conversation-title',
                     @props.subject
 
@@ -68,19 +88,9 @@ module.exports = React.createClass
 
             section
                 key: "conversation-#{@props.messageID}-content"
-                ref: 'scrollable',
+                ref: 'conversation-content',
                     @props.conversation.map @renderMessage
 
 
     closeConversation: ->
         RouterActionCreator.closeConversation()
-
-
-    _initScroll: ->
-        if not (scrollable = ReactDOM.findDOMNode @refs.scrollable) or scrollable.scrollTop
-            return
-
-        if (activeElement = scrollable.querySelector '[data-message-active="true"]')
-            unless LayoutGetter.isVisible activeElement
-                coords = activeElement.getBoundingClientRect()
-                scrollable.scrollTop = coords.top
