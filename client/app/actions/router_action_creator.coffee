@@ -57,19 +57,19 @@ RouterActionCreator =
             # Sometimes MessageList content
             # has more reslts than request has
             oldLastPage = RouterStore.getLastPage()
-
             if oldLastPage?.start? and oldLastPage.start < pageAfter
                 pageAfter = oldLastPage.start
                 lastPage = oldLastPage
 
-            # Prepare next load
-            _setNextURL {pageAfter}
+            unless lastPage?
+                # Prepare next load
+                _setNextURL {pageAfter}
 
-            lastPage ?= {
-                page: _getPage()
-                start: pageAfter
-                isComplete: _getNextURL() is undefined
-            }
+                lastPage = {
+                    page: _getPage()
+                    start: pageAfter
+                    isComplete: _getNextURL() is undefined
+                }
 
             if error?
                 AppDispatcher.dispatch
@@ -304,7 +304,7 @@ _getPreviousURL = ->
 # Get URL from last fetch result
 # not from the list that is not reliable
 _setNextURL = ({pageAfter}) ->
-    page = _addPage()
+    _addPage()
     key = _getNextURI()
 
     # Do not overwrite result
