@@ -100,15 +100,15 @@ class RouterStore extends Store
         action = _getRouteAction params
         filter = _getURIQueryParams params
 
-        isMessage = !!params.messageID or _.contains action, 'message'
+        isMessage = !!params.messageID or _.includes action, 'message'
         if isMessage and not params.mailboxID
             params.mailboxID = @getMailboxID()
 
-        isMailbox = _.contains action, 'mailbox'
+        isMailbox = _.includes action, 'mailbox'
         if isMailbox and not params.mailboxID
             params.mailboxID = @getMailboxID()
 
-        isAccount = _.contains action, 'account'
+        isAccount = _.includes action, 'account'
         if isAccount and not params.accountID
             params.accountID = @getAccountID()
         if isAccount and not params.tab
