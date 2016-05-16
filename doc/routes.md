@@ -101,3 +101,13 @@ If you want to update `Stores` from `Components`you will have to dispatch a `Sto
 ```
 
 Then the `MessageComponent` will be closed; no need to know more contextual data to prevent what will be happening next. `RouterStore` knows everything and prevent you to know this.
+
+### Need a real link to handle `ctrl + click`
+
+If you really want to generate a link, you can also use:
+```
+    MenuComponent
+        mailboxURL: RouterGetter.getURL {mailboxID, isServer: false}
+```
+
+But keep in mind that previous method is safer/faster.
