@@ -6,14 +6,15 @@ React = require 'react'
 AriaTips = require '../../vendor/aria-tips/aria-tips'
 
 # React components
-Menu            = React.createFactory require './menu'
-Modal           = React.createFactory require './modal'
-ToastContainer  = React.createFactory require './toast_container'
-Tooltips        = React.createFactory require './tooltips-manager'
-MessageList     = React.createFactory require './message-list'
-Conversation    = React.createFactory require './conversation'
-AccountConfig   = React.createFactory require './account_config'
-Compose         = React.createFactory require './compose'
+Menu                  = React.createFactory require './menu'
+Modal                 = React.createFactory require './modal'
+ToastContainer        = React.createFactory require './toast_container'
+Tooltips              = React.createFactory require './tooltips-manager'
+MessageList           = React.createFactory require './message-list'
+Conversation          = React.createFactory require './conversation'
+AccountConfig         = React.createFactory require './account_config'
+Compose               = React.createFactory require './compose'
+AccountWizardCreation = React.createFactory require './accounts/wizard/creation'
 
 # React Mixins
 RouterStore          = require '../stores/router_store'
@@ -105,26 +106,9 @@ module.exports = React.createClass
                 main
                     className: @props.layout
 
-                    if isAccount
-                        accountID = @state.accountID or 'new'
-                        tab = RouterGetter.getSelectedTab()
-                        key = "account-config-#{accountID}-#{tab}"
-                        AccountConfig {key, accountID, tab}
-
-                    else if @state.isEditable
-                        Compose
-                            ref                  : "compose-#{@state.action}-#{@state.messageID}"
-                            key                  : "compose-#{@state.action}-#{@state.messageID}"
-                            id                   : @state.messageID
-                            action               : @state.action
-                            message              : message
-                            inReplyTo            : RouterGetter.getReplyMessage @state.messageID
-                            settings             : SettingsStore.get()
-                            account              : RouterGetter.getAccount()
-
-                    else
-                        div
-                            className: 'panels'
+                    div
+                        className: 'panels'
+                        if RouterGetter.getAccounts().size
                             MessageList
                                 ref             : "messageList"
                                 key             : "messageList-#{@state.mailboxID}"
@@ -139,18 +123,22 @@ module.exports = React.createClass
                                 isMailbox       : @state.isMailbox
                                 isLoading       : @state.isLoading
 
-                            if @state.isMailbox and @state.messageID
-                                Conversation
-                                    ref             : "conversation"
-                                    key             : "conversation-#{@state.messageID}"
-                                    messageID       : @state.messageID
-                                    conversationID  : message?.get 'conversationID'
-                                    subject         : message?.get 'subject'
-                                    conversation    : @state.conversation
-                            else
-                                section
-                                    'key'          : 'placeholder'
-                                    'aria-expanded': false
+                        if @state.isMailbox and @state.messageID
+                            Conversation
+                                ref             : "conversation"
+                                key             : "conversation-#{@state.messageID}"
+                                messageID       : @state.messageID
+                                conversationID  : message?.get 'conversationID'
+                                subject         : message?.get 'subject'
+                                conversation    : @state.conversation
+                        else
+                            section
+                                'key'          : 'placeholder'
+                                'aria-expanded': false
+
+            if @state.action is AccountActions.CREATE
+                div role: 'complementary',
+                    AccountWizardCreation()
 
             # Display feedback
             Modal @state.modal if @state.modal?

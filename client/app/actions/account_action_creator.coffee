@@ -1,8 +1,15 @@
-XHRUtils = require '../libs/xhr'
+{ActionTypes, OAuthDomains} = require '../constants/app_constants'
+
+_ = require 'underscore'
+
+XHRUtils      = require '../libs/xhr'
 AppDispatcher = require '../libs/flux/dispatcher/dispatcher'
-{ActionTypes} = require '../constants/app_constants'
 
 AccountStore = require '../stores/account_store'
+RouterStore  = require '../stores/router_store'
+
+AccountMixin = require '../mixins/account_mixin'
+
 
 module.exports = AccountActionCreator =
 
@@ -50,27 +57,31 @@ module.exports = AccountActionCreator =
                     type: ActionTypes.EDIT_ACCOUNT_SUCCESS
                     value: {rawAccount}
 
-    check: ({value, accountID}) ->
-        if accountID?
-            account = AccountStore.getByID accountID
-            newAccount = account.mergeDeep(value).toJS()
-        else
-            newAccount = value
+    check: ({value: account, accountID}) ->
+        if accountID
+            account = AccountStore.getByID(accountID).mergeDeep(account).toJS()
+
+        # Extract domain from login field, to compare w/ know OAuth-aware
+        # domains
+        [..., domain] = account.login.split '@'
 
         AppDispatcher.dispatch
             type: ActionTypes.CHECK_ACCOUNT_REQUEST
-            value: {value, newAccount}
+            value: {account}
 
-        XHRUtils.checkAccount newAccount, (error, rawAccount) ->
+        XHRUtils.checkAccount account, (error, res) ->
             if error?
                 AppDispatcher.dispatch
                     type: ActionTypes.CHECK_ACCOUNT_FAILURE
-                    value: {error}
+                    value:
+                        error: error
+                        oauth: domain if domain in _.keys OAuthDomains
 
             else
+                AccountActionCreator.create value: account
                 AppDispatcher.dispatch
                     type: ActionTypes.CHECK_ACCOUNT_SUCCESS
-                    value: {rawAccount}
+                    value: {res}
 
     remove: (accountID) ->
         AppDispatcher.dispatch
@@ -86,18 +97,30 @@ module.exports = AccountActionCreator =
                     type: ActionTypes.REMOVE_ACCOUNT_SUCCESS
                     value: accountID
 
-    discover: (domain) ->
+    discover: (domain, config) ->
         AppDispatcher.dispatch
-            type: ActionTypes.DISCOVER_REQUEST
+            type: ActionTypes.DISCOVER_ACCOUNT_REQUEST
             value: {domain}
+
         XHRUtils.accountDiscover domain, (error, provider) ->
             if error
                 AppDispatcher.dispatch
-                    type: ActionTypes.DISCOVER_FAILURE
+                    type: ActionTypes.DISCOVER_ACCOUNT_FAILURE
                     value: {error, domain}
+
+            # When discovering success, trigger the check auth action directly.
+            # First, extend the minimal config (from view component) w/
+            # providers from discovery and sanitize this new config (using the
+            # same methods the view component uses by exploiting same mixins).
+            # Also, dispatch a success event for the discovery action.
             else
+                servers = AccountMixin.parseProviders provider
+                config  = AccountMixin.sanitizeConfig _.extend config, servers
+
+                AccountActionCreator.check value: config
+
                 AppDispatcher.dispatch
-                    type: ActionTypes.DISCOVER_SUCCESS
+                    type: ActionTypes.DISCOVER_ACCOUNT_SUCCESS
                     value: {domain, provider}
 
     saveEditTab: (tab) ->

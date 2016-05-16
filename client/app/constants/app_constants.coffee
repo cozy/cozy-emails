@@ -2,24 +2,24 @@ module.exports =
 
     ActionTypes:
         # Account
-        'CHECK_ACCOUNT_REQUEST'     : 'CHECK_ACCOUNT_REQUEST'
-        'CHECK_ACCOUNT_SUCCESS'     : 'CHECK_ACCOUNT_SUCCESS'
-        'CHECK_ACCOUNT_FAILURE'     : 'CHECK_ACCOUNT_FAILURE'
-        'ADD_ACCOUNT_REQUEST'       : 'ADD_ACCOUNT_REQUEST'
-        'ADD_ACCOUNT_SUCCESS'       : 'ADD_ACCOUNT_SUCCESS'
-        'ADD_ACCOUNT_FAILURE'       : 'ADD_ACCOUNT_FAILURE'
-        'REMOVE_ACCOUNT_REQUEST'    : 'REMOVE_ACCOUNT_REQUEST'
-        'REMOVE_ACCOUNT_SUCCESS'    : 'REMOVE_ACCOUNT_SUCCESS'
-        'REMOVE_ACCOUNT_FAILURE'    : 'REMOVE_ACCOUNT_FAILURE'
-        'EDIT_ACCOUNT_REQUEST'      : 'EDIT_ACCOUNT_REQUEST'
-        'EDIT_ACCOUNT_SUCCESS'      : 'EDIT_ACCOUNT_SUCCESS'
-        'EDIT_ACCOUNT_FAILURE'      : 'EDIT_ACCOUNT_FAILURE'
-        'EDIT_ACCOUNT_TAB'          : 'EDIT_ACCOUNT_TAB'
-        'SELECT_ACCOUNT'            : 'SELECT_ACCOUNT'
-        'NEW_ACCOUNT_SETTING'       : 'NEW_ACCOUNT_SETTING'
-        'DISCOVER_REQUEST'          : 'DISCOVER_REQUEST'
-        'DISCOVER_SUCCESS'          : 'DISCOVER_SUCCESS'
-        'DISCOVER_FAILURE'          : 'DISCOVER_FAILURE'
+        'DISCOVER_ACCOUNT_REQUEST': 'DISCOVER_ACCOUNT_REQUEST'
+        'DISCOVER_ACCOUNT_SUCCESS': 'DISCOVER_ACCOUNT_SUCCESS'
+        'DISCOVER_ACCOUNT_FAILURE': 'DISCOVER_ACCOUNT_FAILURE'
+        'CHECK_ACCOUNT_REQUEST':    'CHECK_ACCOUNT_REQUEST'
+        'CHECK_ACCOUNT_SUCCESS':    'CHECK_ACCOUNT_SUCCESS'
+        'CHECK_ACCOUNT_FAILURE':    'CHECK_ACCOUNT_FAILURE'
+        'ADD_ACCOUNT_REQUEST':      'ADD_ACCOUNT_REQUEST'
+        'ADD_ACCOUNT_SUCCESS':      'ADD_ACCOUNT_SUCCESS'
+        'ADD_ACCOUNT_FAILURE':      'ADD_ACCOUNT_FAILURE'
+        'REMOVE_ACCOUNT_REQUEST':   'REMOVE_ACCOUNT_REQUEST'
+        'REMOVE_ACCOUNT_SUCCESS':   'REMOVE_ACCOUNT_SUCCESS'
+        'REMOVE_ACCOUNT_FAILURE':   'REMOVE_ACCOUNT_FAILURE'
+        'EDIT_ACCOUNT_REQUEST':     'EDIT_ACCOUNT_REQUEST'
+        'EDIT_ACCOUNT_SUCCESS':     'EDIT_ACCOUNT_SUCCESS'
+        'EDIT_ACCOUNT_FAILURE':     'EDIT_ACCOUNT_FAILURE'
+        'EDIT_ACCOUNT_TAB':         'EDIT_ACCOUNT_TAB'
+        'SELECT_ACCOUNT':           'SELECT_ACCOUNT'
+        'NEW_ACCOUNT_SETTING':      'NEW_ACCOUNT_SETTING'
 
         # Mailbox
         # 'MAILBOX_ADD'               : 'MAILBOX_ADD'
@@ -110,6 +110,18 @@ module.exports =
         'TOASTS_HIDE'               : 'TOASTS_HIDE'
 
 
+    Requests:
+        'DISCOVER_ACCOUNT': 'DISCOVER_ACCOUNT'
+        'CHECK_ACCOUNT':    'CHECK_ACCOUNT'
+        'ADD_ACCOUNT':      'ADD_ACCOUNT'
+
+
+    RequestStatus:
+        'SUCCESS':  'SUCCESS'
+        'ERROR':    'ERROR'
+        'INFLIGHT': 'INFLIGHT'
+
+
     PayloadSources:
         'VIEW_ACTION'   : 'VIEW_ACTION'
         'SERVER_ACTION' : 'SERVER_ACTION'
@@ -132,6 +144,15 @@ module.exports =
 
     SearchActions:
         'SHOW_ALL'      : 'search'
+
+    OAuthDomains:
+        'gmail.com':      'https://www.google.com/settings/security/lesssecureapps'
+        'googlemail.com': 'https://www.google.com/settings/security/lesssecureapps'
+
+    ServersEncProtocols: [
+        'ssl'
+        'starttls'
+    ]
 
     AlertLevel:
         'SUCCESS'      : 'SUCCESS'
