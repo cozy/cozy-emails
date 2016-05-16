@@ -4,6 +4,7 @@
     "classnames": "2.2.3",
     "immutable": "3.7.6",
     "jquery": "2.2.1",
+    "lodash": "^4.12.0",
     "markdown": "0.5.0",
     "moment": "2.11.2",
     "node-event-emitter": "0.0.1",
