@@ -145,10 +145,22 @@ RouterActionCreator =
         @gotoMessage {messageID, mailboxID}
 
 
-
     closeConversation: (params={}) ->
         {mailboxID} = params
         mailboxID ?= RouterStore.getMailboxID()
+        action = MessageActions.SHOW_ALL
+        AppDispatcher.dispatch
+            type: ActionTypes.ROUTE_CHANGE
+            value: {mailboxID, action}
+
+
+    closeModal: ->
+        return unless (mailboxID = RouterStore.getMailboxID())?
+
+        # Load last messages
+        @refreshMailbox {mailboxID}
+
+        # Display defaultMailbox
         action = MessageActions.SHOW_ALL
         AppDispatcher.dispatch
             type: ActionTypes.ROUTE_CHANGE
