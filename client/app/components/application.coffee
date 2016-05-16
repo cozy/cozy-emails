@@ -137,8 +137,8 @@ module.exports = React.createClass
                                 'aria-expanded': false
 
             if @state.action is AccountActions.CREATE
-                div role: 'complementary',
-                    AccountWizardCreation()
+                AccountWizardCreation
+                    hasDefaultAccount: RouterGetter.getAccountID()?
 
             # Display feedback
             Modal @state.modal if @state.modal?

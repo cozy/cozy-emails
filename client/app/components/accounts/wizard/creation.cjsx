@@ -3,8 +3,9 @@
 RequestStatus
 OAuthDomains} = require '../../../constants/app_constants'
 
-_     = require 'underscore'
-React = require 'react'
+_           = require 'underscore'
+React       = require 'react'
+ReactDOM    = require 'react-dom'
 
 Form    = require '../../basics/form'
 Servers = require '../servers'
@@ -14,6 +15,7 @@ RequestsInFlightStore = require '../../../stores/requests_in_flight_store'
 RouterGetter = require '../../../getters/router'
 
 AccountActionCreator = require '../../../actions/account_action_creator'
+RouterActionCreator = require '../../../actions/router_action_creator'
 
 StoreWatchMixin = require '../../../mixins/store_watch_mixin'
 AccountMixin    = require '../../../mixins/account_mixin'
@@ -106,49 +108,57 @@ module.exports = AccountWizardCreation = React.createClass
 
 
     render: ->
-        <section className='settings'>
-            <h1>{t('account wizard creation')}</h1>
+        <div role='complementary' onClick={@close}>
+            <section className='settings'>
+                <h1>{t('account wizard creation')}</h1>
 
-            <Form ns="account-wizard-creation" className="content">
-                <Form.Input type="text"
-                            name="login"
-                            label={t('account wizard creation login label')}
-                            value={@state.login}
-                            onChange={_.partial @updateState, 'login'} />
-                <Form.Input type="password"
-                            name="password"
-                            label={t('account wizard creation password label')}
-                            value={@state.password}
-                            onChange={_.partial @updateState, 'password'} />
+                <Form ns="account-wizard-creation"
+                        className="content"
+                        onClick={@create}>
 
-                {<div className="alert">
-                    <p>{t("account wizard alert #{@state.alert}")}</p>
-                    {<p>
-                        {t("account wizard alert oauth")}
-                        <a href={OAuthDomains[@state.OAuth]} target="_blank">{t("account wizard alert oauth link label")}</a>.
-                    </p> if @state.OAuth}
-                </div> if @state.alert}
+                    <Form.Input type="text"
+                                name="login"
+                                label={t('account wizard creation login label')}
+                                value={@state.login}
+                                onChange={_.partial @updateState, 'login'} />
+                    <Form.Input type="password"
+                                name="password"
+                                label={t('account wizard creation password label')}
+                                value={@state.password}
+                                onChange={_.partial @updateState, 'password'} />
 
-                <Servers expanded={not @state.isDiscoverable}
-                         legend={t('account wizard creation advanced parameters')}
-                         onExpand={@onExpand}
-                         onChange={@updateState}
-                         {..._.omit @state, 'isOAuth', 'isDiscoverable', 'isBusy'} />
+                    {<div className="alert">
+                        <p>{t("account wizard alert #{@state.alert}")}</p>
+                        {<p>
+                            {t("account wizard alert oauth")}
+                            <a href={OAuthDomains[@state.OAuth]} target="_blank">{t("account wizard alert oauth link label")}</a>.
+                        </p> if @state.OAuth}
+                    </div> if @state.alert}
 
-                <footer>
-                    <nav>
-                        {<button type="submit"
-                                onClick={@create}
-                                disabled={not @state.enableSubmit}>
-                            {t('account wizard creation save')}
-                        </button> unless @state.success}
-                        {<a href="#" className="alert success">
-                            {t('account wizard creation success')}
-                        </a> if @state.success}
-                    </nav>
-                </footer>
-            </Form>
-        </section>
+                    <Servers expanded={not @state.isDiscoverable}
+                             legend={t('account wizard creation advanced parameters')}
+                             onExpand={@onExpand}
+                             onChange={@updateState}
+                             {..._.omit @state, 'isOAuth', 'isDiscoverable', 'isBusy'} />
+
+                    <footer>
+                        <nav>
+                            {<button type="submit"
+                                    disabled={not @state.enableSubmit}>
+                                {t('account wizard creation save')}
+                            </button> unless @state.success}
+                            {<a href="#" className="alert success">
+                                {t('account wizard creation success')}
+                            </a> if @state.success}
+                            {<button type="close"
+                                    disabled={not @props.hasDefaultAccount}>
+                                {t 'app cancel'}
+                            </button>}
+                        </nav>
+                    </footer>
+                </Form>
+            </section>
+        </div>
 
 
     # Account creation steps:
@@ -171,6 +181,17 @@ module.exports = AccountWizardCreation = React.createClass
     # Disable autodiscover when advanced settings are expanded
     onExpand: (expanded) ->
         @setState isDiscoverable: !expanded
+
+
+    close: (event) ->
+        isDisabled = @props.hasDefaultAccount
+        isContainer = event.target is ReactDOM.findDOMNode @
+        isCloseButton = 'close' is event.target.getAttribute 'type'
+        return if isDisabled and not isContainer and not isCloseButton
+
+        event.preventDefault()
+
+        RouterActionCreator.closeModal()
 
 
     # Update state according to user inputs
