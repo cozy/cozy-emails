@@ -112,7 +112,10 @@ module.exports = AccountWizardCreation = React.createClass
             <section className='settings'>
                 <h1>{t('account wizard creation')}</h1>
 
-                <Form ns="account-wizard-creation" className="content">
+                <Form ns="account-wizard-creation"
+                        className="content"
+                        onClick={@create}>
+
                     <Form.Input type="text"
                                 name="login"
                                 label={t('account wizard creation login label')}
@@ -140,18 +143,17 @@ module.exports = AccountWizardCreation = React.createClass
 
                     <footer>
                         <nav>
-                            {<button type="close"
-                                disabled={not @props.hasDefaultAccount}>
-                                {t 'app cancel'}
-                            </button>}
                             {<button type="submit"
-                                    onClick={@create}
                                     disabled={not @state.enableSubmit}>
                                 {t('account wizard creation save')}
                             </button> unless @state.success}
                             {<a href="#" className="alert success">
                                 {t('account wizard creation success')}
                             </a> if @state.success}
+                            {<button type="close"
+                                    disabled={not @props.hasDefaultAccount}>
+                                {t 'app cancel'}
+                            </button>}
                         </nav>
                     </footer>
                 </Form>
