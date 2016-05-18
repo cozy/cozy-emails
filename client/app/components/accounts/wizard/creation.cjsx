@@ -114,7 +114,7 @@ module.exports = AccountWizardCreation = React.createClass
 
                 <Form ns="account-wizard-creation"
                         className="content"
-                        onClick={@create}>
+                        onSubmit={@create}>
 
                     <Form.Input type="text"
                                 name="login"
