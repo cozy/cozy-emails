@@ -140,23 +140,26 @@ module.exports = AccountWizardCreation = React.createClass
                              onExpand={@onExpand}
                              onChange={@updateState}
                              {..._.omit @state, 'isOAuth', 'isDiscoverable', 'isBusy'} />
-
-                    <footer>
-                        <nav>
-                            {<button type="submit"
-                                    disabled={not @state.enableSubmit}>
-                                {t('account wizard creation save')}
-                            </button> unless @state.success}
-                            {<a href="#" className="alert success">
-                                {t('account wizard creation success')}
-                            </a> if @state.success}
-                            {<button type="close"
-                                    disabled={not @props.hasDefaultAccount}>
-                                {t 'app cancel'}
-                            </button>}
-                        </nav>
-                    </footer>
                 </Form>
+
+                <footer>
+                    <nav>
+                        {<a href="#" className="alert success">
+                            {t('account wizard creation success')}
+                        </a> if @state.success}
+
+                        {<button name="cancel"
+                                 type="button"
+                                 onClick={@close}>
+                            {t('app cancel')}
+                        </button> if @props.hasDefaultAccount and not @state.success}
+                        {<button type="submit"
+                                 form="account-wizard-creation"
+                                 disabled={not @state.enableSubmit}>
+                            {t('account wizard creation save')}
+                        </button> unless @state.success}
+                    </nav>
+                </footer>
             </section>
         </div>
 
@@ -183,12 +186,20 @@ module.exports = AccountWizardCreation = React.createClass
         @setState isDiscoverable: !expanded
 
 
+    # Close the modal when:
+    # 1/ click on the modal backdrop
+    # 2/ click on the cancel button
+    #
+    # The close action only occurs if the click event is on one of the
+    # aforementioned element and if there's already one account available
+    # (otherwise this setting step is mandatory).
     close: (event) ->
-        isDisabled = @props.hasDefaultAccount
-        isContainer = event.target is ReactDOM.findDOMNode @
-        isCloseButton = 'close' is event.target.getAttribute 'type'
-        return if isDisabled and not isContainer and not isCloseButton
+        isDisabled    = not @props.hasDefaultAccount
+        isContainer   = event.target is ReactDOM.findDOMNode @
+        isCloseButton = event.target.name is 'cancel'
+        return if isDisabled or not(isContainer or isCloseButton)
 
+        event.stopPropagation()
         event.preventDefault()
 
         RouterActionCreator.closeModal()
