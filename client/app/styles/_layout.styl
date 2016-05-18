@@ -117,7 +117,7 @@ body
     left     0
     bottom   0
     right    0
-    background-color rgba(0, 0, 0, .25)
+    background-color rgba(0, 0, 0, .45)
 
     // Modalbox
     section
@@ -165,6 +165,12 @@ body
 
             &[disabled]
                 opacity .35
+
+            &[name=cancel]
+                margin-right      2em
+                border           1px solid red
+                background-color transparent
+                color            red
 
         .alert
             margin       2em 0
