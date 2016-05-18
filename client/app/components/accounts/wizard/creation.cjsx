@@ -10,7 +10,7 @@ ReactDOM = require 'react-dom'
 Form    = require '../../basics/form'
 Servers = require '../servers'
 
-RequestsInFlightStore = require '../../../stores/requests_in_flight_store'
+RequestsStore = require '../../../stores/requests_store'
 
 RouterGetter = require '../../../getters/router'
 
@@ -32,12 +32,12 @@ module.exports = AccountWizardCreation = React.createClass
     displayName: 'AccountWizardCreation'
 
     mixins: [
-        StoreWatchMixin [RequestsInFlightStore]
+        StoreWatchMixin [RequestsStore]
         AccountMixin
     ]
 
 
-    # Build state form RequestsInFlightStore:
+    # Build state form RequestsStore:
     # - is an autodiscover request in action, or a provider available?
     getStateFromStores: ->
         state       = {}
