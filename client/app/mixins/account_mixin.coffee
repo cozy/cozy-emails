@@ -8,7 +8,7 @@ module.exports =
     # Take a state identifier (key), its value, and the previousState.
     # It ensures the type is right with PropTypes, and manage auto-filling for
     # associated keys (logins / passwords).
-    validateAccountState: (key, value, previousState) ->
+    validateAccountState: (key, value, pState) ->
         # In case key is 'port', ensure the value type is a number
         value = +value if /port$/i.test key
 
@@ -23,7 +23,7 @@ module.exports =
         # sections if needed.
         if key in ['login', 'password']
             # Ensure previousState contains all required fields
-            _.defaults previousState,
+            _.defaults pState,
                 imapLogin:    undefined
                 imapPassword: undefined
                 smtpLogin:    undefined
@@ -31,11 +31,11 @@ module.exports =
 
             # Extract values for filter
             re     = new RegExp "#{key}$", 'i'
-            refVal = previousState[key]
+            refVal = pState[key]
 
             # Parse previousState and keep fields mapped to key w/ an
             # unaltered values
-            extraState =_.chain previousState
+            extraState =_.chain pState
                 .pairs()
                 .filter ([_key, _value]) ->
                     re.test(_key) and _value is refVal
@@ -44,7 +44,14 @@ module.exports =
                 .object()
                 .value()
 
-        _.extend state, extraState
+        # If the modified field is 'login' and servers field are empty, we
+        # assume the user just fix a typo in its email address after a failed
+        # autodiscover request, so we smartly re-enable it to perform another
+        # aiutodiscover test.
+        if key is 'login' and not(pState.imapServer or pState.smtpServer)
+            (discoveryState = {})['isDiscoverable'] = true
+
+        _.extend state, extraState, discoveryState
 
 
     # Parses an array of providers as returned by the Mozilla TB discovery

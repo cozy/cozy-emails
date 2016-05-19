@@ -3,9 +3,9 @@
 RequestStatus
 OAuthDomains} = require '../../../constants/app_constants'
 
-_           = require 'underscore'
-React       = require 'react'
-ReactDOM    = require 'react-dom'
+_        = require 'underscore'
+React    = require 'react'
+ReactDOM = require 'react-dom'
 
 Form    = require '../../basics/form'
 Servers = require '../servers'
