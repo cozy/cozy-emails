@@ -44,7 +44,6 @@ module.exports = React.createClass
 
         classesChild = classNames
             target:  @state.target
-            special: @props.icon.type
             news:    @props.recent > 0
 
         displayError = @props.displayErrors.bind null, @props.progress

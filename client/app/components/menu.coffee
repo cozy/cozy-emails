@@ -68,9 +68,8 @@ module.exports = Menu = React.createClass
 
 
     renderMailboxesFlags: (params={}) ->
-        {flags, type, progress, slug, total, unread} = params
+        {flags, type, progress, slug, total, unread, mailboxID} = params
 
-        mailboxID = @props.mailboxes.toArray()[0].get 'id'
         mailboxURL = RouterGetter.getURL
             mailboxID: mailboxID
             filter: {flags}
@@ -92,13 +91,15 @@ module.exports = Menu = React.createClass
     # renders a single account and its submenu
     # TODO : make a component for this
     renderMailBoxes: (account) ->
-        mailboxes = @props.mailboxes.toArray()
-        inbox = mailboxes[0]
+        inboxMailboxes = @props.mailboxes.filter (mailbox) ->
+            'inbox' is mailbox.get('tree')[0].toLowerCase()
+        otherMailboxes = @props.mailboxes.filter (mailbox) ->
+            'inbox' isnt mailbox.get('tree')[0].toLowerCase()
 
         # Goto the default mailbox of the account
         action = MessageActions.SHOW_ALL
         accountID = account.get 'id'
-        mailboxID = inbox?.get 'id'
+        mailboxID = account.get 'inboxMailbox'
         mailboxURL = RouterGetter.getURL {action, mailboxID, resetFilter: true}
 
         props = {
@@ -142,7 +143,8 @@ module.exports = Menu = React.createClass
                     role: 'group'
                     className: 'list-unstyled mailbox-list',
 
-                    mailboxes?.map (mailbox, key) =>
+                    # Default Inbox Mailboxes
+                    inboxMailboxes?.map (mailbox, key) =>
                         mailboxURL = RouterGetter.getURL
                             mailboxID: (mailboxID = mailbox.get 'id')
                             resetFilter: true
@@ -162,6 +164,7 @@ module.exports = Menu = React.createClass
                             recent:         mailbox.get 'nbRecent'
                             icon:           FileGetter.getMailboxIcon {account, mailboxID}
 
+                    # Unread Mailbox
                     @renderMailboxesFlags
                         type: 'unreadMailbox'
                         flags: MessageFilter.UNSEEN
@@ -169,7 +172,9 @@ module.exports = Menu = React.createClass
                         total: @props.nbUnread
                         unread: @props.nbUnread
                         slug: 'unread'
+                        mailboxID: account.get 'inboxMailbox'
 
+                    # Flagged Mailbox
                     @renderMailboxesFlags
                         type: 'flaggedMailbox'
                         flags: MessageFilter.FLAGGED
@@ -177,3 +182,25 @@ module.exports = Menu = React.createClass
                         total: @props.nbFlagged
                         unread: @props.nbFlagged
                         slug: 'flagged'
+                        mailboxID: account.get 'inboxMailbox'
+
+                    # Other mailboxes
+                    otherMailboxes?.map (mailbox, key) =>
+                        mailboxURL = RouterGetter.getURL
+                            mailboxID: (mailboxID = mailbox.get 'id')
+                            resetFilter: true
+
+                        MenuMailboxItem
+                            key:            'mailbox-item-' + key
+                            accountID:      account.get 'id'
+                            mailboxID:      mailboxID
+                            label:          mailbox.get 'label'
+                            depth:          mailbox.get('tree').length - 1
+                            isActive:       RouterGetter.isCurrentURL mailboxURL
+                            displayErrors:  @displayErrors
+                            progress:       props.progress
+                            url:            mailboxURL
+                            total:          mailbox.get 'nbTotal'
+                            unread:         mailbox.get 'nbUnread'
+                            recent:         mailbox.get 'nbRecent'
+                            icon:           FileGetter.getMailboxIcon {account, mailboxID}
