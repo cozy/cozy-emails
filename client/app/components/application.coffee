@@ -52,7 +52,8 @@ module.exports = React.createClass
             return {
                 mailboxID       : (mailboxID = mailbox?.get 'id')
                 accountID       : RouterGetter.getAccountID()
-                messageID       : RouterGetter.getCurrentMessageID()
+                conversationID  : RouterGetter.getConversationID()
+                messageID       : RouterGetter.getMessageID()
                 action          : RouterGetter.getAction()
                 isEditable      : RouterGetter.isEditable()
                 modal           : RouterGetter.getModal()
@@ -114,7 +115,6 @@ module.exports = React.createClass
                                 key             : "messageList-#{@state.mailboxID}"
                                 accountID       : @state.accountID
                                 mailboxID       : @state.mailboxID
-                                messageID       : @state.messageID
                                 messages        : @state.messages
                                 emptyMessages   : RouterGetter.getEmptyMessage()
                                 isAllSelected   : SelectionGetter.isAllSelected()
@@ -130,7 +130,7 @@ module.exports = React.createClass
                                 messageID       : @state.messageID
                                 conversationID  : message?.get 'conversationID'
                                 subject         : message?.get 'subject'
-                                conversation    : @state.conversation
+                                messages        : @state.conversation
                         else
                             section
                                 'key'          : 'placeholder'

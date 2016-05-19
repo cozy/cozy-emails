@@ -48,6 +48,7 @@ class RouterStore extends Store
     _newAccountChecking = false
     _serverAccountErrorByField = Immutable.Map()
 
+    _conversationID = null
     _messageID = null
     _messagesLength = 0
 
@@ -133,6 +134,7 @@ class RouterStore extends Store
         params.action ?= @getAction()
         params.mailboxID ?= @getMailboxID()
         params.messageID ?= @getMessageID()
+        params.conversationID ?= @getConversationID()
 
         return @getURL params
 
@@ -202,6 +204,14 @@ class RouterStore extends Store
         _tab = tab
 
 
+    _getFlags = (message) ->
+        flags = if message?
+        then message?.get 'flags'
+        else _currentFilter?.flags
+        flags = [flags] if _.isString flags
+        flags or []
+
+
     getAccount: (accountID) ->
         accountID ?= _accountID
         AccountStore.getByID accountID
@@ -254,22 +264,51 @@ class RouterStore extends Store
         _tab
 
 
-    _setCurrentMessage = (messageID) ->
+    _setCurrentMessage = (conversationID, messageID) ->
+        _conversationID = conversationID
         _messageID = messageID
         _messagesLength = 0
 
 
-    getMessageID: ->
-        _messageID
+    getConversationID: (messageID) ->
+        _conversationID
 
 
-    isFlags: (name) ->
-        flags = @getFilter()?.flags or []
-        MessageFilter[name] is flags or MessageFilter[name] in flags
+    getMessageID: (conversationID) ->
+        if conversationID?
+            messages = @getConversation conversationID
+
+            # At first get unread Message
+            # if not get last message
+            message = messages.find @isUnread
+            message ?= messages.shift()
+            message?.get 'id'
+        else
+            _messageID
+
+
+    isUnread: (message) ->
+        flags = _getFlags message
+        if message?
+            return MessageFlags.SEEN not in flags
+        else
+            return MessageFilter.UNSEEN in flags
 
 
     isFlagged: (message) ->
-        MessageFlags.FLAGGED in message?.get 'flags'
+        flags = _getFlags message
+        if message?
+            MessageFlags.FLAGGED in flags
+        else
+            MessageFilter.FLAGGED in flags
+
+
+    isAttached: (message) ->
+        flags = _getFlags message
+        if message?
+            MessageFlags.ATTACH in flags
+        else
+            MessageFilter.ATTACH in flags
 
 
     isDeleted: (message) ->
@@ -291,14 +330,10 @@ class RouterStore extends Store
         draftID in mailboxIDs
 
 
-    isUnread: (message) ->
-        MessageFlags.SEEN not in message?.get 'flags'
-
-
     getMailboxTotal: ->
-        if (@isFlags 'UNSEEN')
+        if @isUnread()
             props = 'nbUnread'
-        else if (@isFlags 'FLAGGED')
+        else if @isFlagged()
             props = 'nbFlagged'
         else
             props = 'nbTotal'
@@ -322,23 +357,21 @@ class RouterStore extends Store
 
     getMessagesList: (mailboxID) ->
         mailboxID ?= @getMailboxID()
-        filter = @getFilter()
 
         # We dont filter for type from and dest because it is
         # complicated by collation and name vs address.
         _filterFlags = (message) =>
-            if filter?.flags
-                flags = message.get 'flags'
-                if @isFlags 'FLAGGED'
-                    return MessageFlags.FLAGGED in flags
-                if @isFlags 'ATTACH'
-                    return message.get('attachments')?.size > 0
-                if @isFlags 'UNSEEN'
-                    return MessageFlags.SEEN not in flags
-            true
+            if @isFlagged()
+                return @isFlagged message
+            if @isAttached()
+                return @isAttached message
+            if @isUnread()
+                return @isUnread message
+            return true
 
         uniq = {}
-        sortOrder = parseInt "#{filter.sort.charAt(0)}1", 10
+        {sort} = @getFilter()
+        sortOrder = parseInt "#{sort.charAt(0)}1", 10
         messages = MessageStore.getAll()?.filter (message) =>
             # Display only last Message of conversation
             conversationID = message.get 'conversationID'
@@ -360,9 +393,8 @@ class RouterStore extends Store
         return messages
 
 
-    getConversation: (messageID) ->
-        messageID ?= @getMessageID()
-        conversationID = MessageStore.getByID(messageID)?.get 'conversationID'
+    getConversation: (conversationID) ->
+        conversationID ?= @getConversationID()
         MessageStore.getConversation conversationID
 
 
@@ -478,7 +510,7 @@ class RouterStore extends Store
             clearTimeout _timerRouteChange
 
             {accountID, mailboxID, tab} = payload
-            {action, messageID, query} = payload
+            {action, conversationID, messageID, query} = payload
 
             # We cant display any informations
             # without accounts
@@ -493,7 +525,7 @@ class RouterStore extends Store
 
             # From MessageStore
             # Update currentMessageID
-            _setCurrentMessage messageID
+            _setCurrentMessage conversationID, messageID
 
             # Handle all Selection
             # _resetSelection()
@@ -584,7 +616,7 @@ class RouterStore extends Store
 
 
         handle ActionTypes.MESSAGE_FETCH_SUCCESS, (payload) ->
-            {result, timestamp, lastPage} = payload
+            {lastPage} = payload
 
             # Save last message references
             _lastPage[_URI] = lastPage if lastPage?
@@ -603,8 +635,10 @@ class RouterStore extends Store
 
         handle ActionTypes.MESSAGE_TRASH_SUCCESS, ({target, updated, ref}) ->
             # Update messageID
-            messageID = @getNextConversation()?.get 'id'
-            _setCurrentMessage messageID
+            message = @getNextConversation()
+            conversationID = message?.get 'conversationID'
+            messageID = message?.get 'id'
+            _setCurrentMessage conversationID, messageID
 
             # Update URL if it didnt
             _updateURL()

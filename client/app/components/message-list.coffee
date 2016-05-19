@@ -103,6 +103,8 @@ module.exports = React.createClass
         isActive = RouterGetter.isCurrentConversation conversationID
         MessageItem
             key                 : "messageItem-#{messageID}"
+            messageID           : messageID
+            conversationID      : conversationID
             message             : message
             tags                : RouterGetter.getTags message
             conversationLengths : conversationLengths
