@@ -51,8 +51,6 @@ module.exports = React.createClass
 
     componentDidUpdate: ->
         _getFullConversation.call @
-        _freezeHeader.call @
-        _scrollToActive.call @
 
 
     renderMessage: (message) ->
