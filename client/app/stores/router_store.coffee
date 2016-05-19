@@ -615,12 +615,24 @@ class RouterStore extends Store
             @emit 'change'
 
 
+        handle ActionTypes.MESSAGE_FETCH_REQUEST, ->
+            _refreshMailbox = true
+            @emit 'change'
+
+
         handle ActionTypes.MESSAGE_FETCH_SUCCESS, (payload) ->
             {lastPage} = payload
 
             # Save last message references
             _lastPage[_URI] = lastPage if lastPage?
 
+            _refreshMailbox = false
+
+            @emit 'change'
+
+
+        handle ActionTypes.MESSAGE_FETCH_FAILURE, ->
+            _refreshMailbox = false
             @emit 'change'
 
 

@@ -61,6 +61,7 @@ module.exports = React.createClass
                 messages        : RouterGetter.getMessagesList mailboxID
                 conversation    : RouterGetter.getConversation()
                 isMailbox       : mailbox.get('lastSync')?
+                isLoading       : RouterGetter.isMailboxLoading()
             }
 
         return {
