@@ -54,7 +54,7 @@ module.exports = AccountWizardCreation = React.createClass
         # Account creation step
         if createReq.status is RequestStatus.SUCCESS
             _.extend state,
-                success: true
+                success: _.partial @redirect, createReq.res
 
         else if createReq.status is RequestStatus.ERROR
             _.extend state,
@@ -144,9 +144,11 @@ module.exports = AccountWizardCreation = React.createClass
 
                 <footer>
                     <nav>
-                        {<a href="#" className="alert success">
+                        {<button className="success"
+                                 name="redirect"
+                                 onClick={@state.success}>
                             {t('account wizard creation success')}
-                        </a> if @state.success}
+                        </button> if @state.success}
 
                         {<button name="cancel"
                                  type="button"
@@ -203,6 +205,11 @@ module.exports = AccountWizardCreation = React.createClass
         event.preventDefault()
 
         RouterActionCreator.closeModal()
+
+
+    # Redirect on success to the freshly created account's mailbox
+    redirect: ({account}) ->
+        RouterActionCreator.showMessageList mailboxID: account.inboxMailbox
 
 
     # Update state according to user inputs
