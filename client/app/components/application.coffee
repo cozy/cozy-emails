@@ -98,9 +98,8 @@ module.exports = React.createClass
                     composeURL      : composeURL
                     newAccountURL   : newAccountURL
                     mailboxes       : RouterGetter.getMailboxes()
-                    nbTotal         : RouterGetter.getTotalLength()
                     nbUnread        : RouterGetter.getUnreadLength()
-                    nbRecent        : RouterGetter.getRecentLength()
+                    nbFlagged       : RouterGetter.getFlaggedLength()
 
 
                 main

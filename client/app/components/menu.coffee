@@ -70,13 +70,13 @@ module.exports = Menu = React.createClass
     renderMailboxesFlags: (params={}) ->
         {flags, type, progress, slug, total, unread} = params
 
-        mailbox = RouterGetter.getInbox()
+        mailboxID = @props.mailboxes.toArray()[0].get 'id'
         mailboxURL = RouterGetter.getURL
-            mailboxID: (mailboxID = mailbox.get 'id')
+            mailboxID: mailboxID
             filter: {flags}
 
         MenuMailboxItem
-            accountID:      RouterGetter.getAccountID()
+            accountID:      @props.accountID
             mailboxID:      mailboxID
             label:          t "mailbox title #{slug}"
             key:            "mailbox-item-#{slug}"
@@ -92,15 +92,17 @@ module.exports = Menu = React.createClass
     # renders a single account and its submenu
     # TODO : make a component for this
     renderMailBoxes: (account) ->
+        mailboxes = @props.mailboxes.toArray()
+        inbox = mailboxes[0]
+
         # Goto the default mailbox of the account
         action = MessageActions.SHOW_ALL
         accountID = account.get 'id'
-        mailbox = RouterGetter.getInbox(accountID)
-        mailboxID = mailbox?.get 'id'
+        mailboxID = inbox?.get 'id'
         mailboxURL = RouterGetter.getURL {action, mailboxID, resetFilter: true}
 
         props = {
-            isSelected: accountID is RouterGetter.getAccountID()
+            isSelected: accountID is @props.accountID
             mailboxURL: mailboxURL
             configURL: RouterGetter.getURL
                 action: AccountActions.EDIT
@@ -110,7 +112,6 @@ module.exports = Menu = React.createClass
             progress: RouterGetter.getProgress accountID
         }
 
-        mailboxes = @props.mailboxes.toArray()
         className = classNames active: props.isSelected
         div
             className: className
@@ -165,14 +166,14 @@ module.exports = Menu = React.createClass
                         type: 'unreadMailbox'
                         flags: MessageFilter.UNSEEN
                         progress: props.progress
-                        total: (total = RouterGetter.getInbox().get 'nbUnread')
-                        unread: total
+                        total: @props.nbUnread
+                        unread: @props.nbUnread
                         slug: 'unread'
 
                     @renderMailboxesFlags
                         type: 'flaggedMailbox'
                         flags: MessageFilter.FLAGGED
                         progress: props.progress
-                        total: (total = RouterGetter.getInbox().get 'nbFlagged')
-                        unread: total
+                        total: @props.nbFlagged
+                        unread: @props.nbFlagged
                         slug: 'flagged'
