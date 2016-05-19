@@ -14,35 +14,33 @@ class AccountStore extends Store
     _accounts = Immutable.Iterable()
 
 
-    _isInbox = (label) ->
-        'inbox' is label.toLowerCase()
-
-
-    _isSpecialMailbox = (label) ->
-        _.find ['draft', 'sent', 'trash'], (tag) ->
-            (new RegExp tag).test label.toLowerCase()
-
-
-    _toImmutable = (account) ->
-
-        # Do not get NoSelect mailbox
-        # cf https://tools.ietf.org/html/rfc3501#page-69
+    _setMailboxToImmutable = (account) ->
         mailboxes = _.filter account.mailboxes, (mailbox) ->
-            -1 is mailbox.attribs.indexOf '\\Noselect'
 
-        account.mailboxes = Immutable.Iterable mailboxes
+            # OVH mailboxes has 2 mailbox called INBOX
+            # but only one the the real one
+            # remove the fake one
+            if 'inbox' is mailbox.label.toLowerCase()
+                return account.inboxMailbox is mailbox.id
+
+            # Do not get NoSelect mailbox
+            # cf https://tools.ietf.org/html/rfc3501#page-69
+            return -1 is mailbox.attribs.indexOf '\\Noselect'
+
+
+        mailboxes = Immutable.Iterable mailboxes
         .toKeyedSeq()
         .mapKeys (_, mailbox) -> mailbox.id
-        .sort (mailbox) ->
-            return 0 if _isInbox mailbox.tree[0]
-            return 1 if _isSpecialMailbox mailbox.tree[0]
-            return 2
-        .map (mailbox) ->
-            mailbox.depth = mailbox.tree.length - 1
-            delete mailbox.tree
-            Immutable.Map mailbox
+        .sort (mb1, mb2) ->
+            # Ordering by path
+            path1 = mb1.tree.join('/').toLowerCase()
+            path2 = mb2.tree.join('/').toLowerCase()
+            path1.localeCompare path2
+
+        .map (mailbox, index) -> Immutable.Map mailbox
         .toOrderedMap()
 
+        account.mailboxes = mailboxes
         delete account.totalUnread
         return Immutable.Map account
 
@@ -53,14 +51,11 @@ class AccountStore extends Store
         _accounts = Immutable.Iterable window.accounts
             .toKeyedSeq()
 
-            # sort first
-            .sort (mb1, mb2) -> mb1.label.localeCompare mb2.label
-
             # sets account ID as index
             .mapKeys (_, account) -> account.id
 
             # makes account object an immutable Map
-            .map _toImmutable
+            .map _setMailboxToImmutable
 
             .toOrderedMap()
 
@@ -90,7 +85,7 @@ class AccountStore extends Store
 
 
     _updateAccount = (rawAccount) ->
-        account = _toImmutable rawAccount
+        account = _setMailboxToImmutable rawAccount
         accountID = account.get 'id'
         _accounts = _accounts?.set accountID, account
 

@@ -151,7 +151,7 @@ module.exports = Menu = React.createClass
                             accountID:      account.get 'id'
                             mailboxID:      mailboxID
                             label:          mailbox.get 'label'
-                            depth:          mailbox.get 'depth'
+                            depth:          mailbox.get('tree').length - 1
                             isActive:       RouterGetter.isCurrentURL mailboxURL
                             displayErrors:  @displayErrors
                             progress:       props.progress
