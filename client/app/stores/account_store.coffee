@@ -14,9 +14,19 @@ class AccountStore extends Store
     _accounts = Immutable.Iterable()
 
 
+    # Get Mailbox Sort Order
+    # These special mailbox should always appears on top
+    # in the same order
+    _getMailboxIndex = (mailbox) ->
+        parent = mailbox.tree[0].toLowerCase()
+        order = ['inbox', 'draft', 'sent', 'deleted', 'trash']
+        index = _.findIndex order, (pattern) ->
+            -1 < parent.indexOf pattern
+        if -1 < index then ++index else order.length
+
+
     _setMailboxToImmutable = (account) ->
         mailboxes = _.filter account.mailboxes, (mailbox) ->
-
             # OVH mailboxes has 2 mailbox called INBOX
             # but only one the the real one
             # remove the fake one
@@ -27,11 +37,18 @@ class AccountStore extends Store
             # cf https://tools.ietf.org/html/rfc3501#page-69
             return -1 is mailbox.attribs.indexOf '\\Noselect'
 
-
-        mailboxes = Immutable.Iterable mailboxes
+        account.mailboxes = Immutable.Iterable mailboxes
         .toKeyedSeq()
         .mapKeys (_, mailbox) -> mailbox.id
         .sort (mb1, mb2) ->
+            if mb1.tree[0] isnt mb2.tree[0]
+                index1 = _getMailboxIndex mb1
+                index2 = _getMailboxIndex mb2
+                if index1 > index2
+                    return 1
+                else if index1 < index2
+                    return -1
+
             # Ordering by path
             path1 = mb1.tree.join('/').toLowerCase()
             path2 = mb2.tree.join('/').toLowerCase()
@@ -40,7 +57,6 @@ class AccountStore extends Store
         .map (mailbox, index) -> Immutable.Map mailbox
         .toOrderedMap()
 
-        account.mailboxes = mailboxes
         delete account.totalUnread
         return Immutable.Map account
 
