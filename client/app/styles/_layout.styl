@@ -117,7 +117,7 @@ body
     left     0
     bottom   0
     right    0
-    background-color rgba(0, 0, 0, .25)
+    background-color rgba(0, 0, 0, .45)
 
     // Modalbox
     section
@@ -166,20 +166,20 @@ body
             &[disabled]
                 opacity .35
 
+            &[name=cancel]
+                margin-right      2em
+                border           1px solid red
+                background-color transparent
+                color            red
+
+            &.success
+                border           1px solid green
+                background-color contrastcolor
+                color            white
+
         .alert
             margin       2em 0
             border-color red
-
-        .success
-            border-color green
-
-        a.success
-            color green
-
-            &:hover
-                text-decoration  none
-                background-color contrastcolor
-                color            white
 
         // Forms
         label

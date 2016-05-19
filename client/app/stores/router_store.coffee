@@ -51,6 +51,8 @@ class RouterStore extends Store
     _messageID = null
     _messagesLength = 0
 
+    _timerRouteChange = null
+
 
     getRouter: ->
         return _router
@@ -198,7 +200,6 @@ class RouterStore extends Store
         _accountID = accountID
         _mailboxID = mailboxID
         _tab = tab
-
 
 
     getAccount: (accountID) ->
@@ -423,7 +424,7 @@ class RouterStore extends Store
 
 
     _checkForNoMailbox = (rawAccount) ->
-        unless rawAccount.mailboxes?.length > 0
+        unless rawAccount.mailboxes?.size > 0
             _setError
                 name: 'AccountConfigError',
                 field: 'nomailboxes'
@@ -468,18 +469,14 @@ class RouterStore extends Store
         _URI = "#{mailboxID}#{query}"
 
 
-    _gotoAccountMailbox = (account) ->
-        _newAccountWaiting = false
-        _checkForNoMailbox account
-        _action = MessageActions.SHOW_ALL
-
-
     ###
         Defines here the action handlers.
     ###
     __bindHandlers: (handle) ->
 
         handle ActionTypes.ROUTE_CHANGE, (payload={}) ->
+            clearTimeout _timerRouteChange
+
             {accountID, mailboxID, tab} = payload
             {action, messageID, query} = payload
 
@@ -535,8 +532,13 @@ class RouterStore extends Store
 
 
         handle ActionTypes.ADD_ACCOUNT_SUCCESS, ({account}) ->
-            setTimeout =>
-                _gotoAccountMailbox account
+            _timerRouteChange = setTimeout =>
+                _newAccountWaiting = false
+                _action            = MessageActions.SHOW_ALL
+
+                _setCurrentAccount account.id, account.inboxMailbox
+                _updateURL()
+
                 @emit 'change'
             , 5000
 
