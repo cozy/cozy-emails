@@ -46,10 +46,6 @@ module.exports = React.createClass
         _scrollToActive.call @
 
 
-    componentDidUpdate: ->
-        _scrollToActive.call @
-
-
     render: ->
         unless @props.isMailbox
             return div className: 'mailbox-loading',
