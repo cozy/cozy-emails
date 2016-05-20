@@ -193,15 +193,23 @@ module.exports =
             resources   : _getResources()
             isDraft     : RouterStore.isDraft message
             isDeleted   : RouterStore.isDeleted message
-            isFlagged   : RouterStore.isFlagged message
-            isUnread    : RouterStore.isUnread message
+            isFlagged   : @isFlagged message
+            isUnread    : @isUnread message
         }
 
 
+    isFlagged: (message) ->
+        RouterStore.isFlagged message
+
+
+    isUnread: (message) ->
+        RouterStore.isUnread message
+
+
     getEmptyMessage: ->
-        if RouterStore.isUnread()
+        if @isUnread()
             return  t 'no unseen message'
-        if RouterStore.isFlagged()
+        if @isFlagged()
             return  t 'no flagged message'
         if RouterStore.isAttached()
             return t 'no filter message'
