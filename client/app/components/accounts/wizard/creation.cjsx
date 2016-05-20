@@ -97,6 +97,7 @@ module.exports = AccountWizardCreation = React.createClass
             isBusy:         isBusy
             isDiscoverable: checkReq.status is null
             alert:          null
+            success:        false
 
 
     componentWillUpdate: (nextProps, nextState) ->
