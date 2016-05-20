@@ -23,18 +23,18 @@ moment   = require 'moment'
 class Router extends Backbone.Router
 
     routes:
-        'mailbox/:mailboxID(?:query)':             'messageList'
-        'account/new':                             'accountNew'
-        'account/:accountID/settings/:tab':        'accountEdit'
-        # 'search/?q=:search'                         : 'search'
-        # 'mailbox/:mailboxID/search/?q=:search'      : 'search'
-        'mailbox/:mailboxID/new':                  'messageNew'
-        'mailbox/:mailboxID/:messageID/edit':      'messageEdit'
-        'mailbox/:mailboxID/:messageID/forward':   'messageForward'
-        'mailbox/:mailboxID/:messageID/reply':     'messageReply'
-        'mailbox/:mailboxID/:messageID/reply-all': 'messageReplyAll'
-        'mailbox/:mailboxID/:messageID(?:query)':  'messageShow'
-        '':                                        'defaultView'
+        'mailbox/:mailboxID(?:query)':                              'messageList'
+        'account/new':                                              'accountNew'
+        'account/:accountID/settings/:tab':                         'accountEdit'
+        # 'search/?q=:search':                                      'search'
+        # 'mailbox/:mailboxID/search/?q=:search':                   'search'
+        'mailbox/:mailboxID/new':                                   'messageNew'
+        'mailbox/:mailboxID/:messageID/edit':                       'messageEdit'
+        'mailbox/:mailboxID/:messageID/forward':                    'messageForward'
+        'mailbox/:mailboxID/:messageID/reply':                      'messageReply'
+        'mailbox/:mailboxID/:messageID/reply-all':                  'messageReplyAll'
+        'mailbox/:mailboxID/:conversationID/:messageID(?:query)':   'messageShow'
+        '':                                                         'defaultView'
 
 
     initialize: ->
@@ -72,8 +72,8 @@ class Router extends Backbone.Router
         _dispatch {action: MessageActions.SHOW_ALL, mailboxID}, query
 
 
-    messageShow: (mailboxID, messageID, query) ->
-        _dispatch {action: MessageActions.SHOW, mailboxID, messageID}, query
+    messageShow: (mailboxID, conversationID, messageID, query) ->
+        _dispatch {action: MessageActions.SHOW, mailboxID, conversationID, messageID}, query
 
 
     messageEdit: (mailboxID, messageID) ->

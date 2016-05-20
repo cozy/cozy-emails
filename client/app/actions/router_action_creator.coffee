@@ -99,50 +99,66 @@ RouterActionCreator =
 
     gotoCompose: (params={}) ->
         {messageID, mailboxID} = params
+
         action = MessageActions.NEW
-        mailboxID ?= RouterStore.getMailboxID()
+        mailboxID ?= RouterStore.getMailboxID messageID
+
         AppDispatcher.dispatch
             type: ActionTypes.ROUTE_CHANGE
             value: {mailboxID, messageID, action}
 
 
+    # Get last message unread
+    # or get last message if not
+    gotoConversation: (params={}) ->
+        {conversationID} = params
+        messageID = RouterStore.getMessageID conversationID
+        @gotoMessage {conversationID, messageID}
+
+
     gotoMessage: (params={}) ->
-        {messageID, mailboxID, action} = params
+        {conversationID, messageID, mailboxID} = params
+
         messageID ?= RouterStore.getMessageID()
+        conversationID ?= RouterStore.getConversationID()
         mailboxID ?= RouterStore.getMailboxID()
-        action ?= MessageActions.SHOW
+        action = MessageActions.SHOW
 
         AppDispatcher.dispatch
             type: ActionTypes.ROUTE_CHANGE
-            value: {messageID, mailboxID, action}
+            value: {conversationID, messageID, mailboxID, action}
 
 
     gotoPreviousMessage: ->
         message = RouterStore.gotoPreviousMessage()
+        conversationID = message?.get 'conversationID'
         messageID = message?.get 'id'
         mailboxID = message?.get 'mailboxID'
-        @gotoMessage {messageID, mailboxID}
+        @gotoMessage {conversationID, messageID, mailboxID}
 
 
     gotoNextMessage: ->
         message = RouterStore.gotoNextMessage()
+        conversationID = message?.get 'conversationID'
         messageID = message?.get 'id'
         mailboxID = message?.get 'mailboxID'
-        @gotoMessage {messageID, mailboxID}
+        @gotoMessage {conversationID, messageID, mailboxID}
 
 
     gotoPreviousConversation: ->
         message = RouterStore.getNextConversation()
+        conversationID = message?.get 'conversationID'
         messageID = message?.get 'id'
         mailboxID = message?.get 'mailboxID'
-        @gotoMessage {messageID, mailboxID}
+        @gotoMessage {conversationID, messageID, mailboxID}
 
 
     gotoNextConversation: ->
         message = RouterStore.getNextConversation()
+        conversationID = message?.get 'conversationID'
         messageID = message?.get 'id'
         mailboxID = message?.get 'mailboxID'
-        @gotoMessage {messageID, mailboxID}
+        @gotoMessage {conversationID, messageID, mailboxID}
 
 
     closeConversation: (params={}) ->

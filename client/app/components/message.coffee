@@ -15,8 +15,10 @@ RouterActionCreator = require '../actions/router_action_creator'
 
 {MessageFlags} = require '../constants/app_constants'
 
+
 module.exports = React.createClass
     displayName: 'Message'
+
 
     componentWillUnmount: ->
         # Mark message as read
@@ -60,13 +62,6 @@ module.exports = React.createClass
                 isFlagged: @props.isFlagged
                 isUnread: @props.isUnread
                 active: @props.isActive,
-
-            if @props.isActive
-                ToolbarMessage
-                    ref         : "message-#{@props.messageID}-toolbar"
-                    key         : "message-#{@props.messageID}-toolbar"
-                    isFull      : true
-                    messageID   : @props.messageID
 
             if @props.isActive
                 MessageContent

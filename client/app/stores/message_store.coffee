@@ -29,7 +29,7 @@ class MessageStore extends Store
 
         # Shortcut to know conversationLength
         # withount loading all massages of the conversation
-        if (conversationLength)
+        if conversationLength?
             for conversationID, length of conversationLength
                 _conversationLength = _conversationLength.set conversationID, length
 
@@ -78,8 +78,8 @@ class MessageStore extends Store
     ###
     __bindHandlers: (handle) ->
 
-        handle ActionTypes.MESSAGE_FETCH_SUCCESS, ({error, result, timestamp}) ->
-            _updateMessages result, timestamp unless error
+        handle ActionTypes.MESSAGE_FETCH_SUCCESS, ({result, timestamp}) ->
+            _updateMessages result, timestamp
             @emit 'change'
 
 
@@ -163,11 +163,11 @@ class MessageStore extends Store
 
 
     getConversation: (conversationID) ->
-        result = []
         _messages.filter (message) ->
-            if (conversationID is message.get 'conversationID')
-                result.push message
-        result
+            conversationID is message.get 'conversationID'
+        .sort (msg1, msg2) ->
+            msg1.get('date') < msg2.get('date')
+        .toArray()
 
 
     getConversationLength: (conversationID) ->

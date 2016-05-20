@@ -96,15 +96,19 @@ module.exports =
 
 
     getConversation: (messageID) ->
-        RouterStore.getConversation(messageID)
+        RouterStore.getConversation(messageID) or []
 
 
-    getCurrentMessageID: ->
+    getConversationID: ->
+        RouterStore.getConversationID()
+
+
+    getMessageID: ->
         RouterStore.getMessageID()
 
 
     isCurrentConversation: (conversationID) ->
-        conversationID is @getMessage()?.get 'conversationID'
+        conversationID is @getConversationID()
 
 
     getMailbox: (mailboxID) ->
@@ -182,48 +186,30 @@ module.exports =
                     return mailbox?.get 'label'
 
 
-    isFlagged: (message) ->
-        RouterStore.isFlagged message
-
-
-    isDeleted: (message) ->
-        RouterStore.isDeleted message
-
-
-    isDraft: (message) ->
-        RouterStore.isDraft message
-
-
-    isUnread: (message) ->
-        RouterStore.isUnread message
-
-
     formatMessage: (message) ->
+        _getResources = ->
+            message?.get('attachments').groupBy (file) ->
+                contentType = file.get 'contentType'
+                attachementType = FileGetter.getAttachmentType contentType
+                if attachementType is 'image' then 'preview' else 'binary'
+
         _.extend MessageGetter.formatContent(message), {
-            resources   : @getResources message
-            isDraft     : @isDraft message
-            isDeleted   : @isDeleted message
-            isFlagged   : @isFlagged message
-            isUnread    : @isUnread message
+            resources   : _getResources()
+            isDraft     : RouterStore.isDraft message
+            isDeleted   : RouterStore.isDeleted message
+            isFlagged   : RouterStore.isFlagged message
+            isUnread    : RouterStore.isUnread message
         }
 
 
     getEmptyMessage: ->
-        if RouterStore.isFlags 'UNSEEN'
+        if RouterStore.isUnread()
             return  t 'no unseen message'
-        if RouterStore.isFlags 'FLAGGED'
+        if RouterStore.isFlagged()
             return  t 'no flagged message'
-        if RouterStore.isFlags 'ATTACH'
+        if RouterStore.isAttached()
             return t 'no filter message'
         return  t 'list empty'
-
-
-    getResources: (message) ->
-        if (files = message?.get 'attachments')
-            files.groupBy (file) ->
-                contentType = file.get 'contentType'
-                attachementType = FileGetter.getAttachmentType contentType
-                if attachementType is 'image' then 'preview' else 'binary'
 
 
     getToasts: ->

@@ -91,8 +91,8 @@ module.exports = React.createClass
 
 
     onMessageClick: (event) ->
-        RouterActionCreator.gotoMessage
-            messageID: @props.message.get 'id'
+        {conversationID} = @props
+        RouterActionCreator.gotoConversation {conversationID}
 
 
     getParticipants: (message) ->

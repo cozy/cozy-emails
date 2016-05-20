@@ -13,8 +13,9 @@ module.exports = React.createClass
 
 
     gotoMessage: ->
-        messageID = @props.message?.get('id')
-        RouterActionCreator.gotoMessage {messageID}
+        conversationID = @props.message?.get 'conversationID'
+        messageID = @props.message?.get 'id'
+        RouterActionCreator.gotoMessage {conversationID, messageID}
 
 
     render: ->
