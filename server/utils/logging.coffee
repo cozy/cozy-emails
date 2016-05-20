@@ -12,7 +12,7 @@ COLORS = [
 # else if process.env.NODE_ENV is 'production' then 1
 # else 0
 
-LOG_LEVEL = 0
+LOG_LEVEL = 1
 
 lastLogs = new Array(15)
 lastDate = +new Date()
