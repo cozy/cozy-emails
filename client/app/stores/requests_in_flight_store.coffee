@@ -5,12 +5,16 @@ Store = require '../libs/flux/store/store'
 {ActionTypes, Requests, RequestStatus} = require '../constants/app_constants'
 
 
-class RequestsInFlightStore extends Store
-
-    _requests = new Immutable.Map
+_reset = ->
+    new Immutable.Map
         "#{Requests.DISCOVER_ACCOUNT}": status: null, res: undefined
         "#{Requests.CHECK_ACCOUNT}":    status: null, res: undefined
         "#{Requests.ADD_ACCOUNT}":      status: null, res: undefined
+
+
+class RequestsInFlightStore extends Store
+
+    _requests = _reset()
 
 
     getRequests: ->
@@ -18,6 +22,12 @@ class RequestsInFlightStore extends Store
 
 
     __bindHandlers: (handle) ->
+
+        # Assume that when a route 'change', we won't need to keep track of
+        # requests anymore, so we reset them
+        handle ActionTypes.ROUTE_CHANGE, ->
+            _requests = _reset()
+            @emit 'change'
 
         handle ActionTypes.DISCOVER_ACCOUNT_REQUEST, ->
             _requests = _requests.set Requests.DISCOVER_ACCOUNT,
