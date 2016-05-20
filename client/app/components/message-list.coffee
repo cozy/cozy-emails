@@ -35,10 +35,6 @@ module.exports = React.createClass
         _scrollToActive.call @
 
 
-    componentDidUpdate: ->
-        _scrollToActive.call @
-
-
     render: ->
         section
             'key'               : "messages-list-#{@props.mailboxID}"
