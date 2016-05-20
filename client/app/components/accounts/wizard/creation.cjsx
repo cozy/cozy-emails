@@ -174,9 +174,7 @@ module.exports = AccountWizardCreation = React.createClass
     create: (event) ->
         event.preventDefault()
 
-        @setState alert: null
-
-        if @state.isDiscoverable
+        if @state.isDiscoverable and not(@state.imapServer or @state.smtpServer)
             [..., domain] = @state.login.split '@'
             AccountActionCreator.discover domain, @sanitizeConfig @state
         else
