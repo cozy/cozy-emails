@@ -1,20 +1,23 @@
-AccountStore          = require '../stores/account_store'
-MessageStore          = require '../stores/message_store'
-NotificationStore     = require '../stores/notification_store'
-RefreshesStore        = require '../stores/refreshes_store'
-RequestsStore = require '../stores/requests_store'
-RouterStore           = require '../stores/router_store'
-SearchStore           = require '../stores/search_store'
+{MailboxFlags
+MessageActions
+Requests
+RequestStatus} = require '../constants/app_constants'
 
+_         = require 'lodash'
+Immutable = require 'immutable'
+moment    = require 'moment'
+
+AccountStore      = require '../stores/account_store'
+MessageStore      = require '../stores/message_store'
+NotificationStore = require '../stores/notification_store'
+RefreshesStore    = require '../stores/refreshes_store'
+RequestsStore     = require '../stores/requests_store'
+RouterStore       = require '../stores/router_store'
+SearchStore       = require '../stores/search_store'
+
+FileGetter    = require '../getters/file'
 MessageGetter = require '../getters/message'
 
-_ = require 'lodash'
-Immutable = require 'immutable'
-moment      = require 'moment'
-
-FileGetter = require '../getters/file'
-
-{MessageActions, MailboxFlags} = require '../constants/app_constants'
 
 module.exports =
 
@@ -41,8 +44,6 @@ module.exports =
     getAction: ->
         RouterStore.getAction()
 
-    getRequestStatus: (request) ->
-        RequestsStore.getRequests().get request
 
     getReplyMessage: (messageID) ->
         isReply = @getAction() is MessageActions.EDIT
@@ -152,6 +153,75 @@ module.exports =
     getAccount: (accountID) ->
         accountID ?= @getAccountID()
         RouterStore.getAccount()
+
+
+    getAccountCreationBusy: ->
+        RequestStatus.INFLIGHT in [
+            RequestsStore.get(Requests.DISCOVER_ACCOUNT).status
+            RequestsStore.get(Requests.CHECK_ACCOUNT).status
+            RequestsStore.get(Requests.ADD_ACCOUNT).status
+        ]
+
+
+    getAccountIsDiscoverable: ->
+        discover = RequestsStore.get Requests.DISCOVER_ACCOUNT
+        check    = RequestsStore.get Requests.CHECK_ACCOUNT
+
+        if discover.status is RequestStatus.SUCCESS
+            return true
+        # autodiscover failed w/o check in course: switch to manual config
+        else if discover.status is RequestStatus.ERROR and check.status is null
+            return false
+        else
+            return check.status is null
+
+
+    getAccountCreationAlert: ->
+        discover = RequestsStore.get Requests.DISCOVER_ACCOUNT
+        check    = RequestsStore.get Requests.CHECK_ACCOUNT
+        create   = RequestsStore.get Requests.ADD_ACCOUNT
+
+        if create.status is RequestStatus.ERROR
+            'CREATE_FAILED'
+
+        else if check.status is RequestStatus.ERROR
+            'CHECK_FAILED'
+
+        # autodiscover failed: set an alert only if check isn't already
+        # performed
+        else if discover.status is RequestStatus.ERROR and check.status is null
+            'DISCOVER_FAILED'
+
+        else
+            null
+
+
+    getAccountIsOAuth: ->
+        check = RequestsStore.get Requests.CHECK_ACCOUNT
+
+        if check.status is RequestStatus.ERROR
+            check.res.oauth
+        else
+            false
+
+
+    getAccountCreationDiscover: ->
+        discover = RequestsStore.get Requests.DISCOVER_ACCOUNT
+
+        if discover.status is RequestStatus.SUCCESS
+            discover.res
+        else
+            false
+
+
+    getAccountCreationSuccess: ->
+        create = RequestsStore.get Requests.ADD_ACCOUNT
+
+        # return create request result (i.e. `{account}`) on success
+        if create.status is RequestStatus.SUCCESS
+            create.res
+        else
+            false
 
 
     getMailboxID: ->

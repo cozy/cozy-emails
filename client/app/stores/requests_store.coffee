@@ -30,8 +30,8 @@ class RequestsStore extends Store
     _requests = _reset()
 
 
-    getRequests: ->
-        return _requests
+    get: (req) ->
+        return _requests.get req
 
 
     __bindHandlers: (handle) ->
