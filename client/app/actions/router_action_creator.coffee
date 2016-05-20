@@ -117,16 +117,17 @@ RouterActionCreator =
 
 
     gotoMessage: (params={}) ->
-        {conversationID, messageID, mailboxID} = params
+        {conversationID, messageID, mailboxID, query} = params
 
         messageID ?= RouterStore.getMessageID()
         conversationID ?= RouterStore.getConversationID()
         mailboxID ?= RouterStore.getMailboxID()
+        query ?= RouterStore.getFilter()
         action = MessageActions.SHOW
 
         AppDispatcher.dispatch
             type: ActionTypes.ROUTE_CHANGE
-            value: {conversationID, messageID, mailboxID, action}
+            value: {conversationID, messageID, mailboxID, action, query}
 
 
     gotoPreviousMessage: ->
