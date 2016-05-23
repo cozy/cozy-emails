@@ -12,7 +12,8 @@ module.exports = {
   },
 
   // Configure mockery to run properly with stores.
-  initForStores: () => {
+  initForStores: (allowables) => {
+    if (allowables === null) allowables = [];
     mockery.enable({
       warnOnUnregistered: true,
       useCleanCache: true,
@@ -24,10 +25,8 @@ module.exports = {
       'lodash',
       '../constants/app_constants',
       '../libs/flux/store/store',
-      '../app/stores/account_store',
-      '../app/stores/layout_store',
       '../invariant',
-    ]);
+    ].concat(allowables));
   },
 
   // Unregister all mockery previously set.
