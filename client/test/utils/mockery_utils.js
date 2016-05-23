@@ -23,6 +23,7 @@ module.exports = {
       'node-event-emitter',
       'immutable',
       'lodash',
+      'underscore',
       '../constants/app_constants',
       '../libs/flux/store/store',
       '../invariant',
