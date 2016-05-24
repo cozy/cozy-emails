@@ -1,5 +1,6 @@
-_     = require 'underscore'
-React = require 'react'
+_          = require 'underscore'
+React      = require 'react'
+classnames = require 'classnames'
 
 Form = require '../basics/form'
 
@@ -56,7 +57,7 @@ module.exports = AccountServer = React.createClass
 
 
     render: ->
-        <div className="content server">
+        <div className={classnames 'content', 'server', customized: @props.isCustomized}>
             <h2>{@props._protocol}</h2>
             <Form.Input type="text"
                         name="#{@props._protocol}-host"

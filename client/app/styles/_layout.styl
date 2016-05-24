@@ -268,6 +268,7 @@ body
         legend::before
             content '⬇'
 
+    // Servers styles
     .content
         h2
             font-size      1em
@@ -277,3 +278,17 @@ body
 
         input[name$=port]
             text-align right
+
+        span
+        input
+            transition opacity 350ms
+
+    .server:not(.customized)
+        [for$=login]
+        [for$=password]
+            span
+            input
+                opacity .45
+
+        input:focus
+            opacity 1

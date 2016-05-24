@@ -25,10 +25,15 @@ module.exports = AccountServers = React.createClass
 
     # Return unprefixed props to the Server component
     _getPropsForContext: (ctx) ->
-        _protocol: ctx
-        server:    @props["#{ctx}Server"]
-        port:      @props["#{ctx}Port"]
-        security:  @props["#{ctx}Security"]
-        login:     @props["#{ctx}Login"]
-        password:  @props["#{ctx}Password"]
-        onChange:  @props.onChange
+        isCustomized = @props.login isnt @props["#{ctx}Login"] or
+            @props.password isnt @props["#{ctx}Password"]
+
+        props =
+            _protocol:    ctx
+            server:       @props["#{ctx}Server"]
+            port:         @props["#{ctx}Port"]
+            security:     @props["#{ctx}Security"]
+            login:        @props["#{ctx}Login"]
+            password:     @props["#{ctx}Password"]
+            isCustomized: isCustomized
+            onChange:     @props.onChange
