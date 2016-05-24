@@ -64,7 +64,7 @@ class AccountStore extends Store
     # Creates an OrderedMap of accounts
     # this map will contains the base information for an account
     _initialize = ->
-        _accounts = Immutable.Iterable window.accounts
+        _accounts = Immutable.Iterable(window?.accounts or [])
             .toKeyedSeq()
 
             # sets account ID as index
@@ -207,3 +207,4 @@ class AccountStore extends Store
 
 
 module.exports = new AccountStore()
+
