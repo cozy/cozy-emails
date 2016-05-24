@@ -54,66 +54,68 @@ module.exports = AccountWizardCreation = React.createClass
 
 
     render: ->
-        <div role='complementary' onClick={@close}>
-            <section className='settings'>
-                <h1>{t('account wizard creation')}</h1>
+        <div role='complementary' className="backdrop" onClick={@close}>
+            <div className="backdrop-wrapper">
+                <section className='settings'>
+                    <h1>{t('account wizard creation')}</h1>
 
-                <Form ns="account-wizard-creation"
-                        className="content"
-                        onSubmit={@create}>
+                    <Form ns="account-wizard-creation"
+                            className="content"
+                            onSubmit={@create}>
 
-                    <Form.Input type="text"
-                                name="login"
-                                label={t('account wizard creation login label')}
-                                value={@state.login}
-                                onChange={_.partial @updateState, 'login'} />
-                    <Form.Input type="password"
-                                name="password"
-                                label={t('account wizard creation password label')}
-                                value={@state.password}
-                                onChange={_.partial @updateState, 'password'} />
+                        <Form.Input type="text"
+                                    name="login"
+                                    label={t('account wizard creation login label')}
+                                    value={@state.login}
+                                    onChange={_.partial @updateState, 'login'} />
+                        <Form.Input type="password"
+                                    name="password"
+                                    label={t('account wizard creation password label')}
+                                    value={@state.password}
+                                    onChange={_.partial @updateState, 'password'} />
 
-                    {<div className="alert">
-                        <p>
-                            {t("account wizard alert #{@state.alert.status}")}
-                        </p>
-                        {<p>
-                            {t("account wizard error #{@state.alert.type}")}
-                        </p> if @state.alert.type}
-                        {<p>
-                            {t("account wizard alert oauth")}
-                            <a href={OAuthDomains[@state.OAuth]} target="_blank">{t("account wizard alert oauth link label")}</a>.
-                        </p> if @state.OAuth}
-                    </div> if @state.alert}
+                        {<div className="alert">
+                            <p>
+                                {t("account wizard alert #{@state.alert.status}")}
+                            </p>
+                            {<p>
+                                {t("account wizard error #{@state.alert.type}")}
+                            </p> if @state.alert.type}
+                            {<p>
+                                {t("account wizard alert oauth")}
+                                <a href={OAuthDomains[@state.OAuth]} target="_blank">{t("account wizard alert oauth link label")}</a>.
+                            </p> if @state.OAuth}
+                        </div> if @state.alert}
 
-                    <Servers expanded={not @state.isDiscoverable}
-                             legend={t('account wizard creation advanced parameters')}
-                             onExpand={@onExpand}
-                             onChange={@updateState}
-                             {..._.omit @state, 'isOAuth', 'isDiscoverable', 'isBusy'} />
-                </Form>
+                        <Servers expanded={not @state.isDiscoverable}
+                                 legend={t('account wizard creation advanced parameters')}
+                                 onExpand={@onExpand}
+                                 onChange={@updateState}
+                                 {..._.omit @state, 'isOAuth', 'isDiscoverable', 'isBusy'} />
+                    </Form>
 
-                <footer>
-                    <nav>
-                        {<button className="success"
-                                 name="redirect"
-                                 onClick={@state.success}>
-                            {t('account wizard creation success')}
-                        </button> if @state.success}
+                    <footer>
+                        <nav>
+                            {<button className="success"
+                                     name="redirect"
+                                     onClick={@state.success}>
+                                {t('account wizard creation success')}
+                            </button> if @state.success}
 
-                        {<button name="cancel"
-                                 type="button"
-                                 onClick={@close}>
-                            {t('app cancel')}
-                        </button> if @props.hasDefaultAccount and not @state.success}
-                        {<button type="submit"
-                                 form="account-wizard-creation"
-                                 disabled={not @state.enableSubmit}>
-                            {t('account wizard creation save')}
-                        </button> unless @state.success}
-                    </nav>
-                </footer>
-            </section>
+                            {<button name="cancel"
+                                     type="button"
+                                     onClick={@close}>
+                                {t('app cancel')}
+                            </button> if @props.hasDefaultAccount and not @state.success}
+                            {<button type="submit"
+                                     form="account-wizard-creation"
+                                     disabled={not @state.enableSubmit}>
+                                {t('account wizard creation save')}
+                            </button> unless @state.success}
+                        </nav>
+                    </footer>
+                </section>
+            </div>
         </div>
 
 

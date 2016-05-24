@@ -56,15 +56,8 @@ module.exports = AccountServer = React.createClass
 
 
     render: ->
-        options = ServersEncProtocols
-            .map (protocol) ->
-                value: protocol
-                label: t "server protocol #{protocol}"
-            .concat
-                value: 'none'
-                label: 'server protocol none'
-
-        <div className="content">
+        <div className="content server">
+            <h2>{@props._protocol}</h2>
             <Form.Input type="text"
                         name="#{@props._protocol}-host"
                         label={t("account wizard creation #{@props._protocol} host")}
@@ -77,7 +70,7 @@ module.exports = AccountServer = React.createClass
                         onChange={_.partial @props.onChange, "#{@props._protocol}Port"} />
             <Form.Select name="#{@props._protocol}-security"
                          label={t("account wizard creation #{@props._protocol} security")}
-                         options=options
+                         options={@_securityOptions()}
                          value={@state.security}
                          onChange={@onSecurityChange} />
             <Form.Input type="text"
@@ -118,3 +111,13 @@ module.exports = AccountServer = React.createClass
         _.each state, (value, key) ->
             globalState["#{protocol}#{key[0].toUpperCase()}#{key.slice 1}"] = value
         @props.onChange globalState
+
+
+    _securityOptions: ->
+        ServersEncProtocols
+            .map (protocol) ->
+                value: protocol
+                label: t "server protocol #{protocol}"
+            .concat
+                value: 'none'
+                label: 'server protocol none'
