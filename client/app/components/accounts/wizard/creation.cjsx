@@ -53,6 +53,10 @@ module.exports = AccountWizardCreation = React.createClass
             not _.isEmpty(nextState.password)
 
 
+    componentDidMount: ->
+        ReactDOM.findDOMNode(@).querySelector('[name=login]').focus()
+
+
     render: ->
         <div role='complementary' className="backdrop" onClick={@close}>
             <div className="backdrop-wrapper">
