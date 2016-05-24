@@ -32,15 +32,23 @@ module.exports =
         create   = RequestsStore.get Requests.ADD_ACCOUNT
 
         if create.status is RequestStatus.ERROR
-            'CREATE_FAILED'
+            status: 'CREATE_FAILED'
 
         else if check.status is RequestStatus.ERROR
-            'CHECK_FAILED'
+            fields = check.res.error.response.body.causeFields
+
+            status: 'CHECK_FAILED'
+            type: if fields and 'smtpServer' in fields
+                'SMTP_SERVER'
+            else if fields and 'imapServer' in fields
+                'IMAP_SERVER'
+            else
+                'AUTH'
 
         # autodiscover failed: set an alert only if check isn't already
         # performed
         else if discover.status is RequestStatus.ERROR and check.status is null
-            'DISCOVER_FAILED'
+            status: 'DISCOVER_FAILED'
 
         else
             null

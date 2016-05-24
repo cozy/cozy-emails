@@ -74,7 +74,12 @@ module.exports = AccountWizardCreation = React.createClass
                                 onChange={_.partial @updateState, 'password'} />
 
                     {<div className="alert">
-                        <p>{t("account wizard alert #{@state.alert}")}</p>
+                        <p>
+                            {t("account wizard alert #{@state.alert.status}")}
+                        </p>
+                        {<p>
+                            {t("account wizard error #{@state.alert.type}")}
+                        </p> if @state.alert.type}
                         {<p>
                             {t("account wizard alert oauth")}
                             <a href={OAuthDomains[@state.OAuth]} target="_blank">{t("account wizard alert oauth link label")}</a>.
