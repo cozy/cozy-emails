@@ -2,13 +2,13 @@
 
 _ = require 'underscore'
 
-XHRUtils      = require '../libs/xhr'
+AccountsUtils = require '../libs/accounts'
 AppDispatcher = require '../libs/flux/dispatcher/dispatcher'
+XHRUtils      = require '../libs/xhr'
 
 AccountStore = require '../stores/account_store'
 RouterStore  = require '../stores/router_store'
 
-AccountMixin = require '../mixins/account_mixin'
 
 
 module.exports = AccountActionCreator =
@@ -114,8 +114,8 @@ module.exports = AccountActionCreator =
             # same methods the view component uses by exploiting same mixins).
             # Also, dispatch a success event for the discovery action.
             else
-                servers = AccountMixin.parseProviders provider
-                config  = AccountMixin.sanitizeConfig _.extend config, servers
+                servers = AccountsUtils.parseProviders provider
+                config  = AccountsUtils.sanitizeConfig _.extend config, servers
 
                 AccountActionCreator.check value: config
 

@@ -1,9 +1,10 @@
 {IMAP_OPTIONS} = require '../../../constants/defaults'
 {OAuthDomains} = require '../../../constants/app_constants'
 
-_        = require 'underscore'
-React    = require 'react'
-ReactDOM = require 'react-dom'
+_             = require 'underscore'
+React         = require 'react'
+ReactDOM      = require 'react-dom'
+AccountsUtils = require '../../../libs/accounts'
 
 Form    = require '../../basics/form'
 Servers = require '../servers'
@@ -16,7 +17,6 @@ AccountActionCreator = require '../../../actions/account_action_creator'
 RouterActionCreator = require '../../../actions/router_action_creator'
 
 StoreWatchMixin = require '../../../mixins/store_watch_mixin'
-AccountMixin    = require '../../../mixins/account_mixin'
 
 
 module.exports = AccountWizardCreation = React.createClass
@@ -25,7 +25,6 @@ module.exports = AccountWizardCreation = React.createClass
 
     mixins: [
         StoreWatchMixin [RequestsStore]
-        AccountMixin
     ]
 
 
@@ -41,7 +40,7 @@ module.exports = AccountWizardCreation = React.createClass
             OAuth:          RequestsGetter.isAccountOAuth()
 
         state.success = _.partial @redirect, account if account
-        _.extend state, @parseProviders discover if discover
+        _.extend state, AccountsUtils.parseProviders discover if discover
 
         return state
 
@@ -123,9 +122,11 @@ module.exports = AccountWizardCreation = React.createClass
 
         if @state.isDiscoverable and not(@state.imapServer or @state.smtpServer)
             [..., domain] = @state.login.split '@'
-            AccountActionCreator.discover domain, @sanitizeConfig @state
+            AccountActionCreator.discover domain,
+                AccountsUtils.sanitizeConfig @state
         else
-            AccountActionCreator.check value: @sanitizeConfig @state
+            AccountActionCreator.check
+                value: AccountsUtils.sanitizeConfig @state
 
 
     # Disable autodiscover when advanced settings are expanded
@@ -167,4 +168,5 @@ module.exports = AccountWizardCreation = React.createClass
             @setState source
         else
             {target: {value}} = event
-            @setState _.partial @validateAccountState, source, value
+            nextState = _.partial AccountsUtils.validateState, source, value
+            @setState nextState
