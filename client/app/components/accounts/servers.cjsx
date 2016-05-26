@@ -29,7 +29,7 @@ module.exports = AccountServers = React.createClass
             @props.password isnt @props["#{ctx}Password"]
 
         props =
-            _protocol:    ctx
+            protocol:    ctx
             server:       @props["#{ctx}Server"]
             port:         @props["#{ctx}Port"]
             security:     @props["#{ctx}Security"]
