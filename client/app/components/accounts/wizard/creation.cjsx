@@ -10,7 +10,7 @@ Servers = require '../servers'
 
 RequestsStore = require '../../../stores/requests_store'
 
-RouterGetter = require '../../../getters/router'
+RequestsGetter = require '../../../getters/requests'
 
 AccountActionCreator = require '../../../actions/account_action_creator'
 RouterActionCreator = require '../../../actions/router_action_creator'
@@ -29,16 +29,16 @@ module.exports = AccountWizardCreation = React.createClass
     ]
 
 
-    # Build state from RequestsStore through RouterGetter
+    # Build state from RequestsStore through RequestsGetter
     getStateFromStores: ->
-        account  = RouterGetter.getAccountCreationSuccess()?.account
-        discover = RouterGetter.getAccountCreationDiscover()
+        account  = RequestsGetter.getAccountCreationSuccess()?.account
+        discover = RequestsGetter.getAccountCreationDiscover()
 
         state =
-            isBusy:         RouterGetter.getAccountCreationBusy()
-            isDiscoverable: RouterGetter.getAccountIsDiscoverable()
-            alert:          RouterGetter.getAccountCreationAlert()
-            OAuth:          RouterGetter.getAccountIsOAuth()
+            isBusy:         RequestsGetter.isAccountCreationBusy()
+            isDiscoverable: RequestsGetter.isAccountDiscoverable()
+            alert:          RequestsGetter.getAccountCreationAlert()
+            OAuth:          RequestsGetter.isAccountOAuth()
 
         state.success = _.partial @redirect, account if account
         _.extend state, @parseProviders discover if discover
