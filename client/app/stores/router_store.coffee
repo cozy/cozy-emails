@@ -44,9 +44,9 @@ class RouterStore extends Store
     _tab = null
 
     _refreshMailbox = false
-    _newAccountWaiting = false
-    _newAccountChecking = false
-    _serverAccountErrorByField = Immutable.Map()
+    # _newAccountWaiting = false
+    # _newAccountChecking = false
+    # _serverAccountErrorByField = Immutable.Map()
 
     _conversationID = null
     _messageID = null
@@ -71,28 +71,28 @@ class RouterStore extends Store
         _modal
 
 
-    getErrors: ->
-        _serverAccountErrorByField
+    # getErrors: ->
+    #     _serverAccountErrorByField
 
 
-    getRawErrors: ->
-        _serverAccountErrorByField.get 'unknown'
+    # getRawErrors: ->
+    #     _serverAccountErrorByField.get 'unknown'
 
 
-    getAlertErrorMessage: ->
-        error = _serverAccountErrorByField.first()
-        if error.name is 'AccountConfigError'
-            return t "config error #{error.field}"
-        else
-            return error.message or error.name or error
+    # getAlertErrorMessage: ->
+    #     error = _serverAccountErrorByField.first()
+    #     if error.name is 'AccountConfigError'
+    #         return t "config error #{error.field}"
+    #     else
+    #         return error.message or error.name or error
 
 
-    isWaiting: ->
-        _newAccountWaiting
+    # isWaiting: ->
+    #     _newAccountWaiting
 
 
-    isChecking: ->
-        _newAccountChecking
+    # isChecking: ->
+    #     _newAccountChecking
 
 
     isRefresh: ->
@@ -447,34 +447,34 @@ class RouterStore extends Store
         _URI
 
 
-    _clearError = ->
-        _serverAccountErrorByField = Immutable.Map()
+    # _clearError = ->
+    #     _serverAccountErrorByField = Immutable.Map()
 
 
-    _addError = (field, err) ->
-        _serverAccountErrorByField = _serverAccountErrorByField.set field, err
+    # _addError = (field, err) ->
+    #     _serverAccountErrorByField = _serverAccountErrorByField.set field, err
 
 
-    _checkForNoMailbox = (rawAccount) ->
-        unless rawAccount.mailboxes?.size > 0
-            _setError
-                name: 'AccountConfigError',
-                field: 'nomailboxes'
-                causeFields: ['nomailboxes']
+    # _checkForNoMailbox = (rawAccount) ->
+    #     unless rawAccount.mailboxes?.size > 0
+    #         _setError
+    #             name: 'AccountConfigError',
+    #             field: 'nomailboxes'
+    #             causeFields: ['nomailboxes']
 
 
-    _setError = (error) ->
-        if error.name is 'AccountConfigError'
-            clientError =
-                message: t "config error #{error.field}"
-                originalError: error.originalError
-                originalErrorStack: error.originalErrorStack
-            errorsMap = {}
-            errorsMap[field] = clientError for field in error.causeFields
-            _serverAccountErrorByField = Immutable.Map errorsMap
-
-        else
-            _serverAccountErrorByField = Immutable.Map "unknown": error
+    # _setError = (error) ->
+    #     if error.name is 'AccountConfigError'
+    #         clientError =
+    #             message: t "config error #{error.field}"
+    #             originalError: error.originalError
+    #             originalErrorStack: error.originalErrorStack
+    #         errorsMap = {}
+    #         errorsMap[field] = clientError for field in error.causeFields
+    #         _serverAccountErrorByField = Immutable.Map errorsMap
+    #
+    #     else
+    #         _serverAccountErrorByField = Immutable.Map "unknown": error
 
 
     _updateURL = ->
@@ -558,14 +558,14 @@ class RouterStore extends Store
             @emit 'change'
 
 
-        handle ActionTypes.ADD_ACCOUNT_REQUEST, ({value}) ->
-            _newAccountWaiting = true
-            @emit 'change'
+        # handle ActionTypes.ADD_ACCOUNT_REQUEST, ({value}) ->
+        #     _newAccountWaiting = true
+        #     @emit 'change'
 
 
         handle ActionTypes.ADD_ACCOUNT_SUCCESS, ({account}) ->
             _timerRouteChange = setTimeout =>
-                _newAccountWaiting = false
+                # _newAccountWaiting = false
                 _action            = MessageActions.SHOW_ALL
 
                 _setCurrentAccount account.id, account.inboxMailbox
@@ -575,44 +575,44 @@ class RouterStore extends Store
             , 5000
 
 
-        handle ActionTypes.ADD_ACCOUNT_FAILURE, ({error}) ->
-            _newAccountWaiting = false
-            _setError error
-            @emit 'change'
+        # handle ActionTypes.ADD_ACCOUNT_FAILURE, ({error}) ->
+        #     _newAccountWaiting = false
+        #     _setError error
+        #     @emit 'change'
 
 
-        handle ActionTypes.CHECK_ACCOUNT_REQUEST, () ->
-            _newAccountChecking = true
-            @emit 'change'
+        # handle ActionTypes.CHECK_ACCOUNT_REQUEST, () ->
+        #     _newAccountChecking = true
+        #     @emit 'change'
 
 
-        handle ActionTypes.CHECK_ACCOUNT_SUCCESS, () ->
-            _newAccountChecking = false
-            @emit 'change'
+        # handle ActionTypes.CHECK_ACCOUNT_SUCCESS, () ->
+        #     _newAccountChecking = false
+        #     @emit 'change'
 
 
-        handle ActionTypes.CHECK_ACCOUNT_FAILURE, ({error}) ->
-            _newAccountChecking = false
-            _setError error
-            @emit 'change'
+        # handle ActionTypes.CHECK_ACCOUNT_FAILURE, ({error}) ->
+        #     _newAccountChecking = false
+        #     _setError error
+        #     @emit 'change'
 
 
-        handle ActionTypes.EDIT_ACCOUNT_REQUEST, ({value}) ->
-            _newAccountWaiting = true
-            @emit 'change'
+        # handle ActionTypes.EDIT_ACCOUNT_REQUEST, ({value}) ->
+        #     _newAccountWaiting = true
+        #     @emit 'change'
 
 
-        handle ActionTypes.EDIT_ACCOUNT_SUCCESS, ({rawAccount}) ->
-            _newAccountWaiting = false
-            _checkForNoMailbox rawAccount
-            _clearError()
-            @emit 'change'
+        # handle ActionTypes.EDIT_ACCOUNT_SUCCESS, ({rawAccount}) ->
+        #     _newAccountWaiting = false
+        #     _checkForNoMailbox rawAccount
+        #     _clearError()
+        #     @emit 'change'
 
 
-        handle ActionTypes.EDIT_ACCOUNT_FAILURE, ({error}) ->
-            _newAccountWaiting = false
-            _setError error
-            @emit 'change'
+        # handle ActionTypes.EDIT_ACCOUNT_FAILURE, ({error}) ->
+        #     _newAccountWaiting = false
+        #     _setError error
+        #     @emit 'change'
 
 
         handle ActionTypes.MESSAGE_FETCH_REQUEST, ->

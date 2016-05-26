@@ -1,20 +1,20 @@
-AccountStore          = require '../stores/account_store'
-MessageStore          = require '../stores/message_store'
-NotificationStore     = require '../stores/notification_store'
-RefreshesStore        = require '../stores/refreshes_store'
-RequestsInFlightStore = require '../stores/requests_in_flight_store'
-RouterStore           = require '../stores/router_store'
-SearchStore           = require '../stores/search_store'
+{MailboxFlags
+MessageActions} = require '../constants/app_constants'
 
+_         = require 'lodash'
+Immutable = require 'immutable'
+moment    = require 'moment'
+
+AccountStore      = require '../stores/account_store'
+MessageStore      = require '../stores/message_store'
+NotificationStore = require '../stores/notification_store'
+RefreshesStore    = require '../stores/refreshes_store'
+RouterStore       = require '../stores/router_store'
+SearchStore       = require '../stores/search_store'
+
+FileGetter    = require '../getters/file'
 MessageGetter = require '../getters/message'
 
-_ = require 'lodash'
-Immutable = require 'immutable'
-moment      = require 'moment'
-
-FileGetter = require '../getters/file'
-
-{MessageActions, MailboxFlags} = require '../constants/app_constants'
 
 module.exports =
 
@@ -41,8 +41,6 @@ module.exports =
     getAction: ->
         RouterStore.getAction()
 
-    getRequestStatus: (request) ->
-        RequestsInFlightStore.getRequests().get request
 
     getReplyMessage: (messageID) ->
         isReply = @getAction() is MessageActions.EDIT

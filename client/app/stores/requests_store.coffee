@@ -1,3 +1,16 @@
+###
+
+RequestsStore
+=============
+
+Handles current requests performed in background to let components aware of
+their current status.
+
+TODO: when migrating to a stateless server app, all requests status should be
+handled by realtime stack and this store should be deprecated.
+
+###
+
 Immutable = require 'immutable'
 
 Store = require '../libs/flux/store/store'
@@ -12,13 +25,13 @@ _reset = ->
         "#{Requests.ADD_ACCOUNT}":      status: null, res: undefined
 
 
-class RequestsInFlightStore extends Store
+class RequestsStore extends Store
 
     _requests = _reset()
 
 
-    getRequests: ->
-        return _requests
+    get: (req) ->
+        return _requests.get req
 
 
     __bindHandlers: (handle) ->
@@ -83,4 +96,4 @@ class RequestsInFlightStore extends Store
             @emit 'change'
 
 
-module.exports = new RequestsInFlightStore()
+module.exports = new RequestsStore()

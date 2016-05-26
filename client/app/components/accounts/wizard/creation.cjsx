@@ -1,30 +1,22 @@
 {IMAP_OPTIONS} = require '../../../constants/defaults'
-{Requests
-RequestStatus
-OAuthDomains} = require '../../../constants/app_constants'
+{OAuthDomains} = require '../../../constants/app_constants'
 
-_        = require 'underscore'
-React    = require 'react'
-ReactDOM = require 'react-dom'
+_             = require 'underscore'
+React         = require 'react'
+ReactDOM      = require 'react-dom'
+AccountsUtils = require '../../../libs/accounts'
 
 Form    = require '../../basics/form'
 Servers = require '../servers'
 
-RequestsInFlightStore = require '../../../stores/requests_in_flight_store'
+RequestsStore = require '../../../stores/requests_store'
 
-RouterGetter = require '../../../getters/router'
+RequestsGetter = require '../../../getters/requests'
 
 AccountActionCreator = require '../../../actions/account_action_creator'
 RouterActionCreator = require '../../../actions/router_action_creator'
 
 StoreWatchMixin = require '../../../mixins/store_watch_mixin'
-AccountMixin    = require '../../../mixins/account_mixin'
-
-
-ALERTS =
-    'DISCOVER_FAILED': 'DISCOVER_FAILED'
-    'CHECK_FAILED':    'CHECK_FAILED'
-    'CREATE_FAILED':   'CREATE_FAILED'
 
 
 module.exports = AccountWizardCreation = React.createClass
@@ -32,72 +24,25 @@ module.exports = AccountWizardCreation = React.createClass
     displayName: 'AccountWizardCreation'
 
     mixins: [
-        StoreWatchMixin [RequestsInFlightStore]
-        AccountMixin
+        StoreWatchMixin [RequestsStore]
     ]
 
 
-    # Build state form RequestsInFlightStore:
-    # - is an autodiscover request in action, or a provider available?
+    # Build state from RequestsStore through RequestsGetter
     getStateFromStores: ->
-        state       = {}
-        discoverReq = RouterGetter.getRequestStatus Requests.DISCOVER_ACCOUNT
-        checkReq    = RouterGetter.getRequestStatus Requests.CHECK_ACCOUNT
-        createReq   = RouterGetter.getRequestStatus Requests.ADD_ACCOUNT
+        account  = RequestsGetter.getAccountCreationSuccess()?.account
+        discover = RequestsGetter.getAccountCreationDiscover()
 
-        isBusy = RequestStatus.INFLIGHT in [
-            discoverReq.status
-            checkReq.status
-            createReq.status
-        ]
+        state =
+            isBusy:         RequestsGetter.isAccountCreationBusy()
+            isDiscoverable: RequestsGetter.isAccountDiscoverable()
+            alert:          RequestsGetter.getAccountCreationAlert()
+            OAuth:          RequestsGetter.isAccountOAuth()
 
-        # Account creation step
-        if createReq.status is RequestStatus.SUCCESS
-            _.extend state,
-                success: _.partial @redirect, createReq.res
+        state.success = _.partial @redirect, account if account
+        _.extend state, AccountsUtils.parseProviders discover if discover
 
-        else if createReq.status is RequestStatus.ERROR
-            _.extend state,
-                alert: ALERTS.CREATE_FAILED
-
-        # Check account failed
-        # - set error message
-        # - if domain is one of known OAuth-aware domain, display reminder about
-        # OAuth token
-        if checkReq.status is RequestStatus.ERROR
-            {oauth} = checkReq.res
-            _.extend state,
-                alert: ALERTS.CHECK_FAILED
-                OAuth: oauth
-
-        # Autodiscover have returned a provider informations (an array of
-        # settings): extract settings from given provider for IMAP and SMTP
-        # and fill state
-        if discoverReq.status is RequestStatus.SUCCESS
-            _.extend state,
-                isDiscoverable: true
-                @parseProviders discoverReq.res
-
-        # autodiscover failed : switch to manual config and set an alert only if
-        # checkReq.status isn't already performed
-        else if discoverReq.status is RequestStatus.ERROR and
-        checkReq.status is null
-            _.extend state,
-                alert: ALERTS.DISCOVER_FAILED
-                isDiscoverable: false
-
-
-        # returns state with its fallback default values.
-        #
-        # `isDiscoverable` is true by default since no check has been performed
-        # (else, it means a previous config - discovered or manual - was
-        # submitted and discovering must be manually set by closing advanced
-        # settings panel)
-        _.defaults state,
-            isBusy:         isBusy
-            isDiscoverable: checkReq.status is null
-            alert:          null
-            success:        false
+        return state
 
 
     componentWillUpdate: (nextProps, nextState) ->
@@ -177,9 +122,11 @@ module.exports = AccountWizardCreation = React.createClass
 
         if @state.isDiscoverable and not(@state.imapServer or @state.smtpServer)
             [..., domain] = @state.login.split '@'
-            AccountActionCreator.discover domain, @sanitizeConfig @state
+            AccountActionCreator.discover domain,
+                AccountsUtils.sanitizeConfig @state
         else
-            AccountActionCreator.check value: @sanitizeConfig @state
+            AccountActionCreator.check
+                value: AccountsUtils.sanitizeConfig @state
 
 
     # Disable autodiscover when advanced settings are expanded
@@ -207,7 +154,7 @@ module.exports = AccountWizardCreation = React.createClass
 
 
     # Redirect on success to the freshly created account's mailbox
-    redirect: ({account}) ->
+    redirect: (account) ->
         RouterActionCreator.showMessageList mailboxID: account.inboxMailbox
 
 
@@ -221,4 +168,5 @@ module.exports = AccountWizardCreation = React.createClass
             @setState source
         else
             {target: {value}} = event
-            @setState _.partial @validateAccountState, source, value
+            nextState = _.partial AccountsUtils.validateState, source, value
+            @setState nextState
