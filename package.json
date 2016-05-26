@@ -22,7 +22,7 @@
     "html-minifier": "1.2.0",
     "html-to-text": "0.1.0",
     "iconv": "2.1.11",
-    "imap": "0.8.13",
+    "imap": "0.8.17",
     "lodash": "2.4.2",
     "mailparser": "0.4.6",
     "moment": "2.11.0",
