@@ -99,7 +99,6 @@ module.exports = React.createClass
                     accounts        : RouterGetter.getAccounts()?.toArray()
                     composeURL      : composeURL
                     newAccountURL   : newAccountURL
-                    mailboxes       : RouterGetter.getMailboxes()
                     nbUnread        : RouterGetter.getUnreadLength()
                     nbFlagged       : RouterGetter.getFlaggedLength()
 

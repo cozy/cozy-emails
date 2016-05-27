@@ -3,7 +3,7 @@ _ = require 'lodash'
 
 Store = require '../libs/flux/store/store'
 
-{ActionTypes, MailboxFlags} = require '../constants/app_constants'
+{ActionTypes} = require '../constants/app_constants'
 
 
 class AccountStore extends Store
@@ -33,9 +33,7 @@ class AccountStore extends Store
             if 'inbox' is mailbox.label.toLowerCase()
                 return account.inboxMailbox is mailbox.id
 
-            # Do not get NoSelect mailbox
-            # cf https://tools.ietf.org/html/rfc3501#page-69
-            return -1 is mailbox.attribs.indexOf '\\Noselect'
+            return true
 
         account.mailboxes = Immutable.Iterable mailboxes
         .toKeyedSeq()
@@ -190,13 +188,17 @@ class AccountStore extends Store
                 .get 'mailboxes'
 
 
-    isInbox: (accountID, mailboxID) ->
+    isInbox: (accountID, mailboxID, getChildren=false) ->
         mailbox = @getMailbox accountID, mailboxID
         return unless mailbox?.size
 
-        # TODO: this test should be done on server
-        isInbox = 'inbox' is mailbox.get('tree').join(',').toLowerCase()
-        isGmailInbox = MailboxFlags.ALL is mailbox.get('attribs').join ','
+        mailboxTree = mailbox.get('tree')
+        mailboxRoot = mailboxTree[0].toLowerCase()
+
+        isInbox = 'inbox' is mailboxRoot
+        isInboxChild = unless getChildren then mailboxTree.length is 1 else true
+        isGmailInbox = '[gmail]' is mailboxRoot and isInboxChild
+
         return isInbox or isGmailInbox
 
 

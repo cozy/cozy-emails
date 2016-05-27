@@ -43,6 +43,16 @@ module.exports =
         AccountStore.getInbox(accountID)?.get 'id'
 
 
+    getInboxMailboxes: (accountID) ->
+        RouterStore.getAllMailboxes(accountID).filter (mailbox) ->
+            AccountStore.isInbox accountID, mailbox.get('id'), true
+
+
+    getOtherMailboxes: (accountID) ->
+        RouterStore.getAllMailboxes(accountID).filter (mailbox) ->
+            not AccountStore.isInbox accountID, mailbox.get('id'), true
+
+
     # Sometimes we need a real URL
     # insteadof changing route params with actionCreator
     # Usefull to allow user
@@ -180,10 +190,6 @@ module.exports =
 
     getLogin: ->
         @getMailbox()?.get 'login'
-
-
-    getMailboxes: ->
-        RouterStore.getAllMailboxes()
 
 
     isMailboxExist: ->

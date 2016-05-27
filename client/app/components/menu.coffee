@@ -91,19 +91,15 @@ module.exports = Menu = React.createClass
     # renders a single account and its submenu
     # TODO : make a component for this
     renderMailBoxes: (account) ->
-        inboxMailboxes = @props.mailboxes.filter (mailbox) ->
-            'inbox' is mailbox.get('tree')[0].toLowerCase()
-        otherMailboxes = @props.mailboxes.filter (mailbox) ->
-            'inbox' isnt mailbox.get('tree')[0].toLowerCase()
-
         # Goto the default mailbox of the account
         props = {
             isSelected: (accountID = account.get 'id') is @props.accountID
             mailboxURL: RouterGetter.getInboxURL accountID
             configURL: RouterGetter.getConfigURL accountID
-            nbUnread: account.get 'totalUnread'
             color: ContactGetter.getTagColor account.get 'label'
             progress: RouterGetter.getProgress accountID
+            inboxMailboxes: RouterGetter.getInboxMailboxes accountID
+            otherMailboxes: RouterGetter.getOtherMailboxes accountID
         }
 
         className = classNames active: props.isSelected
@@ -137,7 +133,7 @@ module.exports = Menu = React.createClass
                     className: 'list-unstyled mailbox-list',
 
                     # Default Inbox Mailboxes
-                    inboxMailboxes?.map (mailbox, key) =>
+                    props.inboxMailboxes?.map (mailbox, key) =>
                         mailboxURL = RouterGetter.getURL
                             mailboxID: (mailboxID = mailbox.get 'id')
                             resetFilter: true
@@ -178,7 +174,7 @@ module.exports = Menu = React.createClass
                         mailboxID: account.get 'inboxMailbox'
 
                     # Other mailboxes
-                    otherMailboxes?.map (mailbox, key) =>
+                    props.otherMailboxes?.map (mailbox, key) =>
                         mailboxURL = RouterGetter.getURL
                             mailboxID: (mailboxID = mailbox.get 'id')
                             resetFilter: true
