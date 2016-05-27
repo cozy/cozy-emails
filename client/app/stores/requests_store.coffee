@@ -15,7 +15,10 @@ Immutable = require 'immutable'
 
 Store = require '../libs/flux/store/store'
 
-{ActionTypes, Requests, RequestStatus} = require '../constants/app_constants'
+{ActionTypes
+AccountActions
+Requests
+RequestStatus} = require '../constants/app_constants'
 
 
 _reset = ->
@@ -36,11 +39,11 @@ class RequestsStore extends Store
 
     __bindHandlers: (handle) ->
 
-        # Assume that when a route 'change', we won't need to keep track of
-        # requests anymore, so we reset them
-        handle ActionTypes.ROUTE_CHANGE, ->
-            _requests = _reset()
+        # Reset requests status when accessing account creation box
+        handle ActionTypes.ROUTE_CHANGE, ({action}) ->
+            _requests = _reset() if action is AccountActions.CREATE
             @emit 'change'
+
 
         handle ActionTypes.DISCOVER_ACCOUNT_REQUEST, ->
             _requests = _requests.set Requests.DISCOVER_ACCOUNT,

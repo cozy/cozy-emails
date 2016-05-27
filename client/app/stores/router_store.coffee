@@ -1,9 +1,11 @@
-_         = require 'lodash'
-Immutable = require 'immutable'
+_             = require 'lodash'
+Immutable     = require 'immutable'
+Store         = require '../libs/flux/store/store'
+AppDispatcher = require '../libs/flux/dispatcher/dispatcher'
 
-Store = require '../libs/flux/store/store'
-AccountStore = require '../stores/account_store'
-MessageStore = require '../stores/message_store'
+AccountStore  = require '../stores/account_store'
+MessageStore  = require '../stores/message_store'
+RequestsStore = require '../stores/requests_store'
 
 {AccountActions
 ActionTypes
@@ -507,6 +509,9 @@ class RouterStore extends Store
     __bindHandlers: (handle) ->
 
         handle ActionTypes.ROUTE_CHANGE, (payload={}) ->
+            # Ensure all stores that listen ROUTE_CHANGE have vanished
+            AppDispatcher.waitFor [RequestsStore.dispatchToken]
+
             clearTimeout _timerRouteChange
 
             {accountID, mailboxID, tab} = payload
