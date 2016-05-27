@@ -5,6 +5,7 @@ Store = require '../libs/flux/store/store'
 
 {ActionTypes, MailboxFlags, MailboxSpecial} = require '../constants/app_constants'
 
+
 class AccountStore extends Store
 
     ###
