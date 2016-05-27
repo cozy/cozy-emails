@@ -3,7 +3,7 @@ _ = require 'lodash'
 
 Store = require '../libs/flux/store/store'
 
-{ActionTypes} = require '../constants/app_constants'
+{ActionTypes, MailboxFlags, MailboxSpecial} = require '../constants/app_constants'
 
 
 class AccountStore extends Store
@@ -27,9 +27,20 @@ class AccountStore extends Store
 
     _setMailboxToImmutable = (account) ->
         mailboxes = _.filter account.mailboxes, (mailbox) ->
-            # OVH mailboxes has 2 mailbox called INBOX
+            # Gmail issue:
+            # no shortcuts into account
+            # to specialMailboxes
+            # TODO: should be done server side
+            _.forEach MailboxSpecial, (type, value) ->
+                unless account[value]?
+                    if MailboxFlags[type] is mailbox.attribs.join(',')
+                        account[value] = mailbox.id
+
+            # OVH issue
+            # mailboxes has 2 mailbox called INBOX
             # but only one the the real one
             # remove the fake one
+            # TODO: should be done server side
             if 'inbox' is mailbox.label.toLowerCase()
                 return account.inboxMailbox is mailbox.id
 
