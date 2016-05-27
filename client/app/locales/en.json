@@ -216,7 +216,7 @@
   "account wizard creation smtp security": "security",
   "account wizard creation save": "create my account",
   "account wizard creation success": "Your account was successfully created! Be ready to jump into your mailbox.",
-  "account wizard alert DISCOVER_FAILED": "We've try hard, but can't successfully auto-discover your email's servers settings. Please fill them in the fields below.",
+  "account wizard alert DISCOVER_FAILED": "We've tried hard, but can't successfully auto-discover your email's servers settings. Please fill them in the fields below.",
   "account wizard alert CHECK_FAILED": "Oops, something wen't wrong and we can't successfully login to your servers.",
   "account wizard alert oauth": "Also, it seems that you use an email provider that allow a double factors authentication. If you've enabled it, you must generate a token in ",
   "account wizard alert oauth link label": "your provider security settings section",
