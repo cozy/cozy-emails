@@ -5,7 +5,6 @@ Store = require '../libs/flux/store/store'
 
 {ActionTypes, MailboxFlags, MailboxSpecial} = require '../constants/app_constants'
 
-
 class AccountStore extends Store
 
     ###
@@ -229,6 +228,10 @@ class AccountStore extends Store
     getTrashMailbox: (accountID) ->
         @getAllMailboxes(accountID)?.find (mailbox) ->
             'trash' is mailbox.get('label').toLowerCase()
+
+    getAllMailbox: (accountID) ->
+        @getAllMailboxes(accountID)?.find (mailbox) ->
+            -1 < mailbox.get('attribs').indexOf MailboxFlags['ALL']
 
 
     getAllMailbox: (accountID) ->
