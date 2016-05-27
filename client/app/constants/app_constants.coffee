@@ -172,6 +172,7 @@ module.exports =
         'UNSEEN'       : 'unseen'
 
     MailboxFlags:
+        'INBOX'   :  '\\Inbox'
         'DRAFT'   :  '\\Drafts'
         'SENT'    :  '\\Sent'
         'TRASH'   :  '\\Trash'
@@ -180,7 +181,7 @@ module.exports =
         'FLAGGED' :  '\\Flagged'
 
     MailboxSpecial:
-        'inboxMailbox'  : ''
+        'inboxMailbox'  : 'INBOX'
         'draftMailbox'  : 'DRAFT'
         'sentMailbox'   : 'SENT'
         'trashMailbox'  : 'TRASH'

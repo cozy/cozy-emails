@@ -193,6 +193,9 @@ module.exports =
 
 
     isMailboxExist: ->
+        accountID = @getAccountID()
+        if (isInbox = AccountStore.isInbox accountID, @getMailboxID())
+            return AccountStore.getAllMailbox(accountID)?.get('lastSync')?
         @getMailbox()?.get('lastSync')?
 
 

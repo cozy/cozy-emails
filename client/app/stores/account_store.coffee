@@ -5,7 +5,6 @@ Store = require '../libs/flux/store/store'
 
 {ActionTypes, MailboxFlags, MailboxSpecial} = require '../constants/app_constants'
 
-
 class AccountStore extends Store
 
     ###
@@ -36,12 +35,20 @@ class AccountStore extends Store
                     if MailboxFlags[type] is mailbox.attribs.join(',')
                         account[value] = mailbox.id
 
+                    # Gmail Inbox has /noselect attribs
+                    # but this flag is for no-catch-mailbox
+                    # change attribs
+                    else if 'INBOX' is type and -1 < ['INBOX', '[Gmail]'].indexOf mailbox.label
+                        mailbox.attribs = [MailboxFlags[type]]
+                        account[value] = mailbox.id
+
             # OVH issue
             # mailboxes has 2 mailbox called INBOX
             # but only one the the real one
             # remove the fake one
             # TODO: should be done server side
             if 'inbox' is mailbox.label.toLowerCase()
+                mailbox.attribs = [MailboxFlags['INBOX']]
                 return account.inboxMailbox is mailbox.id
 
             return true
@@ -221,6 +228,10 @@ class AccountStore extends Store
     getTrashMailbox: (accountID) ->
         @getAllMailboxes(accountID)?.find (mailbox) ->
             'trash' is mailbox.get('label').toLowerCase()
+
+    getAllMailbox: (accountID) ->
+        @getAllMailboxes(accountID)?.find (mailbox) ->
+            -1 < mailbox.get('attribs').indexOf MailboxFlags['ALL']
 
 
     makeEmptyAccount: ->
