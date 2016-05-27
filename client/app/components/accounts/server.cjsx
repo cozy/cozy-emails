@@ -10,7 +10,7 @@ Form = require '../basics/form'
 DEFAULT_PORTS =
     imap:
         ssl:      993
-        starttls: 993
+        starttls: 143
         none:     143
     smtp:
         ssl:      465
@@ -47,8 +47,10 @@ module.exports = AccountServer = React.createClass
     # Component so uses a default initialState bound to no security protocol and
     # according port.
     getInitialState: ->
-        port:     @props.port or DEFAULT_PORTS[@props.protocol].none
-        security: @props.security or 'none'
+        def = 'starttls'
+
+        port:     @props.port or DEFAULT_PORTS[@props.protocol][def]
+        security: @props.security or def
 
 
     componentWillReceiveProps: (nextProps) ->
