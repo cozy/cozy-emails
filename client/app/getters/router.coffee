@@ -1,5 +1,5 @@
-{MailboxFlags
-MessageActions} = require '../constants/app_constants'
+{MessageActions
+AccountActions} = require '../constants/app_constants'
 
 _         = require 'lodash'
 Immutable = require 'immutable'
@@ -36,6 +36,33 @@ module.exports =
 
     getURL: (params) ->
         RouterStore.getURL params
+
+
+    getInboxID: (accountID) ->
+        accountID ?= @getAccountID()
+        AccountStore.getInbox(accountID)?.get 'id'
+
+
+    # Sometimes we need a real URL
+    # insteadof changing route params with actionCreator
+    # Usefull to allow user
+    # to open accountInbox into a new window
+    getInboxURL: (accountID) ->
+        mailboxID = @getInboxID accountID
+        action = MessageActions.SHOW_ALL
+        resetFilter = true
+        return @getURL {action, mailboxID, resetFilter}
+
+
+    # Sometimes we need a real URL
+    # insteadof changing route params with actionCreator
+    # Usefull to allow user
+    # to open accountConfiguration into a new window
+    getConfigURL: (accountID) ->
+        mailboxID = @getInboxID accountID
+        action = AccountActions.EDIT
+        resetFilter = true
+        @getURL {action, mailboxID, resetFilter}
 
 
     getAction: ->
@@ -109,30 +136,25 @@ module.exports =
         conversationID is @getConversationID()
 
 
-    getMailbox: (mailboxID) ->
-        RouterStore.getMailbox mailboxID
-
-
-    getCurrentMailbox: ->
-        RouterStore.getMailbox()
-
-
-    getInbox: (accountID) ->
+    getMailbox: (accountID, mailboxID) ->
         accountID ?= @getAccountID()
-        RouterStore.getInbox accountID
+        mailboxID ?= @getMailboxID()
+        AccountStore.getMailbox accountID, mailboxID
 
 
-    getUnreadLength: ->
-        @getInbox()?.get 'nbUnread'
+    getUnreadLength: (accountID) ->
+        accountID ?= @getAccountID()
+        AccountStore.getInbox()?.get 'nbUnread'
 
 
-    getFlaggedLength: ->
-        @getInbox()?.get 'nbFlagged'
+    getFlaggedLength: (accountID) ->
+        accountID ?= @getAccountID()
+        AccountStore.getInbox()?.get 'nbFlagged'
 
 
     getTrashMailbox: (accountID) ->
         accountID ?= @getAccountID()
-        RouterStore.getTrashMailbox accountID
+        AccountStore.getTrashMailbox accountID
 
 
     getAccounts: ->
@@ -157,27 +179,19 @@ module.exports =
 
 
     getLogin: ->
-        @getCurrentMailbox()?.get 'login'
+        @getMailbox()?.get 'login'
 
 
     getMailboxes: ->
         RouterStore.getAllMailboxes()
 
 
+    isMailboxExist: ->
+        @getMailbox()?.get('lastSync')?
+
+
     isMailboxLoading: ->
         RouterStore.isRefresh()
-
-
-    getTags: (message) ->
-        mailboxID = @getMailboxID()
-        mailboxesIDs = Object.keys message.get 'mailboxIDs'
-        return _.uniq _.compact mailboxesIDs.map (id) =>
-            if (mailbox = @getMailbox id)
-                attribs = mailbox.get('attribs') or []
-                isGlobal = MailboxFlags.ALL in attribs
-                isEqual = mailboxID is id
-                unless (isEqual or isGlobal)
-                    return mailbox?.get 'label'
 
 
     formatMessage: (message) ->

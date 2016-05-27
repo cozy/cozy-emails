@@ -3,7 +3,7 @@ _ = require 'lodash'
 
 Store = require '../libs/flux/store/store'
 
-{ActionTypes} = require '../constants/app_constants'
+{ActionTypes, MailboxFlags} = require '../constants/app_constants'
 
 
 class AccountStore extends Store
@@ -179,10 +179,35 @@ class AccountStore extends Store
             account.get('label') is label
 
 
+    getMailbox: (accountID, mailboxID) ->
+        @getAllMailboxes(accountID)?.find (mailbox) ->
+            mailboxID is mailbox.get 'id'
+
+
     getAllMailboxes: (accountID) ->
         if accountID
             _accounts?.get accountID
                 .get 'mailboxes'
+
+
+    isInbox: (accountID, mailboxID) ->
+        mailbox = @getMailbox accountID, mailboxID
+        return unless mailbox?.size
+
+        # TODO: this test should be done on server
+        isInbox = 'inbox' is mailbox.get('tree').join(',').toLowerCase()
+        isGmailInbox = MailboxFlags.ALL is mailbox.get('attribs').join ','
+        return isInbox or isGmailInbox
+
+
+    getInbox: (accountID) ->
+        @getAllMailboxes(accountID)?.find (mailbox) =>
+            @isInbox accountID, mailbox.get 'id'
+
+
+    getTrashMailbox: (accountID) ->
+        @getAllMailboxes(accountID)?.find (mailbox) ->
+            'trash' is mailbox.get('label').toLowerCase()
 
 
     makeEmptyAccount: ->
@@ -207,4 +232,3 @@ class AccountStore extends Store
 
 
 module.exports = new AccountStore()
-
