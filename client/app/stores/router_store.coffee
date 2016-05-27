@@ -231,33 +231,15 @@ class RouterStore extends Store
             return _mailboxID
 
 
-    getMailbox: (mailboxID) ->
+    getMailbox: (accountID, mailboxID) ->
+        accountID ?= @getAccountID()
         mailboxID ?= @getMailboxID()
-        @getAllMailboxes()?.get mailboxID
+        AccountStore.getMailbox accountID, mailboxID
 
 
     getAllMailboxes: (accountID) ->
         accountID ?= @getAccountID()
         AccountStore.getAllMailboxes accountID
-
-
-    getInbox: (accountID) ->
-        @getAllMailboxes(accountID)?.find (mailbox) ->
-            'inbox' is mailbox.get('label').toLowerCase()
-
-
-    isInbox: (mailboxID) ->
-        mailboxID ?= _mailboxID
-        mailboxIDs = @getAllMailboxes()?.filter (mailbox) ->
-            'inbox' is mailbox.get('label').toLowerCase()
-        .map (mailbox) -> mailbox.get 'id'
-        .toArray()
-        -1 < mailboxIDs?.indexOf mailboxID
-
-
-    getTrashMailbox: (accountID) ->
-        @getAllMailboxes(accountID)?.find (mailbox) ->
-            'trash' is mailbox.get('label').toLowerCase()
 
 
     getSelectedTab: ->
@@ -489,14 +471,13 @@ class RouterStore extends Store
         # but only one is references as real INBOX
         # Get reference INBOX_ID to keep _nextURL works
         # sith this onther INBOX
-        if _self.isInbox()
-            mailboxID = _self.getInbox().get 'id'
+        if AccountStore.isInbox()
+            mailboxID = AccountStore.getInbox(_accountID).get 'id'
         else
-            mailboxID = _self.getMailboxID()
+            mailboxID = _mailboxID
 
         # Get queryString of URI params
-        filter = _self.getFilter()
-        query = _getURIQueryParams {filter}
+        query = _getURIQueryParams {filter: _currentFilter}
 
         _URI = "#{mailboxID}#{query}"
 

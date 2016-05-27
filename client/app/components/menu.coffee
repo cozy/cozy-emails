@@ -97,17 +97,10 @@ module.exports = Menu = React.createClass
             'inbox' isnt mailbox.get('tree')[0].toLowerCase()
 
         # Goto the default mailbox of the account
-        action = MessageActions.SHOW_ALL
-        accountID = account.get 'id'
-        mailboxID = account.get 'inboxMailbox'
-        mailboxURL = RouterGetter.getURL {action, mailboxID, resetFilter: true}
-
         props = {
-            isSelected: accountID is @props.accountID
-            mailboxURL: mailboxURL
-            configURL: RouterGetter.getURL
-                action: AccountActions.EDIT
-                accountID: accountID
+            isSelected: (accountID = account.get 'id') is @props.accountID
+            mailboxURL: RouterGetter.getInboxURL accountID
+            configURL: RouterGetter.getConfigURL accountID
             nbUnread: account.get 'totalUnread'
             color: ContactGetter.getTagColor account.get 'label'
             progress: RouterGetter.getProgress accountID
