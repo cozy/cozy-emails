@@ -229,6 +229,7 @@ class AccountStore extends Store
         @getAllMailboxes(accountID)?.find (mailbox) ->
             'trash' is mailbox.get('label').toLowerCase()
 
+
     getAllMailbox: (accountID) ->
         @getAllMailboxes(accountID)?.find (mailbox) ->
             -1 < mailbox.get('attribs').indexOf MailboxFlags['ALL']
