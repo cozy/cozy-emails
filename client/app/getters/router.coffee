@@ -194,9 +194,17 @@ module.exports =
 
     isMailboxExist: ->
         accountID = @getAccountID()
+
+        # If current mailboxID is inbox
+        # test Inbox instead of 1rst mailbox
         if (isInbox = AccountStore.isInbox accountID, @getMailboxID())
-            return AccountStore.getAllMailbox(accountID)?.get('lastSync')?
-        @getMailbox()?.get('lastSync')?
+            # Gmail issue
+            # Test \All tag insteadof \INBOX
+            mailbox = AccountStore.getAllMailbox accountID
+            mailbox ?= AccountStore.getInbox accountID
+
+        mailbox ?= @getMailbox()
+        mailbox?.get('lastSync')?
 
 
     isMailboxLoading: ->
