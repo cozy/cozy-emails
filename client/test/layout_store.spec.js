@@ -13,7 +13,7 @@ describe('Layout Store', () => {
   before(() => {
     dispatcher = new SpecDispatcher();
     mockeryUtils.initDispatcher(dispatcher);
-    mockeryUtils.initForStores();
+    mockeryUtils.initForStores(['../app/stores/layout_store']);
     layoutStore = require('../app/stores/layout_store');
   });
 

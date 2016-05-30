@@ -1,9 +1,111 @@
 'use strict';
 const assert = require('chai').assert;
+const _ = require('lodash');
 
 const mockeryUtils = require('./utils/mockery_utils');
 const SpecDispatcher = require('./utils/specs_dispatcher');
 const ActionTypes = require('../app/constants/app_constants').ActionTypes;
+
+const fixtures = {
+  message1: {
+    id: 'i1',
+    accountID: 'a1',
+    messageID: 'm1',
+    conversationID: 'ac1',
+    mailboxIDs: { inbox: 1 },
+  },
+  message2: {
+    id: 'i2',
+    accountID: 'a2',
+    messageID: 'm2',
+    conversationID: 'c2',
+    mailboxIDs: { mb1: 1, inbox: 1 },
+  },
+  message3: {
+    id: 'i3',
+    accountID: 'a2',
+    messageID: 'm3',
+    conversationID: 'c2',
+    mailboxIDs: { mb1: 1, inbox: 1 },
+  },
+  message4: {
+    id: 'i4',
+    accountID: 'a4',
+    messageID: 'm4',
+    conversationID: 'c4',
+    mailboxIDs: { inbox: 1 },
+  },
+  message5: {
+    id: 'i5',
+    accountID: 'a5',
+    messageID: 'm5',
+    conversationID: 'c5',
+    mailboxIDs: { inbox: 1 },
+  },
+  message6: {
+    id: 'i6',
+    messageID: 'm6',
+    accountID: 'a5',
+    conversationID: 'c5',
+    mailboxIDs: { inbox: 1 },
+  },
+  message7: {
+    id: 'i7',
+    accountID: 'a7',
+    messageID: 'm7',
+    conversationID: 'c7',
+    mailboxIDs: { inbox: 1 },
+  },
+  message8: {
+    id: 'i8',
+    accountID: 'a8',
+    messageID: 'm8',
+    conversationID: 'c8',
+    mailboxIDs: { inbox: 1 },
+  },
+  message9: {
+    id: 'i9',
+    messageID: 'm9',
+    accountID: 'a8',
+    conversationID: 'c8',
+    mailboxIDs: { inbox: 1 },
+  },
+  message10: {
+    id: 'i10',
+    accountID: 'a10',
+    messageID: 'm10',
+    conversationID: 'c10',
+    mailboxIDs: ['inbox'],
+  },
+  message11: {
+    id: 'i11',
+    accountID: 'a11',
+    messageID: 'm11',
+    conversationID: 'c11',
+    mailboxIDs: ['inbox'],
+  },
+  message12: {
+    id: 'i12',
+    accountID: 'a12',
+    messageID: 'm12',
+    conversationID: 'c11',
+    mailboxIDs: ['inbox'],
+  },
+  rawMessage1: {
+    id: 'rai1',
+    accountID: 'ra1',
+    messageID: 'rm1',
+    conversationID: 'rc1',
+    mailboxIDs: { inbox: 1 },
+  },
+  rawMessage2: {
+    id: 'rai2',
+    accountID: 'ra2',
+    messageID: 'rm2',
+    conversationID: 'rc2',
+    mailboxIDs: { inbox: 1 },
+  },
+};
 
 describe('Message Store', () => {
   let messageStore;
@@ -43,270 +145,205 @@ describe('Message Store', () => {
   before(() => {
     dispatcher = new SpecDispatcher();
     mockeryUtils.initDispatcher(dispatcher);
-    mockeryUtils.initForStores();
+    mockeryUtils.initForStores(['../app/stores/message_store']);
     messageStore = require('../app/stores/message_store');
   });
 
   /*
-   * Problems noticed:
+   * Problems noticed in the store file:
    *
-   * * Usage of underscore instead of lodash.
-   * * The fact that the conversation length is calculated remotely, is
-   *   not clear.
-   * * Coffee file is not linted.
-   * * Most operations like getting raw messages don't update conversation
-   *   length.
-   * * Action values are not normalized.
-   * * SETTINGS_UPDATE_RESQUEST action has a typo inside its name. And it's not
-   *   sure it's still used.
-   * * Line 55, length should be used instead of size.
+   * FIXME Underscore is used instead of lodash.
+   * FIXME The fact that the conversation length is calculated remotely, is
+   *       not clear for the developer.
+   * FIXME The coffeescript code is not linted.
+   * FIXME Most operations, like getting raw messages, don't update
+   *       conversation length.
+   * FIXME Action values are not normalized.
+   * FIXME SETTINGS_UPDATE_RESQUEST action has a typo inside its name. And it's
+   *       not sure it's still used.
+   * FIXME Line 55, length should be used instead of size.
    */
   describe('Actions', () => {
+    const id1 = fixtures.message1.id;
+    const id2 = fixtures.message2.id;
+    const id3 = fixtures.message3.id;
+    const conversationId1 = fixtures.message1.conversationID;
+    const conversationId2 = fixtures.message2.conversationID;
+    const seenFlags = ['\\Seen'];
+
     it('MESSAGE_FETCH_SUCCESS', () => {
-      const message1 = {
-        id: 'ai1',
-        accountID: 'aa1',
-        messageID: 'am1',
-        conversationID: 'ac1',
-        mailboxIDs: { inbox: 1 },
-      };
-      const message2 = {
-        id: 'ai2',
-        accountID: 'aa2',
-        messageID: 'am2',
-        conversationID: 'ac2',
-        mailboxIDs: { mb1: 1, inbox: 1 },
-      };
-      const message3 = {
-        id: 'ai3',
-        accountID: 'aa2',
-        messageID: 'am3',
-        conversationID: 'ac2',
-        mailboxIDs: { mb1: 1, inbox: 1 },
-      };
-      addMessages([message1, message2, message3]);
+      addMessages([fixtures.message1, fixtures.message2, fixtures.message3]);
 
       const messages = messageStore.getAll();
-      assert.deepEqual(messages.get('ai1').toObject(), message1);
-      assert.deepEqual(messages.get('ai2').toObject(), message2);
-      assert.deepEqual(messages.get('ai3').toObject(), message3);
+      assert.deepEqual(messages.get(id1).toObject(), fixtures.message1);
+      assert.deepEqual(messages.get(id2).toObject(), fixtures.message2);
+      assert.deepEqual(messages.get(id3).toObject(), fixtures.message3);
 
-      let length = messageStore.getConversationLength('ac2');
+      let length = messageStore.getConversationLength(conversationId2);
       assert.equal(length, 2);
-      length = messageStore.getConversationLength('ac1');
+      length = messageStore.getConversationLength(conversationId1);
       assert.equal(length, 1);
 
-      message3.flags = ['\\Seen'];
+      fixtures.message3.flags = seenFlags;
 
       // Test that update don't occur with older timestamp
-      addMessages([message1, message2, message3], false,
+      addMessages([fixtures.message1, fixtures.message2, fixtures.message3],
+                  false,
                   new Date().getTime() - 100000);
-      let message = messageStore.getByID('ai3');
+      let message = messageStore.getByID(id3);
       assert.equal(message.get('flags').length, 0);
 
       // Test that update occur with newest addition
-      addMessages([message1, message2, message3]);
-      message = messageStore.getByID('ai3');
-      assert.equal(message.get('flags')[0], '\\Seen');
+      addMessages([fixtures.message1, fixtures.message2, fixtures.message3]);
+      message = messageStore.getByID(id3);
+      assert.equal(message.get('flags')[0], seenFlags);
     });
     it('RECEIVE_RAW_MESSAGE', () => {
-      const message = {
-        id: 'rai1',
-        accountID: 'ra1',
-        messageID: 'rm1',
-        conversationID: 'rc1',
-        mailboxIDs: { inbox: 1 },
-      };
       dispatcher.dispatch({
         type: ActionTypes.RECEIVE_RAW_MESSAGE,
-        value: message,
+        value: fixtures.rawMessage1,
       });
       const messages = messageStore.getAll();
-      assert.deepEqual(messages.get('rai1').toObject(), message);
+      const idr1 = fixtures.rawMessage1.id;
+      assert.deepEqual(messages.get(idr1).toObject(), fixtures.rawMessage1);
     });
     it('RECEIVE_RAW_MESSAGE_REALTIME', () => {
-      const message = {
-        id: 'rai2',
-        accountID: 'ra2',
-        messageID: 'rm2',
-        conversationID: 'rc2',
-        mailboxIDs: { inbox: 1 },
-      };
       dispatcher.dispatch({
         type: ActionTypes.RECEIVE_RAW_MESSAGE_REALTIME,
-        value: message,
+        value: fixtures.rawMessage2,
       });
       const messages = messageStore.getAll();
-      assert.deepEqual(messages.get('rai2').toObject(), message);
+      const idr2 = fixtures.rawMessage2.id;
+      assert.deepEqual(messages.get(idr2).toObject(), fixtures.rawMessage2);
     });
     it('RECEIVE_RAW_MESSAGES', () => {
-      const message4 = {
-        id: 'ai4',
-        accountID: 'aa4',
-        messageID: 'am4',
-        conversationID: 'ac4',
-        mailboxIDs: { inbox: 1 },
-      };
-      const message5 = {
-        id: 'ai5',
-        accountID: 'aa5',
-        messageID: 'am5',
-        conversationID: 'ac5',
-        mailboxIDs: { inbox: 1 },
-      };
-      const message6 = {
-        id: 'ai6',
-        messageID: 'am6',
-        accountID: 'aa5',
-        conversationID: 'ac5',
-        mailboxIDs: { inbox: 1 },
-      };
-      addMessages([message4, null, message5, message6], true);
+      addMessages([
+        fixtures.message4,
+        null,
+        fixtures.message5,
+        fixtures.message6,
+      ],
+      true);
       const messages = messageStore.getAll();
-      assert.deepEqual(messages.get('ai4').toObject(), message4);
-      assert.deepEqual(messages.get('ai5').toObject(), message5);
-      assert.deepEqual(messages.get('ai6').toObject(), message6);
+      const id4 = fixtures.message4.id;
+      const id5 = fixtures.message5.id;
+      const id6 = fixtures.message6.id;
+      assert.deepEqual(messages.get(id4).toObject(), fixtures.message4);
+      assert.deepEqual(messages.get(id5).toObject(), fixtures.message5);
+      assert.deepEqual(messages.get(id6).toObject(), fixtures.message6);
     });
     it('REMOVE_ACCOUNT_SUCCESS', () => {
+      const accountId = fixtures.message5.accountID;
+      const id5 = fixtures.message5.id;
+      const id6 = fixtures.message6.id;
       dispatcher.dispatch({
         type: ActionTypes.REMOVE_ACCOUNT_SUCCESS,
-        value: 'aa5',
+        value: accountId,
       });
       const messages = messageStore.getAll();
-      assert.isUndefined(messages.get('ai5'));
-      assert.isUndefined(messages.get('ai6'));
+      assert.isUndefined(messages.get(id5));
+      assert.isUndefined(messages.get(id6));
     });
     it('MESSAGE_FLAGS_SUCCESS', () => {
-      const message1 = {
-        id: 'ai1',
-        accountID: 'aa1',
-        messageID: 'am1',
-        conversationID: 'ac1',
-        flags: ['\\Seen'],
-        mailboxIDs: { inbox: 1 },
-      };
-      const message2 = {
-        id: 'ai2',
-        accountID: 'aa2',
-        messageID: 'am2',
-        conversationID: 'ac2',
-        flags: ['\\Seen'],
-        mailboxIDs: { mb1: 1, inbox: 1 },
-      };
+      const message1 = _.extend(_.clone(fixtures.message1),
+                                { flags: ['\\Seen'] });
+      const message2 = _.extend(_.clone(fixtures.message2),
+                                { flags: ['\\Seen'] });
       dispatcher.dispatch({
         type: ActionTypes.MESSAGE_FLAGS_SUCCESS,
         value: { updated: [message1, message2] },
       });
+      const id1 = fixtures.message1.id;
+      const id2 = fixtures.message2.id;
       const messages = messageStore.getAll();
-      assert.deepEqual(messages.get('ai1').toObject(), message1);
-      assert.deepEqual(messages.get('ai2').toObject(), message2);
+      assert.deepEqual(messages.get(id1).toObject(), message1);
+      assert.deepEqual(messages.get(id2).toObject(), message2);
     });
     it.skip('MESSAGE_MOVE_SUCCESS', () => {
+      // FIXME: Don't know how to implement this test.
     });
     it.skip('MESSAGE_SEND_SUCCESS', () => {
+      // FIXME: Don't know how to implement this test.
     });
     it('RECEIVE_MESSAGE_DELETE', () => {
+      const id4 = fixtures.message2.id;
       dispatcher.dispatch({
         type: ActionTypes.RECEIVE_MESSAGE_DELETE,
-        value: 'ai4',
+        value: id4,
       });
       const messages = messageStore.getAll();
-      assert.isUndefined(messages.get('ai4'));
+      assert.isUndefined(messages.get(id4));
     });
     it('MAILBOX_EXPUNGE', () => {
+      const id1 = fixtures.message1.id;
+      const id2 = fixtures.message2.id;
+      const id3 = fixtures.message3.id;
+      const mailboxId = Object.keys(fixtures.message3.mailboxIDs)[0];
       dispatcher.dispatch({
         type: ActionTypes.MAILBOX_EXPUNGE,
-        value: 'mb1',
+        value: mailboxId,
       });
       const messages = messageStore.getAll();
-      assert.isDefined(messages.get('ai1'));
-      assert.isUndefined(messages.get('ai2'));
-      assert.isUndefined(messages.get('ai3'));
+      assert.isDefined(messages.get(id1));
+      assert.isUndefined(messages.get(id2));
+      assert.isUndefined(messages.get(id3));
     });
     it('SEARCH_SUCCESS', () => {
-      const message7 = {
-        id: 'ai7',
-        accountID: 'aa7',
-        messageID: 'am7',
-        conversationID: 'ac7',
-        mailboxIDs: { inbox: 1 },
-      };
-      const message8 = {
-        id: 'ai8',
-        accountID: 'aa8',
-        messageID: 'am8',
-        conversationID: 'ac8',
-        mailboxIDs: { inbox: 1 },
-      };
-      const message9 = {
-        id: 'ai9',
-        messageID: 'am9',
-        accountID: 'aa8',
-        conversationID: 'ac8',
-        mailboxIDs: { inbox: 1 },
-      };
       dispatcher.dispatch({
         type: ActionTypes.SEARCH_SUCCESS,
-        value: { result: { rows: [message7, message8, message9] } },
+        value: { result: { rows: [
+          fixtures.message7, fixtures.message8, fixtures.message9,
+        ] } },
       });
       const messages = messageStore.getAll();
-      assert.deepEqual(messages.get('ai7').toObject(), message7);
-      assert.deepEqual(messages.get('ai8').toObject(), message8);
-      assert.deepEqual(messages.get('ai9').toObject(), message9);
+      const id7 = fixtures.message7.id;
+      const id8 = fixtures.message8.id;
+      const id9 = fixtures.message9.id;
+      assert.deepEqual(messages.get(id7).toObject(), fixtures.message7);
+      assert.deepEqual(messages.get(id8).toObject(), fixtures.message8);
+      assert.deepEqual(messages.get(id9).toObject(), fixtures.message9);
     });
     it('SETTINGS_UPDATE_REQUEST', () => {
+      const id9 = fixtures.message9.id;
       dispatcher.dispatch({
         type: ActionTypes.SETTINGS_UPDATE_RESQUEST,
-        value: { messageID: 'ai9', displayImages: true },
+        value: { messageID: id9, displayImages: true },
       });
-      assert.isTrue(messageStore.getByID('ai9').__displayImages);
+      assert.isTrue(messageStore.getByID(id9).__displayImages);
     });
   });
 
   describe('Methods', () => {
-    let message1;
-    let message2;
-    let message3;
-
     it('getByID', () => {
-      message1 = {
-        id: 'i1',
-        accountID: 'a1',
-        messageID: 'm1',
-        conversationID: 'c1',
-        mailboxIDs: ['inbox'],
-      };
-      message2 = {
-        id: 'i2',
-        accountID: 'a2',
-        messageID: 'm2',
-        conversationID: 'c2',
-        mailboxIDs: ['inbox'],
-      };
-      message3 = {
-        id: 'i3',
-        messageID: 'm3',
-        accountID: 'a2',
-        conversationID: 'c2',
-        mailboxIDs: ['inbox'],
-      };
-      addMessages([message1, message2, message3]);
-      assert.deepEqual(messageStore.getByID('i1').toObject(), message1);
+      addMessages([
+        fixtures.message10,
+        fixtures.message11,
+        fixtures.message12,
+      ]);
+      const id10 = fixtures.message10.id;
+      assert.deepEqual(
+        messageStore.getByID(id10).toObject(),
+        fixtures.message10
+      );
     });
     it('getConversation', () => {
-      const messages = messageStore.getConversation('c2');
-      if (messages[0].get('id') === 'i2') {
-        assert.deepEqual(messages[0].toObject(), message2);
-        assert.deepEqual(messages[1].toObject(), message3);
+      const id11 = fixtures.message11.id;
+      const conversationId = fixtures.message11.conversationID;
+      const messages = messageStore.getConversation(conversationId);
+      if (messages[0].get('id') === id11) {
+        assert.deepEqual(messages[0].toObject(), fixtures.message11);
+        assert.deepEqual(messages[1].toObject(), fixtures.message12);
       } else {
-        assert.deepEqual(messages[1].toObject(), message2);
-        assert.deepEqual(messages[0].toObject(), message3);
+        assert.deepEqual(messages[1].toObject(), fixtures.message11);
+        assert.deepEqual(messages[0].toObject(), fixtures.message12);
       }
     });
     it('getConversationLength', () => {
-      let length = messageStore.getConversationLength('c2');
+      const conversationId1 = fixtures.message10.conversationID;
+      const conversationId2 = fixtures.message11.conversationID;
+      let length = messageStore.getConversationLength(conversationId2);
       assert.equal(length, 2);
-      length = messageStore.getConversationLength('c1');
+      length = messageStore.getConversationLength(conversationId1);
       assert.equal(length, 1);
       length = messageStore.getConversationLength('c5');
       assert.isUndefined(length);
@@ -317,3 +354,4 @@ describe('Message Store', () => {
     mockeryUtils.clean();
   });
 });
+

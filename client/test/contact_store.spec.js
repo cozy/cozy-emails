@@ -5,13 +5,37 @@ const mockeryUtils = require('./utils/mockery_utils');
 const SpecDispatcher = require('./utils/specs_dispatcher');
 const ActionTypes = require('../app/constants/app_constants').ActionTypes;
 
+const fixtures = {
+  contact1: {
+    id: 'c1',
+    datapoints: [
+      { name: 'email', value: 'test@right.com' },
+      { name: 'email', value: 'test2@right.com' },
+    ],
+    _attachments: {
+      picture: 'binary1',
+    },
+  },
+  contact2: {
+    id: 'c2',
+    fn: 'John,Doe',
+    datapoints: [
+      { name: 'email', value: 'john@cozy.io' },
+    ],
+  },
+  contact3: {
+    id: 'c3',
+    datapoints: [
+      { name: 'tel', value: '+33 7 12 42 49 87' },
+      { name: 'email', value: 'test@cozy.io' },
+    ],
+  },
+};
+
 
 describe('Contact Store', () => {
   let contactStore;
   let dispatcher;
-  let contact1;
-  let contact2;
-  let contact3;
 
   function search(query) {
     dispatcher.dispatch({
@@ -24,79 +48,63 @@ describe('Contact Store', () => {
   before(() => {
     dispatcher = new SpecDispatcher();
     mockeryUtils.initDispatcher(dispatcher);
-    mockeryUtils.initForStores();
+    mockeryUtils.initForStores(['../app/stores/contact_store']);
     contactStore = require('../app/stores/contact_store');
   });
 
   describe('Actions', () => {
+    const id1 = fixtures.contact1.id;
+    const id2 = fixtures.contact2.id;
+    const email1a = fixtures.contact1.datapoints[0].value;
+    const email1b = fixtures.contact1.datapoints[1].value;
+    const email2 = fixtures.contact2.datapoints[0].value;
+    const email3 = fixtures.contact3.datapoints[1].value;
+
     it('CREATE_CONTACT_SUCCESS', () => {
-      contact1 = {
-        id: 'c1',
-        datapoints: [
-          { name: 'email', value: 'test@right.com' },
-          { name: 'email', value: 'test2@right.com' },
-        ],
-        _attachments: {
-          picture: 'binary1',
-        },
-      };
-      contact2 = {
-        id: 'c2',
-        fn: 'John,Doe',
-        datapoints: [
-          { name: 'email', value: 'john@cozy.io' },
-        ],
-      };
-      contact3 = {
-        id: 'c3',
-        datapoints: [
-          { name: 'tel', value: '+33 7 12 42 49 87' },
-          { name: 'email', value: 'test@cozy.io' },
-        ],
-      };
       dispatcher.dispatch({
         type: ActionTypes.CREATE_CONTACT_SUCCESS,
-        value: [contact1, contact2, contact3],
+        value: [fixtures.contact1, fixtures.contact2, fixtures.contact3],
       });
       const contacts = contactStore.getAll();
-      assert.deepEqual(contacts.get('test@right.com').get('id'), contact1.id);
-      assert.deepEqual(contacts.get('test2@right.com').get('id'), contact1.id);
-      assert.deepEqual(contacts.get('john@cozy.io').get('id'), contact2.id);
-      assert.equal(
-          contacts.get('test2@right.com').get('address'), 'test@right.com');
+      assert.deepEqual(contacts.get(email1a).get('id'), id1);
+      assert.deepEqual(contacts.get(email1b).get('id'), id1);
+      assert.deepEqual(contacts.get(email2).get('id'), id2);
+      assert.equal(contacts.get(email1b).get('address'), email1a);
     });
     it('CONTACT_LOCAL_SEARCH', () => {
       let results = search('test');
       assert.isDefined(results);
       assert.equal(results.size, 3);
-      assert.isDefined(results.get('test@right.com'));
-      assert.isDefined(results.get('test2@right.com'));
-      assert.isDefined(results.get('test@cozy.io'));
+      assert.isDefined(results.get(email1a));
+      assert.isDefined(results.get(email1b));
+      assert.isDefined(results.get(email3));
       results = search('Doe');
       assert.equal(results.size, 1);
-      assert.isDefined(results.get('john@cozy.io'));
-      results = search('john@cozy.io');
+      assert.isDefined(results.get(email2));
+      results = search(email2);
       assert.equal(results.size, 1);
-      assert.isDefined(results.get('john@cozy.io'));
+      assert.isDefined(results.get(email2));
       results = search('test@wrong.com');
       assert.equal(results.size, 0);
     });
   });
 
   describe('Methods', () => {
+    const id1 = fixtures.contact1.id;
+    const email1a = fixtures.contact1.datapoints[0].value;
     it('getByAddress', () => {
-      assert.deepEqual(contactStore.getByAddress('test@right.com').toObject(),
-                       contact1);
+      assert.deepEqual(contactStore.getByAddress(email1a).toObject(),
+                       fixtures.contact1);
       assert.isUndefined(contactStore.getByAddress('test@wrong.com'));
     });
     it('getAvatar', () => {
       assert.isUndefined(contactStore.getAvatar('test@wrong.com'));
-      assert.equal(contactStore.getAvatar('test@right.com'),
-                   'contacts/c1/picture.jpg');
+      assert.equal(contactStore.getAvatar(email1a),
+                   `contacts/${id1}/picture.jpg`);
     });
     it('isExist', () => {
       assert.isFalse(contactStore.isExist('test@wrong.com'));
-      assert.isTrue(contactStore.isExist('test@right.com'));
+      assert.isTrue(contactStore.isExist(email1a));
     });
   });
 
