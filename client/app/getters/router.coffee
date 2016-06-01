@@ -104,10 +104,6 @@ module.exports =
         SearchStore.getCurrentSearch()
 
 
-    getProgress: (accountID) ->
-        RefreshesStore.getRefreshing().get accountID
-
-
     getSelectedTab: ->
         RouterStore.getSelectedTab()
 
@@ -208,7 +204,11 @@ module.exports =
 
 
     isMailboxLoading: ->
-        RouterStore.isRefresh()
+        RouterStore.isRefresh() or RefreshesStore.isRefreshing()
+
+
+    isRefreshError: ->
+        RefreshesStore.getRefreshError()
 
 
     formatMessage: (message) ->

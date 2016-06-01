@@ -46,7 +46,7 @@ module.exports = React.createClass
             target:  @state.target
             news:    @props.recent > 0
 
-        displayError = @props.displayErrors.bind null, @props.progress
+        displayError = @props.displayErrors.bind null, @props.isMailboxLoading
 
         li className: classesParent,
             a
@@ -63,10 +63,10 @@ module.exports = React.createClass
                         className: 'item-label',
                         "#{@props.label}"
 
-                if @props.progress?.get('errors').length
+                if @props.isRefreshError
                     span className: 'refresh-error', onClick: displayError,
                         i className: 'fa fa-warning', null
 
 
-            if not @props.progress and @props.unread
+            if not @props.isMailboxLoading and @props.unread
                 span className: 'badge', @props.unread

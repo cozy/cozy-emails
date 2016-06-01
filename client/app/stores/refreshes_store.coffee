@@ -37,18 +37,18 @@ class RefreshesStore extends Store
     ###
     __bindHandlers: (handle) ->
 
-
         handle ActionTypes.RECEIVE_REFRESH_STATUS, (refreshes) ->
             _reset refreshes
+            @emit 'change'
 
 
-        handle ActionTypes.RECEIVE_REFRESH_UPDATE, (refresh) ->
-            if refresh.length
-                refresh = Immutable.Map refresh
-                id = refresh.get 'objectID'
-                _refreshes = _refreshes.set(id, refresh).toOrderedMap()
-
-                @emit 'change'
+        handle ActionTypes.RECEIVE_REFRESH_UPDATE, (refreshes) ->
+            unless refreshes?.length
+                _refreshes = Immutable.OrderedMap()
+            else
+                refreshes.forEach (refresh) ->
+                    _refreshes = _refreshes.set(refresh.id, refresh).toOrderedMap()
+            @emit 'change'
 
 
         handle ActionTypes.RECEIVE_REFRESH_DELETE, (refreshID) ->
@@ -58,8 +58,12 @@ class RefreshesStore extends Store
             @emit 'change'
 
 
-    getRefreshing: ->
-        return _refreshes
+    isRefreshError: (accountID) ->
+        _refreshes.get('errors')?.length
+
+
+    isRefreshing: ->
+        0 isnt _refreshes.size
 
 
 module.exports = new RefreshesStore()
