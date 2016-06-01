@@ -2,7 +2,7 @@ require '../styles/application.styl'
 require '../../vendor/aria-tips/aria-tips.css'
 
 React = require 'react'
-{div, section, main} = React.DOM
+{div, section, main, h1, img, p} = React.DOM
 AriaTips = require '../../vendor/aria-tips/aria-tips'
 
 # React components
@@ -62,6 +62,7 @@ module.exports = React.createClass
                 conversation    : RouterGetter.getConversation()
                 isMailbox       : RouterGetter.isMailboxExist()
                 isLoading       : RouterGetter.isMailboxLoading()
+                isIndexing      : RouterGetter.isMailboxIndexing()
             }
 
         return {
@@ -79,6 +80,16 @@ module.exports = React.createClass
 
 
     render: ->
+        if @state.isIndexing
+            return div className: 'reindexing-message',
+                img
+                    className: 'spinner'
+                    src: "img/spinner.svg"
+                h1 null,
+                    'We need to reindex your emails.'
+                p null,
+                    'This page will refresh in a minute.'
+
         action = MessageActions.CREATE
         composeURL = RouterGetter.getURL {action}
 
