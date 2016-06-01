@@ -85,9 +85,9 @@ module.exports = React.createClass
         action = AccountActions.CREATE
         newAccountURL = RouterGetter.getURL {action}
 
-        isAccount = -1 < @state.action?.indexOf 'account'
-
         message = RouterGetter.getMessage()
+        conversationID = message?.get 'conversationID'
+        subject = message?.get 'subject'
 
         div className: @state.className,
             div className: 'app',
@@ -103,47 +103,49 @@ module.exports = React.createClass
                     nbFlagged       : RouterGetter.getFlaggedLength()
 
 
-                main
-                    className: @props.layout
-
+                main null,
                     div
-                        className: 'panels'
-                        if RouterGetter.getAccounts().size
-                            MessageList
-                                ref             : "messageList"
-                                key             : "messageList-#{@state.mailboxID}"
-                                accountID       : @state.accountID
-                                mailboxID       : @state.mailboxID
-                                messages        : @state.messages
-                                emptyMessages   : RouterGetter.getEmptyMessage()
-                                isAllSelected   : SelectionGetter.isAllSelected()
-                                selection       : SelectionGetter.getSelection @state.messages
-                                hasNextPage     : RouterGetter.hasNextPage()
-                                isMailbox       : @state.isMailbox
-                                isLoading       : @state.isLoading
+                        className: 'panels',
+
+                        MessageList
+                            ref             : "messageList"
+                            key             : "messageList-#{@state.mailboxID}"
+                            accountID       : @state.accountID
+                            mailboxID       : @state.mailboxID
+                            messages        : @state.messages
+                            emptyMessages   : RouterGetter.getEmptyMessage()
+                            isAllSelected   : SelectionGetter.isAllSelected()
+                            selection       : SelectionGetter.getSelection @state.messages
+                            hasNextPage     : RouterGetter.hasNextPage()
+                            isMailbox       : @state.isMailbox
+                            isLoading       : @state.isLoading
 
                         if @state.isMailbox and @state.messageID
                             Conversation
                                 ref             : "conversation"
                                 key             : "conversation-#{@state.messageID}"
                                 messageID       : @state.messageID
-                                conversationID  : message?.get 'conversationID'
-                                subject         : message?.get 'subject'
+                                conversationID  : conversationID
+                                subject         : subject
                                 messages        : @state.conversation
                         else
                             section
                                 'key'          : 'placeholder'
                                 'aria-expanded': false
 
+
             if @state.action is AccountActions.CREATE
                 AccountWizardCreation
                     key: 'modal-account-wizard'
                     hasDefaultAccount: RouterGetter.getAccountID()?
 
+
             # Display feedback
             Modal @state.modal if @state.modal?
 
+
             ToastContainer()
+
 
             # Tooltips' content is declared once at the application level.
             # It's hidden so it doesn't break the layout. Other components
