@@ -24,7 +24,7 @@ class AccountStore extends Store
         if -1 < index then ++index else order.length
 
 
-    _setMailboxToImmutable = (account) ->
+    _toImmutable = (account) ->
         mailboxes = _.filter account.mailboxes, (mailbox) ->
             # Gmail issue:
             # no shortcuts into account
@@ -87,7 +87,7 @@ class AccountStore extends Store
             .mapKeys (_, account) -> account.id
 
             # makes account object an immutable Map
-            .map _setMailboxToImmutable
+            .map _toImmutable
 
             .toOrderedMap()
 
@@ -117,7 +117,7 @@ class AccountStore extends Store
 
 
     _updateAccount = (rawAccount) ->
-        account = _setMailboxToImmutable rawAccount
+        account = _toImmutable rawAccount
         accountID = account.get 'id'
         _accounts = _accounts?.set accountID, account
 
