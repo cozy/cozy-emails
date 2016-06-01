@@ -211,6 +211,10 @@ module.exports =
         RefreshesStore.getRefreshError()
 
 
+    isMailboxIndexing: ->
+        RefreshesStore.isIndexing()
+
+
     formatMessage: (message) ->
         _getResources = ->
             message?.get('attachments').groupBy (file) ->

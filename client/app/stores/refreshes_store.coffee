@@ -12,6 +12,7 @@ class RefreshesStore extends Store
         Defines private variables here.
     ###
     _refreshes = Immutable.OrderedMap()
+    _isIndexing = false
 
 
     _reset = (refreshes=[]) ->
@@ -36,6 +37,16 @@ class RefreshesStore extends Store
         Defines here the action handlers.
     ###
     __bindHandlers: (handle) ->
+
+        handle ActionTypes.RECEIVE_INDEXES_REQUEST, () ->
+            _isIndexing = true
+            @emit 'change'
+
+
+        handle ActionTypes.RECEIVE_INDEXES_COMPLETE, () ->
+            _isIndexing = false
+            @emit 'change'
+
 
         handle ActionTypes.RECEIVE_REFRESH_STATUS, (refreshes) ->
             _reset refreshes
@@ -65,5 +76,8 @@ class RefreshesStore extends Store
     isRefreshing: ->
         0 isnt _refreshes.size
 
+
+    isIndexing: ->
+        _isIndexing
 
 module.exports = new RefreshesStore()

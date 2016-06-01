@@ -50,6 +50,12 @@ _initRealtime = ->
         reconectionDelay: 2000
         reconnectionAttempts: 3
 
+    _socket.on 'indexes.request',
+        _dispatchAs ActionTypes.RECEIVE_INDEXES_REQUEST
+
+    _socket.on 'indexes.complete',
+        _dispatchAs ActionTypes.RECEIVE_INDEXES_COMPLETE
+
     _socket.on 'refreshes.status',
         _dispatchAs ActionTypes.RECEIVE_REFRESH_STATUS
 

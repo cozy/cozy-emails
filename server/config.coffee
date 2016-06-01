@@ -50,6 +50,10 @@ config =
 
             proc = new ApplicationStartup()
             Scheduler.schedule proc, (err) ->
+                # Dispatching isIndexing state
+                # when browser.tab is focused
+                Scheduler.emit 'indexes.complete', err
+
                 log.info "Initialization complete"
 
     development: [

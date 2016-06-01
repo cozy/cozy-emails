@@ -18,6 +18,9 @@ SocketHandler.setup = (app, server) ->
     io = ioServer server
     io.on 'connection', handleNewClient
 
+    Scheduler.on 'indexes.complete', () ->
+        io.emit 'indexes.complete'
+
     Acccount.on 'create', (created) ->
         created = ramStore.getAccountClientObject created.id
         io.emit 'account.create', created
@@ -84,6 +87,13 @@ inScope = (socket, data) ->
 handleNewClient = (socket) ->
     log.debug 'handleNewClient', socket.id
 
+    # Dispatching isIndexing state
+    # when refreshing/opening mailbox page
+    if Scheduler.isRunning()
+        socket.emit 'indexes.request'
+    else
+        socket.emit 'indexes.complete'
+
     # update the client refreshes status
     socket.emit 'refreshes.status', Scheduler.clientSummary()
 
@@ -104,4 +114,3 @@ forgetClient = (socket) ->
     index = sockets.indexOf socket
     if index isnt -1
         sockets = sockets.splice index, 1
-

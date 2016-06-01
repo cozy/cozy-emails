@@ -4,7 +4,6 @@ ramStore = require '../models/store_account_and_boxes'
 {EventEmitter} = require('events')
 MailboxRefresh = require './mailbox_refresh'
 MailboxRefreshList = require '../processes/mailbox_refresh_list'
-ApplicationStartup = require './application_startup'
 RemoveMessagesFromAccount = require './message_remove_by_account'
 OrphanRemoval = require './orphan_removal'
 async = require 'async'
@@ -51,7 +50,6 @@ Scheduler.schedule = (proc, asap, callback) ->
             Scheduler.doNext() unless running
 
 Scheduler.scheduleMultiple = (processes, callback) ->
-
     waiters = processes.map (proc) ->
         (cb) -> Scheduler.schedule proc, cb
 
@@ -60,6 +58,7 @@ Scheduler.scheduleMultiple = (processes, callback) ->
 
 Scheduler.doNext = ->
     log.debug "Scheduler.doNext already running = ", running?
+
     unless running
         proc = running = queued.shift()
         if proc
@@ -71,7 +70,9 @@ Scheduler.doNext = ->
             # nothing to do
             Scheduler.onIdle()
 
-        eventEmitter.emit 'change'
+        eventAction = if queued.length then 'request' else 'complete'
+        eventEmitter.emit "indexes.#{eventType}"
+
 
 Scheduler.onIdle = ->
     log.debug "Scheduler.onIdle"
@@ -82,6 +83,10 @@ Scheduler.onIdle = ->
         Scheduler.startFavoriteRefresh()
 
     else
+        # Fire indexingComplete event
+        # when ervy tasks are finished
+        eventEmitter.emit 'indexes.complete'
+
         log.debug "nothing to do, waiting 10 MIN"
         setTimeout Scheduler.doNext, 10 * MIN
 
@@ -132,6 +137,9 @@ Scheduler.startFavoriteRefresh = ->
         log.error err if err
         lastFavoriteRefresh = Date.now()
 
+Scheduler.emit = (event, args={}) ->
+    eventEmitter.emit event, args
+
 Scheduler.on = (event, listener) ->
     eventEmitter.addListener event, listener
 
@@ -140,8 +148,8 @@ Scheduler.clientSummary = ->
     list = [running].concat list if running
     return list.map (proc) -> proc.summary()
 
-Scheduler.applicationStartupRunning = ->
-    running and running instanceof ApplicationStartup
+Scheduler.isRunning = ->
+    running
 
 # there is a few time when we want to do an orphan removal after
 # the main operation complete, if the user perform several such
