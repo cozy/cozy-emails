@@ -134,8 +134,14 @@ class AccountStore extends Store
     ###
     __bindHandlers: (handle) ->
 
+
         handle ActionTypes.ADD_ACCOUNT_SUCCESS, ({account}) ->
             _updateAccount account
+            @emit 'change'
+
+
+        handle ActionTypes.RECEIVE_ACCOUNT_UPDATE, (rawAccount) ->
+            _updateAccount rawAccount
             @emit 'change'
 
 
@@ -163,6 +169,10 @@ class AccountStore extends Store
             @emit 'change'
 
 
+        handle ActionTypes.RECEIVE_MAILBOX_CREATE, (mailbox) ->
+            _updateMailbox mailbox
+            @emit 'change'
+
         handle ActionTypes.RECEIVE_MAILBOX_UPDATE, (mailbox) ->
             _updateMailbox mailbox
             @emit 'change'
@@ -171,6 +181,7 @@ class AccountStore extends Store
     ###
         Public API
     ###
+
     getAll: ->
         _accounts
 
