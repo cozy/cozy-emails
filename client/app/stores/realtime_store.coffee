@@ -5,7 +5,7 @@ Store = require '../libs/flux/store/store'
 {ActionTypes} = require '../constants/app_constants'
 
 
-class RefreshesStore extends Store
+class RealtimeStore extends Store
 
     ###
         Initialization.
@@ -80,4 +80,4 @@ class RefreshesStore extends Store
     isIndexing: ->
         _isIndexing
 
-module.exports = new RefreshesStore()
+module.exports = new RealtimeStore()
