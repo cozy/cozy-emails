@@ -208,7 +208,7 @@ module.exports =
 
 
     isRefreshError: ->
-        RealtimeStore.getRefreshError()
+        RealtimeStore.isRefreshError()
 
 
     isMailboxIndexing: ->

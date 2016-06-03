@@ -71,7 +71,7 @@ Scheduler.doNext = ->
             Scheduler.onIdle()
 
         eventAction = if queued.length then 'request' else 'complete'
-        eventEmitter.emit "indexes.#{eventType}"
+        eventEmitter.emit "indexes.#{eventAction}"
 
 
 Scheduler.onIdle = ->

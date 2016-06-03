@@ -69,7 +69,7 @@ class RealtimeStore extends Store
             @emit 'change'
 
 
-    isRefreshError: (accountID) ->
+    isRefreshError: ->
         _refreshes.get('errors')?.length
 
 
