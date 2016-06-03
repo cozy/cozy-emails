@@ -27,6 +27,7 @@ module.exports.create = (req, res, next) ->
                 account = created
                 cb null
         (cb) ->
+            Scheduler.emit 'indexes.request'
             refreshList = new MailboxRefreshList account: account
             Scheduler.schedule refreshList, Scheduler.ASAP, cb
         (cb) ->
@@ -34,6 +35,7 @@ module.exports.create = (req, res, next) ->
             changes = Mailbox.scanBoxesForSpecialUse boxes
             changes.initialized = true
             account.updateAttributes changes, cb
+            Scheduler.emit 'indexes.complete'
 
     ], (err) ->
         return next err if err
