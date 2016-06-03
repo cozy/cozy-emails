@@ -176,7 +176,6 @@ describe('Router Store', () => {
    * Problem noticed:
    *
    * * FIXME: Private methods are melted with public ones.
-   * * FIXME: Store requests other stores without using getters.
    * * FIXME: Some events require a value while it's never used
    *          (ex: EDIT_ACCOUNT_REQUEST).
    * * FIXME: EDIT_ACCOUNT_SUCCESS clears errors after creating some. Don't
@@ -334,6 +333,7 @@ describe('Router Store', () => {
       assert.isFalse(routerStore.isWaiting());
     });
     it('EDIT_ACCOUNT_FAILURE', () => {
+      // NB: More advanced errors are tested in CHECK_ACCOUNT_FAILURE_TEST
       dispatcher.dispatch({
         type: ActionTypes.EDIT_ACCOUNT_FAILURE,
         value: { error: fixtures.testError },
@@ -341,8 +341,6 @@ describe('Router Store', () => {
       assert.isFalse(routerStore.isChecking());
       const errors = routerStore.getErrors().toObject();
       assert.deepEqual(errors, fixtures.unknownError);
-      // More advanced errors are tested in CHECK_ACCOUNT_FAILURE_TEST
-      //
     });
     it('MESSAGE_FETCH_REQUEST', () => {
       dispatcher.dispatch({ type: ActionTypes.MESSAGE_FETCH_REQUEST });
@@ -387,7 +385,8 @@ describe('Router Store', () => {
         },
       });
 
-      /* FIXME: event use wrong parameters. */
+      // FIXME: this event require parameters that are never used.
+      // We should check if they are required by another store.
       dispatcher.dispatch({
         type: ActionTypes.MESSAGE_TRASH_SUCCESS,
         value: {
@@ -416,9 +415,6 @@ describe('Router Store', () => {
       dispatcher.dispatch({ type: ActionTypes.REFRESH_REQUEST });
       dispatcher.dispatch({ type: ActionTypes.REFRESH_FAILURE });
       assert.isFalse(routerStore.isRefresh());
-    });
-    it('SETTINGS_UPDATE_REQUEST', () => {
-      // FIXME: This action does nothing.
     });
     it('REMOVE_ACCOUNT_SUCCESS', () => {
       dispatcher.dispatch({
