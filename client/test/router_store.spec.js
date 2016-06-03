@@ -251,9 +251,12 @@ describe('Router Store', () => {
         assert.equal(routerStore.getMailboxID(), fixtures.account.inboxMailbox);
         assert.equal(routerStore.getSelectedTab(), 'account');
         assert.equal(currentURL, `#mailbox/${fixtures.account.inboxMailbox}`);
+        assert.equal(routerStore.getCurrentURL({isServer: false}),
+                     `#mailbox/${fixtures.account.inboxMailbox}`);
         done();
       }, 5000);
     }); // .timeout(6000);
+    // Uncomment previous line, if you decide to unskip this test.
     it('ADD_ACCOUNT_FAILURE', () => {
       dispatcher.dispatch({
         type: ActionTypes.ADD_ACCOUNT_FAILURE,
