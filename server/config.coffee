@@ -48,6 +48,7 @@ config =
                     css: 'app.css'
             app.locals.assets = assets
 
+            Scheduler.emit 'indexes.request'
             proc = new ApplicationStartup()
             Scheduler.schedule proc, (err) ->
                 # Dispatching isIndexing state
