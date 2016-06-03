@@ -199,6 +199,11 @@ describe('Router Store', () => {
 
   describe('Actions', () => {
     it('ROUTE_INITIALIZE', () => {
+      // Fire two events to allow the initialization of the router store:
+      // ADD_ACCOUNT_SUCCESS and RECEIVE_RAW_MESSAGES. The first one
+      // adds an account and the second one adds messages. That way the router
+      // can build URLs and performs its initializaton like if data are arleady
+      // present in the application.
       dispatcher.dispatch({
         type: ActionTypes.ADD_ACCOUNT_SUCCESS,
         value: { account: _.clone(fixtures.account) },
