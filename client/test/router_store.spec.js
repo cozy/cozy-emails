@@ -634,22 +634,27 @@ describe('Router Store', () => {
         conversationID: 'c5',
       }), 6);
     });
-    it.skip('getNextConversation', () => {
+    it('getNextConversation', () => {
       const msgs = generateMessages();
       changeRoute({ });
-      msgs[2].conversationID = 'c1';
-      msgs[3].conversationID = 'c1';
-      assert.equal(routerStore.getNextConversation().get('messageID'),
-                   msgs[3].messageID);
-    });
-    it.skip('getPreviousConversation', () => {
-      const msgs = generateMessages();
-      changeRoute({ });
+      msgs[7].conversationID = 'c7';
+      msgs[8].conversationID = 'c7';
+      msgs[9].conversationID = 'c7';
       loadMessages(msgs);
-      changeRoute({ }, msgs[4]);
-      changeRoute({ }, msgs[4]);
-      assert.equal(routerStore.getPreivousConversation().get('messageID'),
-                   msgs[1].messageID);
+      changeRoute({ }, msgs[7]);
+      assert.equal(routerStore.getNextConversation().get('messageID'),
+                   msgs[6].messageID);
+    });
+    it('getPreviousConversation', () => {
+      const msgs = generateMessages();
+      changeRoute({ });
+      msgs[7].conversationID = 'c7';
+      msgs[8].conversationID = 'c7';
+      msgs[9].conversationID = 'c7';
+      loadMessages(msgs);
+      changeRoute({ }, msgs[7]);
+      assert.equal(routerStore.getPreviousConversation().get('messageID'),
+                   msgs[10].messageID);
     });
     it('gotoNextMessage', () => {
       const msgs = generateMessages();
