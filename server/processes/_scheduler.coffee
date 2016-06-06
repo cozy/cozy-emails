@@ -62,10 +62,10 @@ Scheduler.doNext = ->
     unless running
         proc = running = queued.shift()
         if proc
+            Scheduler.emit 'indexes.request'
             proc.run (err) ->
                 log.debug "process finished #{proc.id} #{err}"
                 running = null
-                Scheduler.emit 'indexes.request'
                 setImmediate Scheduler.doNext
         else
             # nothing to do
@@ -75,9 +75,11 @@ Scheduler.doNext = ->
 Scheduler.onIdle = ->
     log.debug "Scheduler.onIdle"
     if lastAllRefresh < Date.now() - 1 * HOUR
+        Scheduler.emit 'indexes.request'
         Scheduler.startAllRefresh()
 
     else if lastFavoriteRefresh < Date.now() - 5 * MIN
+        Scheduler.emit 'indexes.request'
         Scheduler.startFavoriteRefresh()
 
     else
