@@ -8,7 +8,7 @@ moment    = require 'moment'
 AccountStore      = require '../stores/account_store'
 MessageStore      = require '../stores/message_store'
 NotificationStore = require '../stores/notification_store'
-RealtimeStore     = require '../stores/realtime_store'
+RequestsStore     = require '../stores/requests_store'
 RouterStore       = require '../stores/router_store'
 SearchStore       = require '../stores/search_store'
 
@@ -208,15 +208,15 @@ module.exports =
 
 
     isMailboxLoading: ->
-        RouterStore.isRefresh() or RealtimeStore.isRefreshing()
+        RouterStore.isRefresh() or RequestsStore.isRefreshing()
 
 
     isRefreshError: ->
-        RealtimeStore.isRefreshError()
+        RequestsStore.isRefreshError()
 
 
     isMailboxIndexing: ->
-        RealtimeStore.isIndexing()
+        RequestsStore.isIndexing()
 
 
     formatMessage: (message) ->

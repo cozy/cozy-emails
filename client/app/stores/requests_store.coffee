@@ -21,7 +21,14 @@ Requests
 RequestStatus} = require '../constants/app_constants'
 
 
-_reset = ->
+_setRefreshes = (refreshes=[]) ->
+    new Immutable.Iterable refreshes
+        .toKeyedSeq()
+        .mapKeys (_, refresh) -> return refresh.objectID
+        .map (refresh) -> Immutable.fromJS refresh
+        .toOrderedMap()
+
+_setRequests = ->
     new Immutable.Map
         "#{Requests.DISCOVER_ACCOUNT}": status: null, res: undefined
         "#{Requests.CHECK_ACCOUNT}":    status: null, res: undefined
@@ -30,18 +37,37 @@ _reset = ->
 
 class RequestsStore extends Store
 
-    _requests = _reset()
+    # Display IndexingView
+    # as defaultView
+    _isIndexing = true
+
+    _requests = _setRequests()
+
+    _refreshes = _setRefreshes window.refreshes
 
 
     get: (req) ->
         return _requests.get req
 
 
+    isRefreshError: ->
+        _refreshes.get('errors')?.length
+
+
+    isRefreshing: ->
+        0 isnt _refreshes.size
+
+
+    isIndexing: ->
+        _isIndexing
+
+
     __bindHandlers: (handle) ->
 
-        # Reset requests status when accessing account creation box
-        handle ActionTypes.ROUTE_CHANGE, ({action}) ->
-            _requests = _reset() if action is AccountActions.CREATE
+        # Assume that when a route 'change', we won't need to keep track of
+        # requests anymore, so we reset them
+        handle ActionTypes.ROUTE_CHANGE, ->
+            _requests = _setRequests()
             @emit 'change'
 
 
@@ -82,21 +108,74 @@ class RequestsStore extends Store
 
 
         handle ActionTypes.ADD_ACCOUNT_REQUEST, ->
+            _isIndexing = true
             _requests = _requests.set Requests.ADD_ACCOUNT,
                 status: RequestStatus.INFLIGHT, res: undefined
             @emit 'change'
 
 
         handle ActionTypes.ADD_ACCOUNT_FAILURE, ({error}) ->
+            _isIndexing = false
             _requests = _requests.set Requests.ADD_ACCOUNT,
                 status: RequestStatus.ERROR, res: {error}
             @emit 'change'
 
 
         handle ActionTypes.ADD_ACCOUNT_SUCCESS, (res) ->
+            _isIndexing = false
             _requests = _requests.set Requests.ADD_ACCOUNT,
                 status: RequestStatus.SUCCESS, res: res
             @emit 'change'
 
+
+        handle ActionTypes.RECEIVE_INDEXES_REQUEST, ->
+            _isIndexing = true
+            @emit 'change'
+
+
+        handle ActionTypes.RECEIVE_ACCOUNT_CREATE, ->
+            _isIndexing = true
+            @emit 'change'
+
+
+        handle ActionTypes.RECEIVE_ACCOUNT_UPDATE, ->
+            _isIndexing = true
+            @emit 'change'
+
+
+        handle ActionTypes.RECEIVE_MAILBOX_CREATE, ->
+            _isIndexing = true
+            @emit 'change'
+
+
+        handle ActionTypes.RECEIVE_MAILBOX_UPDATE, ->
+            _isIndexing = true
+            @emit 'change'
+
+
+        handle ActionTypes.RECEIVE_INDEXES_COMPLETE, ->
+            _isIndexing = false
+            @emit 'change'
+
+
+        handle ActionTypes.RECEIVE_REFRESH_STATUS, (refreshes) ->
+            _refreshes = _setRefreshes refreshes
+            @emit 'change'
+
+
+        handle ActionTypes.RECEIVE_REFRESH_UPDATE, (refreshes) ->
+            unless refreshes?.length
+                _refreshes = Immutable.OrderedMap()
+            else
+                refreshes.forEach (refresh) ->
+                    _refreshes = _refreshes.set(refresh.id, refresh).toOrderedMap()
+            @emit 'change'
+
+
+        handle ActionTypes.RECEIVE_REFRESH_DELETE, (refreshID) ->
+            _refreshes = _refreshes.filter (refresh) ->
+                refresh.get('id') isnt refreshID
+            .toOrderedMap()
+            @emit 'change'
 
 module.exports = new RequestsStore()

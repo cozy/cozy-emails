@@ -19,7 +19,7 @@ AccountWizardCreation = React.createFactory require './accounts/wizard/creation'
 # React Mixins
 RouterStore          = require '../stores/router_store'
 SettingsStore        = require '../stores/settings_store'
-RealtimeStore        = require '../stores/realtime_store'
+RequestsStore        = require '../stores/requests_store'
 StoreWatchMixin      = require '../mixins/store_watch_mixin'
 
 RouterGetter = require '../getters/router'
@@ -41,7 +41,7 @@ module.exports = React.createClass
     displayName: 'Application'
 
     mixins: [
-        StoreWatchMixin [SettingsStore, RealtimeStore, RouterStore]
+        StoreWatchMixin [SettingsStore, RequestsStore, RouterStore]
     ]
 
     getStateFromStores: (props) ->
