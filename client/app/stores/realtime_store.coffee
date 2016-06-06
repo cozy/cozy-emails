@@ -47,6 +47,21 @@ class RealtimeStore extends Store
             @emit 'change'
 
 
+        handle ActionTypes.ADD_ACCOUNT_REQUEST, ->
+            _isIndexing = true
+            @emit 'change'
+
+
+        handle ActionTypes.ADD_ACCOUNT_FAILURE, ->
+            _isIndexing = false
+            @emit 'change'
+
+
+        handle ActionTypes.ADD_ACCOUNT_SUCCESS, ->
+            _isIndexing = false
+            @emit 'change'
+
+
         handle ActionTypes.RECEIVE_ACCOUNT_CREATE, ->
             _isIndexing = true
             @emit 'change'
@@ -71,10 +86,6 @@ class RealtimeStore extends Store
             _isIndexing = false
             @emit 'change'
 
-
-        handle ActionTypes.RECEIVE_INDEXES_COMPLETE, ->
-            _isIndexing = false
-            @emit 'change'
 
         handle ActionTypes.RECEIVE_REFRESH_STATUS, (refreshes) ->
             _reset refreshes
