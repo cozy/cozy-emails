@@ -162,12 +162,12 @@ module.exports =
 
     getUnreadLength: (accountID) ->
         accountID ?= @getAccountID()
-        AccountStore.getInbox()?.get 'nbUnread'
+        AccountStore.getInbox(accountID)?.get 'nbUnread'
 
 
     getFlaggedLength: (accountID) ->
         accountID ?= @getAccountID()
-        AccountStore.getInbox()?.get 'nbFlagged'
+        AccountStore.getInbox(accountID)?.get 'nbFlagged'
 
 
     getTrashMailbox: (accountID) ->
