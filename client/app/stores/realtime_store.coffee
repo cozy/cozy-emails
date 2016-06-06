@@ -43,10 +43,34 @@ class RealtimeStore extends Store
             @emit 'change'
 
 
+        handle ActionTypes.RECEIVE_ACCOUNT_CREATE, () ->
+            _isIndexing = true
+            @emit 'change'
+
+
+        handle ActionTypes.RECEIVE_ACCOUNT_UPDATE, () ->
+            _isIndexing = true
+            @emit 'change'
+
+
+        handle ActionTypes.RECEIVE_MAILBOX_CREATE, () ->
+            _isIndexing = true
+            @emit 'change'
+
+
+        handle ActionTypes.RECEIVE_MAILBOX_UPDATE, () ->
+            _isIndexing = true
+            @emit 'change'
+
+
         handle ActionTypes.RECEIVE_INDEXES_COMPLETE, () ->
             _isIndexing = false
             @emit 'change'
 
+
+        handle ActionTypes.RECEIVE_INDEXES_COMPLETE, () ->
+            _isIndexing = false
+            @emit 'change'
 
         handle ActionTypes.RECEIVE_REFRESH_STATUS, (refreshes) ->
             _reset refreshes

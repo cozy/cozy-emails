@@ -18,7 +18,10 @@ SocketHandler.setup = (app, server) ->
     io = ioServer server
     io.on 'connection', handleNewClient
 
-    Scheduler.on 'indexes.complete', () ->
+    Scheduler.on 'indexes.request', ->
+        io.emit 'indexes.request'
+
+    Scheduler.on 'indexes.complete', ->
         io.emit 'indexes.complete'
 
     Acccount.on 'create', (created) ->
