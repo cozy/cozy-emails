@@ -54,6 +54,7 @@ module.exports = React.createClass
                 accountID       : RouterGetter.getAccountID()
                 conversationID  : RouterGetter.getConversationID()
                 messageID       : RouterGetter.getMessageID()
+                subject         : RouterGetter.getSubject()
                 action          : RouterGetter.getAction()
                 isEditable      : RouterGetter.isEditable()
                 modal           : RouterGetter.getModal()
@@ -96,10 +97,6 @@ module.exports = React.createClass
         action = AccountActions.CREATE
         newAccountURL = RouterGetter.getURL {action}
 
-        message = RouterGetter.getMessage()
-        conversationID = message?.get 'conversationID'
-        subject = message?.get 'subject'
-
         div className: @state.className,
             div className: 'app',
                 Menu
@@ -132,18 +129,19 @@ module.exports = React.createClass
                                 isMailbox       : @state.isMailbox
                                 isLoading       : @state.isLoading
 
-                            if @state.messageID
-                                Conversation
-                                    ref             : "conversation"
-                                    key             : "conversation-#{@state.messageID}"
-                                    messageID       : @state.messageID
-                                    conversationID  : conversationID
-                                    subject         : subject
-                                    messages        : @state.conversation
+                        if @state.isMailbox and @state.messageID
+                            Conversation
+                                ref             : "conversation"
+                                key             : "conversation-#{@state.messageID}"
+                                messageID       : @state.messageID
+                                conversationID  : @state.conversationID
+                                subject         : @state.subject
+                                messages        : @state.conversation
 
-                        section
-                            'key'          : 'placeholder'
-                            'aria-expanded': false
+                        else
+                            section
+                                'key'          : 'placeholder'
+                                'aria-expanded': false
 
 
             if @state.action is AccountActions.CREATE

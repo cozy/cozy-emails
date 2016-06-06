@@ -134,6 +134,10 @@ module.exports =
         RouterStore.getConversationID()
 
 
+    getSubject: ->
+        @getMessage()?.get 'subject'
+
+
     getMessageID: ->
         RouterStore.getMessageID()
 
