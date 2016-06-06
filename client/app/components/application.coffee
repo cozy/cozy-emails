@@ -118,31 +118,32 @@ module.exports = React.createClass
                     div
                         className: 'panels',
 
-                        MessageList
-                            ref             : "messageList"
-                            key             : "messageList-#{@state.mailboxID}"
-                            accountID       : @state.accountID
-                            mailboxID       : @state.mailboxID
-                            messages        : @state.messages
-                            emptyMessages   : RouterGetter.getEmptyMessage()
-                            isAllSelected   : SelectionGetter.isAllSelected()
-                            selection       : SelectionGetter.getSelection @state.messages
-                            hasNextPage     : RouterGetter.hasNextPage()
-                            isMailbox       : @state.isMailbox
-                            isLoading       : @state.isLoading
+                        if @state.isMailbox
+                            MessageList
+                                ref             : "messageList"
+                                key             : "messageList-#{@state.mailboxID}"
+                                accountID       : @state.accountID
+                                mailboxID       : @state.mailboxID
+                                messages        : @state.messages
+                                emptyMessages   : RouterGetter.getEmptyMessage()
+                                isAllSelected   : SelectionGetter.isAllSelected()
+                                selection       : SelectionGetter.getSelection @state.messages
+                                hasNextPage     : RouterGetter.hasNextPage()
+                                isMailbox       : @state.isMailbox
+                                isLoading       : @state.isLoading
 
-                        if @state.isMailbox and @state.messageID
-                            Conversation
-                                ref             : "conversation"
-                                key             : "conversation-#{@state.messageID}"
-                                messageID       : @state.messageID
-                                conversationID  : conversationID
-                                subject         : subject
-                                messages        : @state.conversation
-                        else
-                            section
-                                'key'          : 'placeholder'
-                                'aria-expanded': false
+                            if @state.messageID
+                                Conversation
+                                    ref             : "conversation"
+                                    key             : "conversation-#{@state.messageID}"
+                                    messageID       : @state.messageID
+                                    conversationID  : conversationID
+                                    subject         : subject
+                                    messages        : @state.conversation
+
+                        section
+                            'key'          : 'placeholder'
+                            'aria-expanded': false
 
 
             if @state.action is AccountActions.CREATE
