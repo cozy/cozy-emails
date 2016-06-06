@@ -16,6 +16,10 @@ class RealtimeStore extends Store
 
 
     _reset = (refreshes=[]) ->
+        # Display IndexingView
+        # as defaultView
+        _isIndexing = true
+
         _refreshes = Immutable.Iterable refreshes
         .toKeyedSeq()
         .mapKeys (_, refresh) -> return refresh.objectID
