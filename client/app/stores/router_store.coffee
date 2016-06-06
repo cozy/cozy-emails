@@ -487,11 +487,6 @@ class RouterStore extends Store
             @emit 'change'
 
 
-        # handle ActionTypes.ADD_ACCOUNT_REQUEST, ({value}) ->
-        #     _newAccountWaiting = true
-        #     @emit 'change'
-
-
         handle ActionTypes.ADD_ACCOUNT_SUCCESS, ({account}) ->
             _timerRouteChange = setTimeout =>
                 # _newAccountWaiting = false

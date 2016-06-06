@@ -42,37 +42,37 @@ class RealtimeStore extends Store
     ###
     __bindHandlers: (handle) ->
 
-        handle ActionTypes.RECEIVE_INDEXES_REQUEST, () ->
+        handle ActionTypes.RECEIVE_INDEXES_REQUEST, ->
             _isIndexing = true
             @emit 'change'
 
 
-        handle ActionTypes.RECEIVE_ACCOUNT_CREATE, () ->
+        handle ActionTypes.RECEIVE_ACCOUNT_CREATE, ->
             _isIndexing = true
             @emit 'change'
 
 
-        handle ActionTypes.RECEIVE_ACCOUNT_UPDATE, () ->
+        handle ActionTypes.RECEIVE_ACCOUNT_UPDATE, ->
             _isIndexing = true
             @emit 'change'
 
 
-        handle ActionTypes.RECEIVE_MAILBOX_CREATE, () ->
+        handle ActionTypes.RECEIVE_MAILBOX_CREATE, ->
             _isIndexing = true
             @emit 'change'
 
 
-        handle ActionTypes.RECEIVE_MAILBOX_UPDATE, () ->
+        handle ActionTypes.RECEIVE_MAILBOX_UPDATE, ->
             _isIndexing = true
             @emit 'change'
 
 
-        handle ActionTypes.RECEIVE_INDEXES_COMPLETE, () ->
+        handle ActionTypes.RECEIVE_INDEXES_COMPLETE, ->
             _isIndexing = false
             @emit 'change'
 
 
-        handle ActionTypes.RECEIVE_INDEXES_COMPLETE, () ->
+        handle ActionTypes.RECEIVE_INDEXES_COMPLETE, ->
             _isIndexing = false
             @emit 'change'
 
