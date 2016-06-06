@@ -138,17 +138,7 @@ class RequestsStore extends Store
             @emit 'change'
 
 
-        handle ActionTypes.RECEIVE_ACCOUNT_UPDATE, ->
-            _isIndexing = true
-            @emit 'change'
-
-
         handle ActionTypes.RECEIVE_MAILBOX_CREATE, ->
-            _isIndexing = true
-            @emit 'change'
-
-
-        handle ActionTypes.RECEIVE_MAILBOX_UPDATE, ->
             _isIndexing = true
             @emit 'change'
 
