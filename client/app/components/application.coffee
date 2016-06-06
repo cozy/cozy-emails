@@ -91,12 +91,6 @@ module.exports = React.createClass
                 p null,
                     'This page will refresh in a minute.'
 
-        action = MessageActions.CREATE
-        composeURL = RouterGetter.getURL {action}
-
-        action = AccountActions.CREATE
-        newAccountURL = RouterGetter.getURL {action}
-
         div className: @state.className,
             div className: 'app',
                 Menu
@@ -105,8 +99,8 @@ module.exports = React.createClass
                     accountID       : @state.accountID
                     mailboxID       : @state.mailboxID
                     accounts        : RouterGetter.getAccounts()?.toArray()
-                    composeURL      : composeURL
-                    newAccountURL   : newAccountURL
+                    composeURL      : RouterGetter.getComposeURL()
+                    newAccountURL   : RouterGetter.getCreateAccountURL()
                     nbUnread        : RouterGetter.getUnreadLength()
                     nbFlagged       : RouterGetter.getFlaggedLength()
 

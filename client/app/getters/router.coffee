@@ -75,6 +75,14 @@ module.exports =
         @getURL {action, mailboxID, resetFilter}
 
 
+    getComposeURL: ->
+        @getURL {action: MessageActions.CREATE}
+
+
+    getCreateAccountURL: ->
+        @getURL {action: AccountActions.CREATE}
+
+
     getAction: ->
         RouterStore.getAction()
 
