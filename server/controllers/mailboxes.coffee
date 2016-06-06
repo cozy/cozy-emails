@@ -13,8 +13,8 @@ Scheduler = require '../processes/_scheduler'
 # refresh a single mailbox if we can do it fast
 # We can do it fast if the server support RFC4551
 # see {Mailbox::imap_refreshFast}
-module.exports.refresh = (req, res, next) ->
-    unless (mailbox = ramStore.getMailbox(req.params.mailboxID))
+module.exports.refresh = (req={}, res, next) ->
+    unless (mailbox = ramStore.getMailbox(req.params?.mailboxID))
         return next new NotFound("Mailbox #{req.params.mailboxID}")
 
     unless (account = ramStore.getAccount(mailbox.accountID))

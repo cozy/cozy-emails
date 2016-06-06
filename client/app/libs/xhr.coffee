@@ -256,11 +256,12 @@ module.exports =
         request.get url
         .end handleResponse callback, "refresh"
 
-    refreshMailbox: (mailboxID, opts, callback) ->
+
+    refreshMailbox: (mailboxID, opts={}, callback) ->
         request.get "refresh/#{mailboxID}"
         # FIXME: getting query server side doesnt work
         # cf refresh method into  controllers/mailboxes/
-        # .query opts
+        .query opts
         .end handleResponse callback, "refreshMailbox"
 
 

@@ -19,6 +19,7 @@ RouterActionCreator =
     # This is a read data pattern
     # ActionCreator is a write data pattern
     refreshMailbox: ({mailboxID, deep}) ->
+        return unless (mailboxID ?= RouterStore.getMailboxID())
         deep ?= true
 
         AppDispatcher.dispatch
