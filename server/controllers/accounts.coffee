@@ -66,6 +66,7 @@ module.exports.create = (req, res, next) ->
                 patchConversation.patchOneAccount account, cb
 
         ], (err) ->
+            Scheduler.emit 'indexes.complete', err
             log.error err if err
             log.info "Account #{account?.label} import complete"
 
