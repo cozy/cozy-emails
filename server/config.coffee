@@ -48,14 +48,10 @@ config =
                     css: 'app.css'
             app.locals.assets = assets
 
-            Scheduler.emit 'indexes.request'
             proc = new ApplicationStartup()
             Scheduler.schedule proc, (err) ->
-                # Dispatching isIndexing state
-                # when browser.tab is focused
-                Scheduler.emit 'indexes.complete', err
-
                 log.info "Initialization complete"
+
 
     development: [
         americano.logger 'dev'

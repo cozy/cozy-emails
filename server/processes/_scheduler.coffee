@@ -65,13 +65,11 @@ Scheduler.doNext = ->
             proc.run (err) ->
                 log.debug "process finished #{proc.id} #{err}"
                 running = null
+                Scheduler.emit 'indexes.request'
                 setImmediate Scheduler.doNext
         else
             # nothing to do
             Scheduler.onIdle()
-
-        eventAction = if queued.length then 'request' else 'complete'
-        eventEmitter.emit "indexes.#{eventAction}"
 
 
 Scheduler.onIdle = ->
@@ -84,8 +82,8 @@ Scheduler.onIdle = ->
 
     else
         # Fire indexingComplete event
-        # when ervy tasks are finished
-        eventEmitter.emit 'indexes.complete'
+        # when all tasks are finished
+        Scheduler.emit 'indexes.complete'
 
         log.debug "nothing to do, waiting 10 MIN"
         setTimeout Scheduler.doNext, 10 * MIN
