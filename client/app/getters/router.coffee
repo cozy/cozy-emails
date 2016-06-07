@@ -224,7 +224,8 @@ module.exports =
 
 
     isMailboxIndexing: ->
-        RequestsStore.isIndexing()
+        accountID = @getAccountID()
+        RequestsStore.isIndexing accountID
 
 
     formatMessage: (message) ->

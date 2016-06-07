@@ -30,7 +30,7 @@ Scheduler.schedule = (proc, asap, callback) ->
         throw new Error 'scheduling of finished process'
     else
         unless proc.options?.silent
-            Scheduler.emit 'indexes.request'
+            Scheduler.emit 'indexes.request', proc.options?.mailbox
 
         proc.addCallback callback
 
@@ -67,7 +67,7 @@ Scheduler.doNext = ->
         proc = running = queued.shift()
         if proc
             unless proc.options?.silent
-                Scheduler.emit 'indexes.request'
+                Scheduler.emit 'indexes.request', proc.options?.mailbox
 
             proc.run (err) ->
                 log.debug "process finished #{proc.id} #{err}"
@@ -89,7 +89,7 @@ Scheduler.onIdle = ->
     else
         # Fire indexingComplete event
         # when all tasks are finished
-        Scheduler.emit 'indexes.complete'
+        Scheduler.emit 'indexes.complete', running?.account
         Scheduler.emit 'change'
 
         log.debug "nothing to do, waiting 10 MIN"
@@ -104,7 +104,7 @@ Scheduler.refreshNow = (mailbox, options={}, callback) ->
 
     if running and isSameBoxRefresh running
         unless silent
-            Scheduler.emit 'indexes.request'
+            Scheduler.emit 'indexes.request', running.options?.mailbox
 
         running.addCallback callback
 
@@ -162,7 +162,7 @@ Scheduler.clientSummary = ->
     return list.map (proc) -> proc.summary()
 
 
-Scheduler.isRunning = ->
+Scheduler.getCurrentProcess = ->
     running
 
 

@@ -11,8 +11,6 @@ handled by realtime stack and this store should be deprecated.
 
 ###
 
-_ = require 'lodash'
-
 Immutable = require 'immutable'
 
 Store = require '../libs/flux/store/store'
@@ -44,12 +42,22 @@ class RequestsStore extends Store
     _refreshes = _setRefreshes window.refreshes
 
 
+    ###
+    Private methods
+    =============
+    ###
+    _isLoading =  (req) ->
+        # TODO: vérifier dans le cas de l'indexation
+        # le accountID concerné
+        RequestStatus.INFLIGHT is _requests.get(req)?.status
+
+
+    ###
+    Public methods
+    =============
+    ###
     get: (req) ->
         _requests.get req
-
-
-    isLoading: (req) ->
-        RequestStatus.INFLIGHT is @get(req)?.status
 
 
     isRefreshError: ->
@@ -57,17 +65,20 @@ class RequestsStore extends Store
 
 
     isRefreshing: ->
-        0 isnt _refreshes.size or @isLoading Requests.REFRESH_MAILBOX
+        0 isnt _refreshes.size or _isLoading Requests.REFRESH_MAILBOX
 
 
-    isIndexing: ->
-        _.find ['ADD_ACCOUNT', 'INDEX_MAILBOX'], (name) ->
-            @isLoading Requests[name]
+    isIndexing: (accountID) ->
+        actions = [Requests.INDEX_MAILBOX, Requests.ADD_ACCOUNT]
+        _requests.find (request, name) ->
+            if name in actions and _isLoading name
+                return request.mailbox.accountID is accountID
 
 
     __bindHandlers: (handle) ->
 
-        # Assume that when a route 'change', we won't need to keep track of
+        # Assume that when a route 'change',
+        # we won't need to keep track of
         # requests anymore, so we reset them
         handle ActionTypes.ROUTE_CHANGE, ->
             _requests = _setRequests()
@@ -128,9 +139,15 @@ class RequestsStore extends Store
             @emit 'change'
 
 
-        handle ActionTypes.RECEIVE_INDEXES_REQUEST, ->
+        handle ActionTypes.RECEIVE_INDEXES_REQUEST, (mailbox) ->
             _requests = _requests.set Requests.INDEX_MAILBOX,
-                status: RequestStatus.INFLIGHT, res: undefined
+                status: RequestStatus.INFLIGHT, mailbox: mailbox
+            @emit 'change'
+
+
+        handle ActionTypes.RECEIVE_INDEXES_COMPLETE, ->
+            _requests = _requests.set Requests.INDEX_MAILBOX,
+                status: RequestStatus.SUCCESS
             @emit 'change'
 
 
@@ -143,12 +160,6 @@ class RequestsStore extends Store
         handle ActionTypes.RECEIVE_MAILBOX_CREATE, ->
             _requests = _requests.set Requests.INDEX_MAILBOX,
                 status: RequestStatus.INFLIGHT, res: undefined
-            @emit 'change'
-
-
-        handle ActionTypes.RECEIVE_INDEXES_COMPLETE, (res) ->
-            _requests = _requests.set Requests.INDEX_MAILBOX,
-                status: RequestStatus.SUCCESS, res: res
             @emit 'change'
 
 
@@ -176,7 +187,7 @@ class RequestsStore extends Store
             @emit 'change'
 
 
-        handle ActionTypes.REFRESH_SUCCESS, ->
+        handle ActionTypes.REFRESH_SUCCESS, (res) ->
             _requests = _requests.set Requests.REFRESH_MAILBOX,
                 status: RequestStatus.SUCCESS, res: res
             @emit 'change'

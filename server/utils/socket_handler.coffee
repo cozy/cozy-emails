@@ -18,11 +18,11 @@ SocketHandler.setup = (app, server) ->
     io = ioServer server
     io.on 'connection', handleNewClient
 
-    Scheduler.on 'indexes.request', ->
-        io.emit 'indexes.request'
+    Scheduler.on 'indexes.request', (args...) ->
+        io.emit 'indexes.request', args...
 
-    Scheduler.on 'indexes.complete', ->
-        io.emit 'indexes.complete'
+    Scheduler.on 'indexes.complete', (args...) ->
+        io.emit 'indexes.complete', args...
 
     Acccount.on 'create', (created) ->
         created = ramStore.getAccountClientObject created.id
@@ -92,8 +92,8 @@ handleNewClient = (socket) ->
 
     # Dispatching isIndexing state
     # when refreshing/opening mailbox page
-    if Scheduler.isRunning()
-        socket.emit 'indexes.request'
+    if (process = Scheduler.getCurrentProcess())
+        socket.emit 'indexes.request', process.options.mailbox
     else
         socket.emit 'indexes.complete'
 
