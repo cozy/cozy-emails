@@ -15,6 +15,7 @@ module.exports = class ApplicationStartup extends Process
 
     code: 'application-startup'
 
+
     initialize: (options, callback) ->
         async.series [
             @forceCozyDBReindexing
@@ -24,9 +25,11 @@ module.exports = class ApplicationStartup extends Process
             @removeOrphans
         ], callback
 
+
     forceCozyDBReindexing: (callback) ->
         log.debug "cozydbReindexing"
         cozydb.forceReindexing callback
+
 
     initializeNewAccounts: (callback) ->
         log.debug "initializeNewAccounts"
@@ -41,6 +44,7 @@ module.exports = class ApplicationStartup extends Process
         , (errors) ->
             log.error 'failed to init account', err for err in errors or []
             callback null
+
 
     removeOrphans: (callback) ->
         proc = new OrphanRemoval()

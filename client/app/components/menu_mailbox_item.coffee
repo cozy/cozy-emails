@@ -4,10 +4,6 @@ classNames = require 'classnames'
 
 {div, aside, nav, ul, li, span, a, i, button} = React.DOM
 
-RouterActionCreator = require '../actions/router_action_creator'
-LayoutActionCreator  = require '../actions/layout_action_creator'
-AccountActionCreator = require '../actions/account_action_creator'
-
 {Tooltips} = require '../constants/app_constants'
 
 
