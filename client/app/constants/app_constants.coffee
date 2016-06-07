@@ -172,12 +172,21 @@ module.exports =
         'UNSEEN'       : 'unseen'
 
     MailboxFlags:
+        'INBOX'   :  '\\Inbox'
         'DRAFT'   :  '\\Drafts'
         'SENT'    :  '\\Sent'
         'TRASH'   :  '\\Trash'
         'ALL'     :  '\\All'
         'SPAM'    :  '\\Junk'
         'FLAGGED' :  '\\Flagged'
+
+    MailboxSpecial:
+        'inboxMailbox'  : 'INBOX'
+        'draftMailbox'  : 'DRAFT'
+        'sentMailbox'   : 'SENT'
+        'trashMailbox'  : 'TRASH'
+        'junkMailbox'   : 'SPAM'
+        'allMailbox'    : 'ALL'
 
     FlagsConstants:
         SEEN   : '\\Seen'

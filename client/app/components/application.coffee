@@ -48,9 +48,9 @@ module.exports = React.createClass
         previewSize = LayoutGetter.getPreviewSize()
         className = "layout layout-column layout-preview-#{previewSize}"
 
-        if (mailbox = RouterGetter.getCurrentMailbox())
+        if (mailbox = RouterGetter.getMailbox())
             return {
-                mailboxID       : (mailboxID = mailbox?.get 'id')
+                mailboxID       : (mailboxID = RouterGetter.getMailboxID())
                 accountID       : RouterGetter.getAccountID()
                 conversationID  : RouterGetter.getConversationID()
                 messageID       : RouterGetter.getMessageID()
@@ -60,7 +60,7 @@ module.exports = React.createClass
                 className       : className
                 messages        : RouterGetter.getMessagesList mailboxID
                 conversation    : RouterGetter.getConversation()
-                isMailbox       : mailbox.get('lastSync')?
+                isMailbox       : RouterGetter.isMailboxExist()
                 isLoading       : RouterGetter.isMailboxLoading()
             }
 
@@ -99,7 +99,6 @@ module.exports = React.createClass
                     accounts        : RouterGetter.getAccounts()?.toArray()
                     composeURL      : composeURL
                     newAccountURL   : newAccountURL
-                    mailboxes       : RouterGetter.getMailboxes()
                     nbUnread        : RouterGetter.getUnreadLength()
                     nbFlagged       : RouterGetter.getFlaggedLength()
 
