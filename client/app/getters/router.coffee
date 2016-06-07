@@ -216,7 +216,7 @@ module.exports =
 
 
     isMailboxLoading: ->
-        RouterStore.isRefresh() or RequestsStore.isRefreshing()
+        RequestsStore.isRefreshing()
 
 
     isRefreshError: ->

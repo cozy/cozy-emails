@@ -41,6 +41,8 @@ class RequestsStore extends Store
     # as defaultView
     _isIndexing = true
 
+    _refreshMailbox = false
+
     _requests = _setRequests()
 
     _refreshes = _setRefreshes window.refreshes
@@ -55,7 +57,7 @@ class RequestsStore extends Store
 
 
     isRefreshing: ->
-        0 isnt _refreshes.size
+        0 isnt _refreshes.size or _refreshMailbox
 
 
     isIndexing: ->
@@ -145,6 +147,36 @@ class RequestsStore extends Store
 
         handle ActionTypes.RECEIVE_INDEXES_COMPLETE, ->
             _isIndexing = false
+            @emit 'change'
+
+
+        handle ActionTypes.MESSAGE_FETCH_REQUEST, ->
+            _refreshMailbox = true
+            @emit 'change'
+
+
+        handle ActionTypes.MESSAGE_FETCH_SUCCESS, ->
+            _refreshMailbox = false
+            @emit 'change'
+
+
+        handle ActionTypes.MESSAGE_FETCH_FAILURE, ->
+            _refreshMailbox = false
+            @emit 'change'
+
+
+        handle ActionTypes.REFRESH_REQUEST, ->
+            _refreshMailbox = true
+            @emit 'change'
+
+
+        handle ActionTypes.REFRESH_SUCCESS, ->
+            _refreshMailbox = false
+            @emit 'change'
+
+
+        handle ActionTypes.REFRESH_FAILURE, ->
+            _refreshMailbox = false
             @emit 'change'
 
 

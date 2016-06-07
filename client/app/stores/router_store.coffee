@@ -45,8 +45,6 @@ class RouterStore extends Store
     _mailboxID = null
     _tab = null
 
-    _refreshMailbox = false
-
     _conversationID = null
     _messageID = null
     _messagesLength = 0
@@ -68,10 +66,6 @@ class RouterStore extends Store
 
     getModalParams: ->
         _modal
-
-
-    isRefresh: ->
-        _refreshMailbox
 
 
     getURL: (params={}) ->
@@ -499,24 +493,9 @@ class RouterStore extends Store
             , 5000
 
 
-        handle ActionTypes.MESSAGE_FETCH_REQUEST, ->
-            _refreshMailbox = true
-            @emit 'change'
-
-
-        handle ActionTypes.MESSAGE_FETCH_SUCCESS, (payload) ->
-            {lastPage} = payload
-
+        handle ActionTypes.MESSAGE_FETCH_SUCCESS, ({lastPage}) ->
             # Save last message references
             _lastPage[_URI] = lastPage if lastPage?
-
-            _refreshMailbox = false
-
-            @emit 'change'
-
-
-        handle ActionTypes.MESSAGE_FETCH_FAILURE, ->
-            _refreshMailbox = false
             @emit 'change'
 
 
@@ -538,21 +517,6 @@ class RouterStore extends Store
 
             # Update URL if it didnt
             _updateURL()
-            @emit 'change'
-
-
-        handle ActionTypes.REFRESH_REQUEST, ->
-            _refreshMailbox = true
-            @emit 'change'
-
-
-        handle ActionTypes.REFRESH_SUCCESS, ->
-            _refreshMailbox = false
-            @emit 'change'
-
-
-        handle ActionTypes.REFRESH_FAILURE, ->
-            _refreshMailbox = false
             @emit 'change'
 
 
