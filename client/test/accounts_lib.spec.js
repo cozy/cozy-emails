@@ -178,4 +178,70 @@ describe("Accounts libs spec", () => {
 
     })
 
+
+    describe('Sanitize state to returns a proper server config', () => {
+
+        const expectedKeys = [
+            'label',
+            'name',
+            'login',
+            'password',
+            'smtpServer',
+            'smtpLogin',
+            'smtpPassword',
+            'smtpPort',
+            'smtpSSL',
+            'smtpTLS',
+            'imapServer',
+            'imapLogin',
+            'imapPassword',
+            'imapPort',
+            'imapSSL',
+            'imapTLS'
+        ]
+
+        const state = {
+            "isBusy": false,
+            "isDiscoverable": false,
+            "alert": null,
+            "OAuth": false,
+            "imapPort": 993,
+            "imapSecurity": "ssl",
+            "smtpPort": 587,
+            "smtpSecurity": "starttls",
+            "enableSubmit": true,
+            "imapLogin": "mail@cozy.io",
+            "imapPassword": "cozy",
+            "smtpLogin": "mail@cozy.io",
+            "smtpPassword": "cozy",
+            "login": "mail@cozy.io",
+            "password": "cozy",
+            "imapServer": "imap.cozy.io",
+            "smtpServer": "smtp.cozy.io"
+        }
+
+        const payload = AccountsLib.sanitizeConfig(state)
+
+        it("should only contains expected keys", () => {
+            assert.sameMembers(Object.keys(payload), expectedKeys)
+        })
+
+        it("should use email address prefix as name", () => {
+            const prefix = state.login.split('@')[0]
+            assert.propertyVal(payload, 'name', prefix)
+        })
+
+        it("should use email address as label", () => {
+            assert.propertyVal(payload, 'label', state.login)
+        })
+
+        it("should transcript security booleans", () => {
+            assert.propertyVal(payload, 'imapSSL', true)
+            assert.propertyVal(payload, 'imapTLS', false)
+            assert.propertyVal(payload, 'smtpSSL', false)
+            assert.propertyVal(payload, 'smtpTLS', true)
+        })
+
+    })
+
 });
