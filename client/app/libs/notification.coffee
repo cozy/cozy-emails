@@ -59,12 +59,8 @@ _initRealtime = ->
     _socket.on 'refreshes.status',
         _dispatchAs ActionTypes.RECEIVE_REFRESH_STATUS
 
-    _socket.on 'refresh.create',
-        _dispatchAs ActionTypes.RECEIVE_REFRESH_UPDATE
     _socket.on 'refresh.update',
         _dispatchAs ActionTypes.RECEIVE_REFRESH_UPDATE
-    _socket.on 'refresh.delete',
-        _dispatchAs ActionTypes.RECEIVE_REFRESH_DELETE
 
     _socket.on 'message.create',
         _dispatchAs ActionTypes.RECEIVE_RAW_MESSAGE_REALTIME

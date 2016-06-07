@@ -90,6 +90,7 @@ Scheduler.onIdle = ->
         # Fire indexingComplete event
         # when all tasks are finished
         Scheduler.emit 'indexes.complete'
+        Scheduler.emit 'change'
 
         log.debug "nothing to do, waiting 10 MIN"
         setTimeout Scheduler.doNext, 10 * MIN

@@ -194,10 +194,4 @@ class RequestsStore extends Store
             @emit 'change'
 
 
-        handle ActionTypes.RECEIVE_REFRESH_DELETE, (refreshID) ->
-            _refreshes = _refreshes.filter (refresh) ->
-                refresh.get('id') isnt refreshID
-            .toOrderedMap()
-            @emit 'change'
-
 module.exports = new RequestsStore()
