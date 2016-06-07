@@ -11,6 +11,7 @@ MailboxRefreshList = require '../processes/mailbox_refresh_list'
 MailboxRefresh = require '../processes/mailbox_refresh'
 patchConversation = require '../patchs/conversation'
 
+
 # create an account
 # and lauch fetching of this account mails
 module.exports.create = (req, res, next) ->
@@ -66,9 +67,9 @@ module.exports.create = (req, res, next) ->
                 patchConversation.patchOneAccount account, cb
 
         ], (err) ->
-            Scheduler.emit 'indexes.complete', err
             log.error err if err
             log.info "Account #{account?.label} import complete"
+
 
 # check account parameters
 module.exports.check = (req, res, next) ->
@@ -81,6 +82,7 @@ module.exports.check = (req, res, next) ->
     tmpAccount.testConnections (err) ->
         return next err if err
         res.send check: 'ok'
+
 
 # change an account
 module.exports.edit = (req, res, next) ->
@@ -98,6 +100,7 @@ module.exports.edit = (req, res, next) ->
         accountInstance.updateAttributes changes, (err, updated) ->
             return next err if err
             res.send ramStore.getAccountClientObject accountInstance.id
+
 
 # delete an account
 module.exports.remove = (req, res, next) ->

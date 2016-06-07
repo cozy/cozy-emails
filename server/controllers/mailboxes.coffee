@@ -22,9 +22,7 @@ module.exports.refresh = (req={}, res, next) ->
     else unless account.supportRFC4551
         next new BadRequest('Cant refresh a non RFC4551 box')
     else
-        deepRefresh = req.query?.deep
-        deepRefresh ?= 'deep'
-        Scheduler.refreshNow mailbox, deepRefresh, (err) ->
+        Scheduler.refreshNow mailbox, req.query, (err) ->
             return next err if err
             res.send ramStore.getMailboxClientObject mailbox.id
 

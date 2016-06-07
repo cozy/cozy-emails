@@ -257,11 +257,11 @@ module.exports =
         .end handleResponse callback, "refresh"
 
 
-    refreshMailbox: (mailboxID, opts={}, callback) ->
+    refreshMailbox: (mailboxID, options={}, callback) ->
         request.get "refresh/#{mailboxID}"
         # FIXME: getting query server side doesnt work
         # cf refresh method into  controllers/mailboxes/
-        .query opts
+        .query options
         .end handleResponse callback, "refreshMailbox"
 
 
