@@ -92,4 +92,90 @@ describe("Accounts libs spec", () => {
 
     })
 
+
+    describe("Parse providers to return part of state", () => {
+
+        let providers, nextState
+
+        beforeEach(() => {
+            nextState = AccountsLib.parseProviders(providers)
+        })
+
+        describe("Parse valid provider settings", () => {
+            before(() => {
+                providers = [{
+                    "type": "imap",
+                    "hostname": "mail.gandi.net",
+                    "port": "993",
+                    "socketType": "SSL"
+                }, {
+                    "type": "imap",
+                    "hostname": "mail.gandi.net",
+                    "port": "143",
+                    "socketType": "STARTTLS"
+                }, {
+                    "type": "pop3",
+                    "hostname": "mail.gandi.net",
+                    "port": "995",
+                    "socketType": "SSL"
+                }, {
+                    "type": "pop3",
+                    "hostname": "mail.gandi.net",
+                    "port": "110",
+                    "socketType": "STARTTLS"
+                }, {
+                    "type": "smtp",
+                    "hostname": "mail.gandi.net",
+                    "port": "465",
+                    "socketType": "SSL"
+                }, {
+                    "type": "smtp",
+                    "hostname": "mail.gandi.net",
+                    "port": "587",
+                    "socketType": "STARTTLS"
+                }]
+            })
+
+            it("should return a state containing IMAP and SMTP infos", () => {
+                assert.isObject(nextState)
+                assert.property(nextState, 'imapServer')
+                assert.property(nextState, 'smtpServer')
+            })
+
+            it("should extract Provider settings", () => {
+                assert.propertyVal(nextState, 'imapServer', providers[1].hostname)
+                assert.propertyVal(nextState, 'imapPort', +providers[1].port)
+                assert.propertyVal(nextState, 'imapSecurity', providers[1].socketType.toLowerCase())
+            })
+
+        })
+
+        describe("Fallback settings", () => {
+            before(() => {
+                providers = [{
+                    "type": "imap",
+                    "hostname": "imap.free.fr",
+                    "port": "993",
+                    "socketType": "SSL"
+                }, {
+                    "type": "pop3",
+                    "hostname": "pop.free.fr",
+                    "port": "995",
+                    "socketType": "SSL"
+                }, {
+                    "type": "smtp",
+                    "hostname": "smtp.free.fr",
+                    "port": "25",
+                    "socketType": "plain"
+                }]
+            })
+
+            it("should disable security if none is available", () => {
+                assert.propertyVal(nextState, 'smtpSecurity', 'none')
+            })
+
+        })
+
+    })
+
 });
