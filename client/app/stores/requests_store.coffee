@@ -11,6 +11,8 @@ handled by realtime stack and this store should be deprecated.
 
 ###
 
+_ = require 'lodash'
+
 Immutable = require 'immutable'
 
 Store = require '../libs/flux/store/store'
@@ -37,19 +39,17 @@ _setRequests = ->
 
 class RequestsStore extends Store
 
-    # Display IndexingView
-    # as defaultView
-    _isIndexing = true
-
-    _refreshMailbox = false
-
     _requests = _setRequests()
 
     _refreshes = _setRefreshes window.refreshes
 
 
     get: (req) ->
-        return _requests.get req
+        _requests.get req
+
+
+    isLoading: (req) ->
+        RequestStatus.INFLIGHT is @get(req)?.status
 
 
     isRefreshError: ->
@@ -57,11 +57,12 @@ class RequestsStore extends Store
 
 
     isRefreshing: ->
-        0 isnt _refreshes.size or _refreshMailbox
+        0 isnt _refreshes.size or @isLoading Requests.REFRESH_MAILBOX
 
 
     isIndexing: ->
-        _isIndexing
+        _.find ['ADD_ACCOUNT', 'INDEX_MAILBOX'], (name) ->
+            @isLoading Requests[name]
 
 
     __bindHandlers: (handle) ->
@@ -110,73 +111,80 @@ class RequestsStore extends Store
 
 
         handle ActionTypes.ADD_ACCOUNT_REQUEST, ->
-            _isIndexing = true
             _requests = _requests.set Requests.ADD_ACCOUNT,
                 status: RequestStatus.INFLIGHT, res: undefined
             @emit 'change'
 
 
         handle ActionTypes.ADD_ACCOUNT_FAILURE, ({error}) ->
-            _isIndexing = false
             _requests = _requests.set Requests.ADD_ACCOUNT,
                 status: RequestStatus.ERROR, res: {error}
             @emit 'change'
 
 
         handle ActionTypes.ADD_ACCOUNT_SUCCESS, (res) ->
-            _isIndexing = false
             _requests = _requests.set Requests.ADD_ACCOUNT,
                 status: RequestStatus.SUCCESS, res: res
             @emit 'change'
 
 
         handle ActionTypes.RECEIVE_INDEXES_REQUEST, ->
-            _isIndexing = true
+            _requests = _requests.set Requests.INDEX_MAILBOX,
+                status: RequestStatus.INFLIGHT, res: undefined
             @emit 'change'
 
 
         handle ActionTypes.RECEIVE_ACCOUNT_CREATE, ->
-            _isIndexing = true
+            _requests = _requests.set Requests.ADD_ACCOUNT,
+                status: RequestStatus.INFLIGHT, res: undefined
             @emit 'change'
 
 
         handle ActionTypes.RECEIVE_MAILBOX_CREATE, ->
-            _isIndexing = true
+            _requests = _requests.set Requests.INDEX_MAILBOX,
+                status: RequestStatus.INFLIGHT, res: undefined
             @emit 'change'
 
 
-        handle ActionTypes.RECEIVE_INDEXES_COMPLETE, ->
-            _isIndexing = false
+        handle ActionTypes.RECEIVE_INDEXES_COMPLETE, (res) ->
+            _requests = _requests.set Requests.INDEX_MAILBOX,
+                status: RequestStatus.SUCCESS, res: res
             @emit 'change'
 
 
         handle ActionTypes.MESSAGE_FETCH_REQUEST, ->
-            _refreshMailbox = true
+            _requests = _requests.set Requests.REFRESH_MAILBOX,
+                status: RequestStatus.INFLIGHT, res: undefined
             @emit 'change'
 
 
-        handle ActionTypes.MESSAGE_FETCH_SUCCESS, ->
-            _refreshMailbox = false
+        handle ActionTypes.MESSAGE_FETCH_SUCCESS, (res) ->
+            _requests = _requests.set Requests.REFRESH_MAILBOX,
+                status: RequestStatus.SUCCESS, res: res
             @emit 'change'
 
 
-        handle ActionTypes.MESSAGE_FETCH_FAILURE, ->
-            _refreshMailbox = false
+        handle ActionTypes.MESSAGE_FETCH_FAILURE, ({error}) ->
+            _requests = _requests.set Requests.REFRESH_MAILBOX,
+                status: RequestStatus.ERROR, res: {error}
             @emit 'change'
 
 
         handle ActionTypes.REFRESH_REQUEST, ->
-            _refreshMailbox = true
+            _requests = _requests.set Requests.REFRESH_MAILBOX,
+                status: RequestStatus.INFLIGHT, res: undefined
             @emit 'change'
 
 
         handle ActionTypes.REFRESH_SUCCESS, ->
-            _refreshMailbox = false
+            _requests = _requests.set Requests.REFRESH_MAILBOX,
+                status: RequestStatus.SUCCESS, res: res
             @emit 'change'
 
 
-        handle ActionTypes.REFRESH_FAILURE, ->
-            _refreshMailbox = false
+        handle ActionTypes.REFRESH_FAILURE, ({error}) ->
+            _requests = _requests.set Requests.REFRESH_MAILBOX,
+                status: RequestStatus.ERROR, res: {error}
             @emit 'change'
 
 

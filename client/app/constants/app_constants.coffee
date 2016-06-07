@@ -115,9 +115,11 @@ module.exports =
 
 
     Requests:
-        'DISCOVER_ACCOUNT': 'DISCOVER_ACCOUNT'
-        'CHECK_ACCOUNT':    'CHECK_ACCOUNT'
-        'ADD_ACCOUNT':      'ADD_ACCOUNT'
+        'DISCOVER_ACCOUNT':     'DISCOVER_ACCOUNT'
+        'CHECK_ACCOUNT':        'CHECK_ACCOUNT'
+        'ADD_ACCOUNT':          'ADD_ACCOUNT'
+        'REFRESH_MAILBOX':      'REFRESH_MAILBOX'
+        'INDEX_MAILBOX':        'INDEX_MAILBOX'
 
 
     RequestStatus:
