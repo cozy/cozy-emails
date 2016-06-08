@@ -2,7 +2,8 @@ _ = require 'lodash'
 
 AppDispatcher = require '../libs/flux/dispatcher/dispatcher'
 
-RouterStore = require '../stores/router_store'
+RouterStore     = require '../stores/router_store'
+RequestsStore   = require '../stores/requests_store'
 
 Notification = require '../libs/notification'
 
@@ -95,7 +96,7 @@ RouterActionCreator =
 
 
     gotoNextPage: ->
-        if (url = _getNextURL())?
+        if not RequestsStore.isRefreshing() and (url = _getNextURL())?
             @gotoCurrentPage {url}
 
 
@@ -344,10 +345,9 @@ _setNextURL = ({pageAfter}) ->
         action = MessageActions.SHOW_ALL
         filter = {pageAfter}
 
-        value = RouterStore.getCurrentURL {filter, action}
-        previousValue = _getPreviousURL()
-        if not previousValue? or previousValue isnt value
-            _nextURL[key] = value
+        currentURL = RouterStore.getCurrentURL {filter, action}
+        if _getPreviousURL() isnt currentURL
+            _nextURL[key] = currentURL
 
 
 module.exports = RouterActionCreator
