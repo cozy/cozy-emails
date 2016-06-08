@@ -33,6 +33,8 @@ _setRequests = ->
         "#{Requests.DISCOVER_ACCOUNT}": status: null, res: undefined
         "#{Requests.CHECK_ACCOUNT}":    status: null, res: undefined
         "#{Requests.ADD_ACCOUNT}":      status: null, res: undefined
+        "#{Requests.INDEX_MAILBOX}":    status: null, res: undefined
+        "#{Requests.REFRESH_MAILBOX}":  status: null, res: undefined
 
 
 class RequestsStore extends Store
@@ -40,6 +42,7 @@ class RequestsStore extends Store
     _requests = _setRequests()
 
     _refreshes = _setRefreshes window.refreshes
+
 
 
     ###
@@ -68,11 +71,15 @@ class RequestsStore extends Store
         0 isnt _refreshes.size or _isLoading Requests.REFRESH_MAILBOX
 
 
+    isFetching: ->
+        0 isnt _refreshes.size or _isLoading Requests.REFRESH_MAILBOX
+
+
     isIndexing: (accountID) ->
         actions = [Requests.INDEX_MAILBOX, Requests.ADD_ACCOUNT]
         _requests.find (request, name) ->
             if name in actions and _isLoading name
-                return request.mailbox.accountID is accountID
+                return request.res?.accountID is accountID
 
 
     __bindHandlers: (handle) ->
@@ -141,7 +148,7 @@ class RequestsStore extends Store
 
         handle ActionTypes.RECEIVE_INDEXES_REQUEST, (mailbox) ->
             _requests = _requests.set Requests.INDEX_MAILBOX,
-                status: RequestStatus.INFLIGHT, mailbox: mailbox
+                status: RequestStatus.INFLIGHT, res: mailbox
             @emit 'change'
 
 
