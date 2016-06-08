@@ -245,11 +245,6 @@ class AccountStore extends Store
             -1 < mailbox.get('attribs').indexOf MailboxFlags['ALL']
 
 
-    getAllMailbox: (accountID) ->
-        @getAllMailboxes(accountID)?.find (mailbox) ->
-            -1 < mailbox.get('attribs').indexOf MailboxFlags['ALL']
-
-
     makeEmptyAccount: ->
         Immutable.Map
             label: ''
