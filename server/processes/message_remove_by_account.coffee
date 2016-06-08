@@ -11,14 +11,17 @@ module.exports = class RemoveAllMessagesFromAccount extends Process
 
     code: 'delete-messages-from-account'
 
+
     initialize: (options, callback)->
         @accountID = options.accountID
         @retries = MAX_RETRIES
 
         async.doWhilst @step, @notFinished, callback
 
+
     notFinished: =>
         @batch and @batch.length > 0
+
 
     step: (callback) =>
         @fetchMessages (err) =>
@@ -37,6 +40,7 @@ module.exports = class RemoveAllMessagesFromAccount extends Process
                     # we are not done, loop again, resetting the retries
                     @retries = MAX_RETRIES
                     callback null
+
 
     fetchMessages: (callback) =>
         Message.rawRequest 'dedupRequest',

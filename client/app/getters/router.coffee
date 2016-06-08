@@ -8,7 +8,7 @@ moment    = require 'moment'
 AccountStore      = require '../stores/account_store'
 MessageStore      = require '../stores/message_store'
 NotificationStore = require '../stores/notification_store'
-RefreshesStore    = require '../stores/refreshes_store'
+RequestsStore     = require '../stores/requests_store'
 RouterStore       = require '../stores/router_store'
 SearchStore       = require '../stores/search_store'
 
@@ -75,6 +75,14 @@ module.exports =
         @getURL {action, mailboxID, resetFilter}
 
 
+    getComposeURL: ->
+        @getURL {action: MessageActions.CREATE}
+
+
+    getCreateAccountURL: ->
+        @getURL {action: AccountActions.CREATE}
+
+
     getAction: ->
         RouterStore.getAction()
 
@@ -102,10 +110,6 @@ module.exports =
 
     getSearch: ->
         SearchStore.getCurrentSearch()
-
-
-    getProgress: (accountID) ->
-        RefreshesStore.getRefreshing().get accountID
 
 
     getSelectedTab: ->
@@ -138,6 +142,10 @@ module.exports =
         RouterStore.getConversationID()
 
 
+    getSubject: ->
+        @getMessage()?.get 'subject'
+
+
     getMessageID: ->
         RouterStore.getMessageID()
 
@@ -154,12 +162,12 @@ module.exports =
 
     getUnreadLength: (accountID) ->
         accountID ?= @getAccountID()
-        AccountStore.getInbox()?.get 'nbUnread'
+        AccountStore.getInbox(accountID)?.get 'nbUnread'
 
 
     getFlaggedLength: (accountID) ->
         accountID ?= @getAccountID()
-        AccountStore.getInbox()?.get 'nbFlagged'
+        AccountStore.getInbox(accountID)?.get 'nbFlagged'
 
 
     getTrashMailbox: (accountID) ->
@@ -208,7 +216,16 @@ module.exports =
 
 
     isMailboxLoading: ->
-        RouterStore.isRefresh()
+        RequestsStore.isRefreshing()
+
+
+    isRefreshError: ->
+        RequestsStore.isRefreshError()
+
+
+    isMailboxIndexing: ->
+        accountID = @getAccountID()
+        RequestsStore.isIndexing accountID
 
 
     formatMessage: (message) ->

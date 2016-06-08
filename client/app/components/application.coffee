@@ -2,7 +2,7 @@ require '../styles/application.styl'
 require '../../vendor/aria-tips/aria-tips.css'
 
 React = require 'react'
-{div, section, main} = React.DOM
+{div, section, main, h1, img, p} = React.DOM
 AriaTips = require '../../vendor/aria-tips/aria-tips'
 
 # React components
@@ -19,7 +19,7 @@ AccountWizardCreation = React.createFactory require './accounts/wizard/creation'
 # React Mixins
 RouterStore          = require '../stores/router_store'
 SettingsStore        = require '../stores/settings_store'
-RefreshesStore       = require '../stores/refreshes_store'
+RequestsStore        = require '../stores/requests_store'
 StoreWatchMixin      = require '../mixins/store_watch_mixin'
 
 RouterGetter = require '../getters/router'
@@ -41,7 +41,7 @@ module.exports = React.createClass
     displayName: 'Application'
 
     mixins: [
-        StoreWatchMixin [SettingsStore, RefreshesStore, RouterStore]
+        StoreWatchMixin [SettingsStore, RequestsStore, RouterStore]
     ]
 
     getStateFromStores: (props) ->
@@ -54,6 +54,7 @@ module.exports = React.createClass
                 accountID       : RouterGetter.getAccountID()
                 conversationID  : RouterGetter.getConversationID()
                 messageID       : RouterGetter.getMessageID()
+                subject         : RouterGetter.getSubject()
                 action          : RouterGetter.getAction()
                 isEditable      : RouterGetter.isEditable()
                 modal           : RouterGetter.getModal()
@@ -62,6 +63,7 @@ module.exports = React.createClass
                 conversation    : RouterGetter.getConversation()
                 isMailbox       : RouterGetter.isMailboxExist()
                 isLoading       : RouterGetter.isMailboxLoading()
+                isIndexing      : RouterGetter.isMailboxIndexing()
             }
 
         return {
@@ -79,15 +81,15 @@ module.exports = React.createClass
 
 
     render: ->
-        action = MessageActions.CREATE
-        composeURL = RouterGetter.getURL {action}
-
-        action = AccountActions.CREATE
-        newAccountURL = RouterGetter.getURL {action}
-
-        isAccount = -1 < @state.action?.indexOf 'account'
-
-        message = RouterGetter.getMessage()
+        if @state.isIndexing
+            return div className: 'reindexing-message',
+                img
+                    className: 'spinner'
+                    src: "img/spinner.svg"
+                h1 null,
+                    'We need to reindex your emails.'
+                p null,
+                    'This page will refresh in a minute.'
 
         div className: @state.className,
             div className: 'app',
@@ -97,18 +99,17 @@ module.exports = React.createClass
                     accountID       : @state.accountID
                     mailboxID       : @state.mailboxID
                     accounts        : RouterGetter.getAccounts()?.toArray()
-                    composeURL      : composeURL
-                    newAccountURL   : newAccountURL
+                    composeURL      : RouterGetter.getComposeURL()
+                    newAccountURL   : RouterGetter.getCreateAccountURL()
                     nbUnread        : RouterGetter.getUnreadLength()
                     nbFlagged       : RouterGetter.getFlaggedLength()
 
 
-                main
-                    className: @props.layout
-
+                main null,
                     div
-                        className: 'panels'
-                        if RouterGetter.getAccounts().size
+                        className: 'panels',
+
+                        if @state.isMailbox
                             MessageList
                                 ref             : "messageList"
                                 key             : "messageList-#{@state.mailboxID}"
@@ -127,23 +128,28 @@ module.exports = React.createClass
                                 ref             : "conversation"
                                 key             : "conversation-#{@state.messageID}"
                                 messageID       : @state.messageID
-                                conversationID  : message?.get 'conversationID'
-                                subject         : message?.get 'subject'
+                                conversationID  : @state.conversationID
+                                subject         : @state.subject
                                 messages        : @state.conversation
+
                         else
                             section
                                 'key'          : 'placeholder'
                                 'aria-expanded': false
+
 
             if @state.action is AccountActions.CREATE
                 AccountWizardCreation
                     key: 'modal-account-wizard'
                     hasDefaultAccount: RouterGetter.getAccountID()?
 
+
             # Display feedback
             Modal @state.modal if @state.modal?
 
+
             ToastContainer()
+
 
             # Tooltips' content is declared once at the application level.
             # It's hidden so it doesn't break the layout. Other components
