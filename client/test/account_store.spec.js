@@ -11,8 +11,8 @@ const fixtures = {
     id: '123',
     label: 'personal',
     mailboxes: [
-      { id: 'a1', label: 'inbox', attribs: '', tree: [''], accountID: '123' },
-      { id: 'a2', label: 'sent', attribs: '', tree: [''], accountID: '123' },
+      { id: 'a1', label: 'inbox', attribs: [], tree: [''], accountID: '123' },
+      { id: 'a2', label: 'sent', attribs: [], tree: [''], accountID: '123' },
     ],
   },
   account2: {
@@ -20,10 +20,10 @@ const fixtures = {
     label: 'pro',
     mailboxes: [
       {
-        id: 'b1', label: 'mailbox', attribs: '', tree: [''], accountID: '124',
+        id: 'b1', label: 'mailbox', attribs: [], tree: [''], accountID: '124',
       },
       {
-        id: 'b2', label: 'folder1', attribs: '', tree: [''], accountID: '124',
+        id: 'b2', label: 'folder1', attribs: [], tree: [''], accountID: '124',
       },
     ],
   },
@@ -177,12 +177,12 @@ describe('Account Store', () => {
       let mailboxes = accountStore.getAllMailboxes(id2);
       assert.deepEqual(mailboxes.get(mailboxId1).toObject(), {
         id: mailboxId1, label,
-        attribs: '', tree: [''], accountID: id2,
+        attribs: [], tree: [''], accountID: id2,
       });
       assert.deepEqual(mailboxes.get(mailboxId2).toObject(), {
         id: mailboxId2,
         label: mailboxLabel,
-        attribs: '',
+        attribs: [],
         tree: [''],
         accountID: id2,
       });
