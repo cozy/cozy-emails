@@ -142,6 +142,13 @@ module.exports =
         RouterStore.getConversationID()
 
 
+    isFullConversation: (conversationID) ->
+        conversationID ?= RouterStore.getConversationID()
+        messages = @getConversation conversationID
+        length = @getConversationLength {conversationID}
+        length and length > messages?.length
+
+
     getSubject: ->
         @getMessage()?.get 'subject'
 

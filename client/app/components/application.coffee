@@ -123,12 +123,13 @@ module.exports = React.createClass
 
                         if @state.isMailbox and @state.messageID
                             Conversation
-                                ref             : "conversation"
-                                key             : "conversation-#{@state.messageID}"
-                                messageID       : @state.messageID
-                                conversationID  : @state.conversationID
-                                subject         : @state.subject
-                                messages        : RouterGetter.getConversation()
+                                ref                 : "conversation"
+                                key                 : "conversation-#{@state.messageID}"
+                                messageID           : @state.messageID
+                                conversationID      : @state.conversationID
+                                subject             : @state.subject
+                                messages            : RouterGetter.getConversation()
+                                isFullConversation  : RouterGetter.isFullConversation()
 
                         else
                             section

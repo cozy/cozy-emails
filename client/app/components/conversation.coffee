@@ -13,10 +13,9 @@ RouterActionCreator = require '../actions/router_action_creator'
 
 
 _getFullConversation = ->
-    {conversationID, messages} = @props
-    length = RouterGetter.getConversationLength {conversationID}
-    if length and length isnt messages?.length
-        setTimeout ->
+    {conversationID} = @props
+    if @props.isFullConversation
+        setTimeout =>
             RouterActionCreator.getConversation conversationID
         , 0
 
@@ -51,16 +50,8 @@ module.exports = React.createClass
 
     componentDidUpdate: ->
         _getFullConversation.call @
-
-
-    renderMessage: (message) ->
-        messageID = message.get 'id'
-        Message _.extend RouterGetter.formatMessage(message),
-            ref             : "message-#{messageID}"
-            key             : "message-#{messageID}"
-            messageID       : @props.messageID
-            isActive        : @props.messageID is messageID
-            message         : message
+        _freezeHeader.call @
+        _scrollToActive.call @
 
 
     render: ->
@@ -87,7 +78,15 @@ module.exports = React.createClass
             section
                 key: "conversation-#{@props.messageID}-content"
                 ref: 'conversation-content',
-                    @props.messages.map @renderMessage
+                    @props.messages.map (message) =>
+                        messageID = message.get 'id'
+                        Message _.extend RouterGetter.formatMessage(message),
+                            ref             : "message-#{messageID}"
+                            key             : "message-#{messageID}"
+                            messageID       : @props.messageID
+                            isActive        : @props.messageID is messageID
+                            isTrashbox      : RouterGetter.isTrashbox()
+                            message         : message
 
 
     closeConversation: ->
