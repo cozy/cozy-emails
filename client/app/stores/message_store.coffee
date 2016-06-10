@@ -5,7 +5,6 @@ AppDispatcher = require '../libs/flux/dispatcher/dispatcher'
 
 Store = require '../libs/flux/store/store'
 
-
 # {MessageActions, AccountActions, MessageFlags} = require '../constants/app_constants'
 {ActionTypes, MessageFlags, MessageFilter} = require '../constants/app_constants'
 
@@ -68,8 +67,14 @@ class MessageStore extends Store
             _messages = _messages.set message.id, messageMap
 
 
-    _deleteMessage = (messageID) ->
+    _deleteMessage = (conversationID, messageID) ->
         _messages = _messages.remove messageID
+
+        # _conversationLength cant be trusted after
+        # client messagessList manipulations
+        # FIXME: should be return into serverResponse
+        length = _conversationLength.get conversationID
+        _conversationLength.set conversationID, --length
 
 
 
@@ -107,8 +112,8 @@ class MessageStore extends Store
 
 
         handle ActionTypes.MESSAGE_TRASH_SUCCESS, ({target}) ->
-            {messageID} = target
-            _deleteMessage messageID
+            {messageID, conversationID} = target
+            _deleteMessage conversationID, messageID
             @emit 'change'
 
 
@@ -128,7 +133,8 @@ class MessageStore extends Store
 
 
         handle ActionTypes.RECEIVE_MESSAGE_DELETE, (id) ->
-            _deleteMessage id
+            conversationID = _messages.get(id).get 'conversationID'
+            _deleteMessage conversationID, id
             @emit 'change'
 
 

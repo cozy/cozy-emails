@@ -320,6 +320,7 @@ class RouterStore extends Store
 
         conversations = {}
 
+        accountID ?= @getAccountID()
         mailboxID ?= @getMailboxID()
         inboxID = (inbox = AccountStore.getInbox accountID).get 'id'
         inboxTotal = inbox.get 'nbTotal'
@@ -404,16 +405,25 @@ class RouterStore extends Store
             return conversation?.length
 
 
-    gotoNextMessage: ->
-        messages = MessageStore.getAll()
-        keys = _.keys messages?.toObject()
-        values = messages?.toArray()
+    getNextMessage: (type='all') ->
+        if 'conversation' is type
+            index = undefined
+            messageID = @getMessageID()
+            messages = @getConversation @getConversationID()
+            messages.find (message, i) ->
+                if messageID is message.get 'id'
+                    index = i
+                    return true
+            return messages[--index]?.toJS()
+        else
+            messages = MessageStore.getAll()
+            keys = _.keys messages?.toObject()
+            index = keys.indexOf @getMessageID()
+            values = messages?.toArray()
+            return values[--index]
 
-        index = keys.indexOf @getMessageID()
-        values[--index]
 
-
-    gotoPreviousMessage: ->
+    getPreviousMessage: ->
         messages = MessageStore.getAll()
         keys = _.keys messages?.toObject()
         values = messages?.toArray()
@@ -546,22 +556,9 @@ class RouterStore extends Store
 
 
         handle ActionTypes.MESSAGE_TRASH_SUCCESS, ({target}) ->
-            AppDispatcher.waitFor [MessageStore.dispatchToken]
+            {nextMessage} = target
 
-            {conversationID} = target
-
-            # Get last message of current conversation
-            message = MessageStore.getAll()?.find (message) =>
-                conversationID is message.get 'conversationID'
-
-            # Otherwhise, get next conversation
-            message ?= @getNextConversation()
-
-            # Update global State
-            # that should update URL
-            conversationID = message?.get 'conversationID'
-            messageID = message?.get 'id'
-            _setCurrentMessage conversationID, messageID
+            _setCurrentMessage nextMessage?.conversationID, nextMessage?.id
             _updateURL()
 
             @emit 'change'

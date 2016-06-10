@@ -133,16 +133,16 @@ RouterActionCreator =
             value: {conversationID, messageID, mailboxID, action, query}
 
 
-    gotoPreviousMessage: ->
-        message = RouterStore.gotoPreviousMessage()
+    getPreviousMessage: ->
+        message = RouterStore.getPreviousMessage()
         conversationID = message?.get 'conversationID'
         messageID = message?.get 'id'
         mailboxID = message?.get 'mailboxID'
         @gotoMessage {conversationID, messageID, mailboxID}
 
 
-    gotoNextMessage: ->
-        message = RouterStore.gotoNextMessage()
+    getNextMessage: ->
+        message = RouterStore.getNextMessage()
         conversationID = message?.get 'conversationID'
         messageID = message?.get 'id'
         mailboxID = message?.get 'mailboxID'
@@ -246,6 +246,11 @@ RouterActionCreator =
         target.messageID ?= RouterStore.getMessageID()
         target.conversationID ?= RouterStore.getConversationID()
         target.accountID ?= RouterStore.getAccountID()
+
+        # Get nextMessage before it is removed
+        # into MessagStore
+        target.nextMessage = RouterStore.getNextMessage 'conversation'
+        target.nextMessage ?= RouterStore.getNextConversation()?.toJS()
 
         AppDispatcher.dispatch
             type: ActionTypes.MESSAGE_TRASH_REQUEST
