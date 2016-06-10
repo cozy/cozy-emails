@@ -6,8 +6,6 @@ XHRUtils      = require '../libs/xhr'
 
 MessageStore  = require '../stores/message_store'
 
-refCounter = 1
-
 MessageActionCreator =
 
     receiveRawMessages: (messages) ->

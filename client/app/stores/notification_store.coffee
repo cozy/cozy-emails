@@ -75,12 +75,14 @@ class NotificationStore extends Store
     _removeNotification = (id) ->
         _tasks = _tasks.remove id
 
+
     _showNotification = (options) ->
         id = options.id or +Date.now()
         options.finished ?= true
         _tasks = _tasks.set id, Immutable.Map options
         if options.autoclose
             setTimeout _removeNotification.bind(@, id), 5000
+
 
     _makeMessage = (target, actionAndOK, errMsg)->
         subject = target?.subject
@@ -105,10 +107,6 @@ class NotificationStore extends Store
             subject: subject or ''
             smart_count: smart_count
 
-    _makeUndoAction = (ref) ->
-        label: t 'action undo'
-        onClick: -> getMessageActionCreator().undo ref
-
 
     ###
         Defines here the action handlers.
@@ -118,39 +116,50 @@ class NotificationStore extends Store
         handle ActionTypes.SETTINGS_UPDATE_FAILURE, ({error}) ->
             _alertError t('settings save error') + error
 
+
         handle ActionTypes.MAILBOX_CREATE_SUCCESS, ->
             _alertSuccess t("mailbox create ok")
+
 
         handle ActionTypes.MAILBOX_CREATE_FAILURE, ->
             message = "#{t("mailbox create ko")} #{error.message or error}"
             _alertError message
 
+
         handle ActionTypes.MAILBOX_UPDATE_SUCCESS, ->
             _alertSuccess t("mailbox update ok")
+
 
         handle ActionTypes.MAILBOX_UPDATE_FAILURE, ->
             message = "#{t("mailbox update ko")} #{error.message or error}"
             _alertError message
 
+
         handle ActionTypes.MAILBOX_EXPUNGE_SUCCESS, ->
             _alert t("mailbox expunge ok"), autoclose: true
+
 
         handle ActionTypes.MAILBOX_EXPUNGE_FAILURE, ({error, mailboxID, accountID}) ->
             _alertError """
                 #{t("mailbox expunge ko")} #{error.message or error}
             """
 
+
         handle ActionTypes.REMOVE_ACCOUNT_SUCCESS, ->
             _alertError t('account removed')
+
 
         handle ActionTypes.CLEAR_TOASTS, ->
             _tasks = Immutable.OrderedMap()
 
+
         handle ActionTypes.RECEIVE_TASK_UPDATE, (task) =>
             _showNotification task
 
+
         handle ActionTypes.RECEIVE_TASK_DELETE, (taskid) ->
             _removeNotification taskid
+
 
         handle ActionTypes.MESSAGE_SEND_FAILURE, ({error, action}) ->
             if ActionTypes.MESSAGE_SEND_REQUEST is action
@@ -159,23 +168,22 @@ class NotificationStore extends Store
                 msgKo = t "message action draft ko"
             _alertError "#{msgKo} #{error}"
 
-        handle ActionTypes.MESSAGE_TRASH_SUCCESS, ({target, ref, updated}) ->
+
+        handle ActionTypes.MESSAGE_TRASH_SUCCESS, ({target}) ->
             _showNotification
                 message: _makeMessage target, 'delete ok'
-                actions: [_makeUndoAction ref]
                 autoclose: true
 
-        handle ActionTypes.MESSAGE_TRASH_FAILURE, ({target, ref, error}) ->
+        handle ActionTypes.MESSAGE_TRASH_FAILURE, ({target, error}) ->
             _showNotification
                 message: _makeMessage target, 'delete ko', error
                 errors: [error]
                 autoclose: true
 
-        handle ActionTypes.MESSAGE_MOVE_SUCCESS, ({target, ref, updated}) ->
+        handle ActionTypes.MESSAGE_MOVE_SUCCESS, ({target}) ->
             unless target.silent
                 _showNotification
                     message: _makeMessage target, 'move ok'
-                    actions: [_makeUndoAction ref]
                     autoclose: true
 
         handle ActionTypes.MESSAGE_MOVE_FAILURE, ({target, error}) ->
@@ -200,43 +208,11 @@ class NotificationStore extends Store
                 autoclose: true
 
 
-        # handle ActionTypes.ADD_ACCOUNT_FAILURE, ({error}) ->
-        #     AppDispatcher.waitFor [AccountStore.dispatchToken]
-        #     _showNotification
-        #        message: RouterStore.getAlertErrorMessage()
-        #        errors: RouterStore.getRawErrors()
-        #        autoclose: true
-
-        # handle ActionTypes.ADD_ACCOUNT_SUCCESS, ({areMailboxesConfigured}) ->
-        #     if areMailboxesConfigured
-        #         key = "account creation ok"
-        #     else
-        #         key = "account creation ok configuration needed"
-
-
-        # handle ActionTypes.EDIT_ACCOUNT_FAILURE, ({error}) ->
-        #     AppDispatcher.waitFor [AccountStore.dispatchToken]
-        #     _showNotification
-        #        message: RouterStore.getAlertErrorMessage()
-        #        errors: RouterStore.getRawErrors()
-        #        autoclose: true
-
         handle ActionTypes.EDIT_ACCOUNT_SUCCESS, ->
             _showNotification
                 message: t 'account updated'
                 autoclose: true
 
-        # handle ActionTypes.CHECK_ACCOUNT_FAILURE, ({error}) ->
-        #     AppDispatcher.waitFor [AccountStore.dispatchToken]
-        #     _showNotification
-        #        message: RouterStore.getAlertErrorMessage()
-        #        errors: RouterStore.getRawErrors()
-        #        autoclose: true
-        #
-        # handle ActionTypes.CHECK_ACCOUNT_SUCCESS, ->
-        #     _showNotification
-        #         message: t 'account checked'
-        #         autoclose: true
 
         handle ActionTypes.REFRESH_FAILURE, ({error}) ->
             AppDispatcher.waitFor [AccountStore.dispatchToken]
@@ -277,7 +253,6 @@ class NotificationStore extends Store
             _showNotification
                 message: "#{t 'notif new title'} #{message}"
                 autoclose: true
-
 
 
 module.exports = new NotificationStore()

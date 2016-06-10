@@ -68,8 +68,8 @@ class MessageStore extends Store
             _messages = _messages.set message.id, messageMap
 
 
-    _deleteMessage = (message) ->
-        _messages = _messages.remove message.id
+    _deleteMessage = (messageID) ->
+        _messages = _messages.remove messageID
 
 
 
@@ -122,7 +122,7 @@ class MessageStore extends Store
 
 
         handle ActionTypes.RECEIVE_MESSAGE_DELETE, (id) ->
-            _deleteMessage {id}
+            _deleteMessage id
             @emit 'change'
 
 
@@ -162,15 +162,16 @@ class MessageStore extends Store
         _messages.get(messageID)
 
 
-    getConversation: (conversationID) ->
+    getConversation: (conversationID, mailboxID) ->
         _messages.filter (message) ->
-            conversationID is message.get 'conversationID'
+            if mailboxID of message.get 'mailboxIDs'
+                return conversationID is message.get 'conversationID'
         .sort (msg1, msg2) ->
             msg1.get('date') < msg2.get('date')
         .toArray()
 
 
-    getConversationLength: (conversationID) ->
+    getConversationLength: (conversationID, mailboxID) ->
         _conversationLength?.get conversationID
 
 

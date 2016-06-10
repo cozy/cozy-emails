@@ -59,8 +59,6 @@ module.exports = React.createClass
                 isEditable      : RouterGetter.isEditable()
                 modal           : RouterGetter.getModal()
                 className       : className
-                messages        : RouterGetter.getMessagesList mailboxID
-                conversation    : RouterGetter.getConversation()
                 isMailbox       : RouterGetter.isMailboxExist()
                 isLoading       : RouterGetter.isMailboxLoading()
                 isIndexing      : RouterGetter.isMailboxIndexing()
@@ -115,10 +113,10 @@ module.exports = React.createClass
                                 key             : "messageList-#{@state.mailboxID}"
                                 accountID       : @state.accountID
                                 mailboxID       : @state.mailboxID
-                                messages        : @state.messages
+                                messages        : (messages = RouterGetter.getMessagesList())
                                 emptyMessages   : RouterGetter.getEmptyMessage()
                                 isAllSelected   : SelectionGetter.isAllSelected()
-                                selection       : SelectionGetter.getSelection @state.messages
+                                selection       : SelectionGetter.getSelection messages
                                 hasNextPage     : RouterGetter.hasNextPage()
                                 isMailbox       : @state.isMailbox
                                 isLoading       : @state.isLoading
@@ -130,7 +128,7 @@ module.exports = React.createClass
                                 messageID       : @state.messageID
                                 conversationID  : @state.conversationID
                                 subject         : @state.subject
-                                messages        : @state.conversation
+                                messages        : RouterGetter.getConversation()
 
                         else
                             section
