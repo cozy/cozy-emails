@@ -63,6 +63,13 @@ module.exports = React.createClass
                 isUnread: @props.isUnread
                 active: @props.isActive,
 
+            if @props.isActive and not @props.isTrashbox
+                ToolbarMessage
+                    ref         : "message-#{@props.messageID}-toolbar"
+                    key         : "message-#{@props.messageID}-toolbar"
+                    isFull      : true
+                    messageID   : @props.messageID
+
             if @props.isActive
                 MessageContent
                     ref: "message-#{@props.messageID}-content"
