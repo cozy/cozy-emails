@@ -215,7 +215,7 @@ class RouterStore extends Store
         _tab
 
 
-    _setCurrentMessage = (conversationID, messageID) ->
+    _setCurrentMessage = (conversationID=null, messageID=null) ->
         _conversationID = conversationID
         _messageID = messageID
         _messagesLength = 0
@@ -306,9 +306,7 @@ class RouterStore extends Store
         (_messagesLength + 1) >= MSGBYPAGE
 
 
-    getMessagesList: (mailboxID) ->
-        mailboxID ?= @getMailboxID()
-
+    getMessagesList: (accountID, mailboxID) ->
         # We dont filter for type from and dest because it is
         # complicated by collation and name vs address.
         _filterFlags = (message) =>
@@ -320,14 +318,32 @@ class RouterStore extends Store
                 return @isUnread message
             return true
 
-        uniq = {}
+        conversations = {}
+
+        mailboxID ?= @getMailboxID()
+        inboxID = (inbox = AccountStore.getInbox accountID).get 'id'
+        inboxTotal = inbox.get 'nbTotal'
+        isInbox = AccountStore.isInbox accountID, mailboxID
+
         {sort} = @getFilter()
         sortOrder = parseInt "#{sort.charAt(0)}1", 10
+
         messages = MessageStore.getAll()?.filter (message) =>
+            # FIXME: should be executed server side
+            # add inboxID for its children
+            _.keys(message.get 'mailboxIDs').forEach (id) ->
+                isInboxChild = AccountStore.isInbox accountID, id, true
+                if not isInbox and isInboxChild
+                    mailboxIDs = message.get 'mailboxIDs'
+                    mailboxIDs[inboxID] = inboxTotal
+                    message.set 'mailboxIDs', mailboxIDs
+                    return true
+
             # Display only last Message of conversation
-            conversationID = message.get 'conversationID'
-            unless (exist = uniq[conversationID])
-                uniq[conversationID] = true
+            id = _.last _.keys message.get 'mailboxIDs'
+            path = [id, message.get('conversationID')].join '/'
+            unless (exist = conversations[path])
+                conversations[path] = true
 
             # Should have the same flags
             hasSameFlag = _filterFlags message
@@ -344,9 +360,11 @@ class RouterStore extends Store
         return messages
 
 
-    getConversation: (conversationID) ->
+    getConversation: (conversationID, mailboxID) ->
+        # FIXME: devrait prendre en compte la mailbox concernée
         conversationID ?= @getConversationID()
-        MessageStore.getConversation conversationID
+        mailboxID ?= @getMailboxID()
+        MessageStore.getConversation conversationID, mailboxID
 
 
     getNextConversation: ->
@@ -367,13 +385,23 @@ class RouterStore extends Store
         values[++index]
 
 
+    # FIXME: incohérence ici
+    # la valeur correspond à celle de l'inbox
+    # hors on n'affiche pas toujours des messages de la boite principale
     getConversationLength: ({messageID, conversationID}) ->
         unless conversationID
             messageID ?= @getMessageID()
             if (message = MessageStore.getByID messageID)
                 conversationID = message.get 'conversationID'
 
-        MessageStore.getConversationLength conversationID
+        # FIXME: it should be calcultated on server side
+        # by getConversationLength itself
+        inbox = AccountStore.getInbox @getAccountID()
+        if (mailboxID = @getMailboxID()) is inbox?.get 'id'
+            return MessageStore.getConversationLength conversationID
+        else
+            conversation = MessageStore.getConversation conversationID, mailboxID
+            return conversation?.length
 
 
     gotoNextMessage: ->
@@ -418,7 +446,10 @@ class RouterStore extends Store
         # Get queryString of URI params
         query = _getURIQueryParams {filter: _currentFilter}
 
-        _URI = "#{mailboxID}#{query}"
+        if mailboxID?
+            _URI = "#{mailboxID}#{query}"
+        else
+            _URI = _action
 
 
     ###
@@ -429,6 +460,10 @@ class RouterStore extends Store
         handle ActionTypes.ROUTE_CHANGE, (payload={}) ->
             # Ensure all stores that listen ROUTE_CHANGE have vanished
             AppDispatcher.waitFor [RequestsStore.dispatchToken]
+
+            # Make sure that MessageStore is up to date
+            # before gettings data from it
+            AppDispatcher.waitFor [MessageStore.dispatchToken]
 
             clearTimeout _timerRouteChange
 
@@ -441,6 +476,8 @@ class RouterStore extends Store
                 _action = action
             else
                 _action = AccountActions.CREATE
+
+
 
             # From AccountStore
             accountID ?= AccountStore.getDefault(mailboxID)?.get 'id'
@@ -508,19 +545,30 @@ class RouterStore extends Store
             @emit 'change'
 
 
-        handle ActionTypes.MESSAGE_TRASH_SUCCESS, ({target, updated, ref}) ->
-            # Update messageID
-            message = @getNextConversation()
+        handle ActionTypes.MESSAGE_TRASH_SUCCESS, ({target}) ->
+            AppDispatcher.waitFor [MessageStore.dispatchToken]
+
+            {conversationID} = target
+
+            # Get last message of current conversation
+            message = MessageStore.getAll()?.find (message) =>
+                conversationID is message.get 'conversationID'
+
+            # Otherwhise, get next conversation
+            message ?= @getNextConversation()
+
+            # Update global State
+            # that should update URL
             conversationID = message?.get 'conversationID'
             messageID = message?.get 'id'
             _setCurrentMessage conversationID, messageID
-
-            # Update URL if it didnt
             _updateURL()
+
             @emit 'change'
 
 
-        handle ActionTypes.SETTINGS_UPDATE_REQUEST, ->
+        handle ActionTypes.SETTINGS_UPDATE_RESQUEST, ->
+            AppDispatcher.waitFor [MessageStore.dispatchToken]
             @emit 'change'
 
 

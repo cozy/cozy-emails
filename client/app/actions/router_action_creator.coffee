@@ -244,6 +244,7 @@ RouterActionCreator =
     deleteMessage: (target={}) ->
         timestamp = Date.now()
         target.messageID ?= RouterStore.getMessageID()
+        target.conversationID ?= RouterStore.getConversationID()
         target.accountID ?= RouterStore.getAccountID()
 
         AppDispatcher.dispatch

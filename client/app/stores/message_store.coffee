@@ -106,6 +106,12 @@ class MessageStore extends Store
             @emit 'change'
 
 
+        handle ActionTypes.MESSAGE_TRASH_SUCCESS, ({target}) ->
+            {messageID} = target
+            _deleteMessage messageID
+            @emit 'change'
+
+
         handle ActionTypes.MESSAGE_FLAGS_SUCCESS, ({updated}) ->
             _saveMessage message for message in updated
             @emit 'change'

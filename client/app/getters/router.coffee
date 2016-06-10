@@ -64,6 +64,12 @@ module.exports =
         return @getURL {action, mailboxID, resetFilter}
 
 
+    isTrashbox: (mailboxID) ->
+        accountID = @getAccountID()
+        mailboxID ?= @getMailboxID()
+        AccountStore.isTrashbox accountID, mailboxID
+
+
     # Sometimes we need a real URL
     # insteadof changing route params with actionCreator
     # Usefull to allow user
@@ -120,9 +126,10 @@ module.exports =
         RouterStore.getModalParams()
 
 
-    getMessagesList: (mailboxID) ->
-        mailboxID ?= @getMailboxID()
-        RouterStore.getMessagesList mailboxID
+    getMessagesList: (accountID, mailboxID) ->
+        accountID = @getAccountID()
+        mailboxID = @getMailboxID()
+        RouterStore.getMessagesList accountID, mailboxID
 
 
     getMessage: (messageID) ->
@@ -134,8 +141,8 @@ module.exports =
         RouterStore.getConversationLength {messageID, conversationID}
 
 
-    getConversation: (messageID) ->
-        RouterStore.getConversation(messageID) or []
+    getConversation: (conversationID) ->
+        RouterStore.getConversation(conversationID) or []
 
 
     getConversationID: ->
@@ -175,11 +182,6 @@ module.exports =
     getFlaggedLength: (accountID) ->
         accountID ?= @getAccountID()
         AccountStore.getInbox(accountID)?.get 'nbFlagged'
-
-
-    getTrashMailbox: (accountID) ->
-        accountID ?= @getAccountID()
-        AccountStore.getTrashMailbox accountID
 
 
     getAccounts: ->
