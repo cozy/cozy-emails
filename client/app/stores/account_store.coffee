@@ -224,7 +224,8 @@ class AccountStore extends Store
         return unless mailbox?.size
 
         tree = mailbox.get('tree')
-        root = tree[0].toLowerCase()
+        tree = unless getChildren then tree.join('/') else tree[0]
+        root = tree.toLowerCase()
 
         isInbox = 'inbox' is root
         isInboxChild = unless getChildren then tree.length is 1 else true

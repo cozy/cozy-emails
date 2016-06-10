@@ -62,6 +62,7 @@ module.exports = React.createClass
                 isMailbox       : RouterGetter.isMailboxExist()
                 isLoading       : RouterGetter.isMailboxLoading()
                 isIndexing      : RouterGetter.isMailboxIndexing()
+                hasNextPage     : RouterGetter.hasNextPage()
             }
 
         return {
@@ -117,7 +118,7 @@ module.exports = React.createClass
                                 emptyMessages   : RouterGetter.getEmptyMessage()
                                 isAllSelected   : SelectionGetter.isAllSelected()
                                 selection       : SelectionGetter.getSelection messages
-                                hasNextPage     : RouterGetter.hasNextPage()
+                                hasNextPage     : @state.hasNextPage
                                 isMailbox       : @state.isMailbox
                                 isLoading       : @state.isLoading
 
