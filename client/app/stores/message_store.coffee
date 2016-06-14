@@ -74,7 +74,7 @@ class MessageStore extends Store
         # client messagessList manipulations
         # FIXME: should be return into serverResponse
         length = _conversationLength.get conversationID
-        _conversationLength.set conversationID, --length
+        _conversationLength = _conversationLength.set conversationID, length - 1
 
 
 
