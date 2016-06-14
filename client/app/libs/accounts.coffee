@@ -91,6 +91,7 @@ module.exports =
     # - extract name and label from the mail login field (aka email identifier)
     sanitizeConfig: (state) ->
         excludes = [
+            'OAuth'
             'alert'
             'isBusy'
             'isDiscoverable'

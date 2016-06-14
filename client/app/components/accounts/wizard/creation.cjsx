@@ -179,5 +179,4 @@ module.exports = AccountWizardCreation = React.createClass
             @setState source
         else
             {target: {value}} = event
-            nextState = _.partial AccountsUtils.validateState, source, value
-            @setState nextState
+            @setState _.partial AccountsUtils.validateState, source, value
