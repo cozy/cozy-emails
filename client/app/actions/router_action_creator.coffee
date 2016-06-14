@@ -247,11 +247,6 @@ RouterActionCreator =
         target.conversationID ?= RouterStore.getConversationID()
         target.accountID ?= RouterStore.getAccountID()
 
-        # Get nextMessage before it is removed
-        # into MessagStore
-        target.nextMessage = RouterStore.getNextMessage 'conversation'
-        target.nextMessage ?= RouterStore.getNextConversation()?.toJS()
-
         AppDispatcher.dispatch
             type: ActionTypes.MESSAGE_TRASH_REQUEST
             value: {target}

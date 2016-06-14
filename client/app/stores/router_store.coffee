@@ -48,6 +48,7 @@ class RouterStore extends Store
     _conversationID = null
     _messageID = null
     _messagesLength = 0
+    _nextMessage = undefined
 
     _timerRouteChange = null
 
@@ -405,31 +406,37 @@ class RouterStore extends Store
             return conversation?.length
 
 
-    getNextMessage: (type='all') ->
-        if 'conversation' is type
+    _getNearestMessage = (type='all', action='next') ->
+        messageID = _messageID
+        conversationID = _conversationID
+        mailboxID = _mailboxID
+
+        _getMessageIndex = (messages) ->
             index = undefined
-            messageID = @getMessageID()
-            messages = @getConversation @getConversationID()
+            messageID = messageID
+            messages ?= @getConversation conversationID
             messages.find (message, i) ->
                 if messageID is message.get 'id'
                     index = i
                     return true
-            return messages[--index]?.toJS()
-        else
-            messages = MessageStore.getAll()
-            keys = _.keys messages?.toObject()
-            index = keys.indexOf @getMessageID()
-            values = messages?.toArray()
-            return values[--index]
+            index
+
+        messages = if 'conversation' is type
+        then MessageStore.getConversation conversationID, mailboxID
+        else MessageStore.getAll()?.toArray()
+
+        index = _getMessageIndex messages
+        if 'previous' is action then --index else ++index
+
+        messages[index]?.toJS()
 
 
-    getPreviousMessage: ->
-        messages = MessageStore.getAll()
-        keys = _.keys messages?.toObject()
-        values = messages?.toArray()
+    getNextMessage: (type='all') ->
+        _getNearestMessage type, 'next'
 
-        index = keys.indexOf @getMessageID()
-        values[++index]
+
+    getPreviousMessage: (type='all') ->
+        _getNearestMessage type, 'previous'
 
 
     getURI: ->
@@ -530,9 +537,7 @@ class RouterStore extends Store
 
         handle ActionTypes.ADD_ACCOUNT_SUCCESS, ({account}) ->
             _timerRouteChange = setTimeout =>
-                # _newAccountWaiting = false
-                _action            = MessageActions.SHOW_ALL
-
+                _action = MessageActions.SHOW_ALL
                 _setCurrentAccount account.id, account.inboxMailbox
                 _updateURL()
 
@@ -555,12 +560,21 @@ class RouterStore extends Store
             @emit 'change'
 
 
-        handle ActionTypes.MESSAGE_TRASH_SUCCESS, ({target}) ->
-            {nextMessage} = target
+        handle ActionTypes.MESSAGE_TRASH_REQUEST, ->
+            # Save nextMessage before current is removed
+            # First, get next message on conversation
+            # then get nearest message into conversation
+            # otherwhise, get next conversation on the list
+            _nextMessage = @getNextMessage 'conversation'
+            _nextMessage ?= @getPreviousMessage 'conversation'
+            _nextMessage ?= @getNextConversation()?.toJS()
+            @emit 'change'
 
-            _setCurrentMessage nextMessage?.conversationID, nextMessage?.id
+
+        handle ActionTypes.MESSAGE_TRASH_SUCCESS, ->
+            AppDispatcher.waitFor [MessageStore.dispatchToken]
+            _setCurrentMessage _nextMessage?.conversationID, _nextMessage?.id
             _updateURL()
-
             @emit 'change'
 
 
