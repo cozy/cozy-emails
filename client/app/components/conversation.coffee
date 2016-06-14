@@ -13,8 +13,8 @@ RouterActionCreator = require '../actions/router_action_creator'
 
 
 _getFullConversation = ->
-    {conversationID} = @props
-    if @props.isFullConversation
+    {conversationID, isMissingMessages} = @props
+    if isMissingMessages
         setTimeout =>
             RouterActionCreator.getConversation conversationID
         , 0

@@ -131,7 +131,7 @@ module.exports = React.createClass
                                 conversationID      : @state.conversationID
                                 subject             : @state.subject
                                 messages            : RouterGetter.getConversation()
-                                isFullConversation  : RouterGetter.isFullConversation()
+                                isMissingMessages  : RouterGetter.isMissingMessages()
 
                         else
                             section

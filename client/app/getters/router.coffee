@@ -137,7 +137,7 @@ module.exports =
         RouterStore.getConversationID()
 
 
-    isFullConversation: (conversationID) ->
+    isMissingMessages: (conversationID) ->
         conversationID ?= RouterStore.getConversationID()
         messages = @getConversation conversationID
         length = @getConversationLength {conversationID}
