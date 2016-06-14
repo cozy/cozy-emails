@@ -151,16 +151,12 @@ class MessageStore extends Store
             @emit 'change'
 
 
-        handle ActionTypes.SETTINGS_UPDATE_REQUEST, ({messageID, displayImages}) ->
+        handle ActionTypes.SETTINGS_UPDATE_RESQUEST, ({messageID, displayImages=true}) ->
             # Update settings into component,
             # but not definitly into settingsStore
-            if (message = _messages.get messageID)
-                message.__displayImages = displayImages
-                _messages = _messages.set messageID, message
+            message = @getByID(messageID)?.set '_displayImages', displayImages
+            _messages = _messages.set messageID, message
             @emit 'change'
-
-
-
 
 
     ###
@@ -172,6 +168,10 @@ class MessageStore extends Store
 
     getByID: (messageID) ->
         _messages.get(messageID)
+
+
+    isImagesDisplayed: (messageID) ->
+        @getByID(messageID)?.get('_displayImages') or false
 
 
     getConversation: (conversationID, mailboxID) ->

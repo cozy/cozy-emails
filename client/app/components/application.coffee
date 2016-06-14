@@ -20,6 +20,7 @@ AccountWizardCreation = React.createFactory require './accounts/wizard/creation'
 RouterStore          = require '../stores/router_store'
 SettingsStore        = require '../stores/settings_store'
 RequestsStore        = require '../stores/requests_store'
+MessageStore         = require '../stores/message_store'
 StoreWatchMixin      = require '../mixins/store_watch_mixin'
 
 RouterGetter = require '../getters/router'
@@ -41,7 +42,7 @@ module.exports = React.createClass
     displayName: 'Application'
 
     mixins: [
-        StoreWatchMixin [SettingsStore, RequestsStore, RouterStore]
+        StoreWatchMixin [SettingsStore, RequestsStore, RouterStore, MessageStore]
     ]
 
     getStateFromStores: (props) ->
@@ -50,19 +51,19 @@ module.exports = React.createClass
 
         if (mailbox = RouterGetter.getMailbox())
             return {
-                mailboxID       : (mailboxID = RouterGetter.getMailboxID())
-                accountID       : RouterGetter.getAccountID()
-                conversationID  : RouterGetter.getConversationID()
-                messageID       : RouterGetter.getMessageID()
-                subject         : RouterGetter.getSubject()
-                action          : RouterGetter.getAction()
-                isEditable      : RouterGetter.isEditable()
-                modal           : RouterGetter.getModal()
-                className       : className
-                isMailbox       : RouterGetter.isMailboxExist()
-                isLoading       : RouterGetter.isMailboxLoading()
-                isIndexing      : RouterGetter.isMailboxIndexing()
-                hasNextPage     : RouterGetter.hasNextPage()
+                mailboxID           : (mailboxID = RouterGetter.getMailboxID())
+                accountID           : RouterGetter.getAccountID()
+                conversationID      : RouterGetter.getConversationID()
+                messageID           : RouterGetter.getMessageID()
+                subject             : RouterGetter.getSubject()
+                action              : RouterGetter.getAction()
+                modal               : RouterGetter.getModal()
+                className           : className
+                isMailbox           : RouterGetter.isMailboxExist()
+                isLoading           : RouterGetter.isMailboxLoading()
+                isIndexing          : RouterGetter.isMailboxIndexing()
+                hasNextPage         : RouterGetter.hasNextPage()
+                hasSettingsChanged  : RouterGetter.hasSettingsChanged()
             }
 
         return {

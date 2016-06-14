@@ -20,10 +20,11 @@ MessageActionCreator =
             value: message
 
 
-    displayImages: (props={})->
+    displayImages: ({messageID, displayImages=true})->
+        message = MessageStore.getByID messageID
         AppDispatcher.dispatch
-            type: ActionTypes.SETTINGS_UPDATE_REQUEST
-            value: props
+            type: ActionTypes.SETTINGS_UPDATE_RESQUEST
+            value: {messageID, displayImages}
 
 
     send: (action, message) ->

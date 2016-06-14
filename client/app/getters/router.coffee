@@ -98,18 +98,6 @@ module.exports =
         MessageStore.getByID messageID unless isReply
 
 
-    isEditable: ->
-        action = @getAction()
-        editables = [
-            MessageActions.CREATE,
-            MessageActions.EDIT,
-            MessageActions.REPLY,
-            MessageActions.REPLY_ALL,
-            MessageActions.FORWARD
-            ]
-        action in editables
-
-
     getFilter: ->
         RouterStore.getFilter()
 
@@ -207,6 +195,14 @@ module.exports =
 
     getLogin: ->
         @getMailbox()?.get 'login'
+
+
+    # Here is local settings
+    # global settings are not handled anymore
+    # but should be in the future
+    hasSettingsChanged: ->
+        messageID = RouterStore.getMessageID()
+        MessageStore.isImagesDisplayed messageID
 
 
     isMailboxExist: ->
