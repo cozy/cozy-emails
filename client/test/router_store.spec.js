@@ -180,8 +180,10 @@ describe('Router Store', () => {
    *          (ex: EDIT_ACCOUNT_REQUEST).
    * * FIXME: EDIT_ACCOUNT_SUCCESS clears errors after creating some. Don't
    *          know what to test.
-   * * FIXME: Code is shared bewteen client and server.
+   * * FIXME: Code is shared between client and server.
    * * FIXME: getPreviousConversation and getNextConversation looks confusing.
+   * * FIXME: Search and filter didn't look implemented yet. Tests about it
+   *          should be added later (via ROUTE_CHANGE event tests).
    */
 
   before(() => {
@@ -204,10 +206,6 @@ describe('Router Store', () => {
       // can build URLs and performs its initializaton like if data are arleady
       // present in the application.
       dispatcher.dispatch({
-        type: ActionTypes.ADD_ACCOUNT_SUCCESS,
-        value: { account: _.clone(fixtures.account) },
-      });
-      dispatcher.dispatch({
         type: ActionTypes.RECEIVE_RAW_MESSAGES,
         value: [fixtures.message1, fixtures.message2],
       });
@@ -217,7 +215,21 @@ describe('Router Store', () => {
       });
       assert.equal(routerStore.getRouter(), fixtures.router);
     });
-    it('ROUTE_CHANGE', () => {
+    it('ROUTE_CHANGE (no accounts)', () => {
+      // First we test that the new account action is automatically selected
+      // when the ROUTE_CHANGE event is fired while no account is added to the
+      // store.
+      dispatcher.dispatch({
+        type: ActionTypes.ROUTE_CHANGE,
+        value: { },
+      });
+      assert.equal(routerStore.getAction(), AccountActions.CREATE);
+    });
+    it('ROUTE_CHANGE (accounts)', () => {
+      dispatcher.dispatch({
+        type: ActionTypes.ADD_ACCOUNT_SUCCESS,
+        value: { account: _.clone(fixtures.account) },
+      });
       dispatcher.dispatch({
         type: ActionTypes.ROUTE_CHANGE,
         value: {
@@ -230,6 +242,31 @@ describe('Router Store', () => {
           query: '',
         },
       });
+      assert.equal(routerStore.getAction(), MessageActions.SHOW);
+      assert.equal(routerStore.getAccountID(), fixtures.account.id);
+      assert.equal(routerStore.getMailboxID(), fixtures.account.inboxMailbox);
+      assert.equal(routerStore.getMessageID(), fixtures.message1.id);
+      assert.equal(routerStore.getConversationID(),
+                   fixtures.message1.conversationID);
+      assert.isNull(routerStore.getFilter().value);
+      assert.equal(routerStore.getCurrentURL({ isServer: false }),
+                   '#mailbox/mb1/c1/i1');
+
+      dispatcher.dispatch({
+        type: ActionTypes.ROUTE_CHANGE,
+        value: {
+          accountID: fixtures.account.id,
+          mailboxID: fixtures.account.inboxMailbox,
+          tab: 'selected',
+          action: MessageActions.SHOW_ALL,
+        },
+      });
+      assert.equal(routerStore.getAction(), MessageActions.SHOW_ALL);
+      assert.equal(routerStore.getAccountID(), fixtures.account.id);
+      assert.equal(routerStore.getMailboxID(), fixtures.account.inboxMailbox);
+      assert.isNull(routerStore.getFilter().value);
+      assert.equal(routerStore.getCurrentURL({ isServer: false }),
+                   '#mailbox/mb1');
     });
     it('ADD_ACCOUNT_REQUEST', () => {
       dispatcher.dispatch({
@@ -250,7 +287,7 @@ describe('Router Store', () => {
         assert.equal(routerStore.getMailboxID(), fixtures.account.inboxMailbox);
         assert.equal(routerStore.getSelectedTab(), 'account');
         assert.equal(currentURL, `#mailbox/${fixtures.account.inboxMailbox}`);
-        assert.equal(routerStore.getCurrentURL({isServer: false}),
+        assert.equal(routerStore.getCurrentURL({ isServer: false }),
                      `#mailbox/${fixtures.account.inboxMailbox}`);
         done();
       }, 5000);
