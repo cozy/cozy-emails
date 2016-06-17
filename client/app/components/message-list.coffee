@@ -82,10 +82,10 @@ module.exports = React.createClass
     renderItem: (message) ->
         messageID = message.get 'id'
         conversationID = message.get 'conversationID'
-        conversationLengths = RouterGetter.getConversationLength {conversationID}
-        isActive = RouterGetter.isCurrentConversation conversationID
+        conversationLengths = RouterGetter.getConversationLength conversationID
+        isActive = @props.conversationID is conversationID
         MessageItem
-            key                 : "messageItem-#{messageID}"
+            key                 : "messageItem-#{messageID}-#{isActive}"
             messageID           : messageID
             flags               : message.get 'flags'
             message             : message

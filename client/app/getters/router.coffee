@@ -125,8 +125,8 @@ module.exports =
         MessageStore.getByID messageID
 
 
-    getConversationLength: ({messageID, conversationID}) ->
-        RouterStore.getConversationLength {messageID, conversationID}
+    getConversationLength: (conversationID) ->
+        RouterStore.getConversationLength(conversationID) or 0
 
 
     getConversation: (conversationID) ->
@@ -138,10 +138,11 @@ module.exports =
 
 
     isMissingMessages: (conversationID) ->
-        conversationID ?= RouterStore.getConversationID()
-        messages = @getConversation conversationID
-        length = @getConversationLength {conversationID}
-        length and length > messages?.length
+        RouterStore.isMissingMessages conversationID
+
+
+    isPageComplete: ->
+        RouterStore.isPageComplete()
 
 
     getSubject: ->
@@ -150,10 +151,6 @@ module.exports =
 
     getMessageID: ->
         RouterStore.getMessageID()
-
-
-    isCurrentConversation: (conversationID) ->
-        conversationID is @getConversationID()
 
 
     getMailbox: (accountID, mailboxID) ->

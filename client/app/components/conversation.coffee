@@ -12,14 +12,6 @@ LayoutGetter = require '../getters/layout'
 RouterActionCreator = require '../actions/router_action_creator'
 
 
-_getFullConversation = ->
-    {conversationID, isMissingMessages} = @props
-    if isMissingMessages
-        setTimeout =>
-            RouterActionCreator.getConversation conversationID
-        , 0
-
-
 _scrollToActive = ->
     el = ReactDOM.findDOMNode @
     activeElement = el.querySelector '[data-message-active="true"]'
@@ -41,15 +33,17 @@ _freezeHeader = ->
 module.exports = React.createClass
     displayName: 'Conversation'
 
-
     componentDidMount: ->
-        _getFullConversation.call @
-        _freezeHeader.call @
-        _scrollToActive.call @
+        # Get all conversation
+        # and update _conversationLength
+        # if result.messages.length is different
+        # ie. when mailbox is a flagged on
+        # we don't need to get all messages
+        # but only filtered one
+        setTimeout ->
+            RouterActionCreator.getConversation()
+        , 0
 
-
-    componentDidUpdate: ->
-        _getFullConversation.call @
         _freezeHeader.call @
         _scrollToActive.call @
 

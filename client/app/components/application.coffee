@@ -49,11 +49,13 @@ module.exports = React.createClass
         previewSize = LayoutGetter.getPreviewSize()
         className = "layout layout-column layout-preview-#{previewSize}"
 
-        if (mailbox = RouterGetter.getMailbox())
+        if (mailboxID = RouterGetter.getMailboxID())
             return {
-                mailboxID           : (mailboxID = RouterGetter.getMailboxID())
+                mailboxID           : mailboxID
                 accountID           : RouterGetter.getAccountID()
                 conversationID      : RouterGetter.getConversationID()
+                conversationLength  : RouterGetter.getConversationLength()
+                isMissingMessages   : RouterGetter.isMissingMessages()
                 messageID           : RouterGetter.getMessageID()
                 subject             : RouterGetter.getSubject()
                 action              : RouterGetter.getAction()
@@ -77,7 +79,6 @@ module.exports = React.createClass
     # respective tooltip when the component is mounted (DOM elements exist).
     componentDidMount: ->
         AriaTips.bind()
-
 
 
     render: ->
@@ -111,27 +112,27 @@ module.exports = React.createClass
 
                         if @state.isMailbox
                             MessageList
-                                ref             : "messageList"
-                                key             : "messageList-#{@state.mailboxID}"
-                                accountID       : @state.accountID
-                                mailboxID       : @state.mailboxID
-                                messages        : (messages = RouterGetter.getMessagesList())
-                                emptyMessages   : RouterGetter.getEmptyMessage()
-                                isAllSelected   : SelectionGetter.isAllSelected()
-                                selection       : SelectionGetter.getSelection messages
-                                hasNextPage     : @state.hasNextPage
-                                isMailbox       : @state.isMailbox
-                                isLoading       : @state.isLoading
+                                ref                 : "messageList"
+                                key                 : "messageList-#{@state.mailboxID}-#{@state.conversationLength}"
+                                accountID           : @state.accountID
+                                mailboxID           : @state.mailboxID
+                                conversationID      : @state.conversationID
+                                messages            : (messages = RouterGetter.getMessagesList())
+                                emptyMessages       : RouterGetter.getEmptyMessage()
+                                isAllSelected       : SelectionGetter.isAllSelected()
+                                selection           : SelectionGetter.getSelection messages
+                                hasNextPage         : @state.hasNextPage
+                                isMailbox           : @state.isMailbox
+                                isLoading           : @state.isLoading
 
                         if @state.isMailbox and @state.messageID
                             Conversation
                                 ref                 : "conversation"
-                                key                 : "conversation-#{@state.messageID}"
+                                key                 : "conversation-#{@state.conversationLength}-#{@state.messageID}"
                                 messageID           : @state.messageID
                                 conversationID      : @state.conversationID
                                 subject             : @state.subject
                                 messages            : RouterGetter.getConversation()
-                                isMissingMessages  : RouterGetter.isMissingMessages()
 
                         else
                             section
