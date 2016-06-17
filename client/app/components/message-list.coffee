@@ -36,6 +36,10 @@ module.exports = React.createClass
 
 
     render: ->
+        # TODO: rediriger vers le message le plus proche
+        # lorsque le message n'est plus dans la boite
+        # ie. message non lus
+        # console.log 'MESSAGE_LIST', @props.conversationID
         section
             'key'               : "messages-list-#{@props.mailboxID}"
             'ref'               : "messages-list"

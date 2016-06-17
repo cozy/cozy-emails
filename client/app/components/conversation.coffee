@@ -48,6 +48,17 @@ module.exports = React.createClass
         _scrollToActive.call @
 
 
+    componentWillUpdate: ->
+        setTimeout =>
+            RouterActionCreator.markAsRead @props
+        , 0
+
+    componentWillUnmount: ->
+        setTimeout =>
+            RouterActionCreator.markAsRead @props
+        , 100
+
+
     render: ->
         unless @props.messages?.length
             return section

@@ -20,13 +20,6 @@ module.exports = React.createClass
     displayName: 'Message'
 
 
-    componentWillUnmount: ->
-        # Mark message as read
-        if @props.message?.size and @props.isActive
-            messageID = @props.message.get 'id'
-            RouterActionCreator.mark {messageID}, MessageFlags.SEEN
-
-
     renderAttachement: (file, index, isPreview=false) ->
         file = file?.toJS()
         AttachmentPreview
