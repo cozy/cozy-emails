@@ -5,7 +5,6 @@ AppDispatcher = require '../libs/flux/dispatcher/dispatcher'
 
 Store = require '../libs/flux/store/store'
 
-# {MessageActions, AccountActions, MessageFlags} = require '../constants/app_constants'
 {ActionTypes, MessageFlags, MessageFilter} = require '../constants/app_constants'
 
 class MessageStore extends Store
@@ -30,7 +29,7 @@ class MessageStore extends Store
         # withount loading all massages of the conversation
         if conversationLength?
             for conversationID, length of conversationLength
-                _conversationLength = _conversationLength.set conversationID, length
+                _updateConversationLength conversationID, length
 
 
     _saveMessage = (message, timestamp) ->
@@ -40,6 +39,11 @@ class MessageStore extends Store
         # only update message if new version is newer than
         # the one currently stored
         message.updated = timestamp if timestamp
+
+        # Save reference mailbox into message informations
+        mailboxIDs = _.keys(message.mailboxIDs).sort (value0, value1) ->
+            value0.localeCompare value1
+        message.mailboxID = mailboxIDs.shift()
 
         if not (timestamp? and updated? and updated > timestamp) and
            not message._deleted # deleted draft are empty, don't update them
@@ -74,8 +78,17 @@ class MessageStore extends Store
         # client messagessList manipulations
         # FIXME: should be return into serverResponse
         length = _conversationLength.get conversationID
-        _conversationLength = _conversationLength.set conversationID, length - 1
+        _updateConversationLength conversationID, --length
 
+
+    _updateConversationLength = (conversationID, length) ->
+        # Remove conversation
+        # if no messages exist into it
+        # FIXME: should be return into serverResponse
+        if length < 0
+            _conversationLength = _conversationLength.remove conversationID
+        else
+            _conversationLength = _conversationLength.set conversationID, length
 
 
     ###
@@ -99,8 +112,7 @@ class MessageStore extends Store
 
 
         handle ActionTypes.RECEIVE_RAW_MESSAGES, (messages) ->
-            for message in messages when message?
-                _saveMessage message
+            _updateMessages {messages}
             @emit 'change'
 
 
@@ -117,13 +129,13 @@ class MessageStore extends Store
             @emit 'change'
 
 
-        handle ActionTypes.MESSAGE_FLAGS_SUCCESS, ({updated}) ->
-            _saveMessage message for message in updated
+        handle ActionTypes.MESSAGE_FLAGS_SUCCESS, ({target, updated, flags}) ->
+            _updateMessages updated
             @emit 'change'
 
 
         handle ActionTypes.MESSAGE_MOVE_SUCCESS, ({updated}) ->
-            _saveMessage message for message in updated
+            _updateMessages updated
             @emit 'change'
 
 
@@ -146,8 +158,7 @@ class MessageStore extends Store
 
 
         handle ActionTypes.SEARCH_SUCCESS, ({result}) ->
-            for message in result.rows when message?
-                _saveMessage message
+            _updateMessages result
             @emit 'change'
 
 
@@ -174,17 +185,45 @@ class MessageStore extends Store
         @getByID(messageID)?.get('_displayImages') or false
 
 
+    isUnread: ({flags=[], message}) ->
+        if message?
+            flags = message.get('flags') or []
+            return MessageFlags.SEEN not in flags
+        else
+            return MessageFilter.UNSEEN in flags
+
+
+    isFlagged: ({flags=[], message}) ->
+        if message?
+            flags = message?.get('flags') or []
+            MessageFlags.FLAGGED in flags
+        else
+            MessageFilter.FLAGGED in flags
+
+
+    isAttached: ({flags=[], message}) ->
+        if message?
+            flags = message?.get('flags') or []
+            MessageFlags.ATTACH in flags
+        else
+            MessageFilter.ATTACH in flags
+
+
     getConversation: (conversationID, mailboxID) ->
-        _messages.filter (message) ->
-            if mailboxID of message.get 'mailboxIDs'
-                return conversationID is message.get 'conversationID'
-        .sort (msg1, msg2) ->
-            msg1.get('date') < msg2.get('date')
-        .toArray()
+        _messages.filter (message) =>
+            isSameMailbox = mailboxID of message.get 'mailboxIDs'
+            isSameConversationID = conversationID is message.get 'conversationID'
+            isSameMailbox and isSameConversationID
+            _messages.filter (message) ->
+                if mailboxID of message.get 'mailboxIDs'
+                    return conversationID is message.get 'conversationID'
+            .sort (msg1, msg2) ->
+                msg1.get('date') < msg2.get('date')
+            .toArray()
 
 
-    getConversationLength: (conversationID, mailboxID) ->
-        _conversationLength?.get conversationID
+    getConversationLength: (conversationID) ->
+        _conversationLength?.get(conversationID) or null
 
 
 

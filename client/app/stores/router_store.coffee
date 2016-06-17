@@ -48,7 +48,7 @@ class RouterStore extends Store
     _conversationID = null
     _messageID = null
     _messagesLength = 0
-    _nextMessage = undefined
+    _nextMessage = null
 
     _timerRouteChange = null
 
@@ -194,7 +194,13 @@ class RouterStore extends Store
             return _accountID
 
 
-    getMailboxID: ->
+    getMailboxID: (messageID) ->
+        if messageID
+            # Get mailboxID from message first
+            mailboxIDs = MessageStore.getByID(messageID)?.get 'mailboxIDs'
+            if _mailboxID in _.keys(mailboxIDs)
+                return _mailboxID
+
         unless _mailboxID
             return AccountStore.getDefault()?.get 'inboxMailbox'
         else
@@ -241,26 +247,17 @@ class RouterStore extends Store
 
     isUnread: (message) ->
         flags = _getFlags message
-        if message?
-            return MessageFlags.SEEN not in flags
-        else
-            return MessageFilter.UNSEEN in flags
+        MessageStore.isUnread {flags, message}
 
 
     isFlagged: (message) ->
         flags = _getFlags message
-        if message?
-            MessageFlags.FLAGGED in flags
-        else
-            MessageFilter.FLAGGED in flags
+        MessageStore.isFlagged {flags, message}
 
 
     isAttached: (message) ->
         flags = _getFlags message
-        if message?
-            MessageFlags.ATTACH in flags
-        else
-            MessageFilter.ATTACH in flags
+        MessageStore.isFlagged {flags, message}
 
 
     isDeleted: (message) ->
@@ -301,24 +298,27 @@ class RouterStore extends Store
 
 
     isPageComplete: ->
-        if (messageID = @getMessageID())
-            unless (message = MessageStore.getByID(messageID))?.size
-                return false
+        # Do not infinite fetch
+        # when message doesnt exist anymore
+        messageID = @getMessageID()
+        if messageID and not MessageStore.getByID(messageID)?.size
+            return @hasNextPage()
         (_messagesLength + 1) >= MSGBYPAGE
 
 
-    getMessagesList: (accountID, mailboxID) ->
-        # We dont filter for type from and dest because it is
-        # complicated by collation and name vs address.
-        _filterFlags = (message) =>
-            if @isFlagged()
-                return @isFlagged message
-            if @isAttached()
-                return @isAttached message
-            if @isUnread()
-                return @isUnread message
-            return true
+    # We dont filter for type from and dest because it is
+    # complicated by collation and name vs address.
+    _filterFlags = (message) =>
+        if @isFlagged()
+            return @isFlagged message
+        if @isAttached()
+            return @isAttached message
+        if @isUnread()
+            return @isUnread message
+        return true
 
+
+    getMessagesList: (accountID, mailboxID) ->
         conversations = {}
 
         accountID ?= @getAccountID()
@@ -331,6 +331,8 @@ class RouterStore extends Store
         sortOrder = parseInt "#{sort.charAt(0)}1", 10
 
         messages = MessageStore.getAll()?.filter (message) =>
+            # do not have twice INBOX
+            # see OVH twice Inbox issue
             # FIXME: should be executed server side
             # add inboxID for its children
             _.keys(message.get 'mailboxIDs').forEach (id) ->
@@ -342,10 +344,8 @@ class RouterStore extends Store
                     return true
 
             # Display only last Message of conversation
-            id = _.last _.keys message.get 'mailboxIDs'
-            path = [id, message.get('conversationID')].join '/'
-            unless (exist = conversations[path])
-                conversations[path] = true
+            path = [message.get('mailboxID'), message.get('conversationID')].join '/'
+            conversations[path] = true unless (exist = conversations[path])
 
             # Should have the same flags
             hasSameFlag = _filterFlags message
@@ -363,80 +363,46 @@ class RouterStore extends Store
 
 
     getConversation: (conversationID, mailboxID) ->
-        # FIXME: devrait prendre en compte la mailbox concernée
         conversationID ?= @getConversationID()
+        unless conversationID
+            return []
+
+        # Get current flags
+        flags = _getFlags()
+        isFlagged = MessageStore.isFlagged {flags}
+        isUnread = MessageStore.isUnread {flags}
+
+        # Filter messages
         mailboxID ?= @getMailboxID()
-        MessageStore.getConversation conversationID, mailboxID
+        messages = MessageStore.getConversation conversationID, mailboxID
+        _.filter messages, _filterFlags
+
+
+    _getConversationIndex = (messages) ->
+        keys = _.keys messages?.toObject()
+        keys.indexOf _messageID
 
 
     getNextConversation: ->
         messages = @getMessagesList()
-        keys = _.keys messages?.toObject()
-        values = messages?.toArray()
-
-        index = keys.indexOf @getMessageID()
-        values[--index]
+        index = _getConversationIndex messages
+        messages?.toArray()?[--index]
 
 
     getPreviousConversation: ->
-        messages = @getMessagesList()
-        keys = _.keys messages?.toObject()
-        values = messages?.toArray()
-
-        index = keys.indexOf @getMessageID()
-        values[++index]
+        index = _getConversationIndex messages
+        messages?.toArray()?[++index]
 
 
-    # FIXME: incohérence ici
-    # la valeur correspond à celle de l'inbox
-    # hors on n'affiche pas toujours des messages de la boite principale
-    getConversationLength: ({messageID, conversationID}) ->
-        unless conversationID
-            messageID ?= @getMessageID()
-            if (message = MessageStore.getByID messageID)
-                conversationID = message.get 'conversationID'
-
-        # FIXME: it should be calcultated on server side
-        # by getConversationLength itself
-        inbox = AccountStore.getInbox @getAccountID()
-        if (mailboxID = @getMailboxID()) is inbox?.get 'id'
-            return MessageStore.getConversationLength conversationID
-        else
-            conversation = MessageStore.getConversation conversationID, mailboxID
-            return conversation?.length
+    getConversationLength: (conversationID) ->
+        conversationID ?= @getConversationID()
+        MessageStore.getConversationLength conversationID
 
 
-    _getNearestMessage = (type='all', action='next') ->
-        messageID = _messageID
-        conversationID = _conversationID
-        mailboxID = _mailboxID
-
-        _getMessageIndex = (messages) ->
-            index = undefined
-            messageID = messageID
-            messages ?= @getConversation conversationID
-            messages.find (message, i) ->
-                if messageID is message.get 'id'
-                    index = i
-                    return true
-            index
-
-        messages = if 'conversation' is type
-        then MessageStore.getConversation conversationID, mailboxID
-        else MessageStore.getAll()?.toArray()
-
-        index = _getMessageIndex messages
-        if 'previous' is action then --index else ++index
-
-        messages[index]?.toJS()
-
-
-    getNextMessage: (type='all') ->
-        _getNearestMessage type, 'next'
-
-
-    getPreviousMessage: (type='all') ->
-        _getNearestMessage type, 'previous'
+    isMissingMessages: (conversationID) ->
+        messagesLength = @getConversation(conversationID)?.length
+        maxLength = @getConversationLength(conversationID)
+        not maxLength or messagesLength and ++messagesLength isnt maxLength
 
 
     getURI: ->
@@ -486,6 +452,7 @@ class RouterStore extends Store
 
             {accountID, mailboxID, tab} = payload
             {action, conversationID, messageID, query} = payload
+            previousAction = _action
 
             # We cant display any informations
             # without accounts
@@ -493,8 +460,6 @@ class RouterStore extends Store
                 _action = action
             else
                 _action = AccountActions.CREATE
-
-
 
             # From AccountStore
             accountID ?= AccountStore.getDefault(mailboxID)?.get 'id'
@@ -560,21 +525,29 @@ class RouterStore extends Store
             @emit 'change'
 
 
-        handle ActionTypes.MESSAGE_TRASH_REQUEST, ->
-            # Save nextMessage before current is removed
-            # First, get next message on conversation
-            # then get nearest message into conversation
-            # otherwhise, get next conversation on the list
-            _nextMessage = @getNextMessage 'conversation'
-            _nextMessage ?= @getPreviousMessage 'conversation'
-            _nextMessage ?= @getNextConversation()?.toJS()
+        handle ActionTypes.MESSAGE_FLAGS_SUCCESS, ({target, updated}) ->
+            {messageID} = target
+            message = MessageStore.getByID messageID
+            conversationID = message.get 'conversationID'
+            mailboxID = message.get 'mailboxID'
+            console.log 'MESSAGE_FLAGS_SUCCESS', @getConversationLength conversationID
+
+            _nextMessage = @getNearestMessage {type: 'conversation'}
             @emit 'change'
 
 
         handle ActionTypes.MESSAGE_TRASH_SUCCESS, ->
             AppDispatcher.waitFor [MessageStore.dispatchToken]
-            _setCurrentMessage _nextMessage?.conversationID, _nextMessage?.id
+
+            # Select next message
+            {id, conversationID} = _nextMessage
+            console.log 'GET_NEAREST', _nextMessage
+            _setCurrentMessage conversationID, id
             _updateURL()
+
+            # reset next message
+            _nextMessage = null
+
             @emit 'change'
 
 

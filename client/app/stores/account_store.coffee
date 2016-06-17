@@ -193,10 +193,9 @@ class AccountStore extends Store
 
 
     getDefault: (mailboxID) ->
-        if mailboxID
-            return @getByMailbox mailboxID
-        else
-            return @getAll().first()
+        account = @getByMailbox mailboxID if mailboxID
+        account ?= @getAll().first()
+        account
 
 
     getByMailbox: (mailboxID) ->

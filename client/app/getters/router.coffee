@@ -129,8 +129,8 @@ module.exports =
         RouterStore.getConversationLength(conversationID) or 0
 
 
-    getConversation: (conversationID) ->
-        RouterStore.getConversation(conversationID) or []
+    getConversation: (conversationID, mailboxID) ->
+        RouterStore.getConversation(conversationID, mailboxID) or []
 
 
     getConversationID: ->
