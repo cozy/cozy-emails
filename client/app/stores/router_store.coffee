@@ -308,7 +308,7 @@ class RouterStore extends Store
 
     # We dont filter for type from and dest because it is
     # complicated by collation and name vs address.
-    _filterFlags = (message) =>
+    filterFlags: (message) =>
         if @isFlagged()
             return @isFlagged message
         if @isAttached()
@@ -348,7 +348,7 @@ class RouterStore extends Store
             conversations[path] = true unless (exist = conversations[path])
 
             # Should have the same flags
-            hasSameFlag = _filterFlags message
+            hasSameFlag = @filterFlags message
 
             # Message should be in mailbox
             inMailbox = mailboxID of message.get 'mailboxIDs'
@@ -375,7 +375,7 @@ class RouterStore extends Store
         # Filter messages
         mailboxID ?= @getMailboxID()
         messages = MessageStore.getConversation conversationID, mailboxID
-        _.filter messages, _filterFlags
+        _.filter messages, @filterFlags
 
 
     _getConversationIndex = (messages) ->
