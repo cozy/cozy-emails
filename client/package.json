@@ -40,7 +40,8 @@
     "json-loader": "0.5.4",
     "postcss-loader": "0.8.1",
     "style-loader": "0.13.0",
-    "stylus-loader": "1.5.1",
+    "stylus": "0.54.5",
+    "stylus-loader": "2.1.1",
     "url-loader": "0.5.7"
   }
 }
