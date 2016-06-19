@@ -49,7 +49,7 @@ class MessageStore extends Store
             message.date          ?= new Date().toISOString()
             message.createdAt     ?= message.date
             message.flags         ?= []
-            message.hasAttachments = message.attachments.length > 0
+            message.hasAttachments = message.attachments.size > 0
             message.attachments = message.attachments.map (file) ->
                 Immutable.Map file
             message.attachments = Immutable.List message.attachments
