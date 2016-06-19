@@ -113,6 +113,7 @@ module.exports = AccountWizardCreation = React.createClass
                             </button> if @props.hasDefaultAccount and not @state.success}
                             {<button type="submit"
                                      form="account-wizard-creation"
+                                     aria-busy={@state.isBusy}
                                      disabled={not @state.enableSubmit}>
                                 {t('account wizard creation save')}
                             </button> unless @state.success}
