@@ -51,21 +51,21 @@ module.exports = React.createClass
 
         if (mailboxID = RouterGetter.getMailboxID())
             return {
-                mailboxID           : mailboxID
-                accountID           : RouterGetter.getAccountID()
-                conversationID      : RouterGetter.getConversationID()
-                conversationLength  : RouterGetter.getConversationLength()
-                isMissingMessages   : RouterGetter.isMissingMessages()
-                messageID           : RouterGetter.getMessageID()
-                subject             : RouterGetter.getSubject()
-                action              : RouterGetter.getAction()
-                modal               : RouterGetter.getModal()
-                className           : className
-                isMailbox           : RouterGetter.isMailboxExist()
-                isLoading           : RouterGetter.isMailboxLoading()
-                isIndexing          : RouterGetter.isMailboxIndexing()
-                hasNextPage         : RouterGetter.hasNextPage()
-                hasSettingsChanged  : RouterGetter.hasSettingsChanged()
+                mailboxID               : mailboxID
+                accountID               : RouterGetter.getAccountID()
+                conversationID          : RouterGetter.getConversationID()
+                conversationLength      : RouterGetter.getConversationLength()
+                messageID               : RouterGetter.getMessageID()
+                subject                 : RouterGetter.getSubject()
+                action                  : RouterGetter.getAction()
+                modal                   : RouterGetter.getModal()
+                className               : className
+                lastSync                : RouterGetter.getLastSync()
+                isLoading               : RouterGetter.isMailboxLoading()
+                isConversationLoading   : RouterGetter.isConversationLoading()
+                isIndexing              : RouterGetter.isMailboxIndexing()
+                hasNextPage             : RouterGetter.hasNextPage()
+                hasSettingsChanged      : RouterGetter.hasSettingsChanged()
             }
 
         return {
@@ -105,12 +105,11 @@ module.exports = React.createClass
                     nbUnread        : RouterGetter.getUnreadLength()
                     nbFlagged       : RouterGetter.getFlaggedLength()
 
-
                 main null,
                     div
                         className: 'panels',
 
-                        if @state.isMailbox
+                        if @state.lastSync?
                             MessageList
                                 ref                 : "messageList"
                                 key                 : "messageList-#{@state.mailboxID}-#{@state.conversationLength}"
@@ -122,17 +121,18 @@ module.exports = React.createClass
                                 isAllSelected       : SelectionGetter.isAllSelected()
                                 selection           : SelectionGetter.getSelection messages
                                 hasNextPage         : @state.hasNextPage
-                                isMailbox           : @state.isMailbox
+                                lastSync            : @state.lastSync
                                 isLoading           : @state.isLoading
 
-                        if @state.isMailbox and @state.messageID
+                        if @state.lastSync? and @state.messageID
                             Conversation
-                                ref                 : "conversation"
-                                key                 : "conversation-#{@state.conversationLength}-#{@state.messageID}"
-                                messageID           : @state.messageID
-                                conversationID      : @state.conversationID
-                                subject             : @state.subject
-                                messages            : RouterGetter.getConversation()
+                                ref                     : "conversation"
+                                key                     : "conversation-#{@state.messageID}"
+                                messageID               : @state.messageID
+                                conversationID          : @state.conversationID
+                                subject                 : @state.subject
+                                messages                : RouterGetter.getConversation()
+                                isConversationLoading   : @state.isConversationLoading
 
                         else
                             section

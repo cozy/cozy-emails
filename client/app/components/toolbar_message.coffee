@@ -1,7 +1,7 @@
 React = require 'react'
 {nav, div, button, a} = React.DOM
 
-{MessageActions, Tooltips} = require '../constants/app_constants'
+{Tooltips} = require '../constants/app_constants'
 RouterActionCreator = require '../actions/router_action_creator'
 
 RouterGetter = require '../getters/router'
@@ -12,8 +12,7 @@ module.exports = React.createClass
 
 
     deleteMessage: ->
-        messageID = @props.messageID
-        RouterActionCreator.deleteMessage {messageID}
+        RouterActionCreator.deleteMessage @props
 
 
     render: ->

@@ -34,33 +34,25 @@ module.exports = React.createClass
     displayName: 'Conversation'
 
     componentDidMount: ->
-        # Get all conversation
-        # and update _conversationLength
-        # if result.messages.length is different
-        # ie. when mailbox is a flagged on
-        # we don't need to get all messages
-        # but only filtered one
-        setTimeout ->
-            RouterActionCreator.getConversation()
-        , 0
-
-        _freezeHeader.call @
-        _scrollToActive.call @
+        unless @props.isConversationLoading
+            _freezeHeader.call @
+            _scrollToActive.call @
 
 
-    componentWillUpdate: ->
-        setTimeout =>
-            RouterActionCreator.markAsRead @props
-        , 0
+    componentDidUpdate: ->
+        unless @props.isConversationLoading
+            _freezeHeader.call @
+            _scrollToActive.call @
+
 
     componentWillUnmount: ->
         setTimeout =>
             RouterActionCreator.markAsRead @props
-        , 100
+        , 0
 
 
     render: ->
-        unless @props.messages?.length
+        if @props.isConversationLoading
             return section
                 key: 'conversation'
                 className: 'conversation panel'

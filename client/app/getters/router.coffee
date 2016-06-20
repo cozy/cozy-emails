@@ -115,8 +115,6 @@ module.exports =
 
 
     getMessagesList: (accountID, mailboxID) ->
-        accountID = @getAccountID()
-        mailboxID = @getMailboxID()
         RouterStore.getMessagesList accountID, mailboxID
 
 
@@ -135,10 +133,6 @@ module.exports =
 
     getConversationID: ->
         RouterStore.getConversationID()
-
-
-    isMissingMessages: (conversationID) ->
-        RouterStore.isMissingMessages conversationID
 
 
     isPageComplete: ->
@@ -202,7 +196,7 @@ module.exports =
         MessageStore.isImagesDisplayed messageID
 
 
-    isMailboxExist: ->
+    getLastSync: ->
         accountID = @getAccountID()
 
         # If current mailboxID is inbox
@@ -214,20 +208,25 @@ module.exports =
             mailbox ?= AccountStore.getInbox accountID
 
         mailbox ?= @getMailbox()
-        mailbox?.get('lastSync')?
+        mailbox?.get('lastSync')
 
 
     isMailboxLoading: ->
         RequestsStore.isRefreshing()
 
 
-    isRefreshError: ->
-        RequestsStore.isRefreshError()
-
-
     isMailboxIndexing: ->
         accountID = @getAccountID()
         RequestsStore.isIndexing accountID
+
+
+    isConversationLoading: ->
+        RequestsStore.isConversationLoading()
+
+
+    isRefreshError: ->
+        RequestsStore.isRefreshError()
+
 
 
     formatMessage: (message) ->

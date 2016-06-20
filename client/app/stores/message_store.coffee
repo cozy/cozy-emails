@@ -71,11 +71,14 @@ class MessageStore extends Store
             _messages = _messages.set message.id, messageMap
 
 
-    _deleteMessage = (conversationID, messageID) ->
+    _deleteMessage = ({messageID}) ->
+        conversationID = _messages.get(messageID)?.get 'conversationID'
+
         _messages = _messages.remove messageID
 
-        # _conversationLength cant be trusted after
-        # client messagessList manipulations
+        # Update length counter
+        # _conversationLength is only sent by server
+        # on fetch request but not update
         # FIXME: should be return into serverResponse
         length = _conversationLength.get conversationID
         _updateConversationLength conversationID, --length
@@ -124,8 +127,7 @@ class MessageStore extends Store
 
 
         handle ActionTypes.MESSAGE_TRASH_SUCCESS, ({target}) ->
-            {messageID, conversationID} = target
-            _deleteMessage conversationID, messageID
+            _deleteMessage target
             @emit 'change'
 
 
@@ -144,9 +146,8 @@ class MessageStore extends Store
             @emit 'change'
 
 
-        handle ActionTypes.RECEIVE_MESSAGE_DELETE, (id) ->
-            conversationID = _messages.get(id).get 'conversationID'
-            _deleteMessage conversationID, id
+        handle ActionTypes.RECEIVE_MESSAGE_DELETE, (messageID) ->
+            _deleteMessage {messageID}
             @emit 'change'
 
 
@@ -195,7 +196,7 @@ class MessageStore extends Store
 
     isFlagged: ({flags=[], message}) ->
         if message?
-            flags = message?.get('flags') or []
+            flags = message.get('flags') or []
             MessageFlags.FLAGGED in flags
         else
             MessageFilter.FLAGGED in flags
@@ -203,23 +204,20 @@ class MessageStore extends Store
 
     isAttached: ({flags=[], message}) ->
         if message?
-            flags = message?.get('flags') or []
+            flags = message.get('flags') or []
             MessageFlags.ATTACH in flags
         else
             MessageFilter.ATTACH in flags
 
 
     getConversation: (conversationID, mailboxID) ->
-        _messages.filter (message) =>
+        _messages.filter (message) ->
             isSameMailbox = mailboxID of message.get 'mailboxIDs'
             isSameConversationID = conversationID is message.get 'conversationID'
             isSameMailbox and isSameConversationID
-            _messages.filter (message) ->
-                if mailboxID of message.get 'mailboxIDs'
-                    return conversationID is message.get 'conversationID'
-            .sort (msg1, msg2) ->
-                msg1.get('date') < msg2.get('date')
-            .toArray()
+        .sort (msg1, msg2) ->
+            msg1.get('date') < msg2.get('date')
+        .toArray()
 
 
     getConversationLength: (conversationID) ->

@@ -20,6 +20,7 @@ MessageFlags} = require '../constants/app_constants'
 
 _pages = {}
 _nextURL = {}
+_currentRequest = null
 
 
 RouterActionCreator =
@@ -46,13 +47,15 @@ RouterActionCreator =
                     value: {mailboxID, updated}
 
 
-    gotoCurrentPage: (params={}) ->
+    getCurrentPage: (params={}) ->
         {url} = params
+        url ?= RouterStore.getCurrentURL {action}
+
+        _currentRequest = url
 
         # Always load messagesList
         action = MessageActions.SHOW_ALL
         timestamp = (new Date()).toISOString()
-        url ?= RouterStore.getCurrentURL {action}
 
         AppDispatcher.dispatch
             type: ActionTypes.MESSAGE_FETCH_REQUEST
@@ -103,22 +106,15 @@ RouterActionCreator =
                 # - try to select nearestMessage
                 # - if not select current MessageList
                 # - if no messageList go to default mailbox
-                isMissingMessages = not RouterStore.isPageComplete()
+                isPageComplete = RouterStore.isPageComplete()
                 hasNextPage = RouterStore.hasNextPage()
-                if hasNextPage and isMissingMessages
+                if hasNextPage and not isPageComplete
                     @gotoNextPage()
-                else if (messageID = RouterStore.getMessageID())?
-                    message = MessageStore.getByID messageID
-                    if not hasNextPage.isComplete and not message
-                        if (nearestMessage = RouterStore.getNearestMessage())
-                            @gotoMessage nearestMessage.toJS()
-                        else
-                            @closeConversation()
 
 
     gotoNextPage: ->
-        if not RequestsStore.isRefreshing() and (url = _getNextURL())?
-            @gotoCurrentPage {url}
+        if (url = _getNextURL())?
+            @getCurrentPage {url}
 
 
     gotoCompose: (params={}) ->
@@ -136,6 +132,11 @@ RouterActionCreator =
     # or get last message if not
     gotoConversation: (params={}) ->
         {conversationID} = params
+
+        # 1rst: load all messages from conversation
+        @getConversation conversationID
+
+        # 2nd: redirect to conversation
         messageID = RouterStore.getMessageID conversationID
         @gotoMessage {conversationID, messageID}
 
@@ -157,15 +158,6 @@ RouterActionCreator =
             AppDispatcher.dispatch
                 type: ActionTypes.ROUTE_CHANGE
                 value: {conversationID, messageID, mailboxID, action, query}
-
-
-    gotoNearestMessage: (type) ->
-        type ?= 'conversation'
-
-        message = RouterStore.getNearestMessage type
-
-        console.log 'GOTO_NEAREST_MESSAGE', message?.toJS()
-        # @gotoMessage message?.toJS()
 
 
     gotoPreviousConversation: ->
@@ -250,11 +242,21 @@ RouterActionCreator =
 
 
     markAsRead: (target) ->
-        @mark target, FlagsConstants.SEEN
+        {messageID, accountID} = target
+
+        # Do not mark a message that is ever flagged
+        message = MessageStore.getByID messageID
+        if MessageStore.isUnread {message}
+            @mark {messageID, accountID}, FlagsConstants.SEEN
 
 
     mark: (target, flags) ->
         timestamp = Date.now()
+
+        # Do not mark a removed message
+        {messageID} = target
+        if messageID and not (message = MessageStore.getByID messageID)
+            return
 
         AppDispatcher.dispatch
             type: ActionTypes.MESSAGE_FLAGS_REQUEST
@@ -294,9 +296,10 @@ RouterActionCreator =
     # - conversationIDs
     deleteMessage: (target={}) ->
         timestamp = Date.now()
-        target.messageID ?= RouterStore.getMessageID()
-        target.conversationID ?= RouterStore.getConversationID()
-        target.accountID ?= RouterStore.getAccountID()
+        {messageID, accountID} = target
+        messageID ?= RouterStore.getMessageID()
+        accountID ?= RouterStore.getAccountID()
+        target = {messageID, accountID}
 
         AppDispatcher.dispatch
             type: ActionTypes.MESSAGE_TRASH_REQUEST
@@ -371,7 +374,8 @@ _getNextURI = ->
 
 _getNextURL = ->
     key = _getNextURI()
-    _nextURL[key]
+    if (_nextURL[key] isnt _currentRequest)
+        return _nextURL[key]
 
 
 _getPreviousURI = ->
@@ -402,8 +406,6 @@ _setNextURL = ({pageAfter}) ->
             _nextURL[key] = currentURL
 
 
-# FIXME: doubon avec RouterStore.getConversation
-# voir pour se passser de cette méthode
 _getFilteredList = (messages) ->
     flags = RouterStore.getFilter().flags or []
     flags = [flags] if 'string' is typeof flags

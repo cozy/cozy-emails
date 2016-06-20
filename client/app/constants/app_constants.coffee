@@ -195,7 +195,7 @@ module.exports =
         'junkMailbox'   : 'SPAM'
         'allMailbox'    : 'ALL'
 
-    # FIXME: should decide between: 
+    # FIXME: should decide between:
     # FlagsConstants or MessageFlags
     FlagsConstants:
         SEEN   : '\\Seen'

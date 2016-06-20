@@ -46,7 +46,7 @@ module.exports = React.createClass
             'data-mailbox-id'   : @props.mailboxID
             'className'         : 'messages-list panel'
 
-            unless @props.isMailbox
+            unless @props.lastSync?
                 div className: 'mailbox-loading',
                     Spinner color: 'blue'
                     strong null, t 'emails are fetching'

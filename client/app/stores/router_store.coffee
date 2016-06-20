@@ -48,9 +48,10 @@ class RouterStore extends Store
     _conversationID = null
     _messageID = null
     _messagesLength = 0
-    _nextMessage = null
+    _nearestMessage = null
 
     _timerRouteChange = null
+    _timer = {}
 
 
     getRouter: ->
@@ -187,7 +188,9 @@ class RouterStore extends Store
         AccountStore.getByID accountID
 
 
-    getAccountID: ->
+    getAccountID: (mailboxID) ->
+        if mailboxID
+            return AccountStore.getByMailbox('mailboxID')?.get 'id'
         unless _accountID
             return AccountStore.getDefault()?.get 'id'
         else
@@ -223,6 +226,11 @@ class RouterStore extends Store
 
 
     _setCurrentMessage = (conversationID=null, messageID=null) ->
+        # Return to message list
+        # if no messages are found
+        unless messageID
+            _action = MessageActions.SHOW_ALL
+
         _conversationID = conversationID
         _messageID = messageID
         _messagesLength = 0
@@ -319,10 +327,9 @@ class RouterStore extends Store
 
 
     getMessagesList: (accountID, mailboxID) ->
-        conversations = {}
-
         accountID ?= @getAccountID()
         mailboxID ?= @getMailboxID()
+
         inboxID = (inbox = AccountStore.getInbox accountID).get 'id'
         inboxTotal = inbox.get 'nbTotal'
         isInbox = AccountStore.isInbox accountID, mailboxID
@@ -330,6 +337,7 @@ class RouterStore extends Store
         {sort} = @getFilter()
         sortOrder = parseInt "#{sort.charAt(0)}1", 10
 
+        conversations = {}
         messages = MessageStore.getAll()?.filter (message) =>
             # do not have twice INBOX
             # see OVH twice Inbox issue
@@ -362,6 +370,33 @@ class RouterStore extends Store
         return messages
 
 
+    # Get next message from conversation:
+    # - from the same mailbox
+    # - with the same filters
+    # - otherwise get previous message
+    # If conversation is empty:
+    # - go to next conversation
+    # - otherwise go to previous conversation
+    getNearestMessage: (target={}, type='conversation') ->
+        {messageID, conversationID, mailboxID, accountID} = target
+        unless messageID
+            messageID = _messageID
+            conversationID = _conversationID
+            mailboxID = _mailboxID
+            accountID = _accountID
+
+        if 'conversation' is type
+            conversation = _self.getConversation conversationID, mailboxID
+            messages = Immutable.OrderedMap conversation
+            message = _self.getNextConversation conversation
+            message ?= _self.getPreviousConversation conversation
+            return message if message?.size
+
+        message = _self.getNextConversation()
+        message ?= _self.getPreviousConversation()
+        message
+
+
     getConversation: (conversationID, mailboxID) ->
         conversationID ?= @getConversationID()
         unless conversationID
@@ -379,30 +414,25 @@ class RouterStore extends Store
 
 
     _getConversationIndex = (messages) ->
-        keys = _.keys messages?.toObject()
+        keys = _.map messages, (message) -> message.get 'id'
         keys.indexOf _messageID
 
 
-    getNextConversation: ->
-        messages = @getMessagesList()
+    getNextConversation: (messages) ->
+        messages ?= @getMessagesList()?.toArray()
         index = _getConversationIndex messages
-        messages?.toArray()?[--index]
+        messages[--index]
 
 
-    getPreviousConversation: ->
+    getPreviousConversation: (messages) ->
+        messages ?= @getMessagesList()?.toArray()
         index = _getConversationIndex messages
-        messages?.toArray()?[++index]
+        messages[++index]
 
 
     getConversationLength: (conversationID) ->
         conversationID ?= @getConversationID()
         MessageStore.getConversationLength conversationID
-
-
-    isMissingMessages: (conversationID) ->
-        messagesLength = @getConversation(conversationID)?.length
-        maxLength = @getConversationLength(conversationID)
-        not maxLength or messagesLength and ++messagesLength isnt maxLength
 
 
     getURI: ->
@@ -525,34 +555,59 @@ class RouterStore extends Store
             @emit 'change'
 
 
-        handle ActionTypes.MESSAGE_FLAGS_SUCCESS, ({target, updated}) ->
-            {messageID} = target
-            message = MessageStore.getByID messageID
-            conversationID = message.get 'conversationID'
-            mailboxID = message.get 'mailboxID'
-            console.log 'MESSAGE_FLAGS_SUCCESS', @getConversationLength conversationID
-
-            _nextMessage = @getNearestMessage {type: 'conversation'}
+        handle ActionTypes.MESSAGE_FLAGS_REQUEST, ->
             @emit 'change'
 
 
-        handle ActionTypes.MESSAGE_TRASH_SUCCESS, ->
-            AppDispatcher.waitFor [MessageStore.dispatchToken]
+        # Get nearest message from message to be deleted
+        # to make redirection if request is successful
+        handle ActionTypes.MESSAGE_TRASH_REQUEST, ({target}) ->
+            if target.messageID is _messageID
+                _nearestMessage = @getNearestMessage target
+            @emit 'change'
 
-            # Select next message
-            {id, conversationID} = _nextMessage
-            console.log 'GET_NEAREST', _nextMessage
-            _setCurrentMessage conversationID, id
-            _updateURL()
 
-            # reset next message
-            _nextMessage = null
+        # Select nearest message from deleted message
+        # and remove message from mailbox and conversation lists
+        handle ActionTypes.MESSAGE_TRASH_SUCCESS, ({target}) ->
+            if target.messageID is _messageID
+                messageID = _nearestMessage?.get 'id'
+                conversationID = _nearestMessage?.get 'conversationID'
+
+                # Update currentMessage so that:
+                # - all counters should be updated
+                # - all messagesList should be updated too
+                _setCurrentMessage conversationID, messageID
+                _updateURL()
+
+            @emit 'change'
+
+
+        # Delete nearestMessage
+        # because it's beacame useless
+        handle ActionTypes.MESSAGE_TRASH_FAILURE, ({target}) ->
+            if target.messageID is _messageID
+                _nearestMessage = null
+            @emit 'change'
+
+
+        handle ActionTypes.RECEIVE_MESSAGE_DELETE, (messageID, deleted) ->
+            if messageID is _messageID
+                _nearestMessage = @getNearestMessage deleted
+
+                messageID = _nearestMessage?.get 'id'
+                conversationID = _nearestMessage?.get 'conversationID'
+
+                # Update currentMessage so that:
+                # - all counters should be updated
+                # - all messagesList should be updated too
+                _setCurrentMessage conversationID, messageID
+                _updateURL()
 
             @emit 'change'
 
 
         handle ActionTypes.SETTINGS_UPDATE_RESQUEST, ->
-            AppDispatcher.waitFor [MessageStore.dispatchToken]
             @emit 'change'
 
 
