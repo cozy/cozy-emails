@@ -39,10 +39,10 @@ module.exports = React.createClass
             _scrollToActive.call @
 
 
-    componentWillUpdate: ->
+    componentWillReceiveProps: (nextProps) ->
         # If this conversation was removed
         # redirect to messages list from mailbox
-        if @props.isConversationLoading and not @props.messages.length
+        if nextProps.isConversationLoading and not nextProps.messages.length
             setTimeout ->
                 RouterActionCreator.closeConversation()
             , 0
