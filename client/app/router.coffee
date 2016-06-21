@@ -110,12 +110,14 @@ _dispatch = (payload, query) ->
         # Always get freshest data as possible
         RouterActionCreator.refreshMailbox payload
 
-        # Get all informations to display application
-        RouterActionCreator.getCurrentPage()
-
     if payload.action is MessageActions.SHOW
         # Get all messages from conversation
         RouterActionCreator.getConversation payload.conversationID
+
+    if payload.action in [MessageActions.SHOW_ALL, MessageActions.SHOW]
+
+        # Get all informations to display application
+        RouterActionCreator.getCurrentPage()
 
 
     AppDispatcher.dispatch
