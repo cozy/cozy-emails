@@ -201,7 +201,6 @@ RouterActionCreator =
         conversationID ?= RouterStore.getConversationID()
         timestamp = (new Date()).toISOString()
 
-        console.log 'getConversation', conversationID
         AppDispatcher.dispatch
             type: ActionTypes.MESSAGE_FETCH_REQUEST
             value: {conversationID, timestamp}
@@ -212,15 +211,10 @@ RouterActionCreator =
                     type: ActionTypes.MESSAGE_FETCH_FAILURE
                     value: {error, conversationID, timestamp}
             else
-                # Apply flags and filter
-                # to upgrade conversationLength
-                # FIXME: XHRUtils.fetchConversation
-                # should handle query params
-                # not to do this stuff on client side
-
-                # TODO: faire pareil pour requestByFolder
                 # Apply filters to messages
-                messages = _getFilteredList messages
+                # to upgrade conversationLength
+                # FIXME: should be moved server side
+                messages = _.filter messages, RouterStore.filterFlags
 
                 # Update Realtime
                 lastMessage = _.last messages
@@ -246,7 +240,7 @@ RouterActionCreator =
 
         # Do not mark a message that is ever flagged
         message = MessageStore.getByID messageID
-        if MessageStore.isUnread {message}
+        if message and MessageStore.isUnread {message}
             @mark {messageID, accountID}, FlagsConstants.SEEN
 
 
@@ -268,21 +262,15 @@ RouterActionCreator =
                     type: ActionTypes.MESSAGE_FLAGS_FAILURE
                     value: {target, error, flags}
             else
-                # Get all messages from conversation
-                message = MessageStore.getByID updated.messageID
-                mailboxID = message?.get 'mailboxID'
-                conversationID = message?.get 'conversationID'
-                messages = RouterStore.getConversation conversationID, mailboxID
-
                 # Update _conversationLength value
                 # that is only displayed by the server
                 # with method fetchMessagesByFolder
                 # FIXME: should be sent by server
-                conversationLength = {}
-                conversationLength[conversationID] = messages.length
-                target.conversationLength = conversationLength
 
-                message.updated = timestamp for message in updated
+                # FIXME: clent shouldnt add this information
+                # it shoul be done server side
+                message.updated = timestamp for message in (messages = updated)
+                updated = {messages}
                 AppDispatcher.dispatch
                     type: ActionTypes.MESSAGE_FLAGS_SUCCESS
                     value: {target, updated, flags}
@@ -404,16 +392,5 @@ _setNextURL = ({pageAfter}) ->
         currentURL = RouterStore.getCurrentURL {filter, action}
         if _getPreviousURL() isnt currentURL
             _nextURL[key] = currentURL
-
-
-_getFilteredList = (messages) ->
-    flags = RouterStore.getFilter().flags or []
-    flags = [flags] if 'string' is typeof flags
-    isMailboxUnread = MessageFilter.UNSEEN in flags
-    isMailboxFlagged = MessageFilter.FLAGGED in flags
-    _.filter messages, (message) ->
-        isUnread = MessageFlags.SEEN not in message.flags
-        isFlagged = MessageFlags.FLAGGED in message.flags
-        isUnread is isMailboxUnread and isFlagged is isMailboxFlagged
 
 module.exports = RouterActionCreator

@@ -317,6 +317,8 @@ class RouterStore extends Store
     # We dont filter for type from and dest because it is
     # complicated by collation and name vs address.
     filterFlags: (message) =>
+        if message and message not instanceof Immutable.Map
+            message = Immutable.Map message
         if @isFlagged()
             return @isFlagged message
         if @isAttached()
@@ -401,11 +403,6 @@ class RouterStore extends Store
         conversationID ?= @getConversationID()
         unless conversationID
             return []
-
-        # Get current flags
-        flags = _getFlags()
-        isFlagged = MessageStore.isFlagged {flags}
-        isUnread = MessageStore.isUnread {flags}
 
         # Filter messages
         mailboxID ?= @getMailboxID()
@@ -555,7 +552,7 @@ class RouterStore extends Store
             @emit 'change'
 
 
-        handle ActionTypes.MESSAGE_FLAGS_REQUEST, ->
+        handle ActionTypes.MESSAGE_FLAGS_SUCCESS, ->
             @emit 'change'
 
 
