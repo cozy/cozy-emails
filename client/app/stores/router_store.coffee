@@ -239,7 +239,9 @@ class RouterStore extends Store
     getConversationID: (messageID) ->
         _conversationID
 
-
+    # Get default message of a conversation
+    # if conversationID is in argument
+    # otherwhise, return global messageID (from URL)
     getMessageID: (conversationID) ->
         if conversationID?
             messages = @getConversation conversationID
@@ -479,7 +481,6 @@ class RouterStore extends Store
 
             {accountID, mailboxID, tab} = payload
             {action, conversationID, messageID, query} = payload
-            previousAction = _action
 
             # We cant display any informations
             # without accounts
@@ -537,9 +538,20 @@ class RouterStore extends Store
             , 5000
 
 
-        handle ActionTypes.MESSAGE_FETCH_SUCCESS, ({lastPage}) ->
+        handle ActionTypes.MESSAGE_FETCH_SUCCESS, ({result, conversationID, lastPage}) ->
             # Save last message references
             _lastPage[_URI] = lastPage if lastPage?
+
+            # If messageID doesnt belong to conversation
+            # message must have been deleted
+            # then get default message from this conversation
+            if conversationID
+                inner = _.find result.messages, (msg) -> msg.id is _messageID
+                unless inner
+                    messageID = @getMessageID conversationID
+                    _setCurrentMessage conversationID, messageID
+                    _updateURL()
+
             @emit 'change'
 
 
