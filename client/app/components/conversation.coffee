@@ -39,6 +39,15 @@ module.exports = React.createClass
             _scrollToActive.call @
 
 
+    componentWillUpdate: ->
+        # If this conversation was removed
+        # redirect to messages list from mailbox
+        if @props.isConversationLoading and not @props.messages.length
+            setTimeout ->
+                RouterActionCreator.closeConversation()
+            , 0
+
+
     componentDidUpdate: ->
         unless @props.isConversationLoading
             _freezeHeader.call @
@@ -70,7 +79,7 @@ module.exports = React.createClass
 
                 button
                     className: 'clickable btn btn-default fa fa-close'
-                    onClick: @closeConversation
+                    onClick: -> RouterActionCreator.closeConversation()
 
             section
                 key: "conversation-#{@props.messageID}-content"
@@ -84,7 +93,3 @@ module.exports = React.createClass
                             isActive        : @props.messageID is messageID
                             isTrashbox      : RouterGetter.isTrashbox()
                             message         : message
-
-
-    closeConversation: ->
-        RouterActionCreator.closeConversation()
