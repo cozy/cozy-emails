@@ -75,21 +75,21 @@ const fixtures = {
     accountID: 'a10',
     messageID: 'm10',
     conversationID: 'c10',
-    mailboxIDs: ['inbox'],
+    mailboxIDs: { inbox: 1 },
   },
   message11: {
     id: 'i11',
     accountID: 'a11',
     messageID: 'm11',
     conversationID: 'c11',
-    mailboxIDs: ['inbox'],
+    mailboxIDs: { inbox: 1 },
   },
   message12: {
     id: 'i12',
     accountID: 'a12',
     messageID: 'm12',
     conversationID: 'c11',
-    mailboxIDs: ['inbox'],
+    mailboxIDs: { inbox: 1 },
   },
   rawMessage1: {
     id: 'rai1',
@@ -146,7 +146,6 @@ describe('Message Store', () => {
     dispatcher = new SpecDispatcher();
     mockeryUtils.initDispatcher(dispatcher);
     mockeryUtils.initForStores(['../app/stores/message_store']);
-    messageStore = require('../app/stores/message_store');
   });
 
   /*
@@ -159,9 +158,6 @@ describe('Message Store', () => {
    * FIXME Most operations, like getting raw messages, don't update
    *       conversation length.
    * FIXME Action values are not normalized.
-   * FIXME SETTINGS_UPDATE_RESQUEST action has a typo inside its name. And it's
-   *       not sure it's still used.
-   * FIXME Line 55, length should be used instead of size.
    */
   describe('Actions', () => {
     const id1 = fixtures.message1.id;
@@ -171,9 +167,13 @@ describe('Message Store', () => {
     const conversationId2 = fixtures.message2.conversationID;
     const seenFlags = ['\\Seen'];
 
-    it('MESSAGE_FETCH_SUCCESS', () => {
+    // Reinit a new MessageStore before each test
+    beforeEach(() => {
+      messageStore = require('../app/stores/message_store');
       addMessages([fixtures.message1, fixtures.message2, fixtures.message3]);
+    });
 
+    it('MESSAGE_FETCH_SUCCESS', () => {
       const messages = messageStore.getAll();
       assert.deepEqual(messages.get(id1).toObject(), fixtures.message1);
       assert.deepEqual(messages.get(id2).toObject(), fixtures.message2);
@@ -245,14 +245,14 @@ describe('Message Store', () => {
       assert.isUndefined(messages.get(id6));
     });
     it('MESSAGE_FLAGS_SUCCESS', () => {
-      const message1 = _.extend(_.clone(fixtures.message1),
-                                { flags: ['\\Seen'] });
-      const message2 = _.extend(_.clone(fixtures.message2),
-                                { flags: ['\\Seen'] });
+      const message1 = _.extend({}, fixtures.message1, { flags: seenFlags });
+      const message2 = _.extend({}, fixtures.message2, { flags: seenFlags });
+
       dispatcher.dispatch({
         type: ActionTypes.MESSAGE_FLAGS_SUCCESS,
         value: { updated: [message1, message2] },
       });
+
       const id1 = fixtures.message1.id;
       const id2 = fixtures.message2.id;
       const messages = messageStore.getAll();
@@ -288,7 +288,8 @@ describe('Message Store', () => {
       assert.isUndefined(messages.get(id2));
       assert.isUndefined(messages.get(id3));
     });
-    it('SEARCH_SUCCESS', () => {
+    it.skip('SEARCH_SUCCESS', () => {
+      // TODO: update this test when feature will be back
       dispatcher.dispatch({
         type: ActionTypes.SEARCH_SUCCESS,
         value: { result: { rows: [
@@ -304,22 +305,38 @@ describe('Message Store', () => {
       assert.deepEqual(messages.get(id9).toObject(), fixtures.message9);
     });
     it('SETTINGS_UPDATE_REQUEST', () => {
-      const id9 = fixtures.message9.id;
+      const id1 = fixtures.message1.id;
+
+      // Message must exist into messageStore
+      assert.equal(messageStore.getByID(id1).get('id'), id1);
+      assert.isUndefined(messageStore.getByID(id1).__displayImages);
+
+      // displayImage value has changed
       dispatcher.dispatch({
-        type: ActionTypes.SETTINGS_UPDATE_RESQUEST,
-        value: { messageID: id9, displayImages: true },
+        type: ActionTypes.SETTINGS_UPDATE_REQUEST,
+        value: { messageID: id1, displayImages: true },
       });
-      assert.isTrue(messageStore.getByID(id9).__displayImages);
+      assert.isTrue(messageStore.getByID(id1).__displayImages);
+
+      // displayImage value has changed
+      dispatcher.dispatch({
+        type: ActionTypes.SETTINGS_UPDATE_REQUEST,
+        value: { messageID: id1, displayImages: false },
+      });
+      assert.isFalse(messageStore.getByID(id1).__displayImages);
     });
   });
 
   describe('Methods', () => {
+
+    // Reinit a new MessageStore before each test
+    beforeEach(() => {
+      messageStore = require('../app/stores/message_store');
+      addMessages([fixtures.message10, fixtures.message11, fixtures.message12]);
+    });
+
+
     it('getByID', () => {
-      addMessages([
-        fixtures.message10,
-        fixtures.message11,
-        fixtures.message12,
-      ]);
       const id10 = fixtures.message10.id;
       assert.deepEqual(
         messageStore.getByID(id10).toObject(),
@@ -328,8 +345,9 @@ describe('Message Store', () => {
     });
     it('getConversation', () => {
       const id11 = fixtures.message11.id;
+      const mailbox11 = _.keys(fixtures.message11.mailboxIDs)[0];
       const conversationId = fixtures.message11.conversationID;
-      const messages = messageStore.getConversation(conversationId);
+      const messages = messageStore.getConversation(conversationId, mailbox11);
       if (messages[0].get('id') === id11) {
         assert.deepEqual(messages[0].toObject(), fixtures.message11);
         assert.deepEqual(messages[1].toObject(), fixtures.message12);
@@ -337,14 +355,35 @@ describe('Message Store', () => {
         assert.deepEqual(messages[1].toObject(), fixtures.message11);
         assert.deepEqual(messages[0].toObject(), fixtures.message12);
       }
+
+      //  If conversation doesnt exist
+      // then return empty Array
+      const id5 = fixtures.message5.id;
+      const conversation5 = messageStore.getConversation(id5, 'inbox')
+      assert.deepEqual(messageStore.getConversation(id5, 'inbox'), []);
     });
     it('getConversationLength', () => {
+      const id1 = fixtures.message10.id;
       const conversationId1 = fixtures.message10.conversationID;
-      const conversationId2 = fixtures.message11.conversationID;
-      let length = messageStore.getConversationLength(conversationId2);
-      assert.equal(length, 2);
-      length = messageStore.getConversationLength(conversationId1);
+
+      // Message10 should exist into messageStore
+      assert.deepEqual(messageStore.getByID(id1).toObject(), fixtures.message10);
+
+      // Its length is 1
+      let length = messageStore.getConversationLength(conversationId1);
       assert.equal(length, 1);
+
+      const id2 = fixtures.message11.id;
+      const conversationId2 = fixtures.message11.conversationID;
+
+      // Message11 should exist into messageStore
+      assert.deepEqual(messageStore.getByID(id2).toObject(), fixtures.message11);
+
+      // Its length is 2
+      length = messageStore.getConversationLength(conversationId2);
+      assert.equal(length, 2);
+
+      // Empty conversation should return length: null
       length = messageStore.getConversationLength('c5');
       assert.isUndefined(length);
     });
@@ -354,4 +393,3 @@ describe('Message Store', () => {
     mockeryUtils.clean();
   });
 });
-
