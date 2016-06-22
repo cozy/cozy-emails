@@ -45,14 +45,14 @@ class MessageStore extends Store
         if not (timestamp? and updated? and updated > timestamp) and
            not message._deleted # deleted draft are empty, don't update them
 
-            message.attachments   ?= []
+            attachments = message.attachments or Immutable.List []
+
             message.date          ?= new Date().toISOString()
             message.createdAt     ?= message.date
             message.flags         ?= []
             message.hasAttachments = message.attachments.size > 0
-            message.attachments = message.attachments.map (file) ->
+            message.attachments = Immutable.List attachments.map (file) ->
                 Immutable.Map file
-            message.attachments = Immutable.List message.attachments
 
             # message loaded from fixtures for test purpose have a docType
             # that may cause some troubles
