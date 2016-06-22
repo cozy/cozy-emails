@@ -1,30 +1,31 @@
-XHRUtils = require '../utils/xhr_utils'
-AppDispatcher = require '../app_dispatcher'
-{ActionTypes} = require '../constants/app_constants'
+{ActionTypes, OAuthDomains} = require '../constants/app_constants'
+
+_ = require 'underscore'
+
+AccountsUtils = require '../libs/accounts'
+AppDispatcher = require '../libs/flux/dispatcher/dispatcher'
+XHRUtils      = require '../libs/xhr'
 
 AccountStore = require '../stores/account_store'
-LayoutActionCreator = null
-MessageActionCreator = require './message_action_creator'
+RouterStore  = require '../stores/router_store'
 
-getLAC = ->
-    LayoutActionCreator ?= require '../actions/layout_action_creator'
-    return LayoutActionCreator
+
 
 module.exports = AccountActionCreator =
 
-    create: (inputValues, afterCreation) ->
-        AppDispatcher.handleViewAction
+    create: ({value}) ->
+        AppDispatcher.dispatch
             type: ActionTypes.ADD_ACCOUNT_REQUEST
-            value: {inputValues}
+            value: {value}
 
-        XHRUtils.createAccount inputValues, (error, account) ->
-            if error? or not account?
-                AppDispatcher.handleViewAction
+        XHRUtils.createAccount value, (error, account) ->
+            if error?
+                AppDispatcher.dispatch
                     type: ActionTypes.ADD_ACCOUNT_FAILURE
                     value: {error}
 
             else if not account?
-                AppDispatcher.handleViewAction
+                AppDispatcher.dispatch
                     type: ActionTypes.ADD_ACCOUNT_FAILURE
                     value: {error: 'no account returned from create'}
 
@@ -35,170 +36,156 @@ module.exports = AccountActionCreator =
                                          account.draftMailbox? and \
                                          account.trashMailbox?
 
-                AppDispatcher.handleViewAction
+                AppDispatcher.dispatch
                     type: ActionTypes.ADD_ACCOUNT_SUCCESS
                     value: {account, areMailboxesConfigured}
 
-                {id, inboxMailbox} = account
-                if areMailboxesConfigured
-                    filters = "sort/-date/nofilter/-/before/-/after/-"
-                    url = "account/#{id}/mailbox/#{inboxMailbox}/#{filters}"
-                else
-                    url = "account/#{id}/config/mailboxes"
+    edit: ({value, accountID}) ->
+        newAccount = AccountStore.getByID(accountID).mergeDeep value
 
-                window.router.navigate url, trigger: true
-
-
-    edit: (inputValues, accountID, callback) ->
-        newAccount = AccountStore.getByID(accountID).mergeDeep inputValues
-
-        AppDispatcher.handleViewAction
+        AppDispatcher.dispatch
             type: ActionTypes.EDIT_ACCOUNT_REQUEST
-            value: {inputValues, newAccount}
+            value: {value, newAccount}
 
         XHRUtils.editAccount newAccount, (error, rawAccount) ->
             if error?
-                AppDispatcher.handleViewAction
+                AppDispatcher.dispatch
                     type: ActionTypes.EDIT_ACCOUNT_FAILURE
                     value: {error}
             else
-                AppDispatcher.handleViewAction
+                AppDispatcher.dispatch
                     type: ActionTypes.EDIT_ACCOUNT_SUCCESS
                     value: {rawAccount}
 
-                callback?()
+    check: ({value: account, accountID}) ->
+        if accountID
+            account = AccountStore.getByID(accountID).mergeDeep(account).toJS()
 
-    check: (inputValues, accountID, cb) ->
-        if accountID?
-            account = AccountStore.getByID accountID
-            newAccount = account.mergeDeep(inputValues).toJS()
-        else
-            newAccount = inputValues
+        # Extract domain from login field, to compare w/ know OAuth-aware
+        # domains
+        [..., domain] = account.login.split '@'
 
-        AppDispatcher.handleViewAction
+        AppDispatcher.dispatch
             type: ActionTypes.CHECK_ACCOUNT_REQUEST
-            value: {inputValues, newAccount}
+            value: {account}
 
-        XHRUtils.checkAccount newAccount, (error, rawAccount) ->
+        XHRUtils.checkAccount account, (error, res) ->
             if error?
-                AppDispatcher.handleViewAction
+                AppDispatcher.dispatch
                     type: ActionTypes.CHECK_ACCOUNT_FAILURE
-                    value: {error}
+                    value:
+                        error: error
+                        oauth: domain if domain in _.keys OAuthDomains
 
             else
-                AppDispatcher.handleViewAction
+                AccountActionCreator.create value: account
+                AppDispatcher.dispatch
                     type: ActionTypes.CHECK_ACCOUNT_SUCCESS
-                    value: {rawAccount}
-
-            cb? error, rawAccount
+                    value: {res}
 
     remove: (accountID) ->
-        AppDispatcher.handleViewAction
-            type: ActionTypes.REMOVE_ACCOUNT
+        AppDispatcher.dispatch
+            type: ActionTypes.REMOVE_ACCOUNT_REQUEST
             value: accountID
         XHRUtils.removeAccount accountID, (error) ->
-        getLAC().notify t('account removed'), autoclose: true
-        window.router.navigate '', trigger: true
+            if error
+                AppDispatcher.dispatch
+                    type: ActionTypes.REMOVE_ACCOUNT_FAILURE
+                    value: accountID
+            else
+                AppDispatcher.dispatch
+                    type: ActionTypes.REMOVE_ACCOUNT_SUCCESS
+                    value: accountID
 
-    ensureSelected: (accountID, mailboxID) =>
-        if AccountStore.selectedIsDifferentThan accountID, mailboxID
-            AccountActionCreator.selectAccount accountID, mailboxID
+    discover: (domain, config) ->
+        AppDispatcher.dispatch
+            type: ActionTypes.DISCOVER_ACCOUNT_REQUEST
+            value: {domain}
 
-    selectDefaultIfNoneSelected: () =>
-        selectedAccount = AccountStore.getSelected()
-        defaultAccount = AccountStore.getDefault()
-        if not selectedAccount? and defaultAccount
-            AccountActionCreator.selectAccount defaultAccount.get 'id'
+        XHRUtils.accountDiscover domain, (error, provider) ->
+            if error
+                AppDispatcher.dispatch
+                    type: ActionTypes.DISCOVER_ACCOUNT_FAILURE
+                    value: {error, domain}
 
-    selectAccount: (accountID, mailboxID) ->
-        changed = AccountStore.selectedIsDifferentThan accountID, mailboxID
+            # When discovering success, trigger the check auth action directly.
+            # First, extend the minimal config (from view component) w/
+            # providers from discovery and sanitize this new config (using the
+            # same methods the view component uses by exploiting same mixins).
+            # Also, dispatch a success event for the discovery action.
+            else
+                servers = AccountsUtils.parseProviders provider
+                config  = AccountsUtils.sanitizeConfig _.extend config, servers
 
-        AppDispatcher.handleViewAction
-            type: ActionTypes.SELECT_ACCOUNT
-            value:
-                accountID: accountID
-                mailboxID: mailboxID
+                AccountActionCreator.check value: config
 
-        selected = AccountStore.getSelected()
-        supportRFC4551 = selected?.get('supportRFC4551')
+                AppDispatcher.dispatch
+                    type: ActionTypes.DISCOVER_ACCOUNT_SUCCESS
+                    value: {domain, provider}
 
-        if mailboxID? and changed and supportRFC4551
-            MessageActionCreator.refreshMailbox(mailboxID)
+    saveEditTab: (tab) ->
+        AppDispatcher.dispatch
+            type: ActionTypes.EDIT_ACCOUNT_TAB
+            value: {tab}
 
-    selectAccountForMessage: (message) =>
-        # if there isn't a selected account (page loaded directly),
-        # select the message's account
-        selectedAccount = AccountStore.getSelected()
-        if not selectedAccount? and message?.accountID
-            AccountActionCreator.selectAccount message.accountID
-
-    discover: (domain, callback) ->
-        XHRUtils.accountDiscover domain, callback
-
-    mailboxCreate: (inputValues, callback) ->
+    mailboxCreate: (inputValues) ->
+        AppDispatcher.dispatch
+            type: ActionTypes.MAILBOX_CREATE_REQUEST
+            value: account
         XHRUtils.mailboxCreate inputValues, (error, account) ->
-            if not error?
-                AppDispatcher.handleViewAction
-                    type: ActionTypes.MAILBOX_CREATE
+            unless error?
+                AppDispatcher.dispatch
+                    type: ActionTypes.MAILBOX_CREATE_SUCCESS
+                    value: account
+            else
+                AppDispatcher.dispatch
+                    type: ActionTypes.MAILBOX_CREATE_FAILURE
                     value: account
 
-                getLAC().alertSuccess t("mailbox create ok")
-
-            else
-                message = "#{t("mailbox create ko")} #{error.message or error}"
-                getLAC().alertError message
-
-            callback? error
-
-    mailboxUpdate: (inputValues, callback) ->
+    mailboxUpdate: (inputValues) ->
+        AppDispatcher.dispatch
+            type: ActionTypes.MAILBOX_UPDATE_REQUEST
+            value: account
         XHRUtils.mailboxUpdate inputValues, (error, account) ->
-            if not error?
-                AppDispatcher.handleViewAction
-                    type: ActionTypes.MAILBOX_UPDATE
+            unless error?
+                AppDispatcher.dispatch
+                    type: ActionTypes.MAILBOX_UPDATE_SUCCESS
                     value: account
-
-                getLAC().alertSuccess t("mailbox update ok"),
             else
-                message = "#{t("mailbox update ko")} #{error.message or error}"
-                getLAC().alertError message
-                    autoclose: true
-
-            callback? error
-
-
-    mailboxDelete: (inputValues, callback) ->
-        XHRUtils.mailboxDelete inputValues, (error, account) ->
-            if not error?
-                AppDispatcher.handleViewAction
-                    type: ActionTypes.MAILBOX_DELETE
+                AppDispatcher.dispatch
+                    type: ActionTypes.MAILBOX_UPDATE_FAILURE
                     value: account
-            if callback?
-                callback error
+
+    mailboxDelete: (inputValues) ->
+        AppDispatcher.dispatch
+            type: ActionTypes.MAILBOX_DELETE_REQUEST
+            value: account
+        XHRUtils.mailboxDelete inputValues, (error, account) ->
+            if error?
+                AppDispatcher.dispatch
+                    type: ActionTypes.MAILBOX_DELETE_FAILURE
+                    value: account
+            else
+                AppDispatcher.dispatch
+                    type: ActionTypes.MAILBOX_DELETE_SUCCESS
+                    value: account
+
 
     mailboxExpunge: (options) ->
-
         {accountID, mailboxID} = options
 
-        # delete message from local store to refresh display, we'll fetch them
-        # again on error
-        AppDispatcher.handleViewAction
-            type: ActionTypes.MAILBOX_EXPUNGE
+        # delete message from local store to refresh display,
+        # we'll fetch them again on error
+        AppDispatcher.dispatch
+            type: ActionTypes.MAILBOX_EXPUNGE_REQUEST
             value: mailboxID
 
         XHRUtils.mailboxExpunge options, (error, account) ->
-
-            if error?
-                getLAC().alertError """
-                    #{t("mailbox expunge ko")} #{error.message or error}
-                """
-
-                # if user hasn't switched to another box, refresh display
-                unless AccountStore.selectedIsDifferentThan accountID, mailboxID
-                    parameters = MessageStore.getQueryParams()
-                    parameters.accountID = accountID
-                    parameters.mailboxID = mailboxID
-                    getLAC().showMessageList {parameters}
-
+            if error
+                AppDispatcher.dispatch
+                    type: ActionTypes.MAILBOX_EXPUNGE_FAILURE
+                    value: {mailboxID, accountID, error}
             else
-                getLAC().notify t("mailbox expunge ok"),
-                    autoclose: true
+                AppDispatcher.dispatch
+                    type: ActionTypes.MAILBOX_EXPUNGE_SUCCESS
+                    value: {mailboxID, accountID}

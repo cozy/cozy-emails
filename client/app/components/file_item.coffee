@@ -2,8 +2,9 @@ React = require 'react'
 
 {li, span, i, a} = React.DOM
 
-MessageUtils = require '../utils/message_utils'
-{getFileURL} = require '../utils/file_utils'
+NotificationActionsCreator = require '../actions/notification_action_creator'
+
+FileGetter = require '../getters/file'
 
 ###
 # Display a file item
@@ -35,27 +36,15 @@ module.exports = FileItem = React.createClass
         }
 
     getInitialState: ->
-        return 'tmpFileURL': getFileURL @props.file
+        return 'tmpFileURL': FileGetter.getFileURL @props.file
 
     render: ->
         file = @props.file
         unless @state.tmpFileURL
-            window.cozyMails.log(new Error "Wrong file #{JSON.stringify(file)}")
+            NotificationActionsCreator.alertError "Wrong file #{JSON.stringify(file)}"
             file.url = "message/#{@props.messageID}/attachments/#{file.generatedFileName}"
-        type = MessageUtils.getAttachmentType file.contentType
-        icons =
-            'archive'      : 'fa-file-archive-o'
-            'audio'        : 'fa-file-audio-o'
-            'code'         : 'fa-file-code-o'
-            'image'        : 'fa-file-image-o'
-            'pdf'          : 'fa-file-pdf-o'
-            'word'         : 'fa-file-word-o'
-            'presentation' : 'fa-file-powerpoint-o'
-            'spreadsheet'  : 'fa-file-excel-o'
-            'text'         : 'fa-file-text-o'
-            'video'        : 'fa-file-video-o'
-            'word'         : 'fa-file-word-o'
-        iconClass = icons[type] or 'fa-file-o'
+
+        iconClass = FileGetter.getAttachmentIcon file
 
         li className: "file-item", key: @props.key,
             i className: "mime #{type} fa #{iconClass}"
@@ -73,7 +62,7 @@ module.exports = FileItem = React.createClass
                 a
                     'className' : 'fa fa-download'
                     'download'  : file.generatedFileName
-                    'href'      : getFileURL file
+                    'href'      : FileGetter.getFileURL file
                 if @props.editable
                     i className: "fa fa-times delete", onClick: @doDelete
 

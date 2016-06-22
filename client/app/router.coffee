@@ -1,77 +1,162 @@
-PanelRouter = require './libs/panel_router'
+Backbone = require 'backbone'
+React    = require 'react'
+ReactDOM = require 'react-dom'
 
-AccountStore = require './stores/account_store'
-MessageStore = require './stores/message_store'
+RouterStore = require './stores/router_store'
 
-module.exports = class Router extends PanelRouter
+RouterActionCreator = require './actions/router_action_creator'
+NotificationActionCreator = require './actions/notification_action_creator'
 
-    patterns:
-        'account.config':
-            pattern: 'account/:accountID/config/:tab'
-            fluxAction: 'showConfigAccount'
-        'account.new':
-            pattern: 'account/new'
-            fluxAction: 'showCreateAccount'
+AppDispatcher = require './libs/flux/dispatcher/dispatcher'
 
-        'account.mailbox.messages':
-            pattern: 'account/:accountID/mailbox/:mailboxID/sort/:sort/' +
-                     ':type/:flag/before/:before/after/:after'
-            fluxAction: 'showMessageList'
+{ActionTypes, MessageActions, AccountActions, SearchActions} = require './constants/app_constants'
 
-        'search':
-            pattern: 'account/:accountID/search/:search'
-            fluxAction: 'showSearchResult'
+Polyglot = require 'node-polyglot'
+moment   = require 'moment'
 
-        'message':
-            pattern: 'message/:messageID'
-            fluxAction: 'showMessage'
+# MessageList :
+# ?sort=asc&filters=&status=unseen&start=2016-02-27T23:00:00.000Z&end=2016-03-05T22:59:59.999Z
 
-        'conversation':
-            pattern: 'conversation/:conversationID/:messageID/'
-            fluxAction: 'showConversation'
+# Search :
+# #account/3510d24990c596125ecc9e1fc800616a/mailbox/3510d24990c596125ecc9e1fc80064d3/search/?q=plop
 
-        'default':
-            pattern: ''
-            fluxAction: ''
+class Router extends Backbone.Router
 
-    # default route
-    routes: '': 'default'
+    routes:
+        'mailbox/:mailboxID(?:query)':                              'messageList'
+        'account/new':                                              'accountNew'
+        'account/:accountID/settings/:tab':                         'accountEdit'
+        # 'search/?q=:search':                                      'search'
+        # 'mailbox/:mailboxID/search/?q=:search':                   'search'
+        'mailbox/:mailboxID/new':                                   'messageNew'
+        'mailbox/:mailboxID/:messageID/edit':                       'messageEdit'
+        'mailbox/:mailboxID/:messageID/forward':                    'messageForward'
+        'mailbox/:mailboxID/:messageID/reply':                      'messageReply'
+        'mailbox/:mailboxID/:messageID/reply-all':                  'messageReplyAll'
+        'mailbox/:mailboxID/:conversationID/:messageID(?:query)':   'messageShow'
+        '':                                                         'defaultView'
 
-    # Determines and gets the default parameters regarding a specific action
-    _getDefaultParameters: (action, parameters) ->
-        switch action
 
-            when 'account.mailbox.messages'
-                defaultAccountID = AccountStore.getDefault()?.get 'id'
-                # if parameters contains accountID but no mailboxID,
-                # get the default mailbox for this account
-                if parameters.accountID?
-                    mailbox = AccountStore.getDefaultMailbox parameters.accountID
-                else
-                    mailbox = AccountStore.getDefaultMailbox defaultAccountID
-                defaultMailboxID = mailbox?.get 'id'
-                defaultParameters = {}
-                defaultParameters.accountID = defaultAccountID
-                defaultParameters.mailboxID = defaultMailboxID
-                defaultParameters.pageAfter = '-'
-                defaultParameters.sort = '-date'
-                defaultParameters.after = '-'
-                defaultParameters.before = '-'
-                defaultParameters.type = 'nofilter'
-                defaultParameters.flag = '-'
+    initialize: ->
+        _setLocale()
 
-            when 'account.config'
-                defaultAccount = AccountStore.getDefault()?.get 'id'
-                defaultParameters =
-                    accountID: defaultAccount
-                    tab: 'account'
+        # Save Routes in Stores
+        AppDispatcher.dispatch
+            type: ActionTypes.ROUTES_INITIALIZE
+            value: @
 
-            when 'search'
-                defaultParameters =
-                    accountID: 'all'
-                    search: '-'
+        # Display application
+        _displayApplication()
 
-            else
-                defaultParameters = null
+        # Start Navigation
+        Backbone.history.start()
 
-        return defaultParameters
+
+    defaultView: ->
+        url = if (mailboxID = RouterStore.getMailboxID())
+        then "mailbox/#{mailboxID}"
+        else "account/new"
+
+        @navigate url, trigger: true
+
+
+    accountNew: ->
+        _dispatch {action: AccountActions.CREATE}
+
+
+    accountEdit: (accountID, tab) ->
+        _dispatch {action: AccountActions.EDIT, accountID, tab}
+
+
+    messageList: (mailboxID, query) ->
+        _dispatch {action: MessageActions.SHOW_ALL, mailboxID}, query
+
+
+    messageShow: (mailboxID, conversationID, messageID, query) ->
+        _dispatch {action: MessageActions.SHOW, mailboxID, conversationID, messageID}, query
+
+
+    messageEdit: (mailboxID, messageID) ->
+        _dispatch {action: MessageActions.EDIT, mailboxID, messageID}
+
+
+    messageNew: (mailboxID) ->
+        _dispatch {action: MessageActions.CREATE, mailboxID}
+
+
+    messageForward: (mailboxID, messageID) ->
+        _dispatch {action: MessageActions.FORWARD, mailboxID, messageID}
+
+
+    messageReply: (mailboxID, messageID) ->
+        _dispatch {action: MessageActions.REPLY, mailboxID, messageID}
+
+
+    messageReplyAll: (mailboxID, messageID) ->
+        _dispatch {action: MessageActions.REPLY_ALL, mailboxID, messageID}
+
+
+    # search: (accountID, mailboxID, value) ->
+    #     RouterActionCreator.setAction SearchActions.SHOW_ALL
+    #     console.log 'Search', accountID, mailboxID, value
+
+
+# Dispatch payload with extracted query if available
+_dispatch = (payload, query) ->
+    payload.query = _parseQuery query if query
+
+    AppDispatcher.dispatch
+        type: ActionTypes.ROUTE_CHANGE
+        value: payload
+
+    # Fetch Messages
+    if payload.action in [MessageActions.SHOW_ALL, MessageActions.SHOW]
+        RouterActionCreator.refreshMailbox payload
+        RouterActionCreator.gotoCurrentPage()
+
+
+
+# Extract params from q queryString to an object that map `key` > `value`.
+# Extracted values can be:
+# - a simple string: `?foo=bar` > {foo: 'bar'}
+# - an array (comma separator): `?foo=bar,23` > {foo: ['bar', '23']}
+# - an object (colon separator): `?foo=dest:asc` > {foo: {dest: 'asc'}}
+# - a boolean mapped to true: `?foo` > {foo: true}
+_parseQuery = (query) ->
+    params = {}
+    parts = query.split '&'
+    for part in parts
+        [param, value] = part.split '='
+        params[param] = if /,/g.test value
+            value.split ','
+        else if /:/.test value
+            [arg, val] = value.split ':'
+            (obj = {})[arg] = val
+            obj
+        else
+            value or true
+    return params
+
+
+_displayApplication = ->
+    Application = React.createFactory require './components/application'
+    ReactDOM.render Application(), document.querySelector '[role=application]'
+
+
+# update locate (without saving it into settings)
+_setLocale = (lang) ->
+    lang ?= window.locale or window.navigator.language or 'en'
+    moment.locale lang
+    locales = {}
+    try
+        locales = require "./locales/#{lang}"
+    catch err
+        console.log err
+        locales = require "./locales/en"
+    polyglot = new Polyglot()
+    # we give polyglot the data
+    polyglot.extend locales
+    # handy shortcut
+    window.t = polyglot.t.bind polyglot
+
+module.exports = Router

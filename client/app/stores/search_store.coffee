@@ -23,31 +23,53 @@ class SearchStore extends Store
     _currentSearchResults = Immutable.Set()
     _currentSearchAccounts = Immutable.Map()
 
-    resetSearch = ->
+    _resetSearch = ->
         _currentSearch = ''
         _currentSearchResults = _currentSearchResults.clear()
         _currentSearchAccounts = Immutable.Map()
         _currentSearchPage = 0
         _currentSearchMore = false
 
-    resetSearch()
+    _getNextURL = (value) ->
+        url = "search?search=#{@getCurrentSearchKey()}"
+        url += "&pageSize=#{NUMBER_BY_PAGE}"
+        if _currentSearchPage
+            url += "&page=#{_currentSearchPage}"
+        if _currentSearchAccountID isnt 'all'
+            url += "&accountID=#{_currentSearchAccountID}"
+
+        return url
+
+    _fetchSearchResults = ->
+        url = _getNextURL _currentSearch
+
+        AppDispatcher.dispatch
+            type: ActionTypes.SEARCH_REQUEST
+            value: {search: _currentSearch}
+
+        XHRUtils.search url, (error, searchResults) ->
+            if error?
+                AppDispatcher.dispatch
+                    type: ActionTypes.SEARCH_FAILURE
+                    value: {error}
+            else
+                AppDispatcher.dispatch
+                    type: ActionTypes.SEARCH_SUCCESS
+                        value: {searchResults}
 
     ###
         Defines here the action handlers.
     ###
     __bindHandlers: (handle) ->
 
-        handle ActionTypes.QUERY_PARAMETER_CHANGED, ->
-            resetSearch()
-            @emit 'change'
-
         handle ActionTypes.SEARCH_PARAMETER_CHANGED, ({search, accountID}) ->
-            if search isnt _currentSearch or
-            accountID isnt _currentSearchAccountID
-                resetSearch()
+            if search isnt _currentSearch or accountID isnt _currentSearchAccountID
+                _resetSearch()
 
-            _currentSearch = search
-            _currentSearchAccountID = accountID
+                _currentSearch = if search isnt '-' then search else ''
+                _currentSearchAccountID = accountID
+
+                _fetchSearchResults()
 
             @emit 'change'
 
@@ -62,10 +84,10 @@ class SearchStore extends Store
             _currentSearchResults = _currentSearchResults.clear()
             @emit 'change'
 
-        handle ActionTypes.SEARCH_SUCCESS, ({searchResults}) ->
+        handle ActionTypes.SEARCH_SUCCESS, ({result}) ->
             _fetching--
-            accounts = searchResults.accounts
-            ids = searchResults.rows.map (message) -> message._id
+            accounts = result.accounts
+            ids = result.rows.map (message) -> message._id
             _currentSearchMore = ids.length is NUMBER_BY_PAGE
             _currentSearchResults = _currentSearchResults.union ids
             _currentSearchAccounts = _currentSearchAccounts.merge accounts
@@ -91,16 +113,6 @@ class SearchStore extends Store
 
     hasMoreSearch: ->
         _currentSearchMore
-
-    getNextSearchUrl: () ->
-        url = "search?search=#{@getCurrentSearchKey()}"
-        url += "&pageSize=#{NUMBER_BY_PAGE}"
-        if _currentSearchPage
-            url += "&page=#{_currentSearchPage}"
-        if _currentSearchAccountID isnt 'all'
-            url += "&accountID=#{_currentSearchAccountID}"
-
-        return url
 
 
 module.exports = self = new SearchStore()

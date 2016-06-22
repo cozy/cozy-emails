@@ -12,8 +12,8 @@ module.exports = class OrphanRemoval extends Process
 
     code: 'orphan-removal'
 
-    initialize: (options, callback) ->
 
+    initialize: (options, callback) ->
         async.series [
             @removeMailboxOrphans
             @forgetDestroyedBoxes
@@ -21,6 +21,7 @@ module.exports = class OrphanRemoval extends Process
             @removeOrphansMessageFromMailboxes
             @destroyNoBoxMessages
         ], callback
+
 
     # Public: remove mailboxes linked to an account that doesn't exist
     # in cozy.
@@ -35,6 +36,7 @@ module.exports = class OrphanRemoval extends Process
                 log.error 'failed to delete box', err
             callback null
 
+
     forgetDestroyedBoxes: (callback) ->
         toForget = []
         for account in ramStore.getAllAccounts()
@@ -47,6 +49,7 @@ module.exports = class OrphanRemoval extends Process
         , (errors) ->
             log.error "failed to forget box", err for err in errors
             callback null
+
 
     getOrphanMessageMailboxesIDs: (callback) =>
         Message.rawRequest 'byMailboxRequest',
@@ -62,6 +65,7 @@ module.exports = class OrphanRemoval extends Process
                 id not in existingMailboxes
             callback null
 
+
     removeOrphansMessageFromMailboxes: (callback) =>
         safeLoop @toDestroyMailboxIDs, (mailboxID, next) =>
             log.debug "removeOrphans - found orphan from box", mailboxID
@@ -71,6 +75,7 @@ module.exports = class OrphanRemoval extends Process
         , (errors) ->
             log.error "failed to remove message", err for err in errors
             callback null
+
 
     destroyNoBoxMessages: (callback) ->
         options =
@@ -83,4 +88,3 @@ module.exports = class OrphanRemoval extends Process
             , (errors) ->
                 log.error 'fail to destroy orphan msg', err for err in errors
                 callback null
-
