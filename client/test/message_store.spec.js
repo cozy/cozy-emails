@@ -1,6 +1,7 @@
 'use strict';
 const assert = require('chai').assert;
 const _ = require('lodash');
+const Map = require('immutable').Map;
 
 const mockeryUtils = require('./utils/mockery_utils');
 const SpecDispatcher = require('./utils/specs_dispatcher');
@@ -261,10 +262,14 @@ describe('Message Store', () => {
       assert.deepEqual(messages.get(id2).toObject(), message2);
     });
     it.skip('MESSAGE_MOVE_SUCCESS', () => {
-      // FIXME: Don't know how to implement this test.
+      // TODO: this feature is not fixed yet
+      // 1. fix the feature
+      // 2. add test
     });
     it.skip('MESSAGE_SEND_SUCCESS', () => {
-      // FIXME: Don't know how to implement this test.
+      // TODO: this feature is not fixed yet
+      // 1. fix the feature
+      // 2. add test
     });
     it('RECEIVE_MESSAGE_DELETE', () => {
       const id4 = fixtures.message2.id;

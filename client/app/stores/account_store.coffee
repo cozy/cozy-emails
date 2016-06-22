@@ -32,9 +32,7 @@ class AccountStore extends Store
             # TODO: should be done server side
             _.forEach MailboxSpecial, (type, value) ->
                 unless account[value]?
-                    if mailbox.attribs? and \
-                    mailbox.attribs.length > 0 \
-                    and MailboxFlags[type] is mailbox.attribs.join(',')
+                    if MailboxFlags[type] is (mailbox.attribs or []).join(',')
                         account[value] = mailbox.id
 
                     # Gmail Inbox has /noselect attribs
@@ -270,4 +268,3 @@ class AccountStore extends Store
 
 
 module.exports = new AccountStore()
-
