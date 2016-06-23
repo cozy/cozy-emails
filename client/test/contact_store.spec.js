@@ -33,7 +33,7 @@ const fixtures = {
 };
 
 
-describe('Contact Store', () => {
+describe.skip('Contact Store', () => {
   let contactStore;
   let dispatcher;
 
