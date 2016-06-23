@@ -6,6 +6,8 @@ const _ = require('lodash');
 
 const mockeryUtils = require('./utils/mockery_utils');
 const SpecDispatcher = require('./utils/specs_dispatcher');
+const SpecRouter = require('./utils/specs_router');
+
 const UtilConstants = require('../../server/utils/constants');
 const Constants = require('../app/constants/app_constants');
 const ActionTypes = Constants.ActionTypes;
@@ -14,8 +16,6 @@ const MessageActions = Constants.MessageActions;
 const MessageFlags = Constants.MessageFlags;
 const MessageFilter = Constants.MessageFilter;
 
-
-let currentURL = '';
 
 const fixtures = {
   fullTestError: {
@@ -104,30 +104,13 @@ const fixtures = {
     mailboxIDs: { mb4: 1 },
     flags: [MessageFlags.FLAGGED, MessageFlags.ATTACH],
   },
-
-  router: {
-    navigate: (url) => {
-      currentURL = url;
-    },
-    routes: {
-      'mailbox/:mailboxID(?:filter)': 'messageList',
-      'account/new': 'accountNew',
-      'account/:accountID/settings/:tab': 'accountEdit',
-      'mailbox/:mailboxID/new': 'messageNew',
-      'mailbox/:mailboxID/:messageID/edit': 'messageEdit',
-      'mailbox/:mailboxID/:messageID/forward': 'messageForward',
-      'mailbox/:mailboxID/:messageID/reply': 'messageReply',
-      'mailbox/:mailboxID/:messageID/reply-all': 'messageReplyAll',
-      'mailbox/:mailboxID/:conversationID/:messageID(?:filter)': 'messageShow',
-      '': 'defaultView',
-    },
-  },
 };
 
 
 describe.skip('Router Store', () => {
   let routerStore;
   let dispatcher;
+  let router;
 
 
   function changeRoute(filter, message) {
@@ -188,6 +171,7 @@ describe.skip('Router Store', () => {
 
   before(() => {
     dispatcher = new SpecDispatcher();
+    router = new SpecRouter();
     mockeryUtils.initDispatcher(dispatcher);
     mockeryUtils.initForStores([
       '../app/stores/router_store',
