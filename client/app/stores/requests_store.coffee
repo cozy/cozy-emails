@@ -41,8 +41,7 @@ class RequestsStore extends Store
 
     _requests = _setRequests()
 
-    _refreshes = _setRefreshes window.refreshes if window?
-
+    _refreshes = _setRefreshes window?.refreshes
 
 
     ###

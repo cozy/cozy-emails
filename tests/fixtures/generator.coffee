@@ -85,13 +85,12 @@ for i in [1..numberOfEmails] by 1
     priority  = getRandomElmt priorities
 
     # random date this year before now
-    today = moment("2014-10-29T23:59:59Z")
-    month = getRandom today.month()
-    day = getRandom today.date()
-    hour = getRandom today.hours()
-    minute = getRandom today.minutes()
-    date = moment().months(month).days(day).hours(hour).minutes(minute)
-        .second(0).millisecond(0)
+    now  = moment()
+    date = moment
+        month:  getRandom now.month()
+        day:    getRandom now.date()
+        hour:   getRandom now.hours()
+        minute: getRandom now.minutes()
 
     flags = []
     flags.push '\\Seen' if getRandom(10) > 5

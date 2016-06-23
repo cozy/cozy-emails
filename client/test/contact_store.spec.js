@@ -53,24 +53,30 @@ describe('Contact Store', () => {
   });
 
   describe('Actions', () => {
-    const id1 = fixtures.contact1.id;
-    const id2 = fixtures.contact2.id;
-    const email1a = fixtures.contact1.datapoints[0].value;
-    const email1b = fixtures.contact1.datapoints[1].value;
-    const email2 = fixtures.contact2.datapoints[0].value;
-    const email3 = fixtures.contact3.datapoints[1].value;
+    const id1              = fixtures.contact1.id;
+    const id2              = fixtures.contact2.id;
+    const email1a          = fixtures.contact1.datapoints[0].value;
+    const email1b          = fixtures.contact1.datapoints[1].value;
+    const email1datapoints = fixtures.contact1.datapoints;
+    const email2           = fixtures.contact2.datapoints[0].value;
+    const email3           = fixtures.contact3.datapoints[1].value;
 
     it('CREATE_CONTACT_SUCCESS', () => {
       dispatcher.dispatch({
         type: ActionTypes.CREATE_CONTACT_SUCCESS,
         value: [fixtures.contact1, fixtures.contact2, fixtures.contact3],
       });
-      const contacts = contactStore.getAll();
-      assert.deepEqual(contacts.get(email1a).get('id'), id1);
-      assert.deepEqual(contacts.get(email1b).get('id'), id1);
-      assert.deepEqual(contacts.get(email2).get('id'), id2);
-      assert.equal(contacts.get(email1b).get('address'), email1a);
+
+      const _email1a = contactStore.getByAddress(email1a);
+      const _email1b = contactStore.getByAddress(email1a);
+      const _email2  = contactStore.getByAddress(email2);
+
+      assert.equal(_email1a.get('id'), id1);
+      assert.equal(_email1b.get('id'), id1);
+      assert.equal(_email2.get('id'), id2);
+      assert.sameDeepMembers(_email1b.get('datapoints'), email1datapoints);
     });
+
     it('CONTACT_LOCAL_SEARCH', () => {
       let results = search('test');
       assert.isDefined(results);
@@ -93,8 +99,11 @@ describe('Contact Store', () => {
     const id1 = fixtures.contact1.id;
     const email1a = fixtures.contact1.datapoints[0].value;
     it('getByAddress', () => {
-      assert.deepEqual(contactStore.getByAddress(email1a).toObject(),
-                       fixtures.contact1);
+      const _contact = contactStore.getByAddress(email1a).toObject();
+      assert.equal(_contact.fn, fixtures.contact1.fn)
+      assert.sameDeepMembers(_contact.datapoints, fixtures.contact1.datapoints);
+      assert.equal(_contact.address, email1a)
+
       assert.isUndefined(contactStore.getByAddress('test@wrong.com'));
     });
     it('getAvatar', () => {
