@@ -1,8 +1,6 @@
 _         = require 'underscore'
 Immutable = require 'immutable'
 
-AppDispatcher = require '../libs/flux/dispatcher/dispatcher'
-
 Store = require '../libs/flux/store/store'
 
 {ActionTypes, MessageFlags, MessageFilter} = require '../constants/app_constants'

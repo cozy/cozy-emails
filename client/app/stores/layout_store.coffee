@@ -1,7 +1,5 @@
 Immutable = require 'immutable'
 
-AppDispatcher = require '../libs/flux/dispatcher/dispatcher'
-
 Store = require '../libs/flux/store/store'
 
 {ActionTypes} = require '../constants/app_constants'
