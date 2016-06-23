@@ -13,20 +13,16 @@ Scheduler = require '../processes/_scheduler'
 # refresh a single mailbox if we can do it fast
 # We can do it fast if the server support RFC4551
 # see {Mailbox::imap_refreshFast}
-module.exports.refresh = (req, res, next) ->
-    mailbox = ramStore.getMailbox(req.params.mailboxID)
-    deepRefresh = req.query.deep
-    if not mailbox
+module.exports.refresh = (req={}, res, next) ->
+    unless (mailbox = ramStore.getMailbox(req.params?.mailboxID))
         return next new NotFound("Mailbox #{req.params.mailboxID}")
 
-    account = ramStore.getAccount(mailbox.accountID)
-
-    if not account
+    unless (account = ramStore.getAccount(mailbox.accountID))
         next new NotFound("Account #{mailbox.accountID}")
-    else if not account.supportRFC4551
+    else unless account.supportRFC4551
         next new BadRequest('Cant refresh a non RFC4551 box')
     else
-        Scheduler.refreshNow mailbox, deepRefresh, (err) ->
+        Scheduler.refreshNow mailbox, req.query, (err) ->
             return next err if err
             res.send ramStore.getMailboxClientObject mailbox.id
 

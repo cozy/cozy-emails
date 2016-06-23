@@ -1,16 +1,14 @@
 React      = require 'react'
 classNames = require 'classnames'
 
-{div, section, p, ul, li, a, span, i, button, input, img} = React.DOM
-
-{MessageFlags} = require '../constants/app_constants'
+{div, p, li, a, span, i, img} = React.DOM
 
 RouterActionCreator = require '../actions/router_action_creator'
-LayoutActionCreator = require '../actions/layout_action_creator'
 
 {Icon}       = require('./basic_components').factories
 Participants = React.createFactory require './participants'
 
+RouterGetter = require '../getters/router'
 MessageGetter = require '../getters/message'
 ContactGetter = require '../getters/contact'
 SearchGetter = require '../getters/search'
@@ -19,23 +17,56 @@ SearchGetter = require '../getters/search'
 module.exports = React.createClass
     displayName: 'MessagesItem'
 
-    render: ->
-        date    = MessageGetter.getCreatedAt @props.message
-        avatar  = ContactGetter.getAvatar @props.message
-        flags   = @props.message.get 'flags'
 
-        participants = @getParticipants @props.message
-        subject = @highlightSearch text: @props.message.get 'subject'
+    getDate: ->
+        MessageGetter.getCreatedAt @props.message
 
+
+    getSubject: ->
+        @highlightSearch text: @props.message.get 'subject'
+
+
+    getAvatar: ->
+        ContactGetter.getAvatar @props.message
+
+
+    getParticipants: ->
+        from    = @props.message.get 'from'
+        cc      = @props.message.get('cc')
+        to      = @props.message.get('to').concat(cc).filter (address) =>
+            return address.address isnt @props.login and
+                address.address isnt from[0]?.address
+        separator = if to.length > 0 then ', ' else ' '
+        {from, to, separator}
+
+
+    getBackgroundColor: ->
         from  = @props.message.get('from')[0]
         tag = "#{from?.name} <#{from?.address}>"
-        backgroundColor = ContactGetter.getTagColor tag
-        name = if from?.name then from?.name[0] else from?.address[0]
+        ContactGetter.getTagColor tag
+
+
+    getName: ->
+        from  = @props.message.get('from')[0]
+        if from?.name then from?.name[0] else from?.address[0]
+
+
+    isUnread: ->
+        RouterGetter.isUnread @props.message
+
+
+    isFlagged: ->
+        RouterGetter.isFlagged @props.message
+
+
+    render: ->
+        {from, to, separator} = @getParticipants()
+        backgroundColor = @getBackgroundColor()
 
         li
             className:  classNames
                 message:    true
-                unseen:     MessageFlags.SEEN not in flags
+                unseen:     (isUnread = @isUnread())
                 active:     @props.isActive
             key:                    @props.key
             'data-message-active':  @props.isActive
@@ -49,32 +80,41 @@ module.exports = React.createClass
                 div className: 'markers-wrapper',
                     Icon
                         type: 'new-icon'
-                        className: 'hidden' if MessageFlags.SEEN in flags
+                        className: 'hidden' unless isUnread
 
                     Icon
                         type: 'star'
-                        className: 'hidden' if MessageFlags.FLAGGED not in flags
+                        className: 'hidden' unless @isFlagged()
 
                 div className: 'avatar-wrapper select-target',
-                    if avatar?
+                    if (avatar = @getAvatar())?
                         img className: 'avatar', src: avatar
                     else
                         i
                             className: 'avatar placeholder'
                             style: {backgroundColor},
-                            name
+                            @getName()
 
                 div className: 'metas-wrapper',
                     div className: 'metas',
 
                         div className: 'participants ellipsable',
-                            participants
+                            p null,
+                                Participants
+                                    participants: from
+                                    ref: 'from'
+                                    tooltip: false
+                                span null, separator
+                                Participants
+                                    participants: to
+                                    ref: 'to'
+                                    tooltip: false
 
                         div className: 'subject ellipsable',
-                            subject
+                            @getSubject()
 
                         div className: 'date',
-                            date
+                            @getDate()
 
                         div className: 'extras',
                             if @props.message.get 'hasAttachments'
@@ -91,23 +131,5 @@ module.exports = React.createClass
 
 
     onMessageClick: (event) ->
-        {conversationID} = @props
+        conversationID = @props.message.get 'conversationID'
         RouterActionCreator.gotoConversation {conversationID}
-
-
-    getParticipants: (message) ->
-        from = message.get 'from'
-        to   = message.get('to').concat(message.get('cc')).filter (address) =>
-            return address.address isnt @props.login and
-                address.address isnt from[0]?.address
-        separator = if to.length > 0 then ', ' else ' '
-        p null,
-            Participants
-                participants: from
-                ref: 'from'
-                tooltip: false
-            span null, separator
-            Participants
-                participants: to
-                ref: 'to'
-                tooltip: false

@@ -50,14 +50,17 @@ _initRealtime = ->
         reconectionDelay: 2000
         reconnectionAttempts: 3
 
-    _socket.on 'refresh.status',
+    _socket.on 'indexes.request',
+        _dispatchAs ActionTypes.RECEIVE_INDEXES_REQUEST
+
+    _socket.on 'indexes.complete',
+        _dispatchAs ActionTypes.RECEIVE_INDEXES_COMPLETE
+
+    _socket.on 'refreshes.status',
         _dispatchAs ActionTypes.RECEIVE_REFRESH_STATUS
-    _socket.on 'refresh.create',
-        _dispatchAs ActionTypes.RECEIVE_REFRESH_UPDATE
+
     _socket.on 'refresh.update',
         _dispatchAs ActionTypes.RECEIVE_REFRESH_UPDATE
-    _socket.on 'refresh.delete',
-        _dispatchAs ActionTypes.RECEIVE_REFRESH_DELETE
 
     _socket.on 'message.create',
         _dispatchAs ActionTypes.RECEIVE_RAW_MESSAGE_REALTIME
@@ -65,6 +68,14 @@ _initRealtime = ->
         _dispatchAs ActionTypes.RECEIVE_RAW_MESSAGE_REALTIME
     _socket.on 'message.delete',
         _dispatchAs ActionTypes.RECEIVE_MESSAGE_DELETE
+
+    _socket.on 'account.create',
+        _dispatchAs ActionTypes.RECEIVE_ACCOUNT_CREATE
+    _socket.on 'account.update',
+        _dispatchAs ActionTypes.RECEIVE_ACCOUNT_UPDATE
+
+    _socket.on 'mailbox.create',
+        _dispatchAs ActionTypes.RECEIVE_MAILBOX_CREATE
     _socket.on 'mailbox.update',
         _dispatchAs ActionTypes.RECEIVE_MAILBOX_UPDATE
     _socket.on 'refresh.notify',

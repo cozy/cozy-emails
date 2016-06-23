@@ -82,18 +82,13 @@ module.exports = React.createClass
     renderItem: (message) ->
         messageID = message.get 'id'
         conversationID = message.get 'conversationID'
-        isSelected = -1 < @props.selection?.indexOf messageID
         conversationLengths = RouterGetter.getConversationLength {conversationID}
         isActive = RouterGetter.isCurrentConversation conversationID
         MessageItem
             key                 : "messageItem-#{messageID}"
             messageID           : messageID
-            conversationID      : conversationID
+            flags               : message.get 'flags'
             message             : message
-            tags                : RouterGetter.getTags message
             conversationLengths : conversationLengths
-            isSelected          : isSelected
             isActive            : isActive
             login               : RouterGetter.getLogin()
-            mailboxID           : @props.mailboxID
-            displayConversations: @props.displayConversations

@@ -1,20 +1,29 @@
-_     = require 'underscore'
-React = require 'react'
+{ServersEncProtocols} = require '../../constants/app_constants'
+
+_          = require 'underscore'
+React      = require 'react'
+classnames = require 'classnames'
 
 Form = require '../basics/form'
 
 
-{ServersEncProtocols} = require '../../constants/app_constants'
-
 DEFAULT_PORTS =
     imap:
         ssl:      993
-        starttls: 993
+        starttls: 143
         none:     143
     smtp:
         ssl:      465
         starttls: 587
         none:     25
+
+SECURITY_OPTS = ServersEncProtocols
+    .map (protocol) ->
+        value: protocol
+        label: t "server protocol #{protocol}"
+    .concat
+        value: 'none'
+        label: 'server protocol none'
 
 
 module.exports = AccountServer = React.createClass
@@ -22,7 +31,7 @@ module.exports = AccountServer = React.createClass
     displayName: 'AccountServer'
 
     propTypes:
-        _protocol: React.PropTypes.oneOf(_.keys DEFAULT_PORTS).isRequired
+        protocol: React.PropTypes.oneOf(_.keys DEFAULT_PORTS).isRequired
         server:    React.PropTypes.string
         port:      React.PropTypes.number
         security:  React.PropTypes.string
@@ -38,8 +47,10 @@ module.exports = AccountServer = React.createClass
     # Component so uses a default initialState bound to no security protocol and
     # according port.
     getInitialState: ->
-        port:     @props.port or DEFAULT_PORTS[@props._protocol].none
-        security: @props.security or 'none'
+        def = 'starttls'
+
+        port:     @props.port or DEFAULT_PORTS[@props.protocol][def]
+        security: @props.security or def
 
 
     componentWillReceiveProps: (nextProps) ->
@@ -56,40 +67,33 @@ module.exports = AccountServer = React.createClass
 
 
     render: ->
-        options = ServersEncProtocols
-            .map (protocol) ->
-                value: protocol
-                label: t "server protocol #{protocol}"
-            .concat
-                value: 'none'
-                label: 'server protocol none'
-
-        <div className="content">
+        <div className={classnames 'content', 'server', customized: @props.isCustomized}>
+            <h2>{@props.protocol}</h2>
             <Form.Input type="text"
-                        name="#{@props._protocol}-host"
-                        label={t("account wizard creation #{@props._protocol} host")}
+                        name="#{@props.protocol}-host"
+                        label={t("account wizard creation #{@props.protocol} host")}
                         value={@props.server}
-                        onChange={_.partial @props.onChange, "#{@props._protocol}Server"} />
+                        onChange={_.partial @props.onChange, "#{@props.protocol}Server"} />
             <Form.Input type="number"
-                        name="#{@props._protocol}-port"
-                        label={t("account wizard creation #{@props._protocol} port")}
+                        name="#{@props.protocol}-port"
+                        label={t("account wizard creation #{@props.protocol} port")}
                         value={@state.port}
-                        onChange={_.partial @props.onChange, "#{@props._protocol}Port"} />
-            <Form.Select name="#{@props._protocol}-security"
-                         label={t("account wizard creation #{@props._protocol} security")}
-                         options=options
+                        onChange={_.partial @props.onChange, "#{@props.protocol}Port"} />
+            <Form.Select name="#{@props.protocol}-security"
+                         label={t("account wizard creation #{@props.protocol} security")}
+                         options={SECURITY_OPTS}
                          value={@state.security}
                          onChange={@onSecurityChange} />
             <Form.Input type="text"
-                        name="#{@props._protocol}-login"
-                        label={t("account wizard creation #{@props._protocol} login")}
+                        name="#{@props.protocol}-login"
+                        label={t("account wizard creation #{@props.protocol} login")}
                         value={@props.login}
-                        onChange={_.partial @props.onChange, "#{@props._protocol}Login"} />
+                        onChange={_.partial @props.onChange, "#{@props.protocol}Login"} />
             <Form.Input type="password"
-                        name="#{@props._protocol}-password"
-                        label={t("account wizard creation #{@props._protocol} password")}
+                        name="#{@props.protocol}-password"
+                        label={t("account wizard creation #{@props.protocol} password")}
                         value={@props.password}
-                        onChange={_.partial @props.onChange, "#{@props._protocol}Password"} />
+                        onChange={_.partial @props.onChange, "#{@props.protocol}Password"} />
         </div>
 
 
@@ -103,8 +107,8 @@ module.exports = AccountServer = React.createClass
 
         # Only override port if it isn't a custom one
         # (be careful to convert type from state to be a number)
-        if +@state.port in _.values DEFAULT_PORTS[@props._protocol]
-            nextState['port'] = DEFAULT_PORTS[@props._protocol][value]
+        if +@state.port in _.values DEFAULT_PORTS[@props.protocol]
+            nextState['port'] = DEFAULT_PORTS[@props.protocol][value]
 
         @setState nextState
         # also pass modified props (internal state) to globalState
@@ -112,7 +116,7 @@ module.exports = AccountServer = React.createClass
 
 
     setGlobalState: (state) ->
-        protocol    = @props._protocol
+        protocol    = @props.protocol
         globalState = {}
         # prefix all key names with the protocol for globalState
         _.each state, (value, key) ->

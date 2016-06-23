@@ -5,7 +5,7 @@ log = require('../utils/logging')(prefix: 'controllers:activity')
 
 
 ContactActivity =
-    search: (data, callback) ->
+    search: (data={}, callback) ->
 
         if data.query?
             request = 'mailByName'
@@ -19,7 +19,7 @@ ContactActivity =
         Contact.requestWithPictures request, params, callback
 
 
-    create: (data, callback) ->
+    create: (data={}, callback) ->
         if data.contact?.address?
             Contact.createNoDuplicate data.contact, callback
         else
@@ -31,8 +31,10 @@ ContactActivity =
             return callback new NotFound "CONTACT #{data.id}" unless contact
             contact.destroy callback
 
-module.exports.create = (req, res, next) ->
+module.exports.create = (req={}, res={}, next) ->
     activity = req.body
+    activity ?= {data: {type: 'error'}}
+
     switch activity.data.type
         when 'contact'
             if ContactActivity[activity.name]?
@@ -48,11 +50,13 @@ module.exports.create = (req, res, next) ->
         when 'error'
             # Browser errors sent contains `stack`, otherwise it's a
             # `console.error` message to parse
-            if activity.data.error?.stack
+            if (stack = activity.data.error?.stack)
                 log.error activity.data
-                log.error activity.data.error?.stack
+                log.error stack
             else
-                log.error JSON.parse activity.data.error.msg
+                msg = activity.data.error.msg
+                msg ?= "Missing req argument"
+                log.error msg
             res.send 'ok'
         when 'warn'
             log.warn activity.data.msg

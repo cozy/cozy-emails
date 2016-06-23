@@ -1,30 +1,22 @@
 {IMAP_OPTIONS} = require '../../../constants/defaults'
-{Requests
-RequestStatus
-OAuthDomains} = require '../../../constants/app_constants'
+{OAuthDomains} = require '../../../constants/app_constants'
 
-_        = require 'underscore'
-React    = require 'react'
-ReactDOM = require 'react-dom'
+_             = require 'underscore'
+React         = require 'react'
+ReactDOM      = require 'react-dom'
+AccountsUtils = require '../../../libs/accounts'
 
 Form    = require '../../basics/form'
 Servers = require '../servers'
 
-RequestsInFlightStore = require '../../../stores/requests_in_flight_store'
+RequestsStore = require '../../../stores/requests_store'
 
-RouterGetter = require '../../../getters/router'
+RequestsGetter = require '../../../getters/requests'
 
 AccountActionCreator = require '../../../actions/account_action_creator'
 RouterActionCreator = require '../../../actions/router_action_creator'
 
 StoreWatchMixin = require '../../../mixins/store_watch_mixin'
-AccountMixin    = require '../../../mixins/account_mixin'
-
-
-ALERTS =
-    'DISCOVER_FAILED': 'DISCOVER_FAILED'
-    'CHECK_FAILED':    'CHECK_FAILED'
-    'CREATE_FAILED':   'CREATE_FAILED'
 
 
 module.exports = AccountWizardCreation = React.createClass
@@ -32,72 +24,25 @@ module.exports = AccountWizardCreation = React.createClass
     displayName: 'AccountWizardCreation'
 
     mixins: [
-        StoreWatchMixin [RequestsInFlightStore]
-        AccountMixin
+        StoreWatchMixin [RequestsStore]
     ]
 
 
-    # Build state form RequestsInFlightStore:
-    # - is an autodiscover request in action, or a provider available?
+    # Build state from RequestsStore through RequestsGetter
     getStateFromStores: ->
-        state       = {}
-        discoverReq = RouterGetter.getRequestStatus Requests.DISCOVER_ACCOUNT
-        checkReq    = RouterGetter.getRequestStatus Requests.CHECK_ACCOUNT
-        createReq   = RouterGetter.getRequestStatus Requests.ADD_ACCOUNT
+        account  = RequestsGetter.getAccountCreationSuccess()?.account
+        discover = RequestsGetter.getAccountCreationDiscover()
 
-        isBusy = RequestStatus.INFLIGHT in [
-            discoverReq.status
-            checkReq.status
-            createReq.status
-        ]
+        state =
+            isBusy:         RequestsGetter.isAccountCreationBusy()
+            isDiscoverable: RequestsGetter.isAccountDiscoverable()
+            alert:          RequestsGetter.getAccountCreationAlert()
+            OAuth:          RequestsGetter.isAccountOAuth()
 
-        # Account creation step
-        if createReq.status is RequestStatus.SUCCESS
-            _.extend state,
-                success: _.partial @redirect, createReq.res
+        state.success = _.partial @redirect, account if account
+        _.extend state, AccountsUtils.parseProviders discover if discover
 
-        else if createReq.status is RequestStatus.ERROR
-            _.extend state,
-                alert: ALERTS.CREATE_FAILED
-
-        # Check account failed
-        # - set error message
-        # - if domain is one of known OAuth-aware domain, display reminder about
-        # OAuth token
-        if checkReq.status is RequestStatus.ERROR
-            {oauth} = checkReq.res
-            _.extend state,
-                alert: ALERTS.CHECK_FAILED
-                OAuth: oauth
-
-        # Autodiscover have returned a provider informations (an array of
-        # settings): extract settings from given provider for IMAP and SMTP
-        # and fill state
-        if discoverReq.status is RequestStatus.SUCCESS
-            _.extend state,
-                isDiscoverable: true
-                @parseProviders discoverReq.res
-
-        # autodiscover failed : switch to manual config and set an alert only if
-        # checkReq.status isn't already performed
-        else if discoverReq.status is RequestStatus.ERROR and
-        checkReq.status is null
-            _.extend state,
-                alert: ALERTS.DISCOVER_FAILED
-                isDiscoverable: false
-
-
-        # returns state with its fallback default values.
-        #
-        # `isDiscoverable` is true by default since no check has been performed
-        # (else, it means a previous config - discovered or manual - was
-        # submitted and discovering must be manually set by closing advanced
-        # settings panel)
-        _.defaults state,
-            isBusy:         isBusy
-            isDiscoverable: checkReq.status is null
-            alert:          null
-            success:        false
+        return state
 
 
     componentWillUpdate: (nextProps, nextState) ->
@@ -108,62 +53,74 @@ module.exports = AccountWizardCreation = React.createClass
             not _.isEmpty(nextState.password)
 
 
+    componentDidMount: ->
+        ReactDOM.findDOMNode(@).querySelector('[name=login]').focus()
+
+
     render: ->
-        <div role='complementary' onClick={@close}>
-            <section className='settings'>
-                <h1>{t('account wizard creation')}</h1>
+        <div role='complementary' className="backdrop" onClick={@close}>
+            <div className="backdrop-wrapper">
+                <section className='settings'>
+                    <h1>{t('account wizard creation')}</h1>
 
-                <Form ns="account-wizard-creation"
-                        className="content"
-                        onSubmit={@create}>
+                    <Form ns="account-wizard-creation"
+                            className="content"
+                            onSubmit={@create}>
 
-                    <Form.Input type="text"
-                                name="login"
-                                label={t('account wizard creation login label')}
-                                value={@state.login}
-                                onChange={_.partial @updateState, 'login'} />
-                    <Form.Input type="password"
-                                name="password"
-                                label={t('account wizard creation password label')}
-                                value={@state.password}
-                                onChange={_.partial @updateState, 'password'} />
+                        <Form.Input type="text"
+                                    name="login"
+                                    label={t('account wizard creation login label')}
+                                    value={@state.login}
+                                    onChange={_.partial @updateState, 'login'} />
+                        <Form.Input type="password"
+                                    name="password"
+                                    label={t('account wizard creation password label')}
+                                    value={@state.password}
+                                    onChange={_.partial @updateState, 'password'} />
 
-                    {<div className="alert">
-                        <p>{t("account wizard alert #{@state.alert}")}</p>
-                        {<p>
-                            {t("account wizard alert oauth")}
-                            <a href={OAuthDomains[@state.OAuth]} target="_blank">{t("account wizard alert oauth link label")}</a>.
-                        </p> if @state.OAuth}
-                    </div> if @state.alert}
+                        {<div className="alert">
+                            <p>
+                                {t("account wizard alert #{@state.alert.status}")}
+                            </p>
+                            {<p>
+                                {t("account wizard error #{@state.alert.type}")}
+                            </p> if @state.alert.type}
+                            {<p>
+                                {t("account wizard alert oauth")}
+                                <a href={OAuthDomains[@state.OAuth]} target="_blank">{t("account wizard alert oauth link label")}</a>.
+                            </p> if @state.OAuth}
+                        </div> if @state.alert}
 
-                    <Servers expanded={not @state.isDiscoverable}
-                             legend={t('account wizard creation advanced parameters')}
-                             onExpand={@onExpand}
-                             onChange={@updateState}
-                             {..._.omit @state, 'isOAuth', 'isDiscoverable', 'isBusy'} />
-                </Form>
+                        <Servers expanded={not @state.isDiscoverable}
+                                 legend={t('account wizard creation advanced parameters')}
+                                 onExpand={@onExpand}
+                                 onChange={@updateState}
+                                 {..._.omit @state, 'isOAuth', 'isDiscoverable', 'isBusy'} />
+                    </Form>
 
-                <footer>
-                    <nav>
-                        {<button className="success"
-                                 name="redirect"
-                                 onClick={@state.success}>
-                            {t('account wizard creation success')}
-                        </button> if @state.success}
+                    <footer>
+                        <nav>
+                            {<button className="success"
+                                     name="redirect"
+                                     onClick={@state.success}>
+                                {t('account wizard creation success')}
+                            </button> if @state.success}
 
-                        {<button name="cancel"
-                                 type="button"
-                                 onClick={@close}>
-                            {t('app cancel')}
-                        </button> if @props.hasDefaultAccount and not @state.success}
-                        {<button type="submit"
-                                 form="account-wizard-creation"
-                                 disabled={not @state.enableSubmit}>
-                            {t('account wizard creation save')}
-                        </button> unless @state.success}
-                    </nav>
-                </footer>
-            </section>
+                            {<button name="cancel"
+                                     type="button"
+                                     onClick={@close}>
+                                {t('app cancel')}
+                            </button> if @props.hasDefaultAccount and not @state.success}
+                            {<button type="submit"
+                                     form="account-wizard-creation"
+                                     aria-busy={@state.isBusy}
+                                     disabled={not @state.enableSubmit}>
+                                {t('account wizard creation save')}
+                            </button> unless @state.success}
+                        </nav>
+                    </footer>
+                </section>
+            </div>
         </div>
 
 
@@ -177,9 +134,11 @@ module.exports = AccountWizardCreation = React.createClass
 
         if @state.isDiscoverable and not(@state.imapServer or @state.smtpServer)
             [..., domain] = @state.login.split '@'
-            AccountActionCreator.discover domain, @sanitizeConfig @state
+            AccountActionCreator.discover domain,
+                AccountsUtils.sanitizeConfig @state
         else
-            AccountActionCreator.check value: @sanitizeConfig @state
+            AccountActionCreator.check
+                value: AccountsUtils.sanitizeConfig @state
 
 
     # Disable autodiscover when advanced settings are expanded
@@ -207,7 +166,7 @@ module.exports = AccountWizardCreation = React.createClass
 
 
     # Redirect on success to the freshly created account's mailbox
-    redirect: ({account}) ->
+    redirect: (account) ->
         RouterActionCreator.showMessageList mailboxID: account.inboxMailbox
 
 
@@ -221,4 +180,4 @@ module.exports = AccountWizardCreation = React.createClass
             @setState source
         else
             {target: {value}} = event
-            @setState _.partial @validateAccountState, source, value
+            @setState _.partial AccountsUtils.validateState, source, value

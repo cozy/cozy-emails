@@ -1,3 +1,14 @@
+###
+
+Accounts lib
+===
+
+This library is a simple set of helpers functions useful for parsing and
+validating account's related data (such as components states or requests
+responses).
+
+###
+
 {ServersEncProtocols} = require '../constants/app_constants'
 
 _ = require 'underscore'
@@ -8,7 +19,7 @@ module.exports =
     # Take a state identifier (key), its value, and the previousState.
     # It ensures the type is right with PropTypes, and manage auto-filling for
     # associated keys (logins / passwords).
-    validateAccountState: (key, value, pState) ->
+    validateState: (key, value, pState) ->
         # In case key is 'port', ensure the value type is a number
         value = +value if /port$/i.test key
 
@@ -80,6 +91,7 @@ module.exports =
     # - extract name and label from the mail login field (aka email identifier)
     sanitizeConfig: (state) ->
         excludes = [
+            'OAuth'
             'alert'
             'isBusy'
             'isDiscoverable'

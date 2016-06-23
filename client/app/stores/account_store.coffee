@@ -3,8 +3,7 @@ _ = require 'lodash'
 
 Store = require '../libs/flux/store/store'
 
-{ActionTypes} = require '../constants/app_constants'
-
+{ActionTypes, MailboxFlags, MailboxSpecial} = require '../constants/app_constants'
 
 class AccountStore extends Store
 
@@ -25,17 +24,34 @@ class AccountStore extends Store
         if -1 < index then ++index else order.length
 
 
-    _setMailboxToImmutable = (account) ->
+    _toImmutable = (account) ->
         mailboxes = _.filter account.mailboxes, (mailbox) ->
-            # OVH mailboxes has 2 mailbox called INBOX
+            # Gmail issue:
+            # no shortcuts into account
+            # to specialMailboxes
+            # TODO: should be done server side
+            _.forEach MailboxSpecial, (type, value) ->
+                unless account[value]?
+                    if MailboxFlags[type] is mailbox.attribs.join(',')
+                        account[value] = mailbox.id
+
+                    # Gmail Inbox has /noselect attribs
+                    # but this flag is for no-catch-mailbox
+                    # change attribs
+                    else if 'INBOX' is type and -1 < ['INBOX', '[Gmail]'].indexOf mailbox.label
+                        mailbox.attribs = [MailboxFlags[type]]
+                        account[value] = mailbox.id
+
+            # OVH issue
+            # mailboxes has 2 mailbox called INBOX
             # but only one the the real one
             # remove the fake one
+            # TODO: should be done server side
             if 'inbox' is mailbox.label.toLowerCase()
+                mailbox.attribs = [MailboxFlags['INBOX']]
                 return account.inboxMailbox is mailbox.id
 
-            # Do not get NoSelect mailbox
-            # cf https://tools.ietf.org/html/rfc3501#page-69
-            return -1 is mailbox.attribs.indexOf '\\Noselect'
+            return true
 
         account.mailboxes = Immutable.Iterable mailboxes
         .toKeyedSeq()
@@ -71,7 +87,7 @@ class AccountStore extends Store
             .mapKeys (_, account) -> account.id
 
             # makes account object an immutable Map
-            .map _setMailboxToImmutable
+            .map _toImmutable
 
             .toOrderedMap()
 
@@ -101,7 +117,7 @@ class AccountStore extends Store
 
 
     _updateAccount = (rawAccount) ->
-        account = _setMailboxToImmutable rawAccount
+        account = _toImmutable rawAccount
         accountID = account.get 'id'
         _accounts = _accounts?.set accountID, account
 
@@ -118,8 +134,14 @@ class AccountStore extends Store
     ###
     __bindHandlers: (handle) ->
 
+
         handle ActionTypes.ADD_ACCOUNT_SUCCESS, ({account}) ->
             _updateAccount account
+            @emit 'change'
+
+
+        handle ActionTypes.RECEIVE_ACCOUNT_UPDATE, (rawAccount) ->
+            _updateAccount rawAccount
             @emit 'change'
 
 
@@ -147,6 +169,10 @@ class AccountStore extends Store
             @emit 'change'
 
 
+        handle ActionTypes.RECEIVE_MAILBOX_CREATE, (mailbox) ->
+            _updateMailbox mailbox
+            @emit 'change'
+
         handle ActionTypes.RECEIVE_MAILBOX_UPDATE, (mailbox) ->
             _updateMailbox mailbox
             @emit 'change'
@@ -155,6 +181,7 @@ class AccountStore extends Store
     ###
         Public API
     ###
+
     getAll: ->
         _accounts
 
@@ -179,10 +206,43 @@ class AccountStore extends Store
             account.get('label') is label
 
 
+    getMailbox: (accountID, mailboxID) ->
+        @getAllMailboxes(accountID)?.find (mailbox) ->
+            mailboxID is mailbox.get 'id'
+
+
     getAllMailboxes: (accountID) ->
         if accountID
             _accounts?.get accountID
                 .get 'mailboxes'
+
+
+    isInbox: (accountID, mailboxID, getChildren=false) ->
+        mailbox = @getMailbox accountID, mailboxID
+        return unless mailbox?.size
+
+        mailboxTree = mailbox.get('tree')
+        mailboxRoot = mailboxTree[0].toLowerCase()
+
+        isInbox = 'inbox' is mailboxRoot
+        isInboxChild = unless getChildren then mailboxTree.length is 1 else true
+        isGmailInbox = '[gmail]' is mailboxRoot and isInboxChild
+
+        return isInbox or isGmailInbox
+
+
+    getInbox: (accountID) ->
+        @getAllMailboxes(accountID)?.find (mailbox) =>
+            @isInbox accountID, mailbox.get 'id'
+
+
+    getTrashMailbox: (accountID) ->
+        @getAllMailboxes(accountID)?.find (mailbox) ->
+            'trash' is mailbox.get('label').toLowerCase()
+
+    getAllMailbox: (accountID) ->
+        @getAllMailboxes(accountID)?.find (mailbox) ->
+            -1 < mailbox.get('attribs').indexOf MailboxFlags['ALL']
 
 
     makeEmptyAccount: ->

@@ -1,9 +1,11 @@
-_         = require 'lodash'
-Immutable = require 'immutable'
+_             = require 'lodash'
+Immutable     = require 'immutable'
+Store         = require '../libs/flux/store/store'
+AppDispatcher = require '../libs/flux/dispatcher/dispatcher'
 
-Store = require '../libs/flux/store/store'
-AccountStore = require '../stores/account_store'
-MessageStore = require '../stores/message_store'
+AccountStore  = require '../stores/account_store'
+MessageStore  = require '../stores/message_store'
+RequestsStore = require '../stores/requests_store'
 
 {AccountActions
 ActionTypes
@@ -43,11 +45,6 @@ class RouterStore extends Store
     _mailboxID = null
     _tab = null
 
-    _refreshMailbox = false
-    _newAccountWaiting = false
-    _newAccountChecking = false
-    _serverAccountErrorByField = Immutable.Map()
-
     _conversationID = null
     _messageID = null
     _messagesLength = 0
@@ -69,34 +66,6 @@ class RouterStore extends Store
 
     getModalParams: ->
         _modal
-
-
-    getErrors: ->
-        _serverAccountErrorByField
-
-
-    getRawErrors: ->
-        _serverAccountErrorByField.get 'unknown'
-
-
-    getAlertErrorMessage: ->
-        error = _serverAccountErrorByField.first()
-        if error.name is 'AccountConfigError'
-            return t "config error #{error.field}"
-        else
-            return error.message or error.name or error
-
-
-    isWaiting: ->
-        _newAccountWaiting
-
-
-    isChecking: ->
-        _newAccountChecking
-
-
-    isRefresh: ->
-        _refreshMailbox
 
 
     getURL: (params={}) ->
@@ -231,33 +200,15 @@ class RouterStore extends Store
             return _mailboxID
 
 
-    getMailbox: (mailboxID) ->
+    getMailbox: (accountID, mailboxID) ->
+        accountID ?= @getAccountID()
         mailboxID ?= @getMailboxID()
-        @getAllMailboxes()?.get mailboxID
+        AccountStore.getMailbox accountID, mailboxID
 
 
     getAllMailboxes: (accountID) ->
         accountID ?= @getAccountID()
         AccountStore.getAllMailboxes accountID
-
-
-    getInbox: (accountID) ->
-        @getAllMailboxes(accountID)?.find (mailbox) ->
-            'inbox' is mailbox.get('label').toLowerCase()
-
-
-    isInbox: (mailboxID) ->
-        mailboxID ?= _mailboxID
-        mailboxIDs = @getAllMailboxes()?.filter (mailbox) ->
-            'inbox' is mailbox.get('label').toLowerCase()
-        .map (mailbox) -> mailbox.get 'id'
-        .toArray()
-        -1 < mailboxIDs?.indexOf mailboxID
-
-
-    getTrashMailbox: (accountID) ->
-        @getAllMailboxes(accountID)?.find (mailbox) ->
-            'trash' is mailbox.get('label').toLowerCase()
 
 
     getSelectedTab: ->
@@ -447,36 +398,6 @@ class RouterStore extends Store
         _URI
 
 
-    _clearError = ->
-        _serverAccountErrorByField = Immutable.Map()
-
-
-    _addError = (field, err) ->
-        _serverAccountErrorByField = _serverAccountErrorByField.set field, err
-
-
-    _checkForNoMailbox = (rawAccount) ->
-        unless rawAccount.mailboxes?.size > 0
-            _setError
-                name: 'AccountConfigError',
-                field: 'nomailboxes'
-                causeFields: ['nomailboxes']
-
-
-    _setError = (error) ->
-        if error.name is 'AccountConfigError'
-            clientError =
-                message: t "config error #{error.field}"
-                originalError: error.originalError
-                originalErrorStack: error.originalErrorStack
-            errorsMap = {}
-            errorsMap[field] = clientError for field in error.causeFields
-            _serverAccountErrorByField = Immutable.Map errorsMap
-
-        else
-            _serverAccountErrorByField = Immutable.Map "unknown": error
-
-
     _updateURL = ->
         currentURL = _self.getCurrentURL isServer: false
         if location.hash isnt currentURL
@@ -489,14 +410,13 @@ class RouterStore extends Store
         # but only one is references as real INBOX
         # Get reference INBOX_ID to keep _nextURL works
         # sith this onther INBOX
-        if _self.isInbox()
-            mailboxID = _self.getInbox().get 'id'
+        if AccountStore.isInbox _accountID, _mailboxID
+            mailboxID = AccountStore.getInbox(_accountID).get 'id'
         else
-            mailboxID = _self.getMailboxID()
+            mailboxID = _mailboxID
 
         # Get queryString of URI params
-        filter = _self.getFilter()
-        query = _getURIQueryParams {filter}
+        query = _getURIQueryParams {filter: _currentFilter}
 
         _URI = "#{mailboxID}#{query}"
 
@@ -507,6 +427,9 @@ class RouterStore extends Store
     __bindHandlers: (handle) ->
 
         handle ActionTypes.ROUTE_CHANGE, (payload={}) ->
+            # Ensure all stores that listen ROUTE_CHANGE have vanished
+            AppDispatcher.waitFor [RequestsStore.dispatchToken]
+
             clearTimeout _timerRouteChange
 
             {accountID, mailboxID, tab} = payload
@@ -558,14 +481,9 @@ class RouterStore extends Store
             @emit 'change'
 
 
-        handle ActionTypes.ADD_ACCOUNT_REQUEST, ({value}) ->
-            _newAccountWaiting = true
-            @emit 'change'
-
-
         handle ActionTypes.ADD_ACCOUNT_SUCCESS, ({account}) ->
             _timerRouteChange = setTimeout =>
-                _newAccountWaiting = false
+                # _newAccountWaiting = false
                 _action            = MessageActions.SHOW_ALL
 
                 _setCurrentAccount account.id, account.inboxMailbox
@@ -575,64 +493,9 @@ class RouterStore extends Store
             , 5000
 
 
-        handle ActionTypes.ADD_ACCOUNT_FAILURE, ({error}) ->
-            _newAccountWaiting = false
-            _setError error
-            @emit 'change'
-
-
-        handle ActionTypes.CHECK_ACCOUNT_REQUEST, () ->
-            _newAccountChecking = true
-            @emit 'change'
-
-
-        handle ActionTypes.CHECK_ACCOUNT_SUCCESS, () ->
-            _newAccountChecking = false
-            @emit 'change'
-
-
-        handle ActionTypes.CHECK_ACCOUNT_FAILURE, ({error}) ->
-            _newAccountChecking = false
-            _setError error
-            @emit 'change'
-
-
-        handle ActionTypes.EDIT_ACCOUNT_REQUEST, ({value}) ->
-            _newAccountWaiting = true
-            @emit 'change'
-
-
-        handle ActionTypes.EDIT_ACCOUNT_SUCCESS, ({rawAccount}) ->
-            _newAccountWaiting = false
-            _checkForNoMailbox rawAccount
-            _clearError()
-            @emit 'change'
-
-
-        handle ActionTypes.EDIT_ACCOUNT_FAILURE, ({error}) ->
-            _newAccountWaiting = false
-            _setError error
-            @emit 'change'
-
-
-        handle ActionTypes.MESSAGE_FETCH_REQUEST, ->
-            _refreshMailbox = true
-            @emit 'change'
-
-
-        handle ActionTypes.MESSAGE_FETCH_SUCCESS, (payload) ->
-            {lastPage} = payload
-
+        handle ActionTypes.MESSAGE_FETCH_SUCCESS, ({lastPage}) ->
             # Save last message references
             _lastPage[_URI] = lastPage if lastPage?
-
-            _refreshMailbox = false
-
-            @emit 'change'
-
-
-        handle ActionTypes.MESSAGE_FETCH_FAILURE, ->
-            _refreshMailbox = false
             @emit 'change'
 
 
@@ -654,21 +517,6 @@ class RouterStore extends Store
 
             # Update URL if it didnt
             _updateURL()
-            @emit 'change'
-
-
-        handle ActionTypes.REFRESH_REQUEST, ->
-            _refreshMailbox = true
-            @emit 'change'
-
-
-        handle ActionTypes.REFRESH_SUCCESS, ->
-            _refreshMailbox = false
-            @emit 'change'
-
-
-        handle ActionTypes.REFRESH_FAILURE, ->
-            _refreshMailbox = false
             @emit 'change'
 
 

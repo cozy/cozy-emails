@@ -214,12 +214,12 @@ class NotificationStore extends Store
         #         key = "account creation ok configuration needed"
 
 
-        handle ActionTypes.EDIT_ACCOUNT_FAILURE, ({error}) ->
-            AppDispatcher.waitFor [AccountStore.dispatchToken]
-            _showNotification
-               message: RouterStore.getAlertErrorMessage()
-               errors: RouterStore.getRawErrors()
-               autoclose: true
+        # handle ActionTypes.EDIT_ACCOUNT_FAILURE, ({error}) ->
+        #     AppDispatcher.waitFor [AccountStore.dispatchToken]
+        #     _showNotification
+        #        message: RouterStore.getAlertErrorMessage()
+        #        errors: RouterStore.getRawErrors()
+        #        autoclose: true
 
         handle ActionTypes.EDIT_ACCOUNT_SUCCESS, ->
             _showNotification

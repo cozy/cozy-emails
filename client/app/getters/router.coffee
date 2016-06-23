@@ -1,20 +1,20 @@
-AccountStore          = require '../stores/account_store'
-MessageStore          = require '../stores/message_store'
-NotificationStore     = require '../stores/notification_store'
-RefreshesStore        = require '../stores/refreshes_store'
-RequestsInFlightStore = require '../stores/requests_in_flight_store'
-RouterStore           = require '../stores/router_store'
-SearchStore           = require '../stores/search_store'
+{MessageActions
+AccountActions} = require '../constants/app_constants'
 
+_         = require 'lodash'
+Immutable = require 'immutable'
+moment    = require 'moment'
+
+AccountStore      = require '../stores/account_store'
+MessageStore      = require '../stores/message_store'
+NotificationStore = require '../stores/notification_store'
+RequestsStore     = require '../stores/requests_store'
+RouterStore       = require '../stores/router_store'
+SearchStore       = require '../stores/search_store'
+
+FileGetter    = require '../getters/file'
 MessageGetter = require '../getters/message'
 
-_ = require 'lodash'
-Immutable = require 'immutable'
-moment      = require 'moment'
-
-FileGetter = require '../getters/file'
-
-{MessageActions, MailboxFlags} = require '../constants/app_constants'
 
 module.exports =
 
@@ -38,11 +38,54 @@ module.exports =
         RouterStore.getURL params
 
 
+    getInboxID: (accountID) ->
+        accountID ?= @getAccountID()
+        AccountStore.getInbox(accountID)?.get 'id'
+
+
+    getInboxMailboxes: (accountID) ->
+        RouterStore.getAllMailboxes(accountID).filter (mailbox) ->
+            AccountStore.isInbox accountID, mailbox.get('id'), true
+
+
+    getOtherMailboxes: (accountID) ->
+        RouterStore.getAllMailboxes(accountID).filter (mailbox) ->
+            not AccountStore.isInbox accountID, mailbox.get('id'), true
+
+
+    # Sometimes we need a real URL
+    # insteadof changing route params with actionCreator
+    # Usefull to allow user
+    # to open accountInbox into a new window
+    getInboxURL: (accountID) ->
+        mailboxID = @getInboxID accountID
+        action = MessageActions.SHOW_ALL
+        resetFilter = true
+        return @getURL {action, mailboxID, resetFilter}
+
+
+    # Sometimes we need a real URL
+    # insteadof changing route params with actionCreator
+    # Usefull to allow user
+    # to open accountConfiguration into a new window
+    getConfigURL: (accountID) ->
+        mailboxID = @getInboxID accountID
+        action = AccountActions.EDIT
+        resetFilter = true
+        @getURL {action, mailboxID, resetFilter}
+
+
+    getComposeURL: ->
+        @getURL {action: MessageActions.CREATE}
+
+
+    getCreateAccountURL: ->
+        @getURL {action: AccountActions.CREATE}
+
+
     getAction: ->
         RouterStore.getAction()
 
-    getRequestStatus: (request) ->
-        RequestsInFlightStore.getRequests().get request
 
     getReplyMessage: (messageID) ->
         isReply = @getAction() is MessageActions.EDIT
@@ -67,10 +110,6 @@ module.exports =
 
     getSearch: ->
         SearchStore.getCurrentSearch()
-
-
-    getProgress: (accountID) ->
-        RefreshesStore.getRefreshing().get accountID
 
 
     getSelectedTab: ->
@@ -103,6 +142,10 @@ module.exports =
         RouterStore.getConversationID()
 
 
+    getSubject: ->
+        @getMessage()?.get 'subject'
+
+
     getMessageID: ->
         RouterStore.getMessageID()
 
@@ -111,30 +154,25 @@ module.exports =
         conversationID is @getConversationID()
 
 
-    getMailbox: (mailboxID) ->
-        RouterStore.getMailbox mailboxID
-
-
-    getCurrentMailbox: ->
-        RouterStore.getMailbox()
-
-
-    getInbox: (accountID) ->
+    getMailbox: (accountID, mailboxID) ->
         accountID ?= @getAccountID()
-        RouterStore.getInbox accountID
+        mailboxID ?= @getMailboxID()
+        AccountStore.getMailbox accountID, mailboxID
 
 
-    getUnreadLength: ->
-        @getInbox()?.get 'nbUnread'
+    getUnreadLength: (accountID) ->
+        accountID ?= @getAccountID()
+        AccountStore.getInbox(accountID)?.get 'nbUnread'
 
 
-    getFlaggedLength: ->
-        @getInbox()?.get 'nbFlagged'
+    getFlaggedLength: (accountID) ->
+        accountID ?= @getAccountID()
+        AccountStore.getInbox(accountID)?.get 'nbFlagged'
 
 
     getTrashMailbox: (accountID) ->
         accountID ?= @getAccountID()
-        RouterStore.getTrashMailbox accountID
+        AccountStore.getTrashMailbox accountID
 
 
     getAccounts: ->
@@ -159,27 +197,35 @@ module.exports =
 
 
     getLogin: ->
-        @getCurrentMailbox()?.get 'login'
+        @getMailbox()?.get 'login'
 
 
-    getMailboxes: ->
-        RouterStore.getAllMailboxes()
+    isMailboxExist: ->
+        accountID = @getAccountID()
+
+        # If current mailboxID is inbox
+        # test Inbox instead of 1rst mailbox
+        if (isInbox = AccountStore.isInbox accountID, @getMailboxID())
+            # Gmail issue
+            # Test \All tag insteadof \INBOX
+            mailbox = AccountStore.getAllMailbox accountID
+            mailbox ?= AccountStore.getInbox accountID
+
+        mailbox ?= @getMailbox()
+        mailbox?.get('lastSync')?
 
 
     isMailboxLoading: ->
-        RouterStore.isRefresh()
+        RequestsStore.isRefreshing()
 
 
-    getTags: (message) ->
-        mailboxID = @getMailboxID()
-        mailboxesIDs = Object.keys message.get 'mailboxIDs'
-        return _.uniq _.compact mailboxesIDs.map (id) =>
-            if (mailbox = @getMailbox id)
-                attribs = mailbox.get('attribs') or []
-                isGlobal = MailboxFlags.ALL in attribs
-                isEqual = mailboxID is id
-                unless (isEqual or isGlobal)
-                    return mailbox?.get 'label'
+    isRefreshError: ->
+        RequestsStore.isRefreshError()
+
+
+    isMailboxIndexing: ->
+        accountID = @getAccountID()
+        RequestsStore.isIndexing accountID
 
 
     formatMessage: (message) ->
@@ -193,15 +239,23 @@ module.exports =
             resources   : _getResources()
             isDraft     : RouterStore.isDraft message
             isDeleted   : RouterStore.isDeleted message
-            isFlagged   : RouterStore.isFlagged message
-            isUnread    : RouterStore.isUnread message
+            isFlagged   : @isFlagged message
+            isUnread    : @isUnread message
         }
 
 
+    isFlagged: (message) ->
+        RouterStore.isFlagged message
+
+
+    isUnread: (message) ->
+        RouterStore.isUnread message
+
+
     getEmptyMessage: ->
-        if RouterStore.isUnread()
+        if @isUnread()
             return  t 'no unseen message'
-        if RouterStore.isFlagged()
+        if @isFlagged()
             return  t 'no flagged message'
         if RouterStore.isAttached()
             return t 'no filter message'

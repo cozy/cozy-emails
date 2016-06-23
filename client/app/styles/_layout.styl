@@ -111,20 +111,25 @@ body
 
 
 .app + [role=complementary]
-    // Backdrop definition
-    position absolute
-    top      0
-    left     0
-    bottom   0
-    right    0
-    background-color rgba(0, 0, 0, .45)
+
+    &.backdrop
+        // Backdrop definition
+        position         absolute
+        top              0
+        left             0
+        bottom           0
+        right            0
+        overflow-y       auto
+        background-color rgba(0, 0, 0, .45)
+
+    .backdrop-wrapper
+        padding 2em
 
     // Modalbox
     section
-        position  absolute
-        min-width 45vw
-        max-width 90vw
-        top       1em
+        position  relative
+        min-width (450/16)em
+        max-width (640/16)em
         left      50%
         transform translateX(-50%)
 
@@ -135,7 +140,8 @@ body
         // Header
         h1
             margin         0
-            padding-bottom .5em
+            margin-bottom  .5em
+            padding-bottom .25em
             border-bottom  1px solid grey-01
 
         // Actions
@@ -182,14 +188,60 @@ body
             border-color red
 
         // Forms
+        form
+            display   flex
+            flex-wrap wrap
+
         label
+            flex           1
             display        flex
             flex-direction column
             margin         .5em 0
 
+            &:nth-child(odd)
+                margin-right 1em
+
+            input
+            select
+                width 100%
+
+        fieldset
+        .alert
+            flex 1 100%
+
+        .server
+            display      flex
+            flex-wrap    wrap
+            margin-top   1em
+            padding-left 1em
+            border-left  1px dotted grey-05
+
+            h2
+                width      100%
+                margin-top 0
+
+            label
+                margin .5em 0
+
+            label[for$=login]
+            label[for$=password]
+                flex 1 0 40%
+
+            label[for$=login]
+                margin-right 1em
+
+            label[for$=host]
+                flex         1 50%
+                margin-right 1em
+
+            label[for$=security]
+                flex 1 10%
+                margin-left 1em
+
+
     // Expanded fieldsets
     fieldset[aria-expanded]
-        margin 2em 0 0
+        margin 1em 0 0
 
         legend
             margin         0
@@ -217,6 +269,27 @@ body
         legend::before
             content '⬇'
 
+    // Servers styles
     .content
-        margin      0
-        padding-top 1em
+        h2
+            font-size      1em
+            font-weight    normal
+            color          basecolor
+            text-transform uppercase
+
+        input[name$=port]
+            text-align right
+
+        span
+        input
+            transition opacity 350ms
+
+    .server:not(.customized)
+        [for$=login]
+        [for$=password]
+            span
+            input
+                opacity .45
+
+        input:focus
+            opacity 1

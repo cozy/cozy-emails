@@ -38,6 +38,8 @@ module.exports =
         'MAILBOX_SELECT_ALL'        : 'MAILBOX_SELECT_ALL'
 
         # Message
+        'RECEIVE_ACCOUNT_CREATE'        : 'RECEIVE_ACCOUNT_CREATE'
+        'RECEIVE_ACCOUNT_UPDATE'        : 'RECEIVE_ACCOUNT_UPDATE'
         'RECEIVE_RAW_MESSAGE'           : 'RECEIVE_RAW_MESSAGE'
         'RECEIVE_RAW_MESSAGES'          : 'RECEIVE_RAW_MESSAGES'
         'RECEIVE_RAW_MESSAGE_REALTIME'  : 'RECEIVE_RAW_MESSAGE_REALTIME'
@@ -45,6 +47,7 @@ module.exports =
         'MESSAGE_SEND_SUCCESS'          : 'MESSAGE_SEND_SUCCESS'
         'MESSAGE_SEND_FAILURE'          : 'MESSAGE_SEND_FAILURE'
         'RECEIVE_MESSAGE_DELETE'        : 'RECEIVE_MESSAGE_DELETE'
+        'RECEIVE_MAILBOX_CREATE'        : 'RECEIVE_MAILBOX_CREATE'
         'RECEIVE_MAILBOX_UPDATE'        : 'RECEIVE_MAILBOX_UPDATE'
 
         'MESSAGE_TRASH_REQUEST'         : 'MESSAGE_TRASH_REQUEST'
@@ -96,9 +99,10 @@ module.exports =
         'CLEAR_TOASTS'              : 'CLEAR_TOASTS'
 
         # Refreshes
+        'RECEIVE_INDEXES_REQUEST'      : 'RECEIVE_INDEXES_REQUEST'
+        'RECEIVE_INDEXES_COMPLETE'     : 'RECEIVE_INDEXES_COMPLETE'
         'RECEIVE_REFRESH_UPDATE'       : 'RECEIVE_REFRESH_UPDATE'
         'RECEIVE_REFRESH_STATUS'       : 'RECEIVE_REFRESH_STATUS'
-        'RECEIVE_REFRESH_DELETE'       : 'RECEIVE_REFRESH_DELETE'
         'RECEIVE_REFRESH_NOTIF'        : 'RECEIVE_REFRESH_NOTIF'
 
         'REFRESH_REQUEST'              : 'REFRESH_REQUEST'
@@ -111,9 +115,11 @@ module.exports =
 
 
     Requests:
-        'DISCOVER_ACCOUNT': 'DISCOVER_ACCOUNT'
-        'CHECK_ACCOUNT':    'CHECK_ACCOUNT'
-        'ADD_ACCOUNT':      'ADD_ACCOUNT'
+        'DISCOVER_ACCOUNT':     'DISCOVER_ACCOUNT'
+        'CHECK_ACCOUNT':        'CHECK_ACCOUNT'
+        'ADD_ACCOUNT':          'ADD_ACCOUNT'
+        'REFRESH_MAILBOX':      'REFRESH_MAILBOX'
+        'INDEX_MAILBOX':        'INDEX_MAILBOX'
 
 
     RequestStatus:
@@ -172,12 +178,21 @@ module.exports =
         'UNSEEN'       : 'unseen'
 
     MailboxFlags:
+        'INBOX'   :  '\\Inbox'
         'DRAFT'   :  '\\Drafts'
         'SENT'    :  '\\Sent'
         'TRASH'   :  '\\Trash'
         'ALL'     :  '\\All'
         'SPAM'    :  '\\Junk'
         'FLAGGED' :  '\\Flagged'
+
+    MailboxSpecial:
+        'inboxMailbox'  : 'INBOX'
+        'draftMailbox'  : 'DRAFT'
+        'sentMailbox'   : 'SENT'
+        'trashMailbox'  : 'TRASH'
+        'junkMailbox'   : 'SPAM'
+        'allMailbox'    : 'ALL'
 
     FlagsConstants:
         SEEN   : '\\Seen'

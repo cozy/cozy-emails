@@ -41,6 +41,20 @@ label
 input
     color #333
 
+button[aria-busy=true]
+    &::before
+        content           ''
+        display           inline-block
+        width             1.2em
+        height            1.2em
+        margin-right      1em
+        vertical-align    middle
+        background-image  embedurl("../assets/images/spinner-white.svg", "utf8")
+        background-repeat no-repeat
+        background-size   1.2em
+        @extend           .spin-animate
+
+
 .form-horizontal
     .radio-inline, .checkbox-inline
         padding-top .66em
@@ -99,4 +113,3 @@ input
 .rt-editor.medium-editor-placeholder:after
     top        0.5em
     font-style normal
-

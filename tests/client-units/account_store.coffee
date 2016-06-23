@@ -21,8 +21,8 @@ describe 'AccountStore initialized without account', ->
     it 'Then the default account is still null', ->
         should.not.exist AccountStore.getDefault()
 
-    it 'Then AccountStore.isWaiting is true', ->
-        RouterStore.isWaiting().should.be.true
+    # it 'Then AccountStore.isWaiting is true', ->
+    #     RouterStore.isWaiting().should.be.true
 
     it 'When i receive a successful response (with no mailboxes)', ->
         dispatch ActionTypes.ADD_ACCOUNT_SUCCESS, account:
@@ -40,12 +40,12 @@ describe 'AccountStore initialized without account', ->
     it 'Then the created account should be selected', ->
         RouterStore.getAccountID().should.equal 'testid'
 
-    it 'Then AccountStore.isWaiting is false', ->
-        RouterStore.isWaiting().should.be.false
+    # it 'Then AccountStore.isWaiting is false', ->
+    #     RouterStore.isWaiting().should.be.false
 
-    it 'Then AccountStore should have a nomailboxes error', ->
-        noMailboxErr = RouterStore.getErrors().get('nomailboxes')
-        noMailboxErr.message.should.equal 'translated config error nomailboxes'
+    # it 'Then AccountStore should have a nomailboxes error', ->
+    #     noMailboxErr = RouterStore.getErrors().get('nomailboxes')
+    #     noMailboxErr.message.should.equal 'translated config error nomailboxes'
 
     it 'When i send a request to create a second account', ->
         dispatch ActionTypes.ADD_ACCOUNT_REQUEST, {}
@@ -53,8 +53,8 @@ describe 'AccountStore initialized without account', ->
     it 'Then the default account is the previously created', ->
         AccountStore.getDefault().get('id').should.equal 'testid'
 
-    it 'Then AccountStore.isWaiting is true', ->
-        RouterStore.isWaiting().should.be.true
+    # it 'Then AccountStore.isWaiting is true', ->
+    #     RouterStore.isWaiting().should.be.true
 
     it 'When i receive an error response', ->
         dispatch ActionTypes.ADD_ACCOUNT_FAILURE, error:
@@ -65,15 +65,15 @@ describe 'AccountStore initialized without account', ->
     it 'Then the default account is still the same', ->
         AccountStore.getDefault().get('id').should.equal 'testid'
 
-    it 'Then RouterStore.isWaiting is false', ->
-        RouterStore.isWaiting().should.be.false
+    # it 'Then RouterStore.isWaiting is false', ->
+    #     RouterStore.isWaiting().should.be.false
 
-    it 'Then RouterStore should have some errors', ->
-        should.exist RouterStore.getErrors().get('smtp')
-        error = RouterStore.getErrors().get('smtp')
-        error.message.should.equal 'translated config error smtp'
-        error.should.equal RouterStore.getErrors().get('smtpLogin')
-        error.should.equal RouterStore.getErrors().get('smtpPort')
+    # it 'Then RouterStore should have some errors', ->
+    #     should.exist RouterStore.getErrors().get('smtp')
+    #     error = RouterStore.getErrors().get('smtp')
+    #     error.message.should.equal 'translated config error smtp'
+    #     error.should.equal RouterStore.getErrors().get('smtpLogin')
+    #     error.should.equal RouterStore.getErrors().get('smtpPort')
 
 TEST_ACCOUNT =
     id: 'testid'

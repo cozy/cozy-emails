@@ -8,9 +8,10 @@ module.exports = React.createClass
     displayName: 'ToolboxMailboxes'
 
     getDefaultProps: ->
-        mailboxID = RouterGetter.getCurrentMailbox()?.get 'id'
+        mailboxID = RouterGetter.getMailboxID()
         mailboxes = RouterGetter.getMailboxes()?.filter (mailbox, id) ->
             id isnt mailboxID
+
         {mailboxes}
 
     render: ->
