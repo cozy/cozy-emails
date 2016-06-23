@@ -1,3 +1,4 @@
+_         = require 'underscore'
 Immutable = require 'immutable'
 
 Store = require '../libs/flux/store/store'
@@ -21,37 +22,38 @@ class ContactStore extends Store
     _results  = Immutable.OrderedMap()
 
     _import = (rawResults) ->
-        if rawResults?
+        return unless rawResults
 
-            if not Array.isArray rawResults
-                rawResults = [ rawResults ]
+        rawResults = [ rawResults ] unless Array.isArray rawResults
 
-            convert = (map) ->
+        convert = (map) ->
+            # Extract each contact from rawResults
+            rawResults.forEach (result) ->
+                contact = Immutable.Map(result).delete('docType')
 
-                rawResults.forEach (rawResult) ->
-                    addresses = []
+                # Get avatar from binary if exists, or fallback to datapoint
+                if result._attachments?.picture
+                    avatar = """
+                        contacts/#{result.id}/picture.jpg
+                    """
+                else
+                    _point = _.findWhere(result.datapoints?, {name: 'avatar'})
+                    avatar = _point.value if _point
 
-                    rawResult.datapoints?.forEach (point) ->
-                        if point.name is 'email'
-                            addresses.push point.value
-                        if point.name is 'avatar'
-                            rawResult.avatar = point.value
+                contact = contact.set 'avatar', avatar if avatar
 
-                    delete rawResult.docType
-                    if rawResult._attachments?.picture
-                        rawResult.avatar = """
-                            contacts/#{rawResult.id}/picture.jpg
-                        """
+                # For eavh address, bind a contact w/ the relevant address to
+                # it into the global map (see
+                # Immutable.OrderedMap.withMutations for more informations).
+                result.datapoints?.forEach (datapoint) ->
+                    return unless datapoint.name is 'email'
+                    address = datapoint.value
+                    map.set address, contact.set 'address', address
 
-                    addresses.forEach (address) ->
-                        rawResult.address = address
-                        contact = Immutable.Map rawResult
-                        map.set address, contact
+        _results  = _results.withMutations convert
+        _contacts = _contacts.withMutations convert
 
-            _results  = _results.withMutations convert
-            _contacts = _contacts.withMutations convert
-
-    _import window.contacts
+    _import window?.contacts
 
 
     ###

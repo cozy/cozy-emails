@@ -221,8 +221,8 @@ RouterActionCreator =
         timestamp = Date.now()
 
         AppDispatcher.dispatch
-        type: ActionTypes.MESSAGE_FLAGS_REQUEST
-        value: {target, action}
+            type: ActionTypes.MESSAGE_FLAGS_REQUEST
+            value: {target, action}
 
         XHRUtils.batchFlag {target, action}, (error, updated) =>
             if error

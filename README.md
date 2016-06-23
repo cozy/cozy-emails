@@ -70,11 +70,6 @@ $ npm run build
 
 Please, do not push your local builds in your PR, as long as we make the build process when we release the app.
 
-If you need to run the tests suite to your build:
-
-```sh
-$ npm run test:build
-```
 
 ### Naming conventions
 

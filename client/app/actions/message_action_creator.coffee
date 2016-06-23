@@ -24,7 +24,7 @@ MessageActionCreator =
 
     displayImages: (props={})->
         AppDispatcher.dispatch
-            type: ActionTypes.SETTINGS_UPDATE_RESQUEST
+            type: ActionTypes.SETTINGS_UPDATE_REQUEST
             value: props
 
 

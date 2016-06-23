@@ -25,7 +25,7 @@ class MessageStore extends Store
 
         # This prevent to override local updates
         # with older ones from server
-        messages?.forEach (message) -> _saveMessage message, timestamp
+        messages?.forEach (msg) -> _saveMessage msg, timestamp if msg
 
         # Shortcut to know conversationLength
         # withount loading all massages of the conversation
@@ -45,14 +45,14 @@ class MessageStore extends Store
         if not (timestamp? and updated? and updated > timestamp) and
            not message._deleted # deleted draft are empty, don't update them
 
-            message.attachments   ?= []
+            attachments = message.attachments or Immutable.List []
+
             message.date          ?= new Date().toISOString()
             message.createdAt     ?= message.date
             message.flags         ?= []
-            message.hasAttachments = message.attachments.length > 0
-            message.attachments = message.attachments.map (file) ->
+            message.hasAttachments = attachments.size > 0
+            message.attachments    = Immutable.List attachments.map (file) ->
                 Immutable.Map file
-            message.attachments = Immutable.List message.attachments
 
             # message loaded from fixtures for test purpose have a docType
             # that may cause some troubles
@@ -139,7 +139,7 @@ class MessageStore extends Store
             @emit 'change'
 
 
-        handle ActionTypes.SETTINGS_UPDATE_RESQUEST, ({messageID, displayImages}) ->
+        handle ActionTypes.SETTINGS_UPDATE_REQUEST, ({messageID, displayImages}) ->
             # Update settings into component,
             # but not definitly into settingsStore
             if (message = _messages.get messageID)
