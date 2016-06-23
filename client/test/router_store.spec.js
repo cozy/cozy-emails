@@ -390,7 +390,6 @@ describe('Router Store', () => {
                        fixtures.account.mailboxes[0]);
       const accountID = fixtures.account.id
       const id2 = fixtures.account.mailboxes[1].id;
-      console.log(id2);
       assert.deepEqual(routerStore.getMailbox(accountID, id2).toObject(),
                        fixtures.account.mailboxes[1]);
     });
