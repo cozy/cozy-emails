@@ -125,7 +125,7 @@ const fixtures = {
 };
 
 
-describe.skip('Router Store', () => {
+describe('Router Store', () => {
   let routerStore;
   let dispatcher;
 
