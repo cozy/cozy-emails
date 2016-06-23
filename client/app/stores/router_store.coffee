@@ -400,7 +400,7 @@ class RouterStore extends Store
 
     _updateURL = ->
         currentURL = _self.getCurrentURL isServer: false
-        if location.hash isnt currentURL
+        if location? and location.hash isnt currentURL
             _router.navigate currentURL
 
 

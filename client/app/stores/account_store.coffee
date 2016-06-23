@@ -32,7 +32,9 @@ class AccountStore extends Store
             # TODO: should be done server side
             _.forEach MailboxSpecial, (type, value) ->
                 unless account[value]?
-                    if MailboxFlags[type] is mailbox.attribs.join(',')
+                    if mailbox.attribs? and \
+                    mailbox.attribs.length > 0 \
+                    and MailboxFlags[type] is mailbox.attribs.join(',')
                         account[value] = mailbox.id
 
                     # Gmail Inbox has /noselect attribs
