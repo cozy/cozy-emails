@@ -48,8 +48,10 @@ class RouterStore extends Store
     _conversationID = null
     _messageID = null
     _messagesLength = 0
+    _nearestMessage = null
 
     _timerRouteChange = null
+    _timer = {}
 
 
     getRouter: ->
@@ -186,14 +188,22 @@ class RouterStore extends Store
         AccountStore.getByID accountID
 
 
-    getAccountID: ->
+    getAccountID: (mailboxID) ->
+        if mailboxID
+            return AccountStore.getByMailbox('mailboxID')?.get 'id'
         unless _accountID
             return AccountStore.getDefault()?.get 'id'
         else
             return _accountID
 
 
-    getMailboxID: ->
+    getMailboxID: (messageID) ->
+        if messageID
+            # Get mailboxID from message first
+            mailboxIDs = MessageStore.getByID(messageID)?.get 'mailboxIDs'
+            if _mailboxID in _.keys(mailboxIDs)
+                return _mailboxID
+
         unless _mailboxID
             return AccountStore.getDefault()?.get 'inboxMailbox'
         else
@@ -215,7 +225,12 @@ class RouterStore extends Store
         _tab
 
 
-    _setCurrentMessage = (conversationID, messageID) ->
+    _setCurrentMessage = (conversationID=null, messageID=null) ->
+        # Return to message list
+        # if no messages are found
+        unless messageID
+            _action = MessageActions.SHOW_ALL
+
         _conversationID = conversationID
         _messageID = messageID
         _messagesLength = 0
@@ -224,7 +239,9 @@ class RouterStore extends Store
     getConversationID: (messageID) ->
         _conversationID
 
-
+    # Get default message of a conversation
+    # if conversationID is in argument
+    # otherwhise, return global messageID (from URL)
     getMessageID: (conversationID) ->
         if conversationID?
             messages = @getConversation conversationID
@@ -240,26 +257,17 @@ class RouterStore extends Store
 
     isUnread: (message) ->
         flags = _getFlags message
-        if message?
-            return MessageFlags.SEEN not in flags
-        else
-            return MessageFilter.UNSEEN in flags
+        MessageStore.isUnread {flags, message}
 
 
     isFlagged: (message) ->
         flags = _getFlags message
-        if message?
-            MessageFlags.FLAGGED in flags
-        else
-            MessageFilter.FLAGGED in flags
+        MessageStore.isFlagged {flags, message}
 
 
     isAttached: (message) ->
         flags = _getFlags message
-        if message?
-            MessageFlags.ATTACH in flags
-        else
-            MessageFilter.ATTACH in flags
+        MessageStore.isFlagged {flags, message}
 
 
     isDeleted: (message) ->
@@ -300,37 +308,59 @@ class RouterStore extends Store
 
 
     isPageComplete: ->
-        if (messageID = @getMessageID())
-            unless (message = MessageStore.getByID(messageID))?.size
-                return false
+        # Do not infinite fetch
+        # when message doesnt exist anymore
+        messageID = @getMessageID()
+        if messageID and not MessageStore.getByID(messageID)?.size
+            return @hasNextPage()
         (_messagesLength + 1) >= MSGBYPAGE
 
 
-    getMessagesList: (mailboxID) ->
+    # We dont filter for type from and dest because it is
+    # complicated by collation and name vs address.
+    filterFlags: (message) =>
+        if message and message not instanceof Immutable.Map
+            message = Immutable.Map message
+        if @isFlagged()
+            return @isFlagged message
+        if @isAttached()
+            return @isAttached message
+        if @isUnread()
+            return @isUnread message
+        return true
+
+
+    getMessagesList: (accountID, mailboxID) ->
+        accountID ?= @getAccountID()
         mailboxID ?= @getMailboxID()
 
-        # We dont filter for type from and dest because it is
-        # complicated by collation and name vs address.
-        _filterFlags = (message) =>
-            if @isFlagged()
-                return @isFlagged message
-            if @isAttached()
-                return @isAttached message
-            if @isUnread()
-                return @isUnread message
-            return true
+        inboxID = (inbox = AccountStore.getInbox accountID).get 'id'
+        inboxTotal = inbox.get 'nbTotal'
+        isInbox = AccountStore.isInbox accountID, mailboxID
 
-        uniq = {}
         {sort} = @getFilter()
         sortOrder = parseInt "#{sort.charAt(0)}1", 10
+
+        conversations = {}
         messages = MessageStore.getAll()?.filter (message) =>
+            # do not have twice INBOX
+            # see OVH twice Inbox issue
+            # FIXME: should be executed server side
+            # add inboxID for its children
+            _.keys(message.get 'mailboxIDs').forEach (id) ->
+                isInboxChild = AccountStore.isInbox accountID, id, true
+                if not isInbox and isInboxChild
+                    mailboxIDs = message.get 'mailboxIDs'
+                    mailboxIDs[inboxID] = inboxTotal
+                    message.set 'mailboxIDs', mailboxIDs
+                    return true
+
             # Display only last Message of conversation
-            conversationID = message.get 'conversationID'
-            unless (exist = uniq[conversationID])
-                uniq[conversationID] = true
+            path = [message.get('mailboxID'), message.get('conversationID')].join '/'
+            conversations[path] = true unless (exist = conversations[path])
 
             # Should have the same flags
-            hasSameFlag = _filterFlags message
+            hasSameFlag = @filterFlags message
 
             # Message should be in mailbox
             inMailbox = mailboxID of message.get 'mailboxIDs'
@@ -344,54 +374,64 @@ class RouterStore extends Store
         return messages
 
 
-    getConversation: (conversationID) ->
+    # Get next message from conversation:
+    # - from the same mailbox
+    # - with the same filters
+    # - otherwise get previous message
+    # If conversation is empty:
+    # - go to next conversation
+    # - otherwise go to previous conversation
+    getNearestMessage: (target={}, type='conversation') ->
+        {messageID, conversationID, mailboxID, accountID} = target
+        unless messageID
+            messageID = _messageID
+            conversationID = _conversationID
+            mailboxID = _mailboxID
+            accountID = _accountID
+
+        if 'conversation' is type
+            conversation = _self.getConversation conversationID, mailboxID
+            messages = Immutable.OrderedMap conversation
+            message = _self.getNextConversation conversation
+            message ?= _self.getPreviousConversation conversation
+            return message if message?.size
+
+        message = _self.getNextConversation()
+        message ?= _self.getPreviousConversation()
+        message
+
+
+    getConversation: (conversationID, mailboxID) ->
         conversationID ?= @getConversationID()
-        MessageStore.getConversation conversationID
-
-
-    getNextConversation: ->
-        messages = @getMessagesList()
-        keys = _.keys messages?.toObject()
-        values = messages?.toArray()
-
-        index = keys.indexOf @getMessageID()
-        values[--index]
-
-
-    getPreviousConversation: ->
-        messages = @getMessagesList()
-        keys = _.keys messages?.toObject()
-        values = messages?.toArray()
-
-        index = keys.indexOf @getMessageID()
-        values[++index]
-
-
-    getConversationLength: ({messageID, conversationID}) ->
         unless conversationID
-            messageID ?= @getMessageID()
-            if (message = MessageStore.getByID messageID)
-                conversationID = message.get 'conversationID'
+            return []
 
+        # Filter messages
+        mailboxID ?= @getMailboxID()
+        messages = MessageStore.getConversation conversationID, mailboxID
+        _.filter messages, @filterFlags
+
+
+    _getConversationIndex = (messages) ->
+        keys = _.map messages, (message) -> message.get 'id'
+        keys.indexOf _messageID
+
+
+    getNextConversation: (messages) ->
+        messages ?= @getMessagesList()?.toArray()
+        index = _getConversationIndex messages
+        messages[--index]
+
+
+    getPreviousConversation: (messages) ->
+        messages ?= @getMessagesList()?.toArray()
+        index = _getConversationIndex messages
+        messages[++index]
+
+
+    getConversationLength: (conversationID) ->
+        conversationID ?= @getConversationID()
         MessageStore.getConversationLength conversationID
-
-
-    gotoNextMessage: ->
-        messages = MessageStore.getAll()
-        keys = _.keys messages?.toObject()
-        values = messages?.toArray()
-
-        index = keys.indexOf @getMessageID()
-        values[--index]
-
-
-    gotoPreviousMessage: ->
-        messages = MessageStore.getAll()
-        keys = _.keys messages?.toObject()
-        values = messages?.toArray()
-
-        index = keys.indexOf @getMessageID()
-        values[++index]
 
 
     getURI: ->
@@ -418,7 +458,10 @@ class RouterStore extends Store
         # Get queryString of URI params
         query = _getURIQueryParams {filter: _currentFilter}
 
-        _URI = "#{mailboxID}#{query}"
+        if mailboxID?
+            _URI = "#{mailboxID}#{query}"
+        else
+            _URI = _action
 
 
     ###
@@ -429,6 +472,10 @@ class RouterStore extends Store
         handle ActionTypes.ROUTE_CHANGE, (payload={}) ->
             # Ensure all stores that listen ROUTE_CHANGE have vanished
             AppDispatcher.waitFor [RequestsStore.dispatchToken]
+
+            # Make sure that MessageStore is up to date
+            # before gettings data from it
+            AppDispatcher.waitFor [MessageStore.dispatchToken]
 
             clearTimeout _timerRouteChange
 
@@ -483,9 +530,7 @@ class RouterStore extends Store
 
         handle ActionTypes.ADD_ACCOUNT_SUCCESS, ({account}) ->
             _timerRouteChange = setTimeout =>
-                # _newAccountWaiting = false
-                _action            = MessageActions.SHOW_ALL
-
+                _action = MessageActions.SHOW_ALL
                 _setCurrentAccount account.id, account.inboxMailbox
                 _updateURL()
 
@@ -493,9 +538,20 @@ class RouterStore extends Store
             , 5000
 
 
-        handle ActionTypes.MESSAGE_FETCH_SUCCESS, ({lastPage}) ->
+        handle ActionTypes.MESSAGE_FETCH_SUCCESS, ({result, conversationID, lastPage}) ->
             # Save last message references
             _lastPage[_URI] = lastPage if lastPage?
+
+            # If messageID doesnt belong to conversation
+            # message must have been deleted
+            # then get default message from this conversation
+            if conversationID
+                inner = _.find result.messages, (msg) -> msg.id is _messageID
+                unless inner
+                    messageID = @getMessageID conversationID
+                    _setCurrentMessage conversationID, messageID
+                    _updateURL()
+
             @emit 'change'
 
 
@@ -508,15 +564,55 @@ class RouterStore extends Store
             @emit 'change'
 
 
-        handle ActionTypes.MESSAGE_TRASH_SUCCESS, ({target, updated, ref}) ->
-            # Update messageID
-            message = @getNextConversation()
-            conversationID = message?.get 'conversationID'
-            messageID = message?.get 'id'
-            _setCurrentMessage conversationID, messageID
+        handle ActionTypes.MESSAGE_FLAGS_SUCCESS, ->
+            @emit 'change'
 
-            # Update URL if it didnt
-            _updateURL()
+
+        # Get nearest message from message to be deleted
+        # to make redirection if request is successful
+        handle ActionTypes.MESSAGE_TRASH_REQUEST, ({target}) ->
+            if target.messageID is _messageID
+                _nearestMessage = @getNearestMessage target
+            @emit 'change'
+
+
+        # Select nearest message from deleted message
+        # and remove message from mailbox and conversation lists
+        handle ActionTypes.MESSAGE_TRASH_SUCCESS, ({target}) ->
+            if target.messageID is _messageID
+                messageID = _nearestMessage?.get 'id'
+                conversationID = _nearestMessage?.get 'conversationID'
+
+                # Update currentMessage so that:
+                # - all counters should be updated
+                # - all messagesList should be updated too
+                _setCurrentMessage conversationID, messageID
+                _updateURL()
+
+            @emit 'change'
+
+
+        # Delete nearestMessage
+        # because it's beacame useless
+        handle ActionTypes.MESSAGE_TRASH_FAILURE, ({target}) ->
+            if target.messageID is _messageID
+                _nearestMessage = null
+            @emit 'change'
+
+
+        handle ActionTypes.RECEIVE_MESSAGE_DELETE, (messageID, deleted) ->
+            if messageID is _messageID
+                _nearestMessage = @getNearestMessage deleted
+
+                messageID = _nearestMessage?.get 'id'
+                conversationID = _nearestMessage?.get 'conversationID'
+
+                # Update currentMessage so that:
+                # - all counters should be updated
+                # - all messagesList should be updated too
+                _setCurrentMessage conversationID, messageID
+                _updateURL()
+
             @emit 'change'
 
 

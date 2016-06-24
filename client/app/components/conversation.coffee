@@ -12,15 +12,6 @@ LayoutGetter = require '../getters/layout'
 RouterActionCreator = require '../actions/router_action_creator'
 
 
-_getFullConversation = ->
-    {conversationID, messages} = @props
-    length = RouterGetter.getConversationLength {conversationID}
-    if length and length isnt messages?.length
-        setTimeout ->
-            RouterActionCreator.getConversation conversationID
-        , 0
-
-
 _scrollToActive = ->
     el = ReactDOM.findDOMNode @
     activeElement = el.querySelector '[data-message-active="true"]'
@@ -42,29 +33,35 @@ _freezeHeader = ->
 module.exports = React.createClass
     displayName: 'Conversation'
 
-
     componentDidMount: ->
-        _getFullConversation.call @
-        _freezeHeader.call @
-        _scrollToActive.call @
+        unless @props.isConversationLoading
+            _freezeHeader.call @
+            _scrollToActive.call @
+
+
+    componentWillReceiveProps: (nextProps) ->
+        # If this conversation was removed
+        # redirect to messages list from mailbox
+        if nextProps.isConversationLoading and not nextProps.messages.length
+            setTimeout ->
+                RouterActionCreator.closeConversation()
+            , 0
 
 
     componentDidUpdate: ->
-        _getFullConversation.call @
+        unless @props.isConversationLoading
+            _freezeHeader.call @
+            _scrollToActive.call @
 
 
-    renderMessage: (message) ->
-        messageID = message.get 'id'
-        Message _.extend RouterGetter.formatMessage(message),
-            ref             : "message-#{messageID}"
-            key             : "message-#{messageID}"
-            messageID       : @props.messageID
-            isActive        : @props.messageID is messageID
-            message         : message
+    componentWillUnmount: ->
+        setTimeout =>
+            RouterActionCreator.markAsRead @props
+        , 0
 
 
     render: ->
-        unless @props.messages?.length
+        if @props.isConversationLoading
             return section
                 key: 'conversation'
                 className: 'conversation panel'
@@ -82,13 +79,17 @@ module.exports = React.createClass
 
                 button
                     className: 'clickable btn btn-default fa fa-close'
-                    onClick: @closeConversation
+                    onClick: -> RouterActionCreator.closeConversation()
 
             section
                 key: "conversation-#{@props.messageID}-content"
                 ref: 'conversation-content',
-                    @props.messages.map @renderMessage
-
-
-    closeConversation: ->
-        RouterActionCreator.closeConversation()
+                    @props.messages.map (message) =>
+                        messageID = message.get 'id'
+                        Message _.extend RouterGetter.formatMessage(message),
+                            ref             : "message-#{messageID}"
+                            key             : "message-#{messageID}"
+                            messageID       : @props.messageID
+                            isActive        : @props.messageID is messageID
+                            isTrashbox      : RouterGetter.isTrashbox()
+                            message         : message

@@ -20,13 +20,6 @@ module.exports = React.createClass
     displayName: 'Message'
 
 
-    componentWillUnmount: ->
-        # Mark message as read
-        if @props.message?.size and @props.isActive
-            messageID = @props.message.get 'id'
-            RouterActionCreator.mark {messageID}, MessageFlags.SEEN
-
-
     renderAttachement: (file, index, isPreview=false) ->
         file = file?.toJS()
         AttachmentPreview
@@ -62,6 +55,13 @@ module.exports = React.createClass
                 isFlagged: @props.isFlagged
                 isUnread: @props.isUnread
                 active: @props.isActive,
+
+            if @props.isActive and not @props.isTrashbox
+                ToolbarMessage
+                    ref         : "message-#{@props.messageID}-toolbar"
+                    key         : "message-#{@props.messageID}-toolbar"
+                    isFull      : true
+                    messageID   : @props.messageID
 
             if @props.isActive
                 MessageContent

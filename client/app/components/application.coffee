@@ -20,6 +20,7 @@ AccountWizardCreation = React.createFactory require './accounts/wizard/creation'
 RouterStore          = require '../stores/router_store'
 SettingsStore        = require '../stores/settings_store'
 RequestsStore        = require '../stores/requests_store'
+MessageStore         = require '../stores/message_store'
 StoreWatchMixin      = require '../mixins/store_watch_mixin'
 
 RouterGetter = require '../getters/router'
@@ -41,29 +42,30 @@ module.exports = React.createClass
     displayName: 'Application'
 
     mixins: [
-        StoreWatchMixin [SettingsStore, RequestsStore, RouterStore]
+        StoreWatchMixin [SettingsStore, RequestsStore, RouterStore, MessageStore]
     ]
 
     getStateFromStores: (props) ->
         previewSize = LayoutGetter.getPreviewSize()
         className = "layout layout-column layout-preview-#{previewSize}"
 
-        if (mailbox = RouterGetter.getMailbox())
+        if (mailboxID = RouterGetter.getMailboxID())
             return {
-                mailboxID       : (mailboxID = RouterGetter.getMailboxID())
-                accountID       : RouterGetter.getAccountID()
-                conversationID  : RouterGetter.getConversationID()
-                messageID       : RouterGetter.getMessageID()
-                subject         : RouterGetter.getSubject()
-                action          : RouterGetter.getAction()
-                isEditable      : RouterGetter.isEditable()
-                modal           : RouterGetter.getModal()
-                className       : className
-                messages        : RouterGetter.getMessagesList mailboxID
-                conversation    : RouterGetter.getConversation()
-                isMailbox       : RouterGetter.isMailboxExist()
-                isLoading       : RouterGetter.isMailboxLoading()
-                isIndexing      : RouterGetter.isMailboxIndexing()
+                mailboxID               : mailboxID
+                accountID               : RouterGetter.getAccountID()
+                conversationID          : RouterGetter.getConversationID()
+                conversationLength      : RouterGetter.getConversationLength()
+                messageID               : RouterGetter.getMessageID()
+                subject                 : RouterGetter.getSubject()
+                action                  : RouterGetter.getAction()
+                modal                   : RouterGetter.getModal()
+                className               : className
+                lastSync                : RouterGetter.getLastSync()
+                isLoading               : RouterGetter.isMailboxLoading()
+                isConversationLoading   : RouterGetter.isConversationLoading()
+                isIndexing              : RouterGetter.isMailboxIndexing()
+                hasNextPage             : RouterGetter.hasNextPage()
+                hasSettingsChanged      : RouterGetter.hasSettingsChanged()
             }
 
         return {
@@ -77,7 +79,6 @@ module.exports = React.createClass
     # respective tooltip when the component is mounted (DOM elements exist).
     componentDidMount: ->
         AriaTips.bind()
-
 
 
     render: ->
@@ -104,33 +105,34 @@ module.exports = React.createClass
                     nbUnread        : RouterGetter.getUnreadLength()
                     nbFlagged       : RouterGetter.getFlaggedLength()
 
-
                 main null,
                     div
                         className: 'panels',
 
-                        if @state.isMailbox
+                        if @state.lastSync?
                             MessageList
-                                ref             : "messageList"
-                                key             : "messageList-#{@state.mailboxID}"
-                                accountID       : @state.accountID
-                                mailboxID       : @state.mailboxID
-                                messages        : @state.messages
-                                emptyMessages   : RouterGetter.getEmptyMessage()
-                                isAllSelected   : SelectionGetter.isAllSelected()
-                                selection       : SelectionGetter.getSelection @state.messages
-                                hasNextPage     : RouterGetter.hasNextPage()
-                                isMailbox       : @state.isMailbox
-                                isLoading       : @state.isLoading
+                                ref                 : "messageList"
+                                key                 : "messageList-#{@state.mailboxID}-#{@state.conversationLength}"
+                                accountID           : @state.accountID
+                                mailboxID           : @state.mailboxID
+                                conversationID      : @state.conversationID
+                                messages            : (messages = RouterGetter.getMessagesList())
+                                emptyMessages       : RouterGetter.getEmptyMessage()
+                                isAllSelected       : SelectionGetter.isAllSelected()
+                                selection           : SelectionGetter.getSelection messages
+                                hasNextPage         : @state.hasNextPage
+                                lastSync            : @state.lastSync
+                                isLoading           : @state.isLoading
 
-                        if @state.isMailbox and @state.messageID
+                        if @state.lastSync? and @state.messageID
                             Conversation
-                                ref             : "conversation"
-                                key             : "conversation-#{@state.messageID}"
-                                messageID       : @state.messageID
-                                conversationID  : @state.conversationID
-                                subject         : @state.subject
-                                messages        : @state.conversation
+                                ref                     : "conversation"
+                                key                     : "conversation-#{@state.messageID}"
+                                messageID               : @state.messageID
+                                conversationID          : @state.conversationID
+                                subject                 : @state.subject
+                                messages                : RouterGetter.getConversation()
+                                isConversationLoading   : @state.isConversationLoading
 
                         else
                             section

@@ -13,7 +13,6 @@ jQuery      = require 'jquery'
 {MessageActions, MessageFlags} = require '../constants/app_constants'
 
 SettingsStore    = require '../stores/settings_store'
-RouterStore     = require '../stores/router_store'
 
 ContactGetter     = require '../getters/contact'
 
@@ -451,7 +450,7 @@ module.exports =
 
         attachments = message.get 'attachments'
         if html?.length
-            displayImages = message.__displayImages
+            displayImages = message?.get('_displayImages') or false
             props = {html, attachments, displayImages}
             {html, imagesWarning} = _cleanHTML props
 

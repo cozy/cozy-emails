@@ -6,8 +6,6 @@ XHRUtils      = require '../libs/xhr'
 
 MessageStore  = require '../stores/message_store'
 
-refCounter = 1
-
 MessageActionCreator =
 
     receiveRawMessages: (messages) ->
@@ -22,10 +20,11 @@ MessageActionCreator =
             value: message
 
 
-    displayImages: (props={})->
+    displayImages: ({messageID, displayImages=true})->
+        message = MessageStore.getByID messageID
         AppDispatcher.dispatch
             type: ActionTypes.SETTINGS_UPDATE_REQUEST
-            value: props
+            value: {messageID, displayImages}
 
 
     send: (action, message) ->

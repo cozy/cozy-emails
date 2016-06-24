@@ -36,13 +36,17 @@ module.exports = React.createClass
 
 
     render: ->
+        # TODO: rediriger vers le message le plus proche
+        # lorsque le message n'est plus dans la boite
+        # ie. message non lus
+        # console.log 'MESSAGE_LIST', @props.conversationID
         section
             'key'               : "messages-list-#{@props.mailboxID}"
             'ref'               : "messages-list"
             'data-mailbox-id'   : @props.mailboxID
             'className'         : 'messages-list panel'
 
-            unless @props.isMailbox
+            unless @props.lastSync?
                 div className: 'mailbox-loading',
                     Spinner color: 'blue'
                     strong null, t 'emails are fetching'
@@ -82,10 +86,10 @@ module.exports = React.createClass
     renderItem: (message) ->
         messageID = message.get 'id'
         conversationID = message.get 'conversationID'
-        conversationLengths = RouterGetter.getConversationLength {conversationID}
-        isActive = RouterGetter.isCurrentConversation conversationID
+        conversationLengths = RouterGetter.getConversationLength conversationID
+        isActive = @props.conversationID is conversationID
         MessageItem
-            key                 : "messageItem-#{messageID}"
+            key                 : "messageItem-#{messageID}-#{isActive}"
             messageID           : messageID
             flags               : message.get 'flags'
             message             : message

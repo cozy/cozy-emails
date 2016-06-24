@@ -14,12 +14,14 @@ handled by realtime stack and this store should be deprecated.
 Immutable = require 'immutable'
 
 Store = require '../libs/flux/store/store'
+AppDispatcher = require '../libs/flux/dispatcher/dispatcher'
 
 {ActionTypes
 AccountActions
 Requests
 RequestStatus} = require '../constants/app_constants'
 
+MessageStore  = require '../stores/message_store'
 
 _setRefreshes = (refreshes=[]) ->
     new Immutable.Iterable refreshes
@@ -30,11 +32,12 @@ _setRefreshes = (refreshes=[]) ->
 
 _setRequests = ->
     new Immutable.Map
-        "#{Requests.DISCOVER_ACCOUNT}": status: null, res: undefined
-        "#{Requests.CHECK_ACCOUNT}":    status: null, res: undefined
-        "#{Requests.ADD_ACCOUNT}":      status: null, res: undefined
-        "#{Requests.INDEX_MAILBOX}":    status: null, res: undefined
-        "#{Requests.REFRESH_MAILBOX}":  status: null, res: undefined
+        "#{Requests.DISCOVER_ACCOUNT}":     status: null, res: undefined
+        "#{Requests.CHECK_ACCOUNT}":        status: null, res: undefined
+        "#{Requests.ADD_ACCOUNT}":          status: null, res: undefined
+        "#{Requests.INDEX_MAILBOX}":        status: null, res: undefined
+        "#{Requests.REFRESH_MAILBOX}":      status: null, res: undefined
+        "#{Requests.FETCH_CONVERSATION}":   status: null, res: undefined
 
 
 class RequestsStore extends Store
@@ -70,15 +73,15 @@ class RequestsStore extends Store
         0 isnt _refreshes.size or _isLoading Requests.REFRESH_MAILBOX
 
 
-    isFetching: ->
-        0 isnt _refreshes.size or _isLoading Requests.REFRESH_MAILBOX
-
-
     isIndexing: (accountID) ->
         actions = [Requests.INDEX_MAILBOX, Requests.ADD_ACCOUNT]
         _requests.find (request, name) ->
             if name in actions and _isLoading name
                 return request.res?.accountID is accountID
+
+
+    isConversationLoading: ->
+        _isLoading Requests.FETCH_CONVERSATION
 
 
     __bindHandlers: (handle) ->
@@ -87,7 +90,7 @@ class RequestsStore extends Store
         # we won't need to keep track of
         # requests anymore, so we reset them
         handle ActionTypes.ROUTE_CHANGE, ->
-            _requests = _setRequests()
+            _requests ?= _setRequests()
             @emit 'change'
 
 
@@ -169,20 +172,20 @@ class RequestsStore extends Store
             @emit 'change'
 
 
-        handle ActionTypes.MESSAGE_FETCH_REQUEST, ->
-            _requests = _requests.set Requests.REFRESH_MAILBOX,
+        handle ActionTypes.MESSAGE_FETCH_REQUEST, (res) ->
+            _requests = _requests.set Requests.FETCH_CONVERSATION,
                 status: RequestStatus.INFLIGHT, res: undefined
             @emit 'change'
 
 
         handle ActionTypes.MESSAGE_FETCH_SUCCESS, (res) ->
-            _requests = _requests.set Requests.REFRESH_MAILBOX,
-                status: RequestStatus.SUCCESS, res: res
+            _requests = _requests.set Requests.FETCH_CONVERSATION,
+                status: RequestStatus.SUCCESS, res: {res}
             @emit 'change'
 
 
-        handle ActionTypes.MESSAGE_FETCH_FAILURE, ({error}) ->
-            _requests = _requests.set Requests.REFRESH_MAILBOX,
+        handle ActionTypes.MESSAGE_FETCH_FAILURE, ({error, conversationID}) ->
+            _requests = _requests.set Requests.FETCH_CONVERSATION,
                 status: RequestStatus.ERROR, res: {error}
             @emit 'change'
 

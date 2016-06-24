@@ -245,12 +245,13 @@ describe('Message Store', () => {
       assert.isUndefined(messages.get(id6));
     });
     it('MESSAGE_FLAGS_SUCCESS', () => {
-      const message1 = _.extend({}, fixtures.message1, { flags: seenFlags });
-      const message2 = _.extend({}, fixtures.message2, { flags: seenFlags });
-
+      const changes = { flags: seenFlags };
+      const message1 = _.extend({}, fixtures.message1, changes);
+      const message2 = _.extend({}, fixtures.message2, changes);
+      const updated = { messages: [message1, message2]}
       dispatcher.dispatch({
         type: ActionTypes.MESSAGE_FLAGS_SUCCESS,
-        value: { updated: [message1, message2] },
+        value: { updated, timestamp: Date.now() },
       });
 
       const id1 = fixtures.message1.id;
@@ -309,21 +310,21 @@ describe('Message Store', () => {
 
       // Message must exist into messageStore
       assert.equal(messageStore.getByID(id1).get('id'), id1);
-      assert.isUndefined(messageStore.getByID(id1).__displayImages);
+      assert.isUndefined(messageStore.getByID(id1).get('_displayImages'));
 
       // displayImage value has changed
       dispatcher.dispatch({
         type: ActionTypes.SETTINGS_UPDATE_REQUEST,
         value: { messageID: id1, displayImages: true },
       });
-      assert.isTrue(messageStore.getByID(id1).__displayImages);
+      assert.isTrue(messageStore.getByID(id1).get('_displayImages'));
 
       // displayImage value has changed
       dispatcher.dispatch({
         type: ActionTypes.SETTINGS_UPDATE_REQUEST,
         value: { messageID: id1, displayImages: false },
       });
-      assert.isFalse(messageStore.getByID(id1).__displayImages);
+      assert.isFalse(messageStore.getByID(id1).get('_displayImages'));
     });
   });
 
@@ -385,7 +386,7 @@ describe('Message Store', () => {
 
       // Empty conversation should return length: null
       length = messageStore.getConversationLength('c5');
-      assert.isUndefined(length);
+      assert.isNull(length);
     });
   });
 

@@ -64,6 +64,12 @@ module.exports =
         return @getURL {action, mailboxID, resetFilter}
 
 
+    isTrashbox: (mailboxID) ->
+        accountID = @getAccountID()
+        mailboxID ?= @getMailboxID()
+        AccountStore.isTrashbox accountID, mailboxID
+
+
     # Sometimes we need a real URL
     # insteadof changing route params with actionCreator
     # Usefull to allow user
@@ -92,18 +98,6 @@ module.exports =
         MessageStore.getByID messageID unless isReply
 
 
-    isEditable: ->
-        action = @getAction()
-        editables = [
-            MessageActions.CREATE,
-            MessageActions.EDIT,
-            MessageActions.REPLY,
-            MessageActions.REPLY_ALL,
-            MessageActions.FORWARD
-            ]
-        action in editables
-
-
     getFilter: ->
         RouterStore.getFilter()
 
@@ -120,9 +114,8 @@ module.exports =
         RouterStore.getModalParams()
 
 
-    getMessagesList: (mailboxID) ->
-        mailboxID ?= @getMailboxID()
-        RouterStore.getMessagesList mailboxID
+    getMessagesList: (accountID, mailboxID) ->
+        RouterStore.getMessagesList accountID, mailboxID
 
 
     getMessage: (messageID) ->
@@ -130,16 +123,20 @@ module.exports =
         MessageStore.getByID messageID
 
 
-    getConversationLength: ({messageID, conversationID}) ->
-        RouterStore.getConversationLength {messageID, conversationID}
+    getConversationLength: (conversationID) ->
+        RouterStore.getConversationLength(conversationID) or 0
 
 
-    getConversation: (messageID) ->
-        RouterStore.getConversation(messageID) or []
+    getConversation: (conversationID, mailboxID) ->
+        RouterStore.getConversation(conversationID, mailboxID) or []
 
 
     getConversationID: ->
         RouterStore.getConversationID()
+
+
+    isPageComplete: ->
+        RouterStore.isPageComplete()
 
 
     getSubject: ->
@@ -148,10 +145,6 @@ module.exports =
 
     getMessageID: ->
         RouterStore.getMessageID()
-
-
-    isCurrentConversation: (conversationID) ->
-        conversationID is @getConversationID()
 
 
     getMailbox: (accountID, mailboxID) ->
@@ -168,11 +161,6 @@ module.exports =
     getFlaggedLength: (accountID) ->
         accountID ?= @getAccountID()
         AccountStore.getInbox(accountID)?.get 'nbFlagged'
-
-
-    getTrashMailbox: (accountID) ->
-        accountID ?= @getAccountID()
-        AccountStore.getTrashMailbox accountID
 
 
     getAccounts: ->
@@ -200,7 +188,15 @@ module.exports =
         @getMailbox()?.get 'login'
 
 
-    isMailboxExist: ->
+    # Here is local settings
+    # global settings are not handled anymore
+    # but should be in the future
+    hasSettingsChanged: ->
+        messageID = RouterStore.getMessageID()
+        MessageStore.isImagesDisplayed messageID
+
+
+    getLastSync: ->
         accountID = @getAccountID()
 
         # If current mailboxID is inbox
@@ -212,20 +208,25 @@ module.exports =
             mailbox ?= AccountStore.getInbox accountID
 
         mailbox ?= @getMailbox()
-        mailbox?.get('lastSync')?
+        mailbox?.get('lastSync')
 
 
     isMailboxLoading: ->
         RequestsStore.isRefreshing()
 
 
-    isRefreshError: ->
-        RequestsStore.isRefreshError()
-
-
     isMailboxIndexing: ->
         accountID = @getAccountID()
         RequestsStore.isIndexing accountID
+
+
+    isConversationLoading: ->
+        RequestsStore.isConversationLoading()
+
+
+    isRefreshError: ->
+        RequestsStore.isRefreshError()
+
 
 
     formatMessage: (message) ->

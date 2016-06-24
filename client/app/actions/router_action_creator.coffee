@@ -1,18 +1,26 @@
 _ = require 'lodash'
+Immutable = require 'immutable'
 
 AppDispatcher = require '../libs/flux/dispatcher/dispatcher'
 
 RouterStore     = require '../stores/router_store'
 RequestsStore   = require '../stores/requests_store'
+MessageStore = require '../stores/message_store'
 
 Notification = require '../libs/notification'
 
 XHRUtils = require '../libs/xhr'
 
-{ActionTypes, MessageActions, SearchActions} = require '../constants/app_constants'
+{ActionTypes,
+MessageActions,
+SearchActions,
+FlagsConstants,
+MessageFilter,
+MessageFlags} = require '../constants/app_constants'
 
 _pages = {}
 _nextURL = {}
+_currentRequest = null
 
 
 RouterActionCreator =
@@ -39,13 +47,15 @@ RouterActionCreator =
                     value: {mailboxID, updated}
 
 
-    gotoCurrentPage: (params={}) ->
+    getCurrentPage: (params={}) ->
         {url} = params
+        url ?= RouterStore.getCurrentURL {action}
+
+        _currentRequest = url
 
         # Always load messagesList
         action = MessageActions.SHOW_ALL
         timestamp = (new Date()).toISOString()
-        url ?= RouterStore.getCurrentURL {action}
 
         AppDispatcher.dispatch
             type: ActionTypes.MESSAGE_FETCH_REQUEST
@@ -90,14 +100,21 @@ RouterActionCreator =
                     value: {result, url, timestamp, lastPage}
 
                 # Fetch missing messages
-                isMissingMessages = not RouterStore.isPageComplete()
-                if RouterStore.hasNextPage() and isMissingMessages
+                # otherwhise if message doesnt exist anymore
+                # ie. removed from outside (socketEvent)
+                # ie. navigate with history
+                # - try to select nearestMessage
+                # - if not select current MessageList
+                # - if no messageList go to default mailbox
+                isPageComplete = RouterStore.isPageComplete()
+                hasNextPage = RouterStore.hasNextPage()
+                if hasNextPage and not isPageComplete
                     @gotoNextPage()
 
 
     gotoNextPage: ->
-        if not RequestsStore.isRefreshing() and (url = _getNextURL())?
-            @gotoCurrentPage {url}
+        if (url = _getNextURL())?
+            @getCurrentPage {url}
 
 
     gotoCompose: (params={}) ->
@@ -115,63 +132,52 @@ RouterActionCreator =
     # or get last message if not
     gotoConversation: (params={}) ->
         {conversationID} = params
+
+        # 1rst: load all messages from conversation
+        @getConversation conversationID
+
+        # 2nd: redirect to conversation
         messageID = RouterStore.getMessageID conversationID
         @gotoMessage {conversationID, messageID}
 
 
-    gotoMessage: (params={}) ->
-        {conversationID, messageID, mailboxID, query} = params
+    gotoMessage: (message={}) ->
+        {conversationID, messageID, mailboxID, filter} = message
 
         messageID ?= RouterStore.getMessageID()
-        conversationID ?= RouterStore.getConversationID()
-        mailboxID ?= RouterStore.getMailboxID()
-        query ?= RouterStore.getFilter()
-        action = MessageActions.SHOW
+        mailboxID ?= RouterStore.getMailboxID messageID
+        query = filter or RouterStore.getFilter()
 
-        AppDispatcher.dispatch
-            type: ActionTypes.ROUTE_CHANGE
-            value: {conversationID, messageID, mailboxID, action, query}
-
-
-    gotoPreviousMessage: ->
-        message = RouterStore.gotoPreviousMessage()
-        conversationID = message?.get 'conversationID'
-        messageID = message?.get 'id'
-        mailboxID = message?.get 'mailboxID'
-        @gotoMessage {conversationID, messageID, mailboxID}
-
-
-    gotoNextMessage: ->
-        message = RouterStore.gotoNextMessage()
-        conversationID = message?.get 'conversationID'
-        messageID = message?.get 'id'
-        mailboxID = message?.get 'mailboxID'
-        @gotoMessage {conversationID, messageID, mailboxID}
+        unless messageID
+            action = MessageActions.SHOW_ALL
+            AppDispatcher.dispatch
+                type: ActionTypes.ROUTE_CHANGE
+                value: {mailboxID, action, query}
+        else
+            action = MessageActions.SHOW
+            AppDispatcher.dispatch
+                type: ActionTypes.ROUTE_CHANGE
+                value: {conversationID, messageID, mailboxID, action, query}
 
 
     gotoPreviousConversation: ->
         message = RouterStore.getNextConversation()
-        conversationID = message?.get 'conversationID'
-        messageID = message?.get 'id'
-        mailboxID = message?.get 'mailboxID'
-        @gotoMessage {conversationID, messageID, mailboxID}
+        @gotoMessage message?.toJS()
 
 
     gotoNextConversation: ->
         message = RouterStore.getNextConversation()
-        conversationID = message?.get 'conversationID'
-        messageID = message?.get 'id'
-        mailboxID = message?.get 'mailboxID'
-        @gotoMessage {conversationID, messageID, mailboxID}
+        @gotoMessage message?.toJS()
 
 
     closeConversation: (params={}) ->
         {mailboxID} = params
         mailboxID ?= RouterStore.getMailboxID()
         action = MessageActions.SHOW_ALL
+        query = RouterStore.getFilter()
         AppDispatcher.dispatch
             type: ActionTypes.ROUTE_CHANGE
-            value: {mailboxID, action}
+            value: {mailboxID, action, query}
 
 
     closeModal: ->
@@ -192,6 +198,7 @@ RouterActionCreator =
 
 
     getConversation: (conversationID) ->
+        conversationID ?= RouterStore.getConversationID()
         timestamp = (new Date()).toISOString()
 
         AppDispatcher.dispatch
@@ -204,7 +211,10 @@ RouterActionCreator =
                     type: ActionTypes.MESSAGE_FETCH_FAILURE
                     value: {error, conversationID, timestamp}
             else
-                result = {messages}
+                # Apply filters to messages
+                # to upgrade conversationLength
+                # FIXME: should be moved server side
+                messages = _.filter messages, RouterStore.filterFlags
 
                 # Update Realtime
                 lastMessage = _.last messages
@@ -212,28 +222,58 @@ RouterActionCreator =
                 before = lastMessage?.date or timestamp
                 Notification.setServerScope {mailboxID, before}
 
+                # Update _conversationLength value
+                # that is only displayed by the server
+                # with method fetchMessagesByFolder
+                # FIXME: should be sent by server
+                conversationLength = {}
+                conversationLength[conversationID] = messages.length
+
+                result = {messages, conversationLength}
                 AppDispatcher.dispatch
                     type: ActionTypes.MESSAGE_FETCH_SUCCESS
                     value: {result, conversationID, timestamp}
 
 
-    mark: (target, action) ->
+    markAsRead: (target) ->
+        {messageID, accountID} = target
+
+        # Do not mark a message that is ever flagged
+        message = MessageStore.getByID messageID
+        if message and MessageStore.isUnread {message}
+            @mark {messageID, accountID}, FlagsConstants.SEEN
+
+
+    mark: (target, flags) ->
         timestamp = Date.now()
+
+        # Do not mark a removed message
+        {messageID} = target
+        if messageID and not (message = MessageStore.getByID messageID)
+            return
 
         AppDispatcher.dispatch
             type: ActionTypes.MESSAGE_FLAGS_REQUEST
-            value: {target, action}
+            value: {target, flags, timestamp}
 
-        XHRUtils.batchFlag {target, action}, (error, updated) =>
+        XHRUtils.batchFlag {target, action: flags}, (error, updated) =>
             if error
                 AppDispatcher.dispatch
                     type: ActionTypes.MESSAGE_FLAGS_FAILURE
-                    value: {target, error, action}
+                    value: {target, error, flags, timestamp}
             else
-                message.updated = timestamp for message in updated
+                # Update _conversationLength value
+                # that is only displayed by the server
+                # with method fetchMessagesByFolder
+                # FIXME: should be sent by server
+
+                # FIXME: clent shouldnt add this information
+                # it shoul be done server side
+                updated = {messages}
                 AppDispatcher.dispatch
                     type: ActionTypes.MESSAGE_FLAGS_SUCCESS
-                    value: {target, updated, action}
+                    value: {target, updated, flags, timestamp}
+
 
     # Delete message(s)
     # target:
@@ -243,8 +283,10 @@ RouterActionCreator =
     # - conversationIDs
     deleteMessage: (target={}) ->
         timestamp = Date.now()
-        target.messageID ?= RouterStore.getMessageID()
-        target.accountID ?= RouterStore.getAccountID()
+        {messageID, accountID} = target
+        messageID ?= RouterStore.getMessageID()
+        accountID ?= RouterStore.getAccountID()
+        target = {messageID, accountID}
 
         AppDispatcher.dispatch
             type: ActionTypes.MESSAGE_TRASH_REQUEST
@@ -319,7 +361,8 @@ _getNextURI = ->
 
 _getNextURL = ->
     key = _getNextURI()
-    _nextURL[key]
+    if (_nextURL[key] isnt _currentRequest)
+        return _nextURL[key]
 
 
 _getPreviousURI = ->
@@ -348,6 +391,5 @@ _setNextURL = ({pageAfter}) ->
         currentURL = RouterStore.getCurrentURL {filter, action}
         if _getPreviousURL() isnt currentURL
             _nextURL[key] = currentURL
-
 
 module.exports = RouterActionCreator
