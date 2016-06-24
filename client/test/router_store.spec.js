@@ -265,13 +265,6 @@ describe.skip('Router Store', () => {
   //     assert.equal(routerStore.getCurrentURL({ isServer: false }),
   //                  '#mailbox/mb1');
   //   });
-  //   it('ADD_ACCOUNT_REQUEST', () => {
-  //     dispatcher.dispatch({
-  //       type: ActionTypes.ADD_ACCOUNT_REQUEST,
-  //       value: '',
-  //     });
-  //     assert.isTrue(routerStore.isWaiting());
-  //   });
   //   it.skip('ADD_ACCOUNT_SUCCESS', (done) => {
   //     dispatcher.dispatch({
   //       type: ActionTypes.ADD_ACCOUNT_SUCCESS,
@@ -289,97 +282,7 @@ describe.skip('Router Store', () => {
   //       done();
   //     }, 5000);
   //   }); // .timeout(6000);
-  //   // Uncomment previous line, if you decide to unskip this test.
-  //   it('ADD_ACCOUNT_FAILURE', () => {
-  //     dispatcher.dispatch({
-  //       type: ActionTypes.ADD_ACCOUNT_FAILURE,
-  //       value: { error: fixtures.testError },
-  //     });
-  //     assert.isFalse(routerStore.isWaiting());
-  //     let errors = routerStore.getErrors().toObject();
-  //     assert.deepEqual(errors, fixtures.unknownError);
-  //     dispatcher.dispatch({
-  //       type: ActionTypes.ADD_ACCOUNT_FAILURE,
-  //       value: { error: fixtures.fullTestError },
-  //     });
-  //     assert.isFalse(routerStore.isWaiting());
-  //     errors = routerStore.getErrors().toObject();
-  //     assert.deepEqual(errors, {
-  //       field1: {
-  //         message: fixtures.fullTestError.field,
-  //         originalError: fixtures.fullTestError.originalError,
-  //         originalErrorStack: fixtures.fullTestError.originalErrorStack,
-  //       },
-  //       field2: {
-  //         message: fixtures.fullTestError.field,
-  //         originalError: fixtures.fullTestError.originalError,
-  //         originalErrorStack: fixtures.fullTestError.originalErrorStack,
-  //       },
-  //     });
-  //   });
-  //   it('CHECK_ACCOUNT_REQUEST', () => {
-  //     dispatcher.dispatch({ type: ActionTypes.CHECK_ACCOUNT_REQUEST });
-  //     assert.isTrue(routerStore.isChecking());
-  //   });
-  //   it('CHECK_ACCOUNT_SUCCESS', () => {
-  //     dispatcher.dispatch({ type: ActionTypes.CHECK_ACCOUNT_SUCCESS });
-  //     assert.isFalse(routerStore.isChecking());
-  //   });
-  //   it('CHECK_ACCOUNT_FAILURE', () => {
-  //     dispatcher.dispatch({
-  //       type: ActionTypes.CHECK_ACCOUNT_FAILURE,
-  //       value: { error: fixtures.testError },
-  //     });
-  //     assert.isFalse(routerStore.isChecking());
-  //     let errors = routerStore.getErrors().toObject();
-  //     assert.deepEqual(errors, fixtures.unknownError);
-  //     dispatcher.dispatch({
-  //       type: ActionTypes.CHECK_ACCOUNT_FAILURE,
-  //       value: { error: fixtures.fullTestError },
-  //     });
-  //     assert.isFalse(routerStore.isChecking());
-  //     errors = routerStore.getErrors().toObject();
-  //     assert.deepEqual(errors, {
-  //       field1: {
-  //         message: fixtures.fullTestError.field,
-  //         originalError: fixtures.fullTestError.originalError,
-  //         originalErrorStack: fixtures.fullTestError.originalErrorStack,
-  //       },
-  //       field2: {
-  //         message: fixtures.fullTestError.field,
-  //         originalError: fixtures.fullTestError.originalError,
-  //         originalErrorStack: fixtures.fullTestError.originalErrorStack,
-  //       },
-  //     });
-  //   });
-  //   it('EDIT_ACCOUNT_REQUEST', () => {
-  //     dispatcher.dispatch({
-  //       type: ActionTypes.EDIT_ACCOUNT_REQUEST,
-  //       value: { rawAccount: _.clone(fixtures.account) },
-  //     });
-  //     assert.isTrue(routerStore.isWaiting());
-  //   });
-  //   it('EDIT_ACCOUNT_SUCCESS', () => {
-  //     dispatcher.dispatch({
-  //       type: ActionTypes.EDIT_ACCOUNT_SUCCESS,
-  //       value: { rawAccount: _.clone(fixtures.account) },
-  //     });
-  //     assert.isFalse(routerStore.isWaiting());
-  //   });
-  //   it('EDIT_ACCOUNT_FAILURE', () => {
-  //     // NB: More advanced errors are tested in CHECK_ACCOUNT_FAILURE_TEST
-  //     dispatcher.dispatch({
-  //       type: ActionTypes.EDIT_ACCOUNT_FAILURE,
-  //       value: { error: fixtures.testError },
-  //     });
-  //     assert.isFalse(routerStore.isChecking());
-  //     const errors = routerStore.getErrors().toObject();
-  //     assert.deepEqual(errors, fixtures.unknownError);
-  //   });
-  //   it('MESSAGE_FETCH_REQUEST', () => {
-  //     dispatcher.dispatch({ type: ActionTypes.MESSAGE_FETCH_REQUEST });
-  //     assert.isTrue(routerStore.isRefresh());
-  //   });
+  //
   //   it('MESSAGE_FETCH_SUCCESS', () => {
   //     dispatcher.dispatch({
   //       type: ActionTypes.MESSAGE_FETCH_SUCCESS,
@@ -462,7 +365,7 @@ describe.skip('Router Store', () => {
   //     assert.equal(routerStore.getSelectedTab(), 'account');
   //   });
   // });
-
+  
   describe('getStates related to:', () => {
 
     // TODO: tester lorsqu'on ne trouve aucun comptes
