@@ -254,13 +254,13 @@ RouterActionCreator =
 
         AppDispatcher.dispatch
             type: ActionTypes.MESSAGE_FLAGS_REQUEST
-            value: {target, flags}
+            value: {target, flags, timestamp}
 
         XHRUtils.batchFlag {target, action: flags}, (error, updated) =>
             if error
                 AppDispatcher.dispatch
                     type: ActionTypes.MESSAGE_FLAGS_FAILURE
-                    value: {target, error, flags}
+                    value: {target, error, flags, timestamp}
             else
                 # Update _conversationLength value
                 # that is only displayed by the server
@@ -269,11 +269,10 @@ RouterActionCreator =
 
                 # FIXME: clent shouldnt add this information
                 # it shoul be done server side
-                message.updated = timestamp for message in (messages = updated)
                 updated = {messages}
                 AppDispatcher.dispatch
                     type: ActionTypes.MESSAGE_FLAGS_SUCCESS
-                    value: {target, updated, flags}
+                    value: {target, updated, flags, timestamp}
 
 
     # Delete message(s)

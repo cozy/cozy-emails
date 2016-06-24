@@ -33,20 +33,14 @@ class MessageStore extends Store
 
 
     _saveMessage = (message, timestamp) ->
-        oldmsg = _messages.get message.id
-        updated = oldmsg?.get 'updated'
-
-        # only update message if new version is newer than
-        # the one currently stored
-        message.updated = timestamp if timestamp
-
         # Save reference mailbox into message informations
         mailboxIDs = _.keys(message.mailboxIDs).sort (value0, value1) ->
             value0.localeCompare value1
         message.mailboxID = mailboxIDs.shift()
 
-        if not (timestamp? and updated? and updated > timestamp) and
-           not message._deleted # deleted draft are empty, don't update them
+        updated = (_messages.get message.id)?.get 'updated'
+        isNewer = timestamp? and updated? and updated < timestamp
+        if (not updated? or isNewer) and not message._deleted
 
             attachments = message.attachments or Immutable.List []
 
@@ -131,8 +125,8 @@ class MessageStore extends Store
             @emit 'change'
 
 
-        handle ActionTypes.MESSAGE_FLAGS_SUCCESS, ({target, updated, flags}) ->
-            _updateMessages updated
+        handle ActionTypes.MESSAGE_FLAGS_SUCCESS, ({updated, timestamp}) ->
+            _updateMessages updated, timestamp
             @emit 'change'
 
 
