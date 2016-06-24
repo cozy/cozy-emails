@@ -224,11 +224,12 @@ class RouterStore extends Store
         _tab
 
 
-    _setCurrentMessage = (conversationID=null, messageID=null) ->
+    _setCurrentMessage = ({conversationID, messageID}) ->
         # Return to message list
         # if no messages are found
-        if not messageID and _action is MessageActions.SHOW
-            _action = MessageActions.SHOW_ALL
+        if not messageID or not conversationID
+            conversationID = null
+            messageID = null
 
         _conversationID = conversationID
         _messageID = messageID
@@ -567,7 +568,7 @@ class RouterStore extends Store
                 inner = _.find result.messages, (msg) -> msg.id is _messageID
                 unless inner
                     messageID = @getMessageID conversationID
-                    _setCurrentMessage conversationID, messageID
+                    _setCurrentMessage {conversationID, messageID}
                     _updateURL()
 
             @emit 'change'
@@ -604,7 +605,7 @@ class RouterStore extends Store
                 # Update currentMessage so that:
                 # - all counters should be updated
                 # - all messagesList should be updated too
-                _setCurrentMessage conversationID, messageID
+                _setCurrentMessage {conversationID, messageID}
                 _updateURL()
 
             @emit 'change'
@@ -628,7 +629,7 @@ class RouterStore extends Store
                 # Update currentMessage so that:
                 # - all counters should be updated
                 # - all messagesList should be updated too
-                _setCurrentMessage conversationID, messageID
+                _setCurrentMessage {conversationID, messageID}
                 _updateURL()
 
             @emit 'change'
