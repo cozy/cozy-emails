@@ -616,7 +616,7 @@ class RouterStore extends Store
             @emit 'change'
 
 
-        handle ActionTypes.SETTINGS_UPDATE_RESQUEST, ->
+        handle ActionTypes.SETTINGS_UPDATE_REQUEST, ->
             @emit 'change'
 
 

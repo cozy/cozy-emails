@@ -23,7 +23,7 @@ MessageActionCreator =
     displayImages: ({messageID, displayImages=true})->
         message = MessageStore.getByID messageID
         AppDispatcher.dispatch
-            type: ActionTypes.SETTINGS_UPDATE_RESQUEST
+            type: ActionTypes.SETTINGS_UPDATE_REQUEST
             value: {messageID, displayImages}
 
 

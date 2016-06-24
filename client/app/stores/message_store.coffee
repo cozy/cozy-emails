@@ -157,7 +157,7 @@ class MessageStore extends Store
             @emit 'change'
 
 
-        handle ActionTypes.SETTINGS_UPDATE_RESQUEST, ({messageID, displayImages=true}) ->
+        handle ActionTypes.SETTINGS_UPDATE_REQUEST, ({messageID, displayImages=true}) ->
             # Update settings into component,
             # but not definitly into settingsStore
             message = @getByID(messageID)?.set '_displayImages', displayImages
