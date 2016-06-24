@@ -386,7 +386,7 @@ describe('Message Store', () => {
 
       // Empty conversation should return length: null
       length = messageStore.getConversationLength('c5');
-      assert.isUndefined(length);
+      assert.isNull(length);
     });
   });
 
