@@ -18,6 +18,9 @@ FlagsConstants,
 MessageFilter,
 MessageFlags} = require '../constants/app_constants'
 
+# TODO: move this into RouterStore
+# or create a module paginate
+# to handle this into RouterStore
 _pages = {}
 _nextURL = {}
 _currentRequest = null
@@ -84,6 +87,7 @@ RouterActionCreator =
                     start: pageAfter
                     isComplete: _getNextURL() is undefined
                 }
+
 
             if error?
                 AppDispatcher.dispatch

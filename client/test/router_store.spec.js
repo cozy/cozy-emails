@@ -107,7 +107,7 @@ const fixtures = {
 };
 
 
-describe.skip('Router Store', () => {
+describe('Router Store', () => {
   let routerStore;
   let dispatcher;
   let router;
@@ -130,32 +130,6 @@ describe.skip('Router Store', () => {
   //     },
   //   });
   // }
-
-  function loadMessages(messages, conversationLength) {
-    dispatcher.dispatch({
-      type: ActionTypes.MESSAGE_FETCH_SUCCESS,
-      value: {
-        lastPage: fixtures.lastPage,
-        result: {
-          messages,
-          conversationLength,
-        },
-        timestamp: new Date(),
-      },
-    });
-  }
-
-  function generateMessages() {
-    const msgs = [];
-    for (let i = 0; i < UtilConstants.MSGBYPAGE + 3; i++) {
-      const message = _.clone(fixtures.message1);
-      message.id = `id${i}`;
-      message.messageID = `meid${i}`;
-      message.conversationID = `c${i}`;
-      msgs.push(message);
-    }
-    return msgs;
-  }
 
   /*
    * Problem noticed:
@@ -209,164 +183,7 @@ describe.skip('Router Store', () => {
 
   });
 
-  //
-  // describe('Actions', () => {
-  //
-  //   it('ROUTE_CHANGE (no accounts)', () => {
-  //     // First we test that the new account action is automatically selected
-  //     // when the ROUTE_CHANGE event is fired while no account is added to the
-  //     // store.
-  //     dispatcher.dispatch({
-  //       type: ActionTypes.ROUTE_CHANGE,
-  //     });
-  //     assert.equal(routerStore.getAction(), AccountActions.CREATE);
-  //   });
-  //
-  //   it('ROUTE_CHANGE (accounts)', () => {
-  //     dispatcher.dispatch({
-  //       type: ActionTypes.ADD_ACCOUNT_SUCCESS,
-  //       value: { account: _.clone(fixtures.account) },
-  //     });
-  //     dispatcher.dispatch({
-  //       type: ActionTypes.ROUTE_CHANGE,
-  //       value: {
-  //         accountID: fixtures.account.id,
-  //         mailboxID: fixtures.account.inboxMailbox,
-  //         tab: 'selected',
-  //         action: MessageActions.SHOW,
-  //         conversationID: fixtures.message1.conversationID,
-  //         messageID: fixtures.message1.id,
-  //         query: '',
-  //       },
-  //     });
-  //     assert.equal(routerStore.getAction(), MessageActions.SHOW);
-  //     assert.equal(routerStore.getAccountID(), fixtures.account.id);
-  //     assert.equal(routerStore.getMailboxID(), fixtures.account.inboxMailbox);
-  //     assert.equal(routerStore.getMessageID(), fixtures.message1.id);
-  //     assert.equal(routerStore.getConversationID(),
-  //                  fixtures.message1.conversationID);
-  //     assert.isNull(routerStore.getFilter().value);
-  //     assert.equal(routerStore.getCurrentURL({ isServer: false }),
-  //                  '#mailbox/mb1/c1/i1');
-  //
-  //     dispatcher.dispatch({
-  //       type: ActionTypes.ROUTE_CHANGE,
-  //       value: {
-  //         accountID: fixtures.account.id,
-  //         mailboxID: fixtures.account.inboxMailbox,
-  //         tab: 'selected',
-  //         action: MessageActions.SHOW_ALL,
-  //       },
-  //     });
-  //     assert.equal(routerStore.getAction(), MessageActions.SHOW_ALL);
-  //     assert.equal(routerStore.getAccountID(), fixtures.account.id);
-  //     assert.equal(routerStore.getMailboxID(), fixtures.account.inboxMailbox);
-  //     assert.isNull(routerStore.getFilter().value);
-  //     assert.equal(routerStore.getCurrentURL({ isServer: false }),
-  //                  '#mailbox/mb1');
-  //   });
-  //   it.skip('ADD_ACCOUNT_SUCCESS', (done) => {
-  //     dispatcher.dispatch({
-  //       type: ActionTypes.ADD_ACCOUNT_SUCCESS,
-  //       value: { account: _.clone(fixtures.account) },
-  //     });
-  //     setTimeout(() => {
-  //       assert.isFalse(routerStore.isWaiting());
-  //       assert.equal(routerStore.getAction(), MessageActions.SHOW_ALL);
-  //       assert.equal(routerStore.getAccountID(), fixtures.account.id);
-  //       assert.equal(routerStore.getMailboxID(), fixtures.account.inboxMailbox);
-  //       assert.equal(routerStore.getSelectedTab(), 'account');
-  //       assert.equal(currentURL, `#mailbox/${fixtures.account.inboxMailbox}`);
-  //       assert.equal(routerStore.getCurrentURL({ isServer: false }),
-  //                    `#mailbox/${fixtures.account.inboxMailbox}`);
-  //       done();
-  //     }, 5000);
-  //   }); // .timeout(6000);
-  //
-  //   it('MESSAGE_FETCH_SUCCESS', () => {
-  //     dispatcher.dispatch({
-  //       type: ActionTypes.MESSAGE_FETCH_SUCCESS,
-  //       value: {
-  //         lastPage: fixtures.lastPage,
-  //         result: {},
-  //         timestamp: new Date(),
-  //       },
-  //     });
-  //     assert.isFalse(routerStore.isRefresh());
-  //     assert.deepEqual(routerStore.getLastPage(), fixtures.lastPage);
-  //   });
-  //   it('DISPLAY_MODAL', () => {
-  //     dispatcher.dispatch({
-  //       type: ActionTypes.DISPLAY_MODAL,
-  //       value: fixtures.modal,
-  //     });
-  //     const params = routerStore.getModalParams();
-  //     assert.deepEqual(params, fixtures.modal);
-  //   });
-  //   it('HIDE_MODAL', () => {
-  //     dispatcher.dispatch({ type: ActionTypes.HIDE_MODAL });
-  //     const params = routerStore.getModalParams();
-  //     assert.isNull(params);
-  //   });
-  //   it('MESSAGE_TRASH_SUCCESS', () => {
-  //     dispatcher.dispatch({
-  //       type: ActionTypes.ROUTE_CHANGE,
-  //       value: {
-  //         accountID: fixtures.account.id,
-  //         mailboxID: fixtures.inboxMailbox,
-  //         tab: 'selected',
-  //         action: MessageActions.SHOW,
-  //         conversationID: fixtures.message1.conversationID,
-  //         messageID: fixtures.message1.id,
-  //         query: '',
-  //       },
-  //     });
-  //
-  //     // FIXME: this event require parameters that are never used.
-  //     // We should check if they are required by another store.
-  //     dispatcher.dispatch({
-  //       type: ActionTypes.MESSAGE_TRASH_SUCCESS,
-  //       value: {
-  //         target: '',
-  //         updated: false,
-  //         ref: '',
-  //       },
-  //     });
-  //     // Test if it goes to next conversation.
-  //     const mailboxID = fixtures.account.inboxMailbox;
-  //     const conversationID = fixtures.message2.conversationID;
-  //     const messageID = fixtures.message2.id;
-  //     assert.equal(routerStore.getCurrentURL(),
-  //       `mailbox/${mailboxID}/${conversationID}/${messageID}/`);
-  //   });
-  //   it('REFRESH_REQUEST', () => {
-  //     dispatcher.dispatch({ type: ActionTypes.REFRESH_REQUEST });
-  //     assert.isTrue(routerStore.isRefresh());
-  //   });
-  //   it('REFRESH_SUCCESS', () => {
-  //     dispatcher.dispatch({ type: ActionTypes.REFRESH_REQUEST });
-  //     dispatcher.dispatch({ type: ActionTypes.REFRESH_SUCCESS });
-  //     assert.isFalse(routerStore.isRefresh());
-  //   });
-  //   it('REFRESH_FAILURE', () => {
-  //     dispatcher.dispatch({ type: ActionTypes.REFRESH_REQUEST });
-  //     dispatcher.dispatch({ type: ActionTypes.REFRESH_FAILURE });
-  //     assert.isFalse(routerStore.isRefresh());
-  //   });
-  //   it('REMOVE_ACCOUNT_SUCCESS', () => {
-  //     dispatcher.dispatch({
-  //       type: ActionTypes.REMOVE_ACCOUNT_SUCCESS,
-  //       value: fixtures.account.id,
-  //     });
-  //     assert.equal(routerStore.getAction(), AccountActions.CREATE);
-  //     // FIXME: these tests should failed, because the account was removed.
-  //     // assert.isUndefined(routerStore.getAccountID());
-  //     // assert.isUndefined(routerStore.getMailboxID());
-  //     assert.equal(routerStore.getSelectedTab(), 'account');
-  //   });
-  // });
-
-  describe('getStates related to:', () => {
+  describe('Get States From Stores:', () => {
 
     // TODO: tester lorsqu'on ne trouve aucun comptes
     describe('AccountStore', () => {
@@ -443,256 +260,267 @@ describe.skip('Router Store', () => {
 
     describe('MessageStore', () => {
 
-        it('Display Mailbox', () => {
-            const messageID = fixtures.message1.id;
-            const conversationID = fixtures.message1.conversationID;
-            const accountID = fixtures.message1.accountID;
-            const mailboxID = _.keys(fixtures.message1.mailboxIDs)[0];
-            const action = MessageActions.SHOW;
+      it('Select Mailbox', () => {
+        const messageID = fixtures.message1.id;
+        const conversationID = fixtures.message1.conversationID;
+        const accountID = fixtures.message1.accountID;
+        const mailboxID = _.keys(fixtures.message1.mailboxIDs)[0];
+        const action = MessageActions.SHOW;
 
-            dispatcher.dispatch({
-              type: ActionTypes.ROUTE_CHANGE,
-              value: {
-                accountID,
-                mailboxID,
-                messageID,
-                conversationID,
-                action,
-              }
-            });
-            assert.equal(routerStore.getConversationID(), conversationID);
-            assert.equal(routerStore.getMessageID(), messageID);
-            assert.equal(routerStore.getAction(), action);
-
-            dispatcher.dispatch({
-              type: ActionTypes.ROUTE_CHANGE,
-              value: {
-                accountID,
-                mailboxID,
-                messageID,
-              }
-            });
-            assert.isNull(routerStore.getConversationID());
-            assert.isNull(routerStore.getMessageID());
-            assert.equal(routerStore.getAction(), MessageActions.SHOW_ALL);
-
-            dispatcher.dispatch({
-              type: ActionTypes.ROUTE_CHANGE,
-              value: {
-                accountID,
-                mailboxID,
-                action,
-              }
-            });
-            assert.equal(routerStore.getConversationID(), undefined);
-            assert.equal(routerStore.getMessageID(), undefined);
-            assert.equal(routerStore.getAction(), MessageActions.SHOW_ALL);
-        })
-
-        it('isUnread', () => {
-          // TODO: tester le FLAGS_REQUEST, FLAGS_SUCCESS, FLAGS_FAILURE ici
-          assert.isFalse(routerStore.isUnread(map(fixtures.message1)));
-          assert.isTrue(routerStore.isUnread(map(fixtures.message3)));
+        dispatcher.dispatch({
+          type: ActionTypes.ROUTE_CHANGE,
+          value: {
+            accountID,
+            mailboxID,
+            messageID,
+            conversationID,
+            action,
+          }
         });
+        assert.equal(routerStore.getConversationID(), conversationID);
+        assert.equal(routerStore.getMessageID(), messageID);
+        assert.equal(routerStore.getAction(), action);
 
-        it('isFlagged', () => {
-          assert.isFalse(routerStore.isFlagged(map(fixtures.message1)));
-          assert.isTrue(routerStore.isFlagged(map(fixtures.message3)));
+        dispatcher.dispatch({
+          type: ActionTypes.ROUTE_CHANGE,
+          value: {
+            accountID,
+            mailboxID,
+            messageID,
+          }
         });
+        assert.isNull(routerStore.getConversationID());
+        assert.isNull(routerStore.getMessageID());
+        assert.equal(routerStore.getAction(), MessageActions.SHOW_ALL);
 
-        it('isAttached', () => {
-          assert.isFalse(
-            routerStore.isAttached(map(fixtures.message1)));
-          assert.isTrue(
-            routerStore.isAttached(map(fixtures.message3)));
+        dispatcher.dispatch({
+          type: ActionTypes.ROUTE_CHANGE,
+          value: {
+            accountID,
+            mailboxID,
+            action,
+          }
         });
+        assert.equal(routerStore.getConversationID(), undefined);
+        assert.equal(routerStore.getMessageID(), undefined);
+        assert.equal(routerStore.getAction(), MessageActions.SHOW_ALL);
+      });
 
-        it('isDeleted', () => {
-          // TODO: tester ici:
-          // MESSAGE_TRASH_REQUEST, MESSAGE_TRASH_SUCCESS, MESSAGE_TRASH_FAILURE
-          // et également RECEIVE_MESSAGE_DELETE
-          assert.isFalse(
-            routerStore.isDeleted(map(fixtures.message1)));
-          assert.isTrue(
-            routerStore.isDeleted(map(fixtures.message3)));
-        });
+      it('isUnread', () => {
+        // TODO: tester le FLAGS_REQUEST, FLAGS_SUCCESS, FLAGS_FAILURE ici
+        assert.isFalse(routerStore.isUnread(map(fixtures.message1)));
+        assert.isTrue(routerStore.isUnread(map(fixtures.message3)));
+      });
 
-        it('isDraft', () => {
-          assert.isFalse(
-            routerStore.isDraft(map(fixtures.message1)));
-          assert.isTrue(
-            routerStore.isDraft(map(fixtures.message4)));
-        });
+      it('isFlagged', () => {
+        assert.isFalse(routerStore.isFlagged(map(fixtures.message1)));
+        assert.isTrue(routerStore.isFlagged(map(fixtures.message3)));
+      });
 
-        it('getInboxTotal', () => {
-          const total = fixtures.account.mailboxes[0].nbTotal
-          dispatcher.dispatch({
-            type: ActionTypes.ROUTE_CHANGE,
-            value: {
-              accountID: fixtures.account.id,
-              mailboxID: fixtures.account.inboxMailbox,
-            }
-          });
-          assert.equal(routerStore.getMailboxTotal(), total);
-        });
+      it('isAttached', () => {
+        assert.isFalse(
+          routerStore.isAttached(map(fixtures.message1)));
+        assert.isTrue(
+          routerStore.isAttached(map(fixtures.message3)));
+      });
 
-        it('getFlagboxTotal', () => {
-          const total = fixtures.account.mailboxes[0].nbFlagged
-          dispatcher.dispatch({
-            type: ActionTypes.ROUTE_CHANGE,
-            value: {
-              accountID: fixtures.account.id,
-              mailboxID: fixtures.account.inboxMailbox,
-              query: {flags: MessageFilter.FLAGGED},
-            }
-          });
-          assert.equal(routerStore.getMailboxTotal(), total);
-        });
+      it('isDeleted', () => {
+        // TODO: tester ici:
+        // MESSAGE_TRASH_REQUEST, MESSAGE_TRASH_SUCCESS, MESSAGE_TRASH_FAILURE
+        // et également RECEIVE_MESSAGE_DELETE
+        assert.isFalse(
+          routerStore.isDeleted(map(fixtures.message1)));
+        assert.isTrue(
+          routerStore.isDeleted(map(fixtures.message3)));
+      });
 
-        it('getUnreadTotal', () => {
-          const total = fixtures.account.mailboxes[0].nbUnread
-          dispatcher.dispatch({
-            type: ActionTypes.ROUTE_CHANGE,
-            value: {
-              accountID: fixtures.account.id,
-              mailboxID: fixtures.account.inboxMailbox,
-              query: {flags: MessageFilter.UNSEEN},
-            }
-          });
-          assert.equal(routerStore.getMailboxTotal(), total);
+      it('isDraft', () => {
+        assert.isFalse(
+          routerStore.isDraft(map(fixtures.message1)));
+        assert.isTrue(
+          routerStore.isDraft(map(fixtures.message4)));
+      });
+
+      it('getInboxTotal', () => {
+        const total = fixtures.account.mailboxes[0].nbTotal
+        dispatcher.dispatch({
+          type: ActionTypes.ROUTE_CHANGE,
+          value: {
+            accountID: fixtures.account.id,
+            mailboxID: fixtures.account.inboxMailbox,
+          }
         });
+        assert.equal(routerStore.getMailboxTotal(), total);
+      });
+
+      it('getFlagboxTotal', () => {
+        const total = fixtures.account.mailboxes[0].nbFlagged
+        dispatcher.dispatch({
+          type: ActionTypes.ROUTE_CHANGE,
+          value: {
+            accountID: fixtures.account.id,
+            mailboxID: fixtures.account.inboxMailbox,
+            query: {flags: MessageFilter.FLAGGED},
+          }
+        });
+        assert.equal(routerStore.getMailboxTotal(), total);
+      });
+
+      it('getUnreadTotal', () => {
+        const total = fixtures.account.mailboxes[0].nbUnread
+        dispatcher.dispatch({
+          type: ActionTypes.ROUTE_CHANGE,
+          value: {
+            accountID: fixtures.account.id,
+            mailboxID: fixtures.account.inboxMailbox,
+            query: {flags: MessageFilter.UNSEEN},
+          }
+        });
+        assert.equal(routerStore.getMailboxTotal(), total);
+      });
     });
 
 
     describe('RouterStore', () => {
 
-      it('Paginate', () => {
+      // TODO: test getURL
 
-        // TODO: add more moplex tests
-        // ie. navigate thew several mailbox (accordinf flagged ones)
+      it('Message List Pagination', () => {
+
+        // TODO: add more complex tests
+        // when testing RouterActionCreator.gotoNextPage()
+        // ie. navigate thew several mailbox (including flagged ones)
         // to chake if hasNextPage is still coherent
 
-        it('hasNextPage', () => {
-          dispatcher.dispatch({
-            type: ActionTypes.MESSAGE_FETCH_SUCCESS,
-            value: {
-              lastPage: {
-                info: 'last-page',
-                isComplete: false,
-              },
-              result: {},
-              timestamp: new Date(),
-            },
-          });
-          assert.isTrue(routerStore.hasNextPage());
+        const start1 = Date.parse("1995-12-17T03:24:00");
+        const start2 = Date.parse("1995-12-17T00:24:00");
+        const start3 = Date.parse("1995-12-16T03:24:00");
+        const start4 = Date.parse("1995-12-15");
+        const start5 = Date.parse("1998-10-1");
 
-          dispatcher.dispatch({
-            type: ActionTypes.MESSAGE_FETCH_SUCCESS,
-            value: {
-              lastPage: {
-                info: 'last-page',
-                isComplete: true,
-              },
-              result: {},
-              timestamp: new Date(),
-            },
-          });
-          assert.isFalse(routerStore.hasNextPage());
+        // Goto MailboxList
+        dispatcher.dispatch({
+          type: ActionTypes.ROUTE_CHANGE,
+          value: {
+            accountID: fixtures.account.id,
+            mailboxID: fixtures.account.inboxMailbox,
+          },
         });
 
+        // Fetch 1rst page of messages
+        let lastPage = { start: start1, isComplete: false };
+        dispatcher.dispatch({
+          type: ActionTypes.MESSAGE_FETCH_SUCCESS,
+          value: { lastPage },
+        });
+        assert.equal(routerStore.getLastPage(), lastPage);
+        assert.equal(routerStore.hasNextPage(), true);
+        assert.equal(routerStore.getURI(), fixtures.account.inboxMailbox);
+
+        // Fetch 2nd page of messages
+        lastPage = { start: start2, isComplete: true };
+        dispatcher.dispatch({
+          type: ActionTypes.MESSAGE_FETCH_SUCCESS,
+          value: { lastPage },
+        });
+        assert.equal(routerStore.getLastPage(), lastPage);
+        assert.equal(routerStore.hasNextPage(), false);
       });
+
+
+      it('Navigate from Message to Messages', () => {
+          // TODO: here test isPageComplete with getMessagesList
+          // it('isPageComplete', () => {
+          //   changeRoute({ });
+          //   loadMessages([fixtures.message1, fixtures.message2]);
+          //   routerStore.getMessagesList();
+          //   assert.isFalse(routerStore.isPageComplete());
+          //   const msgs = generateMessages();
+          //   loadMessages(msgs);
+          //   routerStore.getMessagesList();
+          //   assert.isTrue(routerStore.isPageComplete());
+          // });
+          // it('getMessagesList', () => {
+          //   const msgs = [];
+          //   for (let i = 0; i < UtilConstants.MSGBYPAGE + 3; i++) {
+          //     const message = _.clone(fixtures.message1);
+          //     message.id = `id${i}`;
+          //     message.messageID = `meid${i}`;
+          //     message.conversationID = `c${i}`;
+          //     msgs.push(message);
+          //   }
+          //   msgs[12].flags = [];
+          //   msgs[14].flags = [MessageFlags.FLAGGED];
+          //   msgs[15].flags = [MessageFlags.FLAGGED, MessageFlags.ATTACH];
+          //   changeRoute({ });
+          //   loadMessages(msgs);
+          //   assert.equal(routerStore.getMessagesList().size, msgs.length);
+          //   changeRoute({ flags: MessageFilter.UNSEEN });
+          //   assert.equal(routerStore.getMessagesList().size, 3);
+          //   changeRoute({ flags: MessageFilter.FLAGGED });
+          //   assert.equal(routerStore.getMessagesList().size, 2);
+          //   changeRoute({ flags: MessageFilter.ATTACH });
+          //   assert.equal(routerStore.getMessagesList().size, 1);
+          // });
+          // it('getConversation', () => {
+          //   const msgs = generateMessages();
+          //   msgs[16].conversationID = 'c5';
+          //   msgs[17].conversationID = 'c5';
+          //   msgs[18].conversationID = 'c5';
+          //
+          //   changeRoute({ });
+          //   loadMessages(msgs);
+          //   assert.equal(routerStore.getConversation('c5').length, 4);
+          // });
+          // it('getConversationLength', () => {
+          //   const msgs = generateMessages();
+          //   changeRoute({ });
+          //   loadMessages(msgs, { c5: 6 });
+          //   assert.equal(routerStore.getConversationLength({
+          //     conversationID: 'c5',
+          //   }), 6);
+          // });
+          // it('getNextConversation', () => {
+          //   const msgs = generateMessages();
+          //   changeRoute({ });
+          //   msgs[7].conversationID = 'c7';
+          //   msgs[8].conversationID = 'c7';
+          //   msgs[9].conversationID = 'c7';
+          //   loadMessages(msgs);
+          //   changeRoute({ }, msgs[7]);
+          //   assert.equal(routerStore.getNextConversation().get('messageID'),
+          //                msgs[6].messageID);
+          // });
+          // it('getPreviousConversation', () => {
+          //   const msgs = generateMessages();
+          //   changeRoute({ });
+          //   msgs[7].conversationID = 'c7';
+          //   msgs[8].conversationID = 'c7';
+          //   msgs[9].conversationID = 'c7';
+          //   loadMessages(msgs);
+          //   changeRoute({ }, msgs[7]);
+          //   assert.equal(routerStore.getPreviousConversation().get('messageID'),
+          //                msgs[10].messageID);
+          // });
+          // it('gotoNextMessage', () => {
+          //   const msgs = generateMessages();
+          //   changeRoute({ }, msgs[0]);
+          //   loadMessages(msgs);
+          //   assert.equal(routerStore.gotoPreviousMessage().get('me2'));
+          //   assert.equal(routerStore.gotoPreviousMessage().get('me3'));
+          // });
+          // it('gotoPreviousMessage', () => {
+          //   const msgs = generateMessages();
+          //   changeRoute({ }, msgs[4]);
+          //   routerStore.gotoPreviousMessage();
+          //   routerStore.gotoPreviousMessage();
+          //   routerStore.gotoPreviousMessage();
+          //   assert.equal(routerStore.gotoNextMessage().get('me3'));
+          // });
+      });
+
+
     });
-    // it('getLastPage', () => {
-    //   loadMessages([fixtures.message1, fixtures.message2]);
-    //   assert.deepEqual(routerStore.getLastPage(), fixtures.lastPage);
-    // });
-    // it('isPageComplete', () => {
-    //   changeRoute({ });
-    //   loadMessages([fixtures.message1, fixtures.message2]);
-    //   routerStore.getMessagesList();
-    //   assert.isFalse(routerStore.isPageComplete());
-    //   const msgs = generateMessages();
-    //   loadMessages(msgs);
-    //   routerStore.getMessagesList();
-    //   assert.isTrue(routerStore.isPageComplete());
-    // });
-    // it('getMessagesList', () => {
-    //   const msgs = [];
-    //   for (let i = 0; i < UtilConstants.MSGBYPAGE + 3; i++) {
-    //     const message = _.clone(fixtures.message1);
-    //     message.id = `id${i}`;
-    //     message.messageID = `meid${i}`;
-    //     message.conversationID = `c${i}`;
-    //     msgs.push(message);
-    //   }
-    //   msgs[12].flags = [];
-    //   msgs[14].flags = [MessageFlags.FLAGGED];
-    //   msgs[15].flags = [MessageFlags.FLAGGED, MessageFlags.ATTACH];
-    //   changeRoute({ });
-    //   loadMessages(msgs);
-    //   assert.equal(routerStore.getMessagesList().size, msgs.length);
-    //   changeRoute({ flags: MessageFilter.UNSEEN });
-    //   assert.equal(routerStore.getMessagesList().size, 3);
-    //   changeRoute({ flags: MessageFilter.FLAGGED });
-    //   assert.equal(routerStore.getMessagesList().size, 2);
-    //   changeRoute({ flags: MessageFilter.ATTACH });
-    //   assert.equal(routerStore.getMessagesList().size, 1);
-    // });
-    // it('getConversation', () => {
-    //   const msgs = generateMessages();
-    //   msgs[16].conversationID = 'c5';
-    //   msgs[17].conversationID = 'c5';
-    //   msgs[18].conversationID = 'c5';
-    //
-    //   changeRoute({ });
-    //   loadMessages(msgs);
-    //   assert.equal(routerStore.getConversation('c5').length, 4);
-    // });
-    // it('getConversationLength', () => {
-    //   const msgs = generateMessages();
-    //   changeRoute({ });
-    //   loadMessages(msgs, { c5: 6 });
-    //   assert.equal(routerStore.getConversationLength({
-    //     conversationID: 'c5',
-    //   }), 6);
-    // });
-    // it('getNextConversation', () => {
-    //   const msgs = generateMessages();
-    //   changeRoute({ });
-    //   msgs[7].conversationID = 'c7';
-    //   msgs[8].conversationID = 'c7';
-    //   msgs[9].conversationID = 'c7';
-    //   loadMessages(msgs);
-    //   changeRoute({ }, msgs[7]);
-    //   assert.equal(routerStore.getNextConversation().get('messageID'),
-    //                msgs[6].messageID);
-    // });
-    // it('getPreviousConversation', () => {
-    //   const msgs = generateMessages();
-    //   changeRoute({ });
-    //   msgs[7].conversationID = 'c7';
-    //   msgs[8].conversationID = 'c7';
-    //   msgs[9].conversationID = 'c7';
-    //   loadMessages(msgs);
-    //   changeRoute({ }, msgs[7]);
-    //   assert.equal(routerStore.getPreviousConversation().get('messageID'),
-    //                msgs[10].messageID);
-    // });
-    // it('gotoNextMessage', () => {
-    //   const msgs = generateMessages();
-    //   changeRoute({ }, msgs[0]);
-    //   loadMessages(msgs);
-    //   assert.equal(routerStore.gotoPreviousMessage().get('me2'));
-    //   assert.equal(routerStore.gotoPreviousMessage().get('me3'));
-    // });
-    // it('gotoPreviousMessage', () => {
-    //   const msgs = generateMessages();
-    //   changeRoute({ }, msgs[4]);
-    //   routerStore.gotoPreviousMessage();
-    //   routerStore.gotoPreviousMessage();
-    //   routerStore.gotoPreviousMessage();
-    //   assert.equal(routerStore.gotoNextMessage().get('me3'));
-    // });
   });
   after(() => {
     mockeryUtils.clean();
