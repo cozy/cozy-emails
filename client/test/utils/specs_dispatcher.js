@@ -13,4 +13,7 @@ TestDispatcher.prototype.dispatch = function dispatch(payload) {
   });
 };
 
+TestDispatcher.prototype.waitFor = function waitFor(events) {
+};
+
 module.exports = TestDispatcher;

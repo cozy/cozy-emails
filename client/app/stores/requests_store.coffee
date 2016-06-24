@@ -44,7 +44,6 @@ class RequestsStore extends Store
     _refreshes = _setRefreshes window?.refreshes
 
 
-
     ###
     Private methods
     =============

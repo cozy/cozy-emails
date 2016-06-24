@@ -125,7 +125,7 @@ const fixtures = {
 };
 
 
-describe.skip('Router Store', () => {
+describe('Router Store', () => {
   let routerStore;
   let dispatcher;
 
@@ -193,6 +193,7 @@ describe.skip('Router Store', () => {
       '../app/stores/router_store',
       '../stores/account_store',
       '../stores/message_store',
+      '../stores/requests_store',
       '../../../server/utils/constants',
     ]);
     routerStore = require('../app/stores/router_store');
@@ -268,20 +269,12 @@ describe.skip('Router Store', () => {
       assert.equal(routerStore.getCurrentURL({ isServer: false }),
                    '#mailbox/mb1');
     });
-    it('ADD_ACCOUNT_REQUEST', () => {
-      dispatcher.dispatch({
-        type: ActionTypes.ADD_ACCOUNT_REQUEST,
-        value: '',
-      });
-      assert.isTrue(routerStore.isWaiting());
-    });
     it.skip('ADD_ACCOUNT_SUCCESS', (done) => {
       dispatcher.dispatch({
         type: ActionTypes.ADD_ACCOUNT_SUCCESS,
         value: { account: _.clone(fixtures.account) },
       });
       setTimeout(() => {
-        assert.isFalse(routerStore.isWaiting());
         assert.equal(routerStore.getAction(), MessageActions.SHOW_ALL);
         assert.equal(routerStore.getAccountID(), fixtures.account.id);
         assert.equal(routerStore.getMailboxID(), fixtures.account.inboxMailbox);
@@ -293,96 +286,6 @@ describe.skip('Router Store', () => {
       }, 5000);
     }); // .timeout(6000);
     // Uncomment previous line, if you decide to unskip this test.
-    it('ADD_ACCOUNT_FAILURE', () => {
-      dispatcher.dispatch({
-        type: ActionTypes.ADD_ACCOUNT_FAILURE,
-        value: { error: fixtures.testError },
-      });
-      assert.isFalse(routerStore.isWaiting());
-      let errors = routerStore.getErrors().toObject();
-      assert.deepEqual(errors, fixtures.unknownError);
-      dispatcher.dispatch({
-        type: ActionTypes.ADD_ACCOUNT_FAILURE,
-        value: { error: fixtures.fullTestError },
-      });
-      assert.isFalse(routerStore.isWaiting());
-      errors = routerStore.getErrors().toObject();
-      assert.deepEqual(errors, {
-        field1: {
-          message: fixtures.fullTestError.field,
-          originalError: fixtures.fullTestError.originalError,
-          originalErrorStack: fixtures.fullTestError.originalErrorStack,
-        },
-        field2: {
-          message: fixtures.fullTestError.field,
-          originalError: fixtures.fullTestError.originalError,
-          originalErrorStack: fixtures.fullTestError.originalErrorStack,
-        },
-      });
-    });
-    it('CHECK_ACCOUNT_REQUEST', () => {
-      dispatcher.dispatch({ type: ActionTypes.CHECK_ACCOUNT_REQUEST });
-      assert.isTrue(routerStore.isChecking());
-    });
-    it('CHECK_ACCOUNT_SUCCESS', () => {
-      dispatcher.dispatch({ type: ActionTypes.CHECK_ACCOUNT_SUCCESS });
-      assert.isFalse(routerStore.isChecking());
-    });
-    it('CHECK_ACCOUNT_FAILURE', () => {
-      dispatcher.dispatch({
-        type: ActionTypes.CHECK_ACCOUNT_FAILURE,
-        value: { error: fixtures.testError },
-      });
-      assert.isFalse(routerStore.isChecking());
-      let errors = routerStore.getErrors().toObject();
-      assert.deepEqual(errors, fixtures.unknownError);
-      dispatcher.dispatch({
-        type: ActionTypes.CHECK_ACCOUNT_FAILURE,
-        value: { error: fixtures.fullTestError },
-      });
-      assert.isFalse(routerStore.isChecking());
-      errors = routerStore.getErrors().toObject();
-      assert.deepEqual(errors, {
-        field1: {
-          message: fixtures.fullTestError.field,
-          originalError: fixtures.fullTestError.originalError,
-          originalErrorStack: fixtures.fullTestError.originalErrorStack,
-        },
-        field2: {
-          message: fixtures.fullTestError.field,
-          originalError: fixtures.fullTestError.originalError,
-          originalErrorStack: fixtures.fullTestError.originalErrorStack,
-        },
-      });
-    });
-    it('EDIT_ACCOUNT_REQUEST', () => {
-      dispatcher.dispatch({
-        type: ActionTypes.EDIT_ACCOUNT_REQUEST,
-        value: { rawAccount: _.clone(fixtures.account) },
-      });
-      assert.isTrue(routerStore.isWaiting());
-    });
-    it('EDIT_ACCOUNT_SUCCESS', () => {
-      dispatcher.dispatch({
-        type: ActionTypes.EDIT_ACCOUNT_SUCCESS,
-        value: { rawAccount: _.clone(fixtures.account) },
-      });
-      assert.isFalse(routerStore.isWaiting());
-    });
-    it('EDIT_ACCOUNT_FAILURE', () => {
-      // NB: More advanced errors are tested in CHECK_ACCOUNT_FAILURE_TEST
-      dispatcher.dispatch({
-        type: ActionTypes.EDIT_ACCOUNT_FAILURE,
-        value: { error: fixtures.testError },
-      });
-      assert.isFalse(routerStore.isChecking());
-      const errors = routerStore.getErrors().toObject();
-      assert.deepEqual(errors, fixtures.unknownError);
-    });
-    it('MESSAGE_FETCH_REQUEST', () => {
-      dispatcher.dispatch({ type: ActionTypes.MESSAGE_FETCH_REQUEST });
-      assert.isTrue(routerStore.isRefresh());
-    });
     it('MESSAGE_FETCH_SUCCESS', () => {
       dispatcher.dispatch({
         type: ActionTypes.MESSAGE_FETCH_SUCCESS,
@@ -392,7 +295,6 @@ describe.skip('Router Store', () => {
           timestamp: new Date(),
         },
       });
-      assert.isFalse(routerStore.isRefresh());
       assert.deepEqual(routerStore.getLastPage(), fixtures.lastPage);
     });
     it('DISPLAY_MODAL', () => {
@@ -438,20 +340,6 @@ describe.skip('Router Store', () => {
       const messageID = fixtures.message2.id;
       assert.equal(routerStore.getCurrentURL(),
         `mailbox/${mailboxID}/${conversationID}/${messageID}/`);
-    });
-    it('REFRESH_REQUEST', () => {
-      dispatcher.dispatch({ type: ActionTypes.REFRESH_REQUEST });
-      assert.isTrue(routerStore.isRefresh());
-    });
-    it('REFRESH_SUCCESS', () => {
-      dispatcher.dispatch({ type: ActionTypes.REFRESH_REQUEST });
-      dispatcher.dispatch({ type: ActionTypes.REFRESH_SUCCESS });
-      assert.isFalse(routerStore.isRefresh());
-    });
-    it('REFRESH_FAILURE', () => {
-      dispatcher.dispatch({ type: ActionTypes.REFRESH_REQUEST });
-      dispatcher.dispatch({ type: ActionTypes.REFRESH_FAILURE });
-      assert.isFalse(routerStore.isRefresh());
     });
     it('REMOVE_ACCOUNT_SUCCESS', () => {
       dispatcher.dispatch({
@@ -500,8 +388,9 @@ describe.skip('Router Store', () => {
     it('getMailbox', () => {
       assert.deepEqual(routerStore.getMailbox().toObject(),
                        fixtures.account.mailboxes[0]);
+      const accountID = fixtures.account.id
       const id2 = fixtures.account.mailboxes[1].id;
-      assert.deepEqual(routerStore.getMailbox(id2).toObject(),
+      assert.deepEqual(routerStore.getMailbox(accountID, id2).toObject(),
                        fixtures.account.mailboxes[1]);
     });
     it('getAllMailboxes', () => {
@@ -517,20 +406,6 @@ describe.skip('Router Store', () => {
         return mailboxes[key].toObject();
       });
       assert.deepEqual(mbs, fixtures.account.mailboxes);
-    });
-    it('getInbox', () => {
-      assert.deepEqual(routerStore.getInbox().toObject(),
-                   fixtures.account.mailboxes[0]);
-    });
-    it('isInbox', () => {
-      let id = fixtures.account.mailboxes[0].id;
-      assert.isTrue(routerStore.isInbox(id));
-      id = fixtures.account.mailboxes[1].id;
-      assert.isFalse(routerStore.isInbox(id));
-    });
-    it('getTrashMailbox', () => {
-      assert.deepEqual(routerStore.getTrashMailbox().toObject(),
-                   fixtures.account.mailboxes[2]);
     });
     it('getSelectedTab', () => {
       assert.equal(routerStore.getSelectedTab(), 'account');
