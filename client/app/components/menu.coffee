@@ -53,7 +53,6 @@ module.exports = Menu = React.createClass
                                 div
                                     className: 'account-details',
                                         span {}, @props?.search
-
                 @props.accounts.map @renderMailBoxes
 
             nav className: 'submenu',
@@ -138,7 +137,7 @@ module.exports = Menu = React.createClass
                     className: 'list-unstyled mailbox-list',
 
                     # Default Inbox Mailboxes
-                    props.inboxMailboxes?.map (mailbox, key) =>
+                    props.inboxMailboxes?.valueSeq().map (mailbox, key) =>
                         mailboxURL = RouterGetter.getURL
                             mailboxID: (mailboxID = mailbox.get 'id')
                             resetFilter: true
@@ -182,7 +181,7 @@ module.exports = Menu = React.createClass
                         mailboxID:          account.get 'inboxMailbox'
 
                     # Other mailboxes
-                    props.otherMailboxes?.map (mailbox, key) =>
+                    props.otherMailboxes?.valueSeq().map (mailbox, key) =>
                         mailboxURL = RouterGetter.getURL
                             mailboxID: (mailboxID = mailbox.get 'id')
                             resetFilter: true
