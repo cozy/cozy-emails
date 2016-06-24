@@ -258,6 +258,7 @@ describe('Message Store', () => {
       const id1 = fixtures.message1.id;
       const id2 = fixtures.message2.id;
       const messages = messageStore.getAll();
+
       assert.deepEqual(messages.get(id1).toObject(), message1);
       assert.deepEqual(messages.get(id2).toObject(), message2);
     });
@@ -391,7 +392,7 @@ describe('Message Store', () => {
 
       // Empty conversation should return length: null
       length = messageStore.getConversationLength('c5');
-      assert.isUndefined(length);
+      assert.isNull(length);
     });
   });
 

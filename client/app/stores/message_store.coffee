@@ -37,7 +37,7 @@ class MessageStore extends Store
         message.mailboxID = mailboxIDs.shift()
 
         updated = (_messages.get message.id)?.get 'updated'
-        isNewer = timestamp? and updated? and updated < timestamp
+        isNewer = timestamp? and updated? and updated <= timestamp
         if (not updated? or isNewer) and not message._deleted
 
             attachments = message.attachments or Immutable.List []
