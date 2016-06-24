@@ -168,10 +168,10 @@ class RouterStore extends Store
         filter.type in ['from', 'dest']
 
 
-    _setCurrentAccount = (accountID, mailboxID, tab="account") ->
+    _setCurrentAccount = ({accountID, mailboxID, tab="account"}) ->
         _accountID = accountID
         _mailboxID = mailboxID
-        _tab = tab
+        _tab = if _action is AccountActions.EDIT then tab else null
 
 
     _getFlags = (message) ->
@@ -233,6 +233,20 @@ class RouterStore extends Store
         _conversationID = conversationID
         _messageID = messageID
         _messagesLength = 0
+
+
+    _setCurrentAction = (payload={}) ->
+        {action, accountID, mailboxID, messageID, conversationID} = payload
+        if AccountStore.getAll()?.size
+            if mailboxID
+                if messageID and conversationID
+                    action = MessageActions.SHOW
+                else if accountID and action isnt AccountActions.EDIT
+                    action = MessageActions.SHOW_ALL
+            else
+                action = AccountActions.EDIT
+        _action = action or AccountActions.CREATE
+
 
 
     getConversationID: (messageID) ->
@@ -478,23 +492,19 @@ class RouterStore extends Store
 
             clearTimeout _timerRouteChange
 
-
             {accountID, mailboxID, tab} = payload
             {action, conversationID, messageID, filter} = payload
 
             # We cant display any informations
             # without accounts
-            if AccountStore.getAll()?.size
-                _action = action
-            else
-                _action = AccountActions.CREATE
+            _setCurrentAction payload
 
-            # From AccountStore
-            _setCurrentAccount accountID, mailboxID, tab
+            _setCurrentAccount payload
 
             # From MessageStore
             # Update currentMessageID
-            _setCurrentMessage conversationID, messageID
+            _setCurrentMessage payload
+
             # Handle all Selection
             # _resetSelection()
 
@@ -520,20 +530,30 @@ class RouterStore extends Store
             @emit 'change'
 
 
-        handle ActionTypes.REMOVE_ACCOUNT_SUCCESS, ->
-            _action = AccountActions.CREATE
-            _setCurrentAccount()
+        # Do not redirect to default account
+        # if silent is true
+        handle ActionTypes.REMOVE_ACCOUNT_SUCCESS, ({accountID, silent})  ->
+            accountID = @getAccountID()
+            mailboxID = @getAccount(accountID)?.get 'inboxMailbox'
+            _setCurrentAccount {accountID, mailboxID}
+
+            unless silent
+                action = AccountActions[if mailboxID then 'EDIT' else 'CREATE']
+                _setCurrentAction {action}
+
+            _updateURL()
+
             @emit 'change'
 
 
-        handle ActionTypes.ADD_ACCOUNT_SUCCESS, ({account}) ->
+        handle ActionTypes.ADD_ACCOUNT_SUCCESS, ({account, timeout}) ->
             _timerRouteChange = setTimeout =>
                 _action = MessageActions.SHOW_ALL
                 _setCurrentAccount account.id, account.inboxMailbox
                 _updateURL()
 
                 @emit 'change'
-            , 5000
+            , timeout or 5000
 
 
         handle ActionTypes.MESSAGE_FETCH_SUCCESS, ({result, conversationID, lastPage}) ->

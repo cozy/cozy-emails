@@ -165,7 +165,9 @@ class AccountStore extends Store
             @emit 'change'
 
 
-        handle ActionTypes.REMOVE_ACCOUNT_SUCCESS, (accountID) ->
+        handle ActionTypes.REMOVE_ACCOUNT_SUCCESS, ({accountID}) ->
+            _accounts = _accounts?.filter (account) ->
+                account.get('id') isnt accountID
             @emit 'change'
 
 

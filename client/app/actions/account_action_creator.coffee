@@ -91,11 +91,11 @@ module.exports = AccountActionCreator =
             if error
                 AppDispatcher.dispatch
                     type: ActionTypes.REMOVE_ACCOUNT_FAILURE
-                    value: accountID
+                    value: {accountID}
             else
                 AppDispatcher.dispatch
                     type: ActionTypes.REMOVE_ACCOUNT_SUCCESS
-                    value: accountID
+                    value: {accountID}
 
     discover: (domain, config) ->
         AppDispatcher.dispatch
