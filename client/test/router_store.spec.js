@@ -365,7 +365,7 @@ describe.skip('Router Store', () => {
   //     assert.equal(routerStore.getSelectedTab(), 'account');
   //   });
   // });
-  
+
   describe('getStates related to:', () => {
 
     // TODO: tester lorsqu'on ne trouve aucun comptes
@@ -563,32 +563,45 @@ describe.skip('Router Store', () => {
         });
     });
 
-    // it('hasNextPage', () => {
-    //   dispatcher.dispatch({
-    //     type: ActionTypes.MESSAGE_FETCH_SUCCESS,
-    //     value: {
-    //       lastPage: {
-    //         info: 'last-page',
-    //         isComplete: false,
-    //       },
-    //       result: {},
-    //       timestamp: new Date(),
-    //     },
-    //   });
-    //   assert.isTrue(routerStore.hasNextPage());
-    //   dispatcher.dispatch({
-    //     type: ActionTypes.MESSAGE_FETCH_SUCCESS,
-    //     value: {
-    //       lastPage: {
-    //         info: 'last-page',
-    //         isComplete: true,
-    //       },
-    //       result: {},
-    //       timestamp: new Date(),
-    //     },
-    //   });
-    //   assert.isFalse(routerStore.hasNextPage());
-    // });
+
+    describe('RouterStore', () => {
+
+      it('Paginate', () => {
+
+        // TODO: add more moplex tests
+        // ie. navigate thew several mailbox (accordinf flagged ones)
+        // to chake if hasNextPage is still coherent
+
+        it('hasNextPage', () => {
+          dispatcher.dispatch({
+            type: ActionTypes.MESSAGE_FETCH_SUCCESS,
+            value: {
+              lastPage: {
+                info: 'last-page',
+                isComplete: false,
+              },
+              result: {},
+              timestamp: new Date(),
+            },
+          });
+          assert.isTrue(routerStore.hasNextPage());
+
+          dispatcher.dispatch({
+            type: ActionTypes.MESSAGE_FETCH_SUCCESS,
+            value: {
+              lastPage: {
+                info: 'last-page',
+                isComplete: true,
+              },
+              result: {},
+              timestamp: new Date(),
+            },
+          });
+          assert.isFalse(routerStore.hasNextPage());
+        });
+
+      });
+    });
     // it('getLastPage', () => {
     //   loadMessages([fixtures.message1, fixtures.message2]);
     //   assert.deepEqual(routerStore.getLastPage(), fixtures.lastPage);
