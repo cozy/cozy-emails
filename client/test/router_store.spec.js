@@ -204,7 +204,7 @@ describe.skip('Router Store', () => {
 
     dispatcher.dispatch({
       type: ActionTypes.ADD_ACCOUNT_SUCCESS,
-      value: { account: fixtures.account },
+      value: { account: _.clone(fixtures.account) },
     });
 
   });
@@ -621,29 +621,43 @@ describe.skip('Router Store', () => {
             routerStore.isDraft(map(fixtures.message4)));
         });
 
-        // it('getMailboxTotal', () => {
-        //   // TODO: faire des tests d'ajout et de suppression ici
-        //   // TODO: faire les tests des compteurs des mailbox flagged ici
-        //   assert.equal(
-        //     routerStore.getMailboxTotal(),
-        //     fixtures.account.mailboxes[0].nbTotal
-        //   );
-        //   //   changeRoute({ });
-        //   //   assert.equal(
-        //   //     routerStore.getMailboxTotal(),
-        //   //     fixtures.account.mailboxes[0].nbTotal
-        //   //   );
-        //   //   changeRoute({ flags: MessageFilter.UNSEEN });
-        //   //   assert.equal(
-        //   //     routerStore.getMailboxTotal(),
-        //   //     fixtures.account.mailboxes[0].nbUnread
-        //   //   );
-        //   //   changeRoute({ flags: MessageFilter.FLAGGED });
-        //   //   assert.equal(
-        //   //     routerStore.getMailboxTotal(),
-        //   //     fixtures.account.mailboxes[0].nbFlagged
-        //   //   );
-        // });
+        it('getInboxTotal', () => {
+          const total = fixtures.account.mailboxes[0].nbTotal
+          dispatcher.dispatch({
+            type: ActionTypes.ROUTE_CHANGE,
+            value: {
+              accountID: fixtures.account.id,
+              mailboxID: fixtures.account.inboxMailbox,
+            }
+          });
+          assert.equal(routerStore.getMailboxTotal(), total);
+        });
+
+        it('getFlagboxTotal', () => {
+          const total = fixtures.account.mailboxes[0].nbFlagged
+          dispatcher.dispatch({
+            type: ActionTypes.ROUTE_CHANGE,
+            value: {
+              accountID: fixtures.account.id,
+              mailboxID: fixtures.account.inboxMailbox,
+              query: {flags: MessageFilter.FLAGGED},
+            }
+          });
+          assert.equal(routerStore.getMailboxTotal(), total);
+        });
+
+        it('getUnreadTotal', () => {
+          const total = fixtures.account.mailboxes[0].nbUnread
+          dispatcher.dispatch({
+            type: ActionTypes.ROUTE_CHANGE,
+            value: {
+              accountID: fixtures.account.id,
+              mailboxID: fixtures.account.inboxMailbox,
+              query: {flags: MessageFilter.UNSEEN},
+            }
+          });
+          assert.equal(routerStore.getMailboxTotal(), total);
+        });
     });
 
     // it('hasNextPage', () => {
