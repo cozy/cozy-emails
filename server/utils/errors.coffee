@@ -4,7 +4,6 @@ americano = require 'americano'
 # @TODO : move this to server ?
 OTHER_FIELDS_ERROR_CAUSES =
     'auth': ['login', 'password', 'imapLogin']
-    'smtpAuth': ['smtpLogin', 'smtpPassword']
     'imapServer': ['imapPort']
     'imapTLS': ['imapServer', 'imapPort', 'imapTLS', 'imapSSL']
     'smtp': ['smtpServer', 'smtpPort', 'smtpSSL', 'smtpTLS']
