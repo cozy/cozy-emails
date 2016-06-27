@@ -254,9 +254,11 @@ module.exports = class Message extends cozydb.CozyModel
             [count, messages] = results
             conversationIDs = _.uniq _.pluck messages, 'conversationID'
 
-            Message.getConversationLengths conversationIDs, (error, conversationLength) ->
-                return callback error if error
-                callback null, {conversationLength, messages, count}
+            Message.getConversationLengths(
+                conversationIDs, (error, conversationLength) ->
+                    return callback error if error
+                    callback null, {conversationLength, messages, count}
+            )
 
     # Public: get messages in a box depending on the query params
     #

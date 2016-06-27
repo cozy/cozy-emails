@@ -79,11 +79,13 @@ module.exports.listByMailboxOptions = (req, res, next) ->
     sortField = sort.substring(1)
     before = req.query.before
     after = req.query.after
+
     if sortField is 'date'
         before ?= new Date(0).toISOString()
         after ?= new Date().toISOString()
-        if new Date(before).toISOString() isnt before or
-           new Date(after).toISOString() isnt after
+
+        if new Date(before).toISOString() isnt before \
+        or new Date(after).toISOString() isnt after
             return next new BadRequest "before & after should be a valid JS " +
                 "date.toISOString()"
 

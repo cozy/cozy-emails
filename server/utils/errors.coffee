@@ -129,8 +129,8 @@ baseHandler = americano.errorHandler()
 utils.errorHandler = (err, req, res, next) ->
     log.debug "ERROR HANDLER CALLED", err
 
-    if err instanceof utils.AccountConfigError or
-       err.textCode is 'AUTHENTICATIONFAILED'
+    if err instanceof utils.AccountConfigError \
+    or err.textCode is 'AUTHENTICATIONFAILED'
         res.status(400).send
             name: err.name
             field: err.field

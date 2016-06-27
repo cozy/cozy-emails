@@ -103,7 +103,8 @@ class Account extends cozydb.CozyModel
     # Returns a the updated account
     forgetBox: (boxid, callback) ->
         changes = {}
-        for attribute in Object.keys Constants.RFC6154 when @[attribute] is boxid
+        keys = Object.keys Constants.RFC6154
+        for attribute in keys when @[attribute] is boxid
             changes[attribute] = null
 
         if boxid in @favorites
