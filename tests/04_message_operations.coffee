@@ -185,7 +185,7 @@ describe 'Message actions', ->
     it "When I edit a Draft (remove first attachment)", (done) ->
         @timeout 5000
 
-        filter = store.draftStatus.attachments
+        attachments = store.draftStatus.attachments
         store.draftStatus.attachments = attachments.filter (file) ->
             file.generatedFileName isnt 'README-2.md'
 
