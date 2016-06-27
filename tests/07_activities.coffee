@@ -39,7 +39,7 @@ describe 'Activity testing', ->
                     name: 'bobby'
                     address: 'bob@test.com'
 
-        client.post "/activity", createContactActivity, (err, res, body) =>
+        client.post "/activity", createContactActivity, (err, res, body) ->
             should.not.exist err
             res.statusCode.should.equal 200
             body.result.should.be.instanceof(Array).and.have.lengthOf 1
@@ -55,7 +55,7 @@ describe 'Activity testing', ->
                     name: 'alice'
                     address: 'alice@test.com'
 
-        client.post "/activity", createContactActivity, (err, res, body) =>
+        client.post "/activity", createContactActivity, (err, res, body) ->
             should.not.exist err
             res.statusCode.should.equal 200
             body.result.should.be.instanceof(Array).and.have.lengthOf 1

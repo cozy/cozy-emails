@@ -60,7 +60,7 @@ describe 'Mailbox operations', ->
             parentID: null
 
 
-        client.post "/mailbox/", box, (err, res, body) =>
+        client.post "/mailbox/", box, (err, res, body) ->
             res.statusCode.should.equal 200
             body.id.should.equal store.accountID
             body.should.have.property('mailboxes').with.lengthOf(5)
@@ -74,7 +74,7 @@ describe 'Mailbox operations', ->
             accountID: store.accountID
             label: 'My Drafts'
 
-        client.put "/mailbox/#{store.draftBoxID}", box, (err, res, body) =>
+        client.put "/mailbox/#{store.draftBoxID}", box, (err, res, body) ->
             res.statusCode.should.equal 200
             body.id.should.equal store.accountID
             body.should.have.property('mailboxes').with.lengthOf(5)
@@ -91,7 +91,8 @@ describe 'Mailbox operations', ->
 
         store.accountState.draftMailbox = store.draftBoxID
 
-        client.put "/account/#{store.accountID}", store.accountState, (err, res, body) =>
+        url = "/account/#{store.accountID}"
+        client.put url, store.accountState, (err, res, body) ->
             res.statusCode.should.equal 200
             body.should.have.property 'draftMailbox', store.draftBoxID
             done()
@@ -104,7 +105,7 @@ describe 'Mailbox operations', ->
             favorite: true
             mailboxID: store.draftBoxID
 
-        client.put "/mailbox/#{store.draftBoxID}", box, (err, res, body) =>
+        client.put "/mailbox/#{store.draftBoxID}", box, (err, res, body) ->
             res.statusCode.should.equal 200
             body.id.should.equal store.accountID
             body.should.have.property('favorites').with.lengthOf 5

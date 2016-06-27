@@ -44,8 +44,8 @@ describe 'AccountStore initialized without account', ->
     #     RouterStore.isWaiting().should.be.false
 
     # it 'Then AccountStore should have a nomailboxes error', ->
-    #     noMailboxErr = RouterStore.getErrors().get('nomailboxes')
-    #     noMailboxErr.message.should.equal 'translated config error nomailboxes'
+    #    noMailboxErr = RouterStore.getErrors().get('nomailboxes')
+    #    noMailboxErr.message.should.equal 'translated config error nomailboxes'
 
     it 'When i send a request to create a second account', ->
         dispatch ActionTypes.ADD_ACCOUNT_REQUEST, {}
