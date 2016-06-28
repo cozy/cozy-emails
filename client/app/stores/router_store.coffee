@@ -106,7 +106,6 @@ class RouterStore extends Store
         params.mailboxID ?= @getMailboxID()
         params.messageID ?= @getMessageID()
         params.conversationID ?= @getConversationID()
-
         return @getURL params
 
 
@@ -228,7 +227,7 @@ class RouterStore extends Store
     _setCurrentMessage = (conversationID=null, messageID=null) ->
         # Return to message list
         # if no messages are found
-        unless messageID
+        if not messageID and _action is MessageActions.SHOW
             _action = MessageActions.SHOW_ALL
 
         _conversationID = conversationID
@@ -479,6 +478,7 @@ class RouterStore extends Store
 
             clearTimeout _timerRouteChange
 
+
             {accountID, mailboxID, tab} = payload
             {action, conversationID, messageID, query} = payload
 
@@ -490,13 +490,11 @@ class RouterStore extends Store
                 _action = AccountActions.CREATE
 
             # From AccountStore
-            accountID ?= AccountStore.getDefault(mailboxID)?.get 'id'
             _setCurrentAccount accountID, mailboxID, tab
 
             # From MessageStore
             # Update currentMessageID
             _setCurrentMessage conversationID, messageID
-
             # Handle all Selection
             # _resetSelection()
 
