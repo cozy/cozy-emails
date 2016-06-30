@@ -45,21 +45,21 @@ module.exports.createAllMailbox = function AllMailbox() {
     id: "1",
     label: mailboxLabel,
     attribs: [MailboxFlags.ALL],
-    tree: [inboxLabel, 'Tous mes messages'],
+    tree: [mailboxLabel],
   });
 };
 
 
 module.exports.createDraftMailbox = function DraftMailbox() {
   const mailboxLabel = 'Mes brouillons';
-    let mailbox = new module.exports.createMailbox();
+  let mailbox = new module.exports.createMailbox();
 
-    return Object.assign(mailbox, {
-      id: "2",
-      label: mailboxLabel,
-      attribs: [MailboxFlags.DRAFT],
-      tree: [inboxLabel, mailboxLabel],
-    });
+  return Object.assign(mailbox, {
+    id: "2",
+    label: mailboxLabel,
+    attribs: [MailboxFlags.DRAFT],
+    tree: [mailboxLabel],
+  });
 };
 
 
@@ -71,7 +71,7 @@ module.exports.createSentMailbox = function SentMailbox() {
     id: "3",
     label: mailboxLabel,
     attribs: [MailboxFlags.SENT],
-    tree: [inboxLabel, mailboxLabel],
+    tree: [mailboxLabel],
   });
 };
 
@@ -81,9 +81,10 @@ module.exports.createTrashMailbox = function TrashMailbox() {
   let mailbox = new module.exports.createMailbox();
 
   return Object.assign(mailbox, {
+    id: "4",
     label: mailboxLabel,
-    attribs: [MailboxFlags.INBOX],
-    tree: [inboxLabel, mailboxLabel],
+    attribs: [MailboxFlags.TRASH],
+    tree: [mailboxLabel],
   });
 };
 
@@ -93,10 +94,10 @@ module.exports.createJunkMailbox = function JunkMailbox() {
   let mailbox = new module.exports.createMailbox();
 
   return Object.assign(mailbox, {
-    id: "4",
+    id: "5",
     label: mailboxLabel,
-    attribs: [MailboxFlags.SPAM],
-    tree: [inboxLabel, mailboxLabel],
+    attribs: [MailboxFlags.INBOX, MailboxFlags.SPAM],
+    tree: [mailboxLabel],
     nbTotal: 10,
     nbUnread: 3,
     nbFlagged: 3,
@@ -109,7 +110,7 @@ module.exports.createUnreadMailbox = function UnreadMailbox() {
   let mailbox = new module.exports.createMailbox();
 
   return Object.assign(mailbox, {
-    id: "5",
+    id: "6",
     label: mailboxLabel,
     attribs: [MailboxFlags.INBOX, FlagsConstants.UNSEEN],
     tree: [inboxLabel, mailboxLabel],
@@ -123,7 +124,7 @@ module.exports.createFlaggedMailbox = function FlaggedMailbox() {
   let mailbox = new module.exports.createMailbox();
 
   return Object.assign(mailbox, {
-    id: "6",
+    id: "7",
     label: mailboxLabel,
     attribs: [MailboxFlags.INBOX, MailboxFlags.FLAGGED],
     tree: [inboxLabel, mailboxLabel],
@@ -140,6 +141,7 @@ module.exports.createAccount = function Account() {
   const sentMailbox = new module.exports.createSentMailbox();
   const trashMailbox = new module.exports.createTrashMailbox();
   const unreadMailbox = new module.exports.createUnreadMailbox();
+  const flaggedMailbox = new module.exports.createFlaggedMailbox()
 
   return {
     id: '0d73a98a97651572eeb6e00c41f5817a',
@@ -158,7 +160,7 @@ module.exports.createAccount = function Account() {
 
     // TODO: faire des mailbox sans attribs
     //  pour gérer le cas
-    mailboxes: [inboxMailbox, draftMailbox, junkMailbox, sentMailbox, trashMailbox, unreadMailbox],
+    mailboxes: [inboxMailbox, draftMailbox, junkMailbox, sentMailbox, trashMailbox, unreadMailbox, flaggedMailbox],
 
     // favorites: Array[4],
 
