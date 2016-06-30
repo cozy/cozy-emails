@@ -67,12 +67,9 @@ describe('AccountStore', () => {
       });
 
       describe('Account.mailboxes', () => {
-        it('should be equal to its input value', () => {
-            // const output = AccountStore.getAll().get(account.id).get('mailboxes');
-
-
-
-            // assert.equal(_.toArray(mailboxesStored.toJS()), account.mailboxes);
+        it('should have the same size thann its input', () => {
+            const output = AccountStore.getAll().get(account.id).get('mailboxes');
+            assert.equal(_.toArray(output.toJS()).length, account.mailboxes.length);
         });
 
         it('should be sorted as CONST MailboxFlags', () => {
