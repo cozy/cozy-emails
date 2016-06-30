@@ -42,7 +42,6 @@
   },
   "devDependencies": {
     "chai": "3.5.0",
-    "coffee-19-jshint": "2.3.1",
     "coffee-jshint": "0.2.3",
     "coffee-script": "1.10.0",
     "coffeelint": "1.14.2",
