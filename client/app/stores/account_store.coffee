@@ -161,10 +161,9 @@ class AccountStore extends Store
         _accounts = _accounts.set account.get('id'), account
 
 
-    _updateAccount = (rawAccount) ->
-        account = _toImmutable rawAccount
+    _updateAccount = (account) ->
+        account = _toImmutable account
         _accounts = _accounts?.set account.get('id'), account
-
 
 
     ###
@@ -180,7 +179,7 @@ class AccountStore extends Store
 
 
         handle ActionTypes.RESET_ACCOUNT_REQUEST, () ->
-            _accounts = Immutable.Iterable()
+            _accounts = Immutable.OrderedMap()
             @emit 'change'
 
 
@@ -189,28 +188,28 @@ class AccountStore extends Store
             @emit 'change'
 
 
-        handle ActionTypes.RECEIVE_ACCOUNT_UPDATE, (rawAccount) ->
-            _updateAccount rawAccount
+        handle ActionTypes.RECEIVE_ACCOUNT_UPDATE, (account) ->
+            _updateAccount account
             @emit 'change'
 
 
-        handle ActionTypes.EDIT_ACCOUNT_SUCCESS, ({rawAccount}) ->
-            _updateAccount rawAccount
+        handle ActionTypes.EDIT_ACCOUNT_SUCCESS, (account) ->
+            _updateAccount account
             @emit 'change'
 
 
-        handle ActionTypes.MAILBOX_CREATE_SUCCESS, (rawAccount) ->
-            _updateAccount rawAccount
+        handle ActionTypes.MAILBOX_CREATE_SUCCESS, (account) ->
+            _updateAccount account
             @emit 'change'
 
 
-        handle ActionTypes.MAILBOX_UPDATE_SUCCESS, (rawAccount) ->
-            _updateAccount rawAccount
+        handle ActionTypes.MAILBOX_UPDATE_SUCCESS, (account) ->
+            _updateAccount account
             @emit 'change'
 
 
-        handle ActionTypes.MAILBOX_DELETE_SUCCESS, (rawAccount) ->
-            _updateAccount rawAccount
+        handle ActionTypes.MAILBOX_DELETE_SUCCESS, (account) ->
+            _updateAccount account
             @emit 'change'
 
 

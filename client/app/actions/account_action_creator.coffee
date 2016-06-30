@@ -128,33 +128,36 @@ module.exports = AccountActionCreator =
             type: ActionTypes.EDIT_ACCOUNT_TAB
             value: {tab}
 
-    mailboxCreate: (inputValues) ->
+
+    mailboxCreate: (mailbox) ->
         AppDispatcher.dispatch
             type: ActionTypes.MAILBOX_CREATE_REQUEST
-            value: account
-        XHRUtils.mailboxCreate inputValues, (error, account) ->
+            value: mailbox
+        XHRUtils.mailboxCreate mailbox, (error, mailbox) ->
             unless error?
                 AppDispatcher.dispatch
                     type: ActionTypes.MAILBOX_CREATE_SUCCESS
-                    value: account
+                    value: mailbox
             else
                 AppDispatcher.dispatch
                     type: ActionTypes.MAILBOX_CREATE_FAILURE
-                    value: account
+                    value: mailbox
 
-    mailboxUpdate: (inputValues) ->
+
+    mailboxUpdate: (mailbox) ->
         AppDispatcher.dispatch
             type: ActionTypes.MAILBOX_UPDATE_REQUEST
-            value: account
-        XHRUtils.mailboxUpdate inputValues, (error, account) ->
+            value: mailbox
+        XHRUtils.mailboxUpdate inputValues, (error, mailbox) ->
             unless error?
                 AppDispatcher.dispatch
                     type: ActionTypes.MAILBOX_UPDATE_SUCCESS
-                    value: account
+                    value: mailbox
             else
                 AppDispatcher.dispatch
                     type: ActionTypes.MAILBOX_UPDATE_FAILURE
-                    value: account
+                    value: mailbox
+
 
     mailboxDelete: (inputValues) ->
         AppDispatcher.dispatch
