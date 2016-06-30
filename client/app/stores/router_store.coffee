@@ -491,7 +491,7 @@ class RouterStore extends Store
             # before gettings data from it
             AppDispatcher.waitFor [MessageStore.dispatchToken]
 
-            clearTimeout _timerRouteChan
+            clearTimeout _timerRouteChange
 
             {accountID, mailboxID, tab} = payload
             {action, conversationID, messageID, filter} = payload

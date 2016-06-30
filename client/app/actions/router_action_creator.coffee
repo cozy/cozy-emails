@@ -187,7 +187,6 @@ RouterActionCreator =
 
 
     closeModal: ->
-        # FIX: can't go to account/new anymore
         account = AccountStore.getDefault()
         mailbox = AccountStore.getInbox account.get 'id'
         return unless (mailboxID = mailbox?.get 'id')?
