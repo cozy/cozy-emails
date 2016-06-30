@@ -41,9 +41,11 @@ module.exports =
         # Message
         'RECEIVE_ACCOUNT_CREATE'        : 'RECEIVE_ACCOUNT_CREATE'
         'RECEIVE_ACCOUNT_UPDATE'        : 'RECEIVE_ACCOUNT_UPDATE'
+        'ACCOUNT_RESET_REQUEST'         : 'ACCOUNT_RESET_REQUEST'
         'RECEIVE_RAW_MESSAGE'           : 'RECEIVE_RAW_MESSAGE'
         'RECEIVE_RAW_MESSAGES'          : 'RECEIVE_RAW_MESSAGES'
         'RECEIVE_RAW_MESSAGE_REALTIME'  : 'RECEIVE_RAW_MESSAGE_REALTIME'
+        'MESSAGE_RESET_REQUEST'         : 'MESSAGE_RESET_REQUEST'
         'MESSAGE_SEND_REQUEST'          : 'MESSAGE_SEND_REQUEST'
         'MESSAGE_SEND_SUCCESS'          : 'MESSAGE_SEND_SUCCESS'
         'MESSAGE_SEND_FAILURE'          : 'MESSAGE_SEND_FAILURE'
@@ -185,15 +187,18 @@ module.exports =
         'TRASH'   :  '\\Trash'
         'ALL'     :  '\\All'
         'SPAM'    :  '\\Junk'
+        'JUNK'    :  '\\Junk'
         'FLAGGED' :  '\\Flagged'
 
     MailboxSpecial:
-        'inboxMailbox'  : 'INBOX'
-        'draftMailbox'  : 'DRAFT'
-        'sentMailbox'   : 'SENT'
-        'trashMailbox'  : 'TRASH'
-        'junkMailbox'   : 'SPAM'
-        'allMailbox'    : 'ALL'
+        'inboxMailbox'      : 'INBOX'
+        'unreadMailbox'     : 'DRAFT'
+        'flaggedMailbox'    : 'FLAGGED'
+        'draftMailbox'      : 'DRAFT'
+        'sentMailbox'       : 'SENT'
+        'trashMailbox'      : ['TRASH', 'DELETE']
+        'junkMailbox'       : ['SPAM', 'JUNK']
+        'allMailbox'        : 'ALL'
 
     # FIXME: should decide between:
     # FlagsConstants or MessageFlags

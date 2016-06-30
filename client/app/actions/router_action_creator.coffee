@@ -1,11 +1,12 @@
 _ = require 'lodash'
 Immutable = require 'immutable'
 
-AppDispatcher = require '../libs/flux/dispatcher/dispatcher'
+AppDispatcher   = require '../libs/flux/dispatcher/dispatcher'
 
 RouterStore     = require '../stores/router_store'
 RequestsStore   = require '../stores/requests_store'
-MessageStore = require '../stores/message_store'
+AccountStore    = require '../stores/account_store'
+MessageStore    = require '../stores/message_store'
 
 Notification = require '../libs/notification'
 
@@ -65,7 +66,7 @@ RouterActionCreator =
             type: ActionTypes.MESSAGE_FETCH_REQUEST
             value: {url, timestamp}
 
-        XHRUtils.fetchMessagesByFolder url, (error, result) =>
+        XHRUtils.fetchMessagesByFolder url, (error, result={}) =>
             # Save messagesLength per page
             # to get the correct pageAfter param
             # for getNext handles
@@ -186,7 +187,10 @@ RouterActionCreator =
 
 
     closeModal: ->
-        return unless (mailboxID = RouterStore.getMailboxID())?
+        # FIX: can't go to account/new anymore
+        account = AccountStore.getDefault()
+        mailbox = AccountStore.getInbox account.get 'id'
+        return unless (mailboxID = mailbox?.get 'id')?
 
         # Load last messages
         @refreshMailbox {mailboxID}

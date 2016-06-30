@@ -17,6 +17,7 @@ class MessageStore extends Store
 
 
     _updateMessages = (result={}, timestamp) ->
+
         {messages, conversationLength} = result
 
         # This prevent to override local updates
@@ -30,15 +31,24 @@ class MessageStore extends Store
                 _updateConversationLength conversationID, length
 
 
+    _shouldUpdateMessage = (message, timestamp) ->
+        unless message?.id
+            return false
+
+        timestamp ?= new Date()
+        updated = (_messages.get message.id)?.get 'updated'
+        isNewer = timestamp? and updated? and updated <= timestamp
+
+        (not updated? or isNewer) and not message._deleted
+
+
     _saveMessage = (message, timestamp) ->
         # Save reference mailbox into message informations
         mailboxIDs = _.keys(message.mailboxIDs).sort (value0, value1) ->
             value0.localeCompare value1
         message.mailboxID = mailboxIDs.shift()
 
-        updated = (_messages.get message.id)?.get 'updated'
-        isNewer = timestamp? and updated? and updated <= timestamp
-        if (not updated? or isNewer) and not message._deleted
+        if _shouldUpdateMessage message, timestamp
 
             attachments = message.attachments or Immutable.List []
 
@@ -63,7 +73,7 @@ class MessageStore extends Store
             _messages = _messages.set message.id, messageMap
 
 
-    _deleteMessage = ({messageID}) ->
+    _deleteMessage = ({messageID}, timestamp) ->
         conversationID = _messages.get(messageID)?.get 'conversationID'
 
         _messages = _messages.remove messageID
@@ -90,6 +100,12 @@ class MessageStore extends Store
         Defines here the action handlers.
     ###
     __bindHandlers: (handle) ->
+
+
+        handle ActionTypes.MESSAGE_RESET_REQUEST, ->
+            _messages = Immutable.OrderedMap();
+            @emit 'change'
+
 
         handle ActionTypes.MESSAGE_FETCH_SUCCESS, ({result, timestamp}) ->
             _updateMessages result, timestamp

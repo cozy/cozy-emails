@@ -101,6 +101,8 @@ class RouterStore extends Store
 
 
     getCurrentURL: (options={}) ->
+        return unless (action = @getAction() or options.action)
+
         params = _.extend {isServer: true}, options
         params.action ?= @getAction()
         params.mailboxID ?= @getMailboxID()
@@ -190,8 +192,6 @@ class RouterStore extends Store
     getAccountID: (mailboxID) ->
         if mailboxID
             return AccountStore.getByMailbox('mailboxID')?.get 'id'
-        unless _accountID
-            return AccountStore.getDefault()?.get 'id'
         else
             return _accountID
 
@@ -203,10 +203,7 @@ class RouterStore extends Store
             if _mailboxID in _.keys(mailboxIDs)
                 return _mailboxID
 
-        unless _mailboxID
-            return AccountStore.getDefault()?.get 'inboxMailbox'
-        else
-            return _mailboxID
+        return _mailboxID
 
 
     getMailbox: (accountID, mailboxID) ->
@@ -244,10 +241,7 @@ class RouterStore extends Store
                     action = MessageActions.SHOW
                 else if accountID and action isnt AccountActions.EDIT
                     action = MessageActions.SHOW_ALL
-            else
-                action = AccountActions.EDIT
         _action = action or AccountActions.CREATE
-
 
 
     getConversationID: (messageID) ->
@@ -348,8 +342,9 @@ class RouterStore extends Store
         accountID ?= @getAccountID()
         mailboxID ?= @getMailboxID()
 
-        inboxID = (inbox = AccountStore.getInbox accountID).get 'id'
-        inboxTotal = inbox.get 'nbTotal'
+        inbox = AccountStore.getInbox accountID
+        inboxID = (inbox = AccountStore.getInbox accountID)?.get 'id'
+        inboxTotal = inbox?.get 'nbTotal'
         isInbox = AccountStore.isInbox accountID, mailboxID
 
         {sort} = @getFilter()
@@ -368,7 +363,6 @@ class RouterStore extends Store
                     mailboxIDs[inboxID] = inboxTotal
                     message.set 'mailboxIDs', mailboxIDs
                     return true
-
             # Display only last Message of conversation
             path = [message.get('mailboxID'), message.get('conversationID')].join '/'
             conversations[path] = true unless (exist = conversations[path])
@@ -378,6 +372,8 @@ class RouterStore extends Store
 
             # Message should be in mailbox
             inMailbox = mailboxID of message.get 'mailboxIDs'
+
+            # console.log 'PLOP', message.get 'mailboxIDs'
 
             return inMailbox and not exist and hasSameFlag
         .sort _sortByDate sortOrder
@@ -452,6 +448,10 @@ class RouterStore extends Store
         _URI
 
 
+    getMessagesPerPage: ->
+        MSGBYPAGE
+
+
     _updateURL = ->
         currentURL = _self.getCurrentURL isServer: false
         if location?.hash isnt currentURL
@@ -491,7 +491,7 @@ class RouterStore extends Store
             # before gettings data from it
             AppDispatcher.waitFor [MessageStore.dispatchToken]
 
-            clearTimeout _timerRouteChange
+            clearTimeout _timerRouteChan
 
             {accountID, mailboxID, tab} = payload
             {action, conversationID, messageID, filter} = payload
