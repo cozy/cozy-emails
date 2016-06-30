@@ -62,7 +62,15 @@ describe('AccountStore', () => {
 
       describe('Account', () => {
         it('should be equal to its input value', () => {
+          let output = AccountStore.getAll().get(account.id).toJS();
 
+          // mailboxes is a specific case
+          // it will be test after this
+          delete output.mailboxes;
+  
+          _.each(output, (value, property) => {
+            assert.equal(value, account[property]);
+          });
         });
       });
 
