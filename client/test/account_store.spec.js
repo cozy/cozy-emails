@@ -5,6 +5,7 @@ const _ = require('lodash');
 const mockeryUtils = require('./utils/mockery_utils');
 const SpecDispatcher = require('./utils/specs_dispatcher');
 const ActionTypes = require('../app/constants/app_constants').ActionTypes;
+const MailboxFlags = require('../app/constants/app_constants').MailboxFlags;
 
 const AccountFixture = require('./fixtures/account');
 
@@ -59,15 +60,63 @@ describe('AccountStore', () => {
 
     describe('ADD_ACCOUNT_SUCCESS', () => {
 
-      it('Account should be equal to its input value', () => {
-        const accountStored = AccountStore.getAll().get(account.id);
-        // assert.deepEqual(accountStored.get('mailboxes'), account.mailboxes);
+      describe('Account', () => {
+        it('should be equal to its input value', () => {
+
+        });
       });
 
-      // TODO: test mailbox order
-      // - add unsorted mailboxes
-      // - ckeck the order from (CONST)MailboxFlags
-      it('Account.mailboxes should be sorted', () => { })
+      describe('Account.mailboxes', () => {
+        it('should be equal to its input value', () => {
+            // const output = AccountStore.getAll().get(account.id).get('mailboxes');
+
+
+
+            // assert.equal(_.toArray(mailboxesStored.toJS()), account.mailboxes);
+        });
+
+        it('should be sorted as CONST MailboxFlags', () => {
+          const output = AccountStore.getByID(account.id).get('mailboxes');
+          const defaultOrder = AccountStore.getMailboxOrder();
+          const flags = _.toArray(MailboxFlags);
+
+          _.toArray(output.toJS()).forEach((mailbox, index) => {
+            let order = mailbox.order;
+            let attribs = mailbox.attribs;
+
+            // Get Mailbox.child right order
+            // - get 1rst decimal if attribs.lenth is 1
+            // - get 2nd decimal if attribs.lenth is 2
+            // etc.
+            if (mailbox.attribs != undefined) {
+              const index = mailbox.attribs.length - 1;
+              if (index > 0) {
+                order = `${mailbox.order}`.split('.')[index];
+                attribs = [mailbox.attribs[index]]
+              }
+            }
+
+            const flag = flags[order]
+            if (flag != undefined) {
+              // Test order for each flagged mailbox
+              assert.notEqual(attribs.indexOf(flag), -1);
+
+            } else {
+              // Unflagged mailbox always have the same order
+              // alphanumeric sorted is applied
+              assert.equal(order, defaultOrder);
+
+              // If this mailbox has flags
+              // ensure that its not known flags
+              if (attribs != undefined) {
+                attribs.forEach((attrib) => {
+                  assert.equal(flags.indexOf(flags), -1);
+                });
+              }
+            }
+          });
+        });
+      });
     });
 
     // // TODO: add test on account_update;

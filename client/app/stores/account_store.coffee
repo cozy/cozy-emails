@@ -10,7 +10,8 @@ class AccountStore extends Store
     ###
         Defines private variables here.
     ###
-    _accounts = Immutable.Iterable()
+    _accounts = null;
+    _mailboxOrder = 100;
 
 
     _isGmail = (account) ->
@@ -29,13 +30,13 @@ class AccountStore extends Store
             # console.log 'GET_MAILBOX_ORDER', value, attribs, tree, label
             if (index = value.shift())?
                 index = "#{index}.#{decimal}" if (decimal = value.join '').length
-                return index * 10
+                return index
 
         else if attrib?
             index = _.findIndex _.keys(MailboxFlags), (key) -> MailboxFlags[key] is attrib
             return index if -1 < index
 
-        return 100
+        return _mailboxOrder
 
     # FIXME: all this stuff should be done sever side
     # its only about fixing what server side part doesnt complete
@@ -162,6 +163,7 @@ class AccountStore extends Store
 
 
     _updateAccount = (account) ->
+        # console.log 'UPDATE_ACCOUNT', account.mailboxes
         account = _toImmutable account
         _accounts = _accounts?.set account.get('id'), account
 
@@ -245,6 +247,12 @@ class AccountStore extends Store
         account = @getByMailbox mailboxID if mailboxID
         account ?= @getAll().first()
         account
+
+
+    getMailboxOrder: (accountID, mailboxID) ->
+        if accountID and mailboxID
+            return @getMailbox(accountID, mailboxID).get 'order'
+        _mailboxOrder
 
 
     getByMailbox: (mailboxID) ->
