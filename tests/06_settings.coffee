@@ -3,7 +3,7 @@ should = require 'should'
 describe "settings changes", ->
 
     it "When I get the settings (first time)", (done) ->
-        client.get "/settings", (err, res, body) =>
+        client.get "/settings", (err, res, body) ->
             res.statusCode.should.equal 200
 
             #body.should.have.property 'messagesPerPage'      , 25
@@ -24,7 +24,7 @@ describe "settings changes", ->
             messageDisplayHTML: false
 
 
-        client.put "/settings", changes, (err, res, body) =>
+        client.put "/settings", changes, (err, res, body) ->
             res.statusCode.should.equal 200
 
             #body.should.have.property 'messagesPerPage'      , 20
@@ -40,7 +40,7 @@ describe "settings changes", ->
 
     it "When I get again ", (done) ->
 
-        client.get "/settings", (err, res, body) =>
+        client.get "/settings", (err, res, body) ->
             res.statusCode.should.equal 200
 
             #body.should.have.property 'messagesPerPage'      , 20

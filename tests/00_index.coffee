@@ -10,4 +10,3 @@ describe 'Index page', ->
             body.indexOf(REINDEXING_MSG).should.equal -1
             done()
 
-

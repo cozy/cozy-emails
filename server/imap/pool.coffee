@@ -91,8 +91,8 @@ module.exports = class ImapPool
 
         isAuth = err.textCode is 'AUTHENTICATIONFAILED'
 
-        if (err instanceof PasswordEncryptedError or
-           isAuth) and @account.id and @failConnectionCounter is 1
+        if (err instanceof PasswordEncryptedError or isAuth) \
+        and @account.id and @failConnectionCounter is 1
             @account.refreshPassword (err) =>
                 if err
                     @_giveUp _typeConnectionError err
@@ -130,7 +130,9 @@ module.exports = class ImapPool
         name = connection.connectionName
         log.error "error on active imap socket on #{name}", err
         @_removeFromPool connection
-        try connection.destroy()
+        try
+            connection.destroy()
+        catch e
 
     _onActiveClose: (connection, err) ->
         log.error "active connection #{connection.connectionName} closed", err

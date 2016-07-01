@@ -3,7 +3,7 @@ should = require 'should'
 describe 'Account Synchronizations', ->
 
     it "Get initial Inbox count", (done) ->
-        client.get "/mailbox/#{store.inboxID}", (err, res, body) =>
+        client.get "/mailbox/#{store.inboxID}", (err, res, body) ->
             body.should.have.property 'count'
             store.initialInboxCount = body.count
             done()
@@ -22,9 +22,9 @@ describe 'Account Synchronizations', ->
 
     it "Message have moved", (done) ->
 
-        client.get "/mailbox/#{store.inboxID}", (err, res, body) =>
+        client.get "/mailbox/#{store.inboxID}", (err, res, body) ->
             body.should.have.property 'count', store.initialInboxCount - 1
-            client.get "/mailbox/#{store.testBoxID}", (err, res, body) =>
+            client.get "/mailbox/#{store.testBoxID}", (err, res, body) ->
                 body.should.have.property 'count', 4
                 done()
 
@@ -40,9 +40,9 @@ describe 'Account Synchronizations', ->
         client.get "/refresh", done
 
     it "Message have been copied", (done) ->
-        client.get "/mailbox/#{store.inboxID}", (err, res, body) =>
+        client.get "/mailbox/#{store.inboxID}", (err, res, body) ->
             body.should.have.property 'count', store.initialInboxCount - 1
-            client.get "/mailbox/#{store.testBoxID}", (err, res, body) =>
+            client.get "/mailbox/#{store.testBoxID}", (err, res, body) ->
                 body.should.have.property 'count', 5
                 done()
 
