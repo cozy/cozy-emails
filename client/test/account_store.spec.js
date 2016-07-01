@@ -44,28 +44,36 @@ describe('AccountStore', () => {
   describe('_initialize()', () => {
     it('window.accounts should be stored', () => {
       assert.equal(AccountStore.getAll().size, accounts.length);
+      Dispatcher.dispatch({
+        type: ActionTypes.RESET_ACCOUNT_REQUEST,
+      });
     });
   });
 
 
   describe('Actions', () => {
 
-    beforeEach(() => {
-      Dispatcher.dispatch({
-        type: ActionTypes.ADD_ACCOUNT_SUCCESS,
-        value: { account: _.clone(account) },
-      });
-    });
-
-    afterEach(() => {
-      Dispatcher.dispatch({
-        type: ActionTypes.RESET_ACCOUNT_REQUEST,
-      });
-    });
-
     describe('ADD_ACCOUNT_SUCCESS', () => {
 
-      describe('Account', () => {
+      beforeEach(() => {
+        Dispatcher.dispatch({
+          type: ActionTypes.ADD_ACCOUNT_SUCCESS,
+          value: { account: _.clone(account) },
+        });
+      });
+
+      afterEach(() => {
+        Dispatcher.dispatch({
+          type: ActionTypes.RESET_ACCOUNT_REQUEST,
+        });
+      });
+
+      describe('Account.value', () => {
+
+        it('should add a new item', () => {
+          assert.equal(AccountStore.getAll().size, 1);
+        });
+
         it('should be equal to its input value', () => {
           let output = AccountStore.getAll().get(account.id).toJS();
 
@@ -129,20 +137,32 @@ describe('AccountStore', () => {
       });
     });
 
-    // // TODO: add test on account_update;
-    // // data should always be formatted/filtered/sorted
-    // // such as account_create
-    // // - RECEIVE_MAILBOX_CREATE
-    // // - RECEIVE_MAILBOX_UPDATE
-    // it('EDIT_ACCOUNT_SUCCESS', () => {
-    //   console.log(AccountStore.getAll().size)
-    //   // Dispatcher.dispatch({
-    //   //   type: ActionTypes.EDIT_ACCOUNT_SUCCESS,
-    //   //   value: { rawAccount: { id, login } },
-    //   // });
-    //   // const accounts = AccountStore.getAll();
-    //   // assert.equal(accounts.get(id).get('login'), login);
-    // });
+
+
+    // TODO: add test on account_update;
+    // data should always be formatted/filtered/sorted
+    // such as account_create
+    // - RECEIVE_MAILBOX_CREATE
+    // - RECEIVE_MAILBOX_UPDATE
+    describe('EDIT_ACCOUNT_SUCCESS', () => {
+
+      it('should add a new item', () => {
+        Dispatcher.dispatch({
+          type: ActionTypes.EDIT_ACCOUNT_SUCCESS,
+          value: { rawAccount: account },
+        });
+
+        let output = AccountStore.getAll().get(account.id).toJS();
+
+        // mailboxes is a specific case
+        // it will be test after this
+        delete output.mailboxes;
+
+        _.each(output, (value, property) => {
+          assert.equal(value, account[property]);
+        });
+      });
+    });
 
     // it('MAILBOX_CREATE_SUCCESS', () => {
     //   Dispatcher.dispatch({

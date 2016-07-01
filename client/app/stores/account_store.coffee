@@ -191,8 +191,8 @@ class AccountStore extends Store
             @emit 'change'
 
 
-        handle ActionTypes.EDIT_ACCOUNT_SUCCESS, (account) ->
-            _updateAccount account
+        handle ActionTypes.EDIT_ACCOUNT_SUCCESS, ({rawAccount}) ->
+            _updateAccount rawAccount
             @emit 'change'
 
 
