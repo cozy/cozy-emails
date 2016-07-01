@@ -242,7 +242,6 @@ describe('AccountStore', () => {
     //   const accounts = AccountStore.getAll();
     //   assert.isUndefined(accounts.get(id).get('password'));
     // });
-  });
   //
   // describe('Methods', () => {
   //   // const id1 = fixtures.account1.id;
