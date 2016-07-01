@@ -11,6 +11,8 @@ fixtures.account3
 */
 "use strict";
 
+const guid = require('../utils/guid');
+
 const MailboxFlags = require('../../app/constants/app_constants').MailboxFlags;
 const MailboxSpecial = require('../../app/constants/app_constants').MailboxSpecial;
 const MessageFilter = require('../../app/constants/app_constants').MessageFilter;
@@ -23,7 +25,7 @@ const inboxLabel = 'Boite principale';
 module.exports.createMailbox = function Inbox() {
   return {
     label: inboxLabel,
-    id: "0",
+    id: guid(),
     lastSync: new Date(),
 
     attribs: [MailboxFlags.INBOX],
@@ -42,7 +44,6 @@ module.exports.createAllMailbox = function AllMailbox() {
   let mailbox = new module.exports.createMailbox();
 
   return Object.assign(mailbox, {
-    id: "1",
     label: mailboxLabel,
     attribs: [MailboxFlags.ALL],
     tree: [mailboxLabel],
@@ -55,7 +56,6 @@ module.exports.createDraftMailbox = function DraftMailbox() {
   let mailbox = new module.exports.createMailbox();
 
   return Object.assign(mailbox, {
-    id: "2",
     label: mailboxLabel,
     attribs: [MailboxFlags.DRAFT],
     tree: [mailboxLabel],
@@ -68,7 +68,6 @@ module.exports.createSentMailbox = function SentMailbox() {
   let mailbox = new module.exports.createMailbox();
 
   return Object.assign(mailbox, {
-    id: "3",
     label: mailboxLabel,
     attribs: [MailboxFlags.SENT],
     tree: [mailboxLabel],
@@ -81,7 +80,6 @@ module.exports.createTrashMailbox = function TrashMailbox() {
   let mailbox = new module.exports.createMailbox();
 
   return Object.assign(mailbox, {
-    id: "4",
     label: mailboxLabel,
     attribs: [MailboxFlags.TRASH],
     tree: [mailboxLabel],
@@ -94,7 +92,6 @@ module.exports.createJunkMailbox = function JunkMailbox() {
   let mailbox = new module.exports.createMailbox();
 
   return Object.assign(mailbox, {
-    id: "5",
     label: mailboxLabel,
     attribs: [MailboxFlags.INBOX, MailboxFlags.SPAM],
     tree: [mailboxLabel],
@@ -110,7 +107,6 @@ module.exports.createUnreadMailbox = function UnreadMailbox() {
   let mailbox = new module.exports.createMailbox();
 
   return Object.assign(mailbox, {
-    id: "6",
     label: mailboxLabel,
     attribs: [MailboxFlags.INBOX, FlagsConstants.UNSEEN],
     tree: [inboxLabel, mailboxLabel],
@@ -119,12 +115,12 @@ module.exports.createUnreadMailbox = function UnreadMailbox() {
   });
 };
 
+
 module.exports.createFlaggedMailbox = function FlaggedMailbox() {
   const mailboxLabel = 'Mon courrier important';
   let mailbox = new module.exports.createMailbox();
 
   return Object.assign(mailbox, {
-    id: "7",
     label: mailboxLabel,
     attribs: [MailboxFlags.INBOX, MailboxFlags.FLAGGED],
     tree: [inboxLabel, mailboxLabel],
@@ -133,7 +129,8 @@ module.exports.createFlaggedMailbox = function FlaggedMailbox() {
   });
 };
 
-
+// TODO: ajouter des identifiant différents
+//  pour avoir des id de mailbox uniques
 module.exports.createAccount = function Account() {
   const inboxMailbox = new module.exports.createMailbox();
   const draftMailbox = new module.exports.createDraftMailbox();
@@ -144,7 +141,7 @@ module.exports.createAccount = function Account() {
   const flaggedMailbox = new module.exports.createFlaggedMailbox()
 
   return {
-    id: '0d73a98a97651572eeb6e00c41f5817a',
+    id: guid(),
 
     docType: 'account',
     initialized: true,
