@@ -27,7 +27,6 @@ class AccountStore extends Store
                 result.push index if -1 < (index = _getMailboxOrder {attrib})
                 result
             , []
-            # console.log 'GET_MAILBOX_ORDER', value, attribs, tree, label
             if (index = value.shift())?
                 index = "#{index}.#{decimal}" if (decimal = value.join '').length
                 return index
@@ -76,8 +75,6 @@ class AccountStore extends Store
                 # Add missing \Inbox flag
                 mailbox.attribs ?= []
                 mailbox.attribs.unshift MailboxFlags.INBOX
-
-            # console.log 'FORMAT_MAILBOX_ATTRIBS', mailbox.tree, mailbox.attribs, isInbox, isChild, isAttribMissing
 
 
         # Add appropriate attribs according to tree
@@ -163,7 +160,6 @@ class AccountStore extends Store
 
 
     _updateAccount = (account) ->
-        # console.log 'UPDATE_ACCOUNT', account.mailboxes
         account = _toImmutable account
         _accounts = _accounts?.set account.get('id'), account
 
