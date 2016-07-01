@@ -64,7 +64,7 @@ describe('AccountStore', () => {
   });
 
 
-  describe('Actions', () => {
+  describe('Account Actions', () => {
 
     describe('ADD_ACCOUNT_SUCCESS', () => {
 
@@ -157,80 +157,80 @@ describe('AccountStore', () => {
 
       it('should add a new item', testAccountValues);
     });
+  });
 
 
-    describe('Add mailbox', () => {
+  describe('Mailbox Actions', () => {
 
-      beforeEach(() => {
-        Dispatcher.dispatch({
-          type: ActionTypes.ADD_ACCOUNT_SUCCESS,
-          value: { account: _.clone(account) },
-        });
-      });
-
-      afterEach(() => {
-        Dispatcher.dispatch({
-          type: ActionTypes.RESET_ACCOUNT_REQUEST,
-        });
-      });
-
-      describe('MAILBOX_CREATE_SUCCESS', () => {
-        it('should add a new item', () => {
-          const mailbox = AccountFixture.createMailbox();
-
-          Dispatcher.dispatch({
-            type: ActionTypes.MAILBOX_CREATE_SUCCESS,
-            value: mailbox,
-          });
-
-          const output = AccountStore.getMailbox(account.id, mailbox.id);
-          assert.deepEqual(mailbox, output.toJS());
-        });
-      });
-
-      describe('RECEIVE_MAILBOX_CREATE', () => {
-        it('should add a new item', () => {
-          const mailbox = AccountFixture.createMailbox();
-
-          Dispatcher.dispatch({
-            type: ActionTypes.RECEIVE_MAILBOX_CREATE,
-            value: mailbox,
-          });
-
-          const output = AccountStore.getMailbox(account.id, mailbox.id);
-          assert.deepEqual(mailbox, output.toJS());
-        });
+    beforeEach(() => {
+      Dispatcher.dispatch({
+        type: ActionTypes.ADD_ACCOUNT_SUCCESS,
+        value: { account: _.clone(account) },
       });
     });
 
-    // describe('RECEIVE_MAILBOX_UPDATE', () => {
-    //
-    //   beforeEach(() => {
-    //     Dispatcher.dispatch({
-    //       type: ActionTypes.RECEIVE_MAILBOX_UPDATE,
-    //       value: { rawAccount: account },
-    //     });
-    //   });
-    //
-    //   afterEach(() => {
-    //     Dispatcher.dispatch({
-    //       type: ActionTypes.RESET_ACCOUNT_REQUEST,
-    //     });
-    //   });
-    //
-    //   it('should add a new item', testAccountValues);
-    // });
+    afterEach(() => {
+      Dispatcher.dispatch({
+        type: ActionTypes.RESET_ACCOUNT_REQUEST,
+      });
+    });
 
-    // it('MAILBOX_UPDATE_SUCCESS', () => {
-    //   Dispatcher.dispatch({
-    //     type: ActionTypes.MAILBOX_UPDATE_SUCCESS,
-    //     value: {
-    //       id, login, password, initialized: true,
-    //     },
-    //   });
-    //   const accounts = AccountStore.getAll();
-    //   assert.equal(accounts.get(id).get('password'), password);
-    // });
+    describe('MAILBOX_CREATE_SUCCESS', () => {
+      it('should add a new item', () => {
+        const mailbox = AccountFixture.createMailbox();
+
+        Dispatcher.dispatch({
+          type: ActionTypes.MAILBOX_CREATE_SUCCESS,
+          value: mailbox,
+        });
+
+        const output = AccountStore.getMailbox(account.id, mailbox.id);
+        assert.deepEqual(mailbox, output.toJS());
+      });
+    });
+
+    describe('RECEIVE_MAILBOX_CREATE', () => {
+      it('should add a new item', () => {
+        const mailbox = AccountFixture.createMailbox();
+
+        Dispatcher.dispatch({
+          type: ActionTypes.RECEIVE_MAILBOX_CREATE,
+          value: mailbox,
+        });
+
+        const output = AccountStore.getMailbox(account.id, mailbox.id);
+        assert.deepEqual(mailbox, output.toJS());
+      });
+    });
+
+    describe('MAILBOX_UPDATE_SUCCESS', () => {
+      it('should update item', () => {
+        const mailbox = AccountFixture.createMailbox();
+
+        Dispatcher.dispatch({
+          type: ActionTypes.MAILBOX_UPDATE_SUCCESS,
+          value: mailbox,
+        });
+
+        const output = AccountStore.getMailbox(account.id, mailbox.id);
+        assert.deepEqual(mailbox, output.toJS());
+      });
+    });
+
+    describe('RECEIVE_MAILBOX_UPDATE', () => {
+      it('should update item', () => {
+        const mailbox = AccountFixture.createMailbox();
+
+        Dispatcher.dispatch({
+          type: ActionTypes.RECEIVE_MAILBOX_UPDATE,
+          value: mailbox,
+        });
+
+        const output = AccountStore.getMailbox(account.id, mailbox.id);
+        assert.deepEqual(mailbox, output.toJS());
+      });
+    });
+  });
     // it.skip('REMOVE_ACCOUNT_SUCCESS', () => {
     //   // FIXME Nothing is done here in the store code.
     // });
@@ -241,15 +241,6 @@ describe('AccountStore', () => {
     //   });
     //   const accounts = AccountStore.getAll();
     //   assert.isUndefined(accounts.get(id).get('password'));
-    // });
-    // it('RECEIVE_MAILBOX_UPDATE', () => {
-    //   Dispatcher.dispatch({
-    //     type: ActionTypes.RECEIVE_MAILBOX_UPDATE,
-    //     value: { id: mailboxId, label },
-    //   });
-    //   const accounts = AccountStore.getAll();
-    //   const mailbox = accounts.get(id2).get('mailboxes').get(mailboxId);
-    //   assert.equal(mailbox.get('label'), label);
     // });
   });
   //
@@ -308,4 +299,3 @@ describe('AccountStore', () => {
   //     assert.deepEqual(account.toObject(), fixtures.emptyAccount);
   //   });
   // });
-});

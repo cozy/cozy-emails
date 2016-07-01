@@ -157,29 +157,18 @@ class AccountStore extends Store
             account.get('mailboxes').get mailboxID
 
 
-    _updateMailbox = (data) ->
-        return unless (account = _getByMailbox data.id)
-
-        # Reformat new mailbox
-        mailboxes = account?.get 'mailboxes'
-        mailbox = _formatMailbox account, data
-        return unless _filterMailbox account, mailbox
-
-        # Update globals
-        mailbox = Immutable.Map mailbox
-        account = account.set 'mailboxes', mailboxes.set data.id, mailbox
-        _accounts = _accounts.set account.get('id'), account
+    _updateMailbox = (mailbox) ->
+        unless (account = _getByMailbox(mailbox.id)?.toJS())
+            accountID = mailbox.accountID or _accounts?.first()?.get 'id'
+            account = _accounts?.get(accountID)?.toJS()
+            return unless account?
+        account.mailboxes[mailbox.id] = mailbox
+        _updateAccount account
 
 
     _updateAccount = (account) ->
         account = _toImmutable account
         _accounts = _accounts?.set account.get('id'), account
-
-
-    _createMailbox = (accountID, mailbox) ->
-        return unless (account = _accounts?.get(accountID)?.toJS())
-        account.mailboxes[mailbox.id] = mailbox
-        _updateAccount account
 
 
 
@@ -215,14 +204,6 @@ class AccountStore extends Store
             @emit 'change'
 
 
-
-
-
-        handle ActionTypes.MAILBOX_UPDATE_SUCCESS, (account) ->
-            _updateAccount account
-            @emit 'change'
-
-
         handle ActionTypes.MAILBOX_DELETE_SUCCESS, (account) ->
             _updateAccount account
             @emit 'change'
@@ -235,14 +216,17 @@ class AccountStore extends Store
 
 
         handle ActionTypes.MAILBOX_CREATE_SUCCESS, (mailbox) ->
-            accountID = mailbox.accountID or @getAll()?.first()?.get 'id'
-            _createMailbox accountID, mailbox
+            _updateMailbox mailbox
             @emit 'change'
 
 
         handle ActionTypes.RECEIVE_MAILBOX_CREATE, (mailbox) ->
-            accountID = mailbox.accountID or @getAll()?.first()?.get 'id'
-            _createMailbox accountID, mailbox
+            _updateMailbox mailbox
+            @emit 'change'
+
+
+        handle ActionTypes.MAILBOX_UPDATE_SUCCESS, (mailbox) ->
+            _updateMailbox mailbox
             @emit 'change'
 
 
