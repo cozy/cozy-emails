@@ -146,12 +146,20 @@ describe('AccountStore', () => {
     // - RECEIVE_MAILBOX_UPDATE
     describe('EDIT_ACCOUNT_SUCCESS', () => {
 
-      it('should add a new item', () => {
+      beforeEach(() => {
         Dispatcher.dispatch({
           type: ActionTypes.EDIT_ACCOUNT_SUCCESS,
           value: { rawAccount: account },
         });
+      });
 
+      afterEach(() => {
+        Dispatcher.dispatch({
+          type: ActionTypes.RESET_ACCOUNT_REQUEST,
+        });
+      });
+
+      it('should add a new item', () => {
         let output = AccountStore.getAll().get(account.id).toJS();
 
         // mailboxes is a specific case
