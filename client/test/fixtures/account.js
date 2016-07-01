@@ -1,14 +1,3 @@
-// TODO: ajouter des méthodes pour générer X comptes dynamiquement
-// TODO: ajouter des méthodes pour générer X messages dynamiquement
-// TODO: commencer par ajouter des comptes statiques
-
-/*
-fixtures.emptyAccount
-fixtures.account1
-fixtures.account2
-fixtures.account3
-
-*/
 "use strict";
 
 const getUID = require('../utils/guid').getUID;
@@ -238,46 +227,3 @@ module.exports.createOVHAccount = function Account() {
   //     tree: [MailboxSpecial.draftMailbox],
   // });
 }
-// {
-//   account1: {
-//     id: '123',
-//     label: 'personal',
-//     mailboxes: [
-//       { id: 'a1', label: 'inbox', accountID: '123' },
-//       { id: 'a2', label: 'sent', accountID: '123' },
-//     ],
-//   },
-//   account2: {
-//     id: '124',
-//     label: 'pro',
-//     mailboxes: [
-//       {
-//         id: 'b1', label: 'mailbox', accountID: '124',
-//       },
-//       {
-//         id: 'b2', label: 'folder1', accountID: '124',
-//       },
-//     ],
-//   },
-//   account3: {
-//     id: '125',
-//   },
-//   emptyAccount: {
-//     label: '',
-//     login: '',
-//     password: '',
-//     imapServer: '',
-//     imapLogin: '',
-//     smtpServer: '',
-//     id: null,
-//     smtpPort: 465,
-//     smtpSSL: true,
-//     smtpTLS: false,
-//     smtpMethod: 'PLAIN',
-//     imapPort: 993,
-//     imapSSL: true,
-//     imapTLS: false,
-//     accountType: 'IMAP',
-//     favoriteMailboxes: null,
-//   },
-// };
