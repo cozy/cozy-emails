@@ -37,17 +37,18 @@ class AccountStore extends Store
 
         return _mailboxOrder
 
+
     # FIXME: all this stuff should be done sever side
     # its only about fixing what server side part doesnt complete
     _formatMailbox = (account, mailbox) ->
         # Reset empty properties
-        tree = unless _.isEmpty _.compact mailbox.tree
+        tree = if mailbox.tree? and not _.isEmpty _.compact mailbox.tree
         then mailbox.tree
         else undefined
         mailbox.tree = undefined unless tree?
 
         # Reset empty properties
-        attribs = unless _.isEmpty _.compact mailbox.attribs
+        attribs = if mailbox.attribs? and not _.isEmpty _.compact mailbox.attribs
         then mailbox.attribs
         else undefined
         mailbox.attribs = undefined unless attribs?
@@ -118,7 +119,18 @@ class AccountStore extends Store
         account.mailboxes = Immutable.Iterable mailboxes
             .toKeyedSeq()
             .mapKeys (_, mailbox) -> mailbox.id
-            .sort (mb1, mb2) -> mb1.order > mb2.order
+            .sort (mb1, mb2) ->
+                if mb1.order > mb2.order
+                    return 1
+                else if mb1.order < mb2.order
+                    return -1
+
+                # Ordering by path
+                if mb1.tree? and mb2.tree?
+                    path1 = mb1.tree.join('/').toLowerCase()
+                    path2 = mb2.tree.join('/').toLowerCase()
+                    return path1.localeCompare path2
+
             .map (mailbox, index) -> Immutable.Map mailbox
             .toOrderedMap()
 
@@ -164,6 +176,13 @@ class AccountStore extends Store
         _accounts = _accounts?.set account.get('id'), account
 
 
+    _createMailbox = (accountID, mailbox) ->
+        return unless (account = _accounts?.get(accountID)?.toJS())
+        account.mailboxes[mailbox.id] = mailbox
+        _updateAccount account
+
+
+
     ###
         Initialize private variables here.
     ###
@@ -196,9 +215,7 @@ class AccountStore extends Store
             @emit 'change'
 
 
-        handle ActionTypes.MAILBOX_CREATE_SUCCESS, (account) ->
-            _updateAccount account
-            @emit 'change'
+
 
 
         handle ActionTypes.MAILBOX_UPDATE_SUCCESS, (account) ->
@@ -217,8 +234,15 @@ class AccountStore extends Store
             @emit 'change'
 
 
+        handle ActionTypes.MAILBOX_CREATE_SUCCESS, (mailbox) ->
+            accountID = mailbox.accountID or @getAll()?.first()?.get 'id'
+            _createMailbox accountID, mailbox
+            @emit 'change'
+
+
         handle ActionTypes.RECEIVE_MAILBOX_CREATE, (mailbox) ->
-            _updateMailbox mailbox
+            accountID = mailbox.accountID or @getAll()?.first()?.get 'id'
+            _createMailbox accountID, mailbox
             @emit 'change'
 
 

@@ -17,6 +17,19 @@ describe('AccountStore', () => {
   let account = AccountFixture.createAccount();
   let accounts = [];
 
+
+  function testAccountValues() {
+    let output = AccountStore.getAll().get(account.id).toJS();
+
+    // mailboxes is a specific case
+    // it will be test after this
+    delete output.mailboxes;
+
+    _.each(output, (value, property) => {
+      assert.equal(value, account[property]);
+    });
+  }
+
   before(() => {
     // Add preset accounts value
     // done serverside in real life
@@ -74,17 +87,7 @@ describe('AccountStore', () => {
           assert.equal(AccountStore.getAll().size, 1);
         });
 
-        it('should be equal to its input value', () => {
-          let output = AccountStore.getAll().get(account.id).toJS();
-
-          // mailboxes is a specific case
-          // it will be test after this
-          delete output.mailboxes;
-
-          _.each(output, (value, property) => {
-            assert.equal(value, account[property]);
-          });
-        });
+        it('should be equal to its input value', testAccountValues);
       });
 
       describe('Account.mailboxes', () => {
@@ -137,19 +140,12 @@ describe('AccountStore', () => {
       });
     });
 
-
-
-    // TODO: add test on account_update;
-    // data should always be formatted/filtered/sorted
-    // such as account_create
-    // - RECEIVE_MAILBOX_CREATE
-    // - RECEIVE_MAILBOX_UPDATE
     describe('EDIT_ACCOUNT_SUCCESS', () => {
 
       beforeEach(() => {
         Dispatcher.dispatch({
           type: ActionTypes.EDIT_ACCOUNT_SUCCESS,
-          value: { rawAccount: account },
+          value: { rawAccount: _.clone(account) },
         });
       });
 
@@ -159,27 +155,72 @@ describe('AccountStore', () => {
         });
       });
 
-      it('should add a new item', () => {
-        let output = AccountStore.getAll().get(account.id).toJS();
+      it('should add a new item', testAccountValues);
+    });
 
-        // mailboxes is a specific case
-        // it will be test after this
-        delete output.mailboxes;
 
-        _.each(output, (value, property) => {
-          assert.equal(value, account[property]);
+    describe('Add mailbox', () => {
+
+      beforeEach(() => {
+        Dispatcher.dispatch({
+          type: ActionTypes.ADD_ACCOUNT_SUCCESS,
+          value: { account: _.clone(account) },
+        });
+      });
+
+      afterEach(() => {
+        Dispatcher.dispatch({
+          type: ActionTypes.RESET_ACCOUNT_REQUEST,
+        });
+      });
+
+      describe('MAILBOX_CREATE_SUCCESS', () => {
+        it('should add a new item', () => {
+          const mailbox = AccountFixture.createMailbox();
+
+          Dispatcher.dispatch({
+            type: ActionTypes.MAILBOX_CREATE_SUCCESS,
+            value: mailbox,
+          });
+
+          const output = AccountStore.getMailbox(account.id, mailbox.id);
+          assert.deepEqual(mailbox, output.toJS());
+        });
+      });
+
+      describe('RECEIVE_MAILBOX_CREATE', () => {
+        it('should add a new item', () => {
+          const mailbox = AccountFixture.createMailbox();
+
+          Dispatcher.dispatch({
+            type: ActionTypes.RECEIVE_MAILBOX_CREATE,
+            value: mailbox,
+          });
+
+          const output = AccountStore.getMailbox(account.id, mailbox.id);
+          assert.deepEqual(mailbox, output.toJS());
         });
       });
     });
 
-    // it('MAILBOX_CREATE_SUCCESS', () => {
-    //   Dispatcher.dispatch({
-    //     type: ActionTypes.MAILBOX_CREATE_SUCCESS,
-    //     value: { id, login, initialized: true },
+    // describe('RECEIVE_MAILBOX_UPDATE', () => {
+    //
+    //   beforeEach(() => {
+    //     Dispatcher.dispatch({
+    //       type: ActionTypes.RECEIVE_MAILBOX_UPDATE,
+    //       value: { rawAccount: account },
+    //     });
     //   });
-    //   const accounts = AccountStore.getAll();
-    //   assert.equal(accounts.get(id).get('initialized'), true);
+    //
+    //   afterEach(() => {
+    //     Dispatcher.dispatch({
+    //       type: ActionTypes.RESET_ACCOUNT_REQUEST,
+    //     });
+    //   });
+    //
+    //   it('should add a new item', testAccountValues);
     // });
+
     // it('MAILBOX_UPDATE_SUCCESS', () => {
     //   Dispatcher.dispatch({
     //     type: ActionTypes.MAILBOX_UPDATE_SUCCESS,
