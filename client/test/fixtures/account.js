@@ -11,7 +11,8 @@ fixtures.account3
 */
 "use strict";
 
-const guid = require('../utils/guid');
+const getUID = require('../utils/guid').getUID;
+const getName = require('../utils/guid').getName;
 
 const MailboxFlags = require('../../app/constants/app_constants').MailboxFlags;
 const MailboxSpecial = require('../../app/constants/app_constants').MailboxSpecial;
@@ -19,23 +20,34 @@ const MessageFilter = require('../../app/constants/app_constants').MessageFilter
 const FlagsConstants = require('../../app/constants/app_constants').FlagsConstants;
 const MessageFlags = require('../../app/constants/app_constants').MessageFlags;
 
-
 const inboxLabel = 'Boite principale';
 
-module.exports.createMailbox = function Inbox() {
+module.exports.createMailbox = function Mailbox() {
   return {
-    label: inboxLabel,
-    id: guid(),
+    label: getName('mailbox'),
+    id: getUID(),
     lastSync: new Date(),
 
-    attribs: [MailboxFlags.INBOX],
-    tree: [inboxLabel],
+    attribs: undefined,
+    tree: undefined,
 
     nbFlagged: 117,
     nbRecent: 0,
     nbTotal: 3351,
     nbUnread: 164,
   }
+};
+
+
+module.exports.createInboxMailbox = function Inbox() {
+  const mailboxLabel = 'Tous mes messages';
+  let mailbox = new module.exports.createMailbox();
+
+  return Object.assign(mailbox, {
+    label: inboxLabel,
+    attribs: [MailboxFlags.ALL],
+    tree: [inboxLabel],
+  });
 };
 
 
@@ -129,19 +141,34 @@ module.exports.createFlaggedMailbox = function FlaggedMailbox() {
   });
 };
 
-// TODO: ajouter des identifiant différents
-//  pour avoir des id de mailbox uniques
 module.exports.createAccount = function Account() {
-  const inboxMailbox = new module.exports.createMailbox();
+
+  const inboxMailbox = new module.exports.createInboxMailbox();
   const draftMailbox = new module.exports.createDraftMailbox();
   const junkMailbox = new module.exports.createJunkMailbox();
   const sentMailbox = new module.exports.createSentMailbox();
   const trashMailbox = new module.exports.createTrashMailbox();
   const unreadMailbox = new module.exports.createUnreadMailbox();
-  const flaggedMailbox = new module.exports.createFlaggedMailbox()
+  const flaggedMailbox = new module.exports.createFlaggedMailbox();
+
+  let mailboxes = [];
+  mailboxes.push(inboxMailbox);
+  mailboxes.push(draftMailbox);
+  mailboxes.push(junkMailbox);
+  mailboxes.push(sentMailbox);
+  mailboxes.push(trashMailbox);
+  mailboxes.push(unreadMailbox);
+  mailboxes.push(flaggedMailbox);
+
+  // Add mailbox created by user
+  let counter = Math.round(Math.random() * 6);
+  while (counter > 0) {
+    mailboxes.push(new module.exports.createMailbox());
+    --counter;
+  }
 
   return {
-    id: guid(),
+    id: getUID(),
 
     docType: 'account',
     initialized: true,
@@ -155,9 +182,7 @@ module.exports.createAccount = function Account() {
     trashMailbox: trashMailbox.id,
     unreadMailbox: unreadMailbox.id,
 
-    // TODO: faire des mailbox sans attribs
-    //  pour gérer le cas
-    mailboxes: [inboxMailbox, draftMailbox, junkMailbox, sentMailbox, trashMailbox, unreadMailbox, flaggedMailbox],
+    mailboxes,
 
     // favorites: Array[4],
 

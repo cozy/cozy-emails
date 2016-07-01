@@ -15,8 +15,19 @@ describe('AccountStore', () => {
   let AccountStore;
   let Dispatcher;
   let account = AccountFixture.createAccount();
+  let accounts = [];
 
   before(() => {
+    // Add preset accounts value
+    // done serverside in real life
+    accounts.push(AccountFixture.createAccount());
+    accounts.push(AccountFixture.createAccount());
+    accounts.push(AccountFixture.createAccount());
+    accounts.push(AccountFixture.createAccount());
+    accounts.push(AccountFixture.createAccount());
+    accounts.push(AccountFixture.createAccount());
+    global.window = { accounts };
+
     Dispatcher = new SpecDispatcher();
     mockeryUtils.initDispatcher(Dispatcher);
     mockeryUtils.initForStores(['../app/stores/account_store']);
@@ -25,38 +36,32 @@ describe('AccountStore', () => {
 
   after(() => {
     mockeryUtils.clean();
-  });
-
-  beforeEach(() => {
-    Dispatcher.dispatch({
-      type: ActionTypes.ADD_ACCOUNT_SUCCESS,
-      value: { account: _.clone(account) },
-    });
-  });
-
-  afterEach(() => {
-    Dispatcher.dispatch({
-      type: ActionTypes.RESET_ACCOUNT_REQUEST,
-    });
+    delete global.window
   });
 
 
-  // TODO: should test window.accounts
-  // is these accounts are added?
-  // tets AccountStore._initlaize
+  // Test default Account values
   describe('_initialize()', () => {
-
-    // TODO: how to fake window value?!
-    it('window.accounts should be stored', () => { });
+    it('window.accounts should be stored', () => {
+      assert.equal(AccountStore.getAll().size, accounts.length);
+    });
   });
 
-  /*
-   * Problem noticed in the store file:
-   *
-   * FIXME Remove mailbox event doesn't do anything.
-   * FIXME getDefault method can be used as getByMailbox.
-   */
+
   describe('Actions', () => {
+
+    beforeEach(() => {
+      Dispatcher.dispatch({
+        type: ActionTypes.ADD_ACCOUNT_SUCCESS,
+        value: { account: _.clone(account) },
+      });
+    });
+
+    afterEach(() => {
+      Dispatcher.dispatch({
+        type: ActionTypes.RESET_ACCOUNT_REQUEST,
+      });
+    });
 
     describe('ADD_ACCOUNT_SUCCESS', () => {
 
@@ -67,7 +72,7 @@ describe('AccountStore', () => {
           // mailboxes is a specific case
           // it will be test after this
           delete output.mailboxes;
-  
+
           _.each(output, (value, property) => {
             assert.equal(value, account[property]);
           });
@@ -75,7 +80,7 @@ describe('AccountStore', () => {
       });
 
       describe('Account.mailboxes', () => {
-        it('should have the same size thann its input', () => {
+        it('should have the same size than its input', () => {
             const output = AccountStore.getAll().get(account.id).get('mailboxes');
             assert.equal(_.toArray(output.toJS()).length, account.mailboxes.length);
         });
@@ -108,11 +113,11 @@ describe('AccountStore', () => {
 
             } else {
               // Unflagged mailbox always have the same order
-              // alphanumeric sorted is applied
+              // alphanumeric sorted is applied then
               assert.equal(order, defaultOrder);
 
               // If this mailbox has flags
-              // ensure that its not known flags
+              // ensure that it is unknown flags
               if (attribs != undefined) {
                 attribs.forEach((attrib) => {
                   assert.equal(flags.indexOf(flags), -1);
