@@ -194,8 +194,11 @@ describe('AccountStore', () => {
     });
 
     it('getDefault', () => {
-      // Default mailbox should be inboxMailbox
-      testAccountValues(AccountStore.getDefault());
+      const account0 = AccountStore.getDefault();
+      testAccountValues(account0, accounts[0]);
+
+      const account1 = AccountStore.getDefault(accounts[2].inboxMailbox);
+      testAccountValues(account1, accounts[2]);
     });
 
     it('getByLabel', () => {
