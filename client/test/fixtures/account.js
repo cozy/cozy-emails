@@ -30,11 +30,11 @@ module.exports.createMailbox = function Mailbox() {
 
 module.exports.createInboxMailbox = function Inbox() {
   const mailboxLabel = 'Tous mes messages';
-  let mailbox = new module.exports.createMailbox();
+  const mailbox = new module.exports.createMailbox();
 
   return Object.assign(mailbox, {
     label: inboxLabel,
-    attribs: [MailboxFlags.ALL],
+    attribs: [MailboxFlags.INBOX],
     tree: [inboxLabel],
   });
 };
@@ -42,7 +42,7 @@ module.exports.createInboxMailbox = function Inbox() {
 
 module.exports.createAllMailbox = function AllMailbox() {
   const mailboxLabel = 'Tous mes messages';
-  let mailbox = new module.exports.createMailbox();
+  const mailbox = new module.exports.createMailbox();
 
   return Object.assign(mailbox, {
     label: mailboxLabel,
@@ -54,7 +54,7 @@ module.exports.createAllMailbox = function AllMailbox() {
 
 module.exports.createDraftMailbox = function DraftMailbox() {
   const mailboxLabel = 'Mes brouillons';
-  let mailbox = new module.exports.createMailbox();
+  const mailbox = new module.exports.createMailbox();
 
   return Object.assign(mailbox, {
     label: mailboxLabel,
@@ -66,7 +66,7 @@ module.exports.createDraftMailbox = function DraftMailbox() {
 
 module.exports.createSentMailbox = function SentMailbox() {
   const mailboxLabel = 'Mes messages envoyés';
-  let mailbox = new module.exports.createMailbox();
+  const mailbox = new module.exports.createMailbox();
 
   return Object.assign(mailbox, {
     label: mailboxLabel,
@@ -78,7 +78,7 @@ module.exports.createSentMailbox = function SentMailbox() {
 
 module.exports.createTrashMailbox = function TrashMailbox() {
   const mailboxLabel = 'Poubelle';
-  let mailbox = new module.exports.createMailbox();
+  const mailbox = new module.exports.createMailbox();
 
   return Object.assign(mailbox, {
     label: mailboxLabel,
@@ -90,7 +90,7 @@ module.exports.createTrashMailbox = function TrashMailbox() {
 
 module.exports.createJunkMailbox = function JunkMailbox() {
   const mailboxLabel = 'Mes messages non désirés';
-  let mailbox = new module.exports.createMailbox();
+  const mailbox = new module.exports.createMailbox();
 
   return Object.assign(mailbox, {
     label: mailboxLabel,
@@ -105,7 +105,7 @@ module.exports.createJunkMailbox = function JunkMailbox() {
 
 module.exports.createUnreadMailbox = function UnreadMailbox() {
   const mailboxLabel = 'Mes messages non lu';
-  let mailbox = new module.exports.createMailbox();
+  const mailbox = new module.exports.createMailbox();
 
   return Object.assign(mailbox, {
     label: mailboxLabel,
@@ -119,7 +119,7 @@ module.exports.createUnreadMailbox = function UnreadMailbox() {
 
 module.exports.createFlaggedMailbox = function FlaggedMailbox() {
   const mailboxLabel = 'Mon courrier important';
-  let mailbox = new module.exports.createMailbox();
+  const mailbox = new module.exports.createMailbox();
 
   return Object.assign(mailbox, {
     label: mailboxLabel,

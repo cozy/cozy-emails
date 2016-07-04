@@ -14,9 +14,8 @@ const sinon = require('sinon');
 describe('AccountStore', () => {
   let AccountStore;
   let Dispatcher;
-  let account = AccountFixture.createAccount();
+  const account = AccountFixture.createAccount();
   let accounts = [];
-
 
   function testAccountValues() {
     let output = AccountStore.getAll().get(account.id).toJS();
@@ -30,9 +29,20 @@ describe('AccountStore', () => {
     });
   }
 
+  function testMailboxValues(mailbox) {
+    let output = AccountStore.getMailbox(account.id, mailbox.id).toJS();
+    const order = output.order;
+    delete output.order;
+    assert.deepEqual(mailbox, output);
+    assert.equal(mailbox.order, undefined);
+    assert.equal(typeof order, 'number');
+  }
+
+
   before(() => {
     // Add preset accounts value
     // done serverside in real life
+    accounts.push(account);
     accounts.push(AccountFixture.createAccount());
     accounts.push(AccountFixture.createAccount());
     accounts.push(AccountFixture.createAccount());
@@ -61,10 +71,9 @@ describe('AccountStore', () => {
     // const mailboxId1 = fixtures.account2.mailboxes[0].id;
     // const mailboxId2 = fixtures.account2.mailboxes[1].id;
 
-
     it('getByID', () => {
-      const result = AccountStore.getByID(account.id);
-      assert.equal(result.get('id'), account.id);
+      testAccountValues();
+      account.mailboxes.forEach(testMailboxValues);
     });
     // it('getByMailbox', () => {
     //   const account = AccountStore.getByMailbox(mailboxId1);
@@ -128,7 +137,7 @@ describe('AccountStore', () => {
       beforeEach(() => {
         Dispatcher.dispatch({
           type: ActionTypes.ADD_ACCOUNT_SUCCESS,
-          value: { account: _.clone(account) },
+          value: { account },
         });
       });
 
@@ -139,7 +148,6 @@ describe('AccountStore', () => {
       });
 
       describe('Account.value', () => {
-
         it('should add a new item', () => {
           assert.equal(AccountStore.getAll().size, 1);
         });
@@ -202,7 +210,7 @@ describe('AccountStore', () => {
       beforeEach(() => {
         Dispatcher.dispatch({
           type: ActionTypes.EDIT_ACCOUNT_SUCCESS,
-          value: { rawAccount: _.clone(account) },
+          value: { rawAccount: account },
         });
       });
 
@@ -222,7 +230,7 @@ describe('AccountStore', () => {
     beforeEach(() => {
       Dispatcher.dispatch({
         type: ActionTypes.ADD_ACCOUNT_SUCCESS,
-        value: { account: _.clone(account) },
+        value: { account },
       });
     });
 
@@ -241,8 +249,7 @@ describe('AccountStore', () => {
           value: mailbox,
         });
 
-        const output = AccountStore.getMailbox(account.id, mailbox.id);
-        assert.deepEqual(mailbox, output.toJS());
+        testMailboxValues(mailbox);
       });
     });
 
@@ -255,8 +262,7 @@ describe('AccountStore', () => {
           value: mailbox,
         });
 
-        const output = AccountStore.getMailbox(account.id, mailbox.id);
-        assert.deepEqual(mailbox, output.toJS());
+        testMailboxValues(mailbox);
       });
     });
 
@@ -269,8 +275,7 @@ describe('AccountStore', () => {
           value: mailbox,
         });
 
-        const output = AccountStore.getMailbox(account.id, mailbox.id);
-        assert.deepEqual(mailbox, output.toJS());
+        testMailboxValues(mailbox);
       });
     });
 
@@ -283,8 +288,7 @@ describe('AccountStore', () => {
           value: mailbox,
         });
 
-        const output = AccountStore.getMailbox(account.id, mailbox.id);
-        assert.deepEqual(mailbox, output.toJS());
+        testMailboxValues(mailbox);
       });
     });
 

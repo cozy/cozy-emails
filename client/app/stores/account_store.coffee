@@ -29,7 +29,7 @@ class AccountStore extends Store
             , []
             if (index = value.shift())?
                 index = "#{index}.#{decimal}" if (decimal = value.join '').length
-                return index
+                return index * 1
 
         else if attrib?
             index = _.findIndex _.keys(MailboxFlags), (key) -> MailboxFlags[key] is attrib
@@ -110,13 +110,13 @@ class AccountStore extends Store
 
 
     _toImmutable = (account) ->
-
-        mailboxes = _.compact _.map account.mailboxes, (mailbox) ->
+        _account = _.cloneDeep account
+        _mailboxes = _.compact _.map _account.mailboxes, (mailbox) ->
                 _formatMailbox account, mailbox
             .filter (mailbox) ->
                 _filterMailbox account, mailbox if mailbox
 
-        account.mailboxes = Immutable.Iterable mailboxes
+        _account.mailboxes = Immutable.Iterable _mailboxes
             .toKeyedSeq()
             .mapKeys (_, mailbox) -> mailbox.id
             .sort (mb1, mb2) ->
@@ -134,14 +134,15 @@ class AccountStore extends Store
             .map (mailbox, index) -> Immutable.Map mailbox
             .toOrderedMap()
 
-        delete account.totalUnread
-        return Immutable.Map account
+        delete _account.totalUnread
+        return Immutable.Map _account
 
 
     # Creates an OrderedMap of accounts
     # this map will contains the base information for an account
     _initialize = ->
-        _accounts = Immutable.Iterable(window?.accounts or [])
+        _accounts = _.cloneDeep(window?.accounts) or []
+        _accounts = Immutable.Iterable _accounts
             .toKeyedSeq()
             # sets account ID as index
             .mapKeys (_, account) -> account.id
