@@ -27,6 +27,7 @@ describe('AccountStore', () => {
     _.each(output, (value, property) => {
       assert.equal(value, input[property]);
     });
+
     input.mailboxes.forEach((mailbox) => {
       testMailboxValues(input, mailbox);
     });
@@ -34,6 +35,7 @@ describe('AccountStore', () => {
 
   function testMailboxValues(account, mailbox) {
     let output = AccountStore.getMailbox(account.id, mailbox.id);
+    assert.notEqual(output, undefined);
     assert.notEqual(output.size, 0);
 
     output = output.toJS();
@@ -82,10 +84,6 @@ describe('AccountStore', () => {
       });
     });
 
-    it('getMailbox', () => {
-
-    });
-
     it('getAllMailboxes', () => {
       account.mailboxes.forEach((mailbox) => {
         testMailboxValues(account, mailbox);
@@ -117,6 +115,7 @@ describe('AccountStore', () => {
     });
 
     it('getDefault', () => {
+      // Default mailbox should be inboxMailbox
       testAccountValues(AccountStore.getDefault());
     });
 
