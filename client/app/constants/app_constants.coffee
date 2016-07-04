@@ -189,6 +189,7 @@ module.exports =
         'ALL'     :  '\\All'
         'SPAM'    :  '\\Junk'
         'JUNK'    :  '\\Junk'
+        'UNSEEN'  : 'Unseen'
         'FLAGGED' :  '\\Flagged'
 
     MailboxSpecial:
