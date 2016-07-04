@@ -75,14 +75,12 @@ describe('AccountStore', () => {
     it('getByID', () => {
       testAccountValues(AccountStore.getByID(account.id));
     });
-    // it('getByMailbox', () => {
-    //   const account = AccountStore.getByMailbox(mailboxId1);
-    //   assert.equal(account.get('id'), id2);
-    // });
-    // it('getDefault', () => {
-    //   const account = AccountStore.getDefault();
-    //   assert.equal(account.get('id'), id1);
-    // });
+    it('getByMailbox', () => {
+      testAccountValues(AccountStore.getByMailbox(account.mailboxes[0].id));
+    });
+    it('getDefault', () => {
+      testAccountValues(AccountStore.getDefault());
+    });
     // it('getByLabel', () => {
     //   const account = AccountStore.getByLabel('pro');
     //   assert.equal(account.get('id'), id2);
