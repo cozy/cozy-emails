@@ -91,10 +91,8 @@ describe('AccountStore', () => {
     });
 
     it('getInbox', () => {
+      assert.notEqual(account.inboxMailbox, undefined);
 
-    });
-
-    it('isInbox', () => {
       const inbox = AccountStore.getMailbox(account.id, account.inboxMailbox);
       assert.equal(account.inboxMailbox, inbox.get('id'));
 
@@ -118,6 +116,23 @@ describe('AccountStore', () => {
           assert.equal(index, 0);
           assert.notEqual(mailbox.tree, undefined);
           assert.equal(mailbox.tree.indexOf(inboxLabel), 0);
+        }
+      });
+
+    });
+
+    it('isInbox', () => {
+      const inbox = AccountStore.getMailbox(account.id, account.inboxMailbox);
+      assert.equal(AccountStore.isInbox(account.id, account.inboxMailbox), true);
+
+      // Check for children
+      const mailboxes = AccountStore.getAllMailboxes(account.id);
+      mailboxes.forEach((mailbox) => {
+        if (mailbox.attribs === undefined) {
+          assert.equal(AccountStore.isInbox(account.id, mailbox.id), false);
+        } else {
+          const index = mailbox.attribs.indexOf(MailboxFlags.INBOX);
+          assert.equal(AccountStore.isInbox(account.id, mailbox.id), index > -1);
         }
       });
 

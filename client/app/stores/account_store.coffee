@@ -280,7 +280,7 @@ class AccountStore extends Store
 
 
     isInbox: (accountID, mailboxID, getChildren=false) ->
-        return unless (mailbox = @getMailbox accountID, mailboxID)?.size
+        return false unless (mailbox = @getMailbox accountID, mailboxID)?.size
 
         account = @getByID(accountID)?.toObject()
         attribs = mailbox.get('attribs')
