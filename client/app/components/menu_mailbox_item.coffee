@@ -63,6 +63,6 @@ module.exports = React.createClass
                     span className: 'refresh-error', onClick: displayError,
                         i className: 'fa fa-warning', null
 
-
-            if not @props.isMailboxLoading and @props.unread
-                span className: 'badge', @props.unread
+            div className: 'badges',
+                if not @props.isMailboxLoading and @props.unread
+                    span className: 'badge', @props.unread
