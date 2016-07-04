@@ -90,11 +90,36 @@ describe('AccountStore', () => {
       });
     });
 
-    it('isInbox', () => {
+    it('getInbox', () => {
 
     });
 
-    it('getInbox', () => {
+    it('isInbox', () => {
+      const inbox = AccountStore.getMailbox(account.id, account.inboxMailbox);
+      assert.equal(account.inboxMailbox, inbox.get('id'));
+
+      // Check flags
+      assert.equal(inbox.get('attribs').indexOf(MailboxFlags.INBOX), 0);
+      assert.equal(inbox.get('attribs').length, 1);
+
+      // Check Tree
+      const inboxLabel = inbox.get('label');
+      assert.notEqual(inboxLabel, undefined);
+      assert.notEqual(inbox.get('tree'), undefined);
+      assert.equal(inboxLabel, inbox.get('tree').join(''));
+      assert.equal(inbox.get('tree').length, 1);
+
+      // Check for children
+      const mailboxes = AccountStore.getAllMailboxes(account.id);
+      mailboxes.forEach((mailbox) => {
+        if (mailbox.attribs === undefined) return;
+        const index = mailbox.attribs.indexOf(MailboxFlags.INBOX);
+        if (index > -1) {
+          assert.equal(index, 0);
+          assert.notEqual(mailbox.tree, undefined);
+          assert.equal(mailbox.tree.indexOf(inboxLabel), 0);
+        }
+      });
 
     });
 
