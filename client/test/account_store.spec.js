@@ -81,14 +81,9 @@ describe('AccountStore', () => {
     it('getDefault', () => {
       testAccountValues(AccountStore.getDefault());
     });
-    // it('getByLabel', () => {
-    //   const account = AccountStore.getByLabel('pro');
-    //   assert.equal(account.get('id'), id2);
-    // });
-    // // TODO: add test for mailbox mappinf
-    // // no attribs Case
-    // // no tree cases
-    //
+    it('getByLabel', () => {
+      testAccountValues(AccountStore.getByLabel(account.label));
+    });
     // //  TODO: add test for OVH know issues
     // //  TODO: add test for GMAIL know issues
     // it('getAllMailboxes', () => {
