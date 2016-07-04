@@ -17,26 +17,32 @@ describe('AccountStore', () => {
   const account = AccountFixture.createAccount();
   let accounts = [];
 
-  function testAccountValues(output) {
+  function testAccountValues(output, input) {
     output = output.toJS();
+    if (undefined === input) input = account;
 
     // mailboxes is a specific case
     // if not specified it will be test afterwards
     delete output.mailboxes;
     _.each(output, (value, property) => {
-      assert.equal(value, account[property]);
+      assert.equal(value, input[property]);
     });
-
-    account.mailboxes.forEach(testMailboxValues);
+    input.mailboxes.forEach((mailbox) => {
+      testMailboxValues(input, mailbox);
+    });
   }
 
-  function testMailboxValues(mailbox) {
-    let output = AccountStore.getMailbox(account.id, mailbox.id).toJS();
-    const order = output.order;
+  function testMailboxValues(account, mailbox) {
+    let output = AccountStore.getMailbox(account.id, mailbox.id);
+    assert.notEqual(output.size, 0);
+
+    output = output.toJS();
+
+    assert.equal(typeof output.order, 'number');
     delete output.order;
+
     assert.deepEqual(mailbox, output);
     assert.equal(mailbox.order, undefined);
-    assert.equal(typeof order, 'number');
   }
 
 
@@ -66,8 +72,14 @@ describe('AccountStore', () => {
 
   describe('Methods', () => {
 
-    it('getAll', () => {
+    it('getByID', () => {
+      testAccountValues(AccountStore.getByID(account.id));
+    });
 
+    it('getAll', () => {
+      accounts.forEach((input) => {
+        testAccountValues(AccountStore.getByID(input.id), input);
+      });
     });
 
     it('getMailbox', () => {
@@ -75,7 +87,9 @@ describe('AccountStore', () => {
     });
 
     it('getAllMailboxes', () => {
-      account.mailboxes.forEach(testMailboxValues);
+      account.mailboxes.forEach((mailbox) => {
+        testMailboxValues(account, mailbox);
+      });
     });
 
     it('isInbox', () => {
@@ -96,10 +110,6 @@ describe('AccountStore', () => {
 
     it('getMailboxOrder', () => {
 
-    });
-
-    it('getByID', () => {
-      testAccountValues(AccountStore.getByID(account.id));
     });
 
     it('getByMailbox', () => {
@@ -251,7 +261,7 @@ describe('AccountStore', () => {
           value: mailbox,
         });
 
-        testMailboxValues(mailbox);
+        testMailboxValues(account, mailbox);
       });
     });
 
@@ -264,7 +274,7 @@ describe('AccountStore', () => {
           value: mailbox,
         });
 
-        testMailboxValues(mailbox);
+        testMailboxValues(account, mailbox);
       });
     });
 
@@ -277,7 +287,7 @@ describe('AccountStore', () => {
           value: mailbox,
         });
 
-        testMailboxValues(mailbox);
+        testMailboxValues(account, mailbox);
       });
     });
 
@@ -290,7 +300,7 @@ describe('AccountStore', () => {
           value: mailbox,
         });
 
-        testMailboxValues(mailbox);
+        testMailboxValues(account, mailbox);
       });
     });
 
