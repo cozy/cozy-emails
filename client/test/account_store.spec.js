@@ -49,12 +49,7 @@ describe('AccountStore', () => {
   }
 
 
-  function testSpecialMailbox (type, flag) {
-    assert.notEqual(account[type], undefined);
-
-    const mailbox = AccountStore.getMailbox(account.id, account[type]);
-    assert.equal(account[type], mailbox.get('id'));
-
+  function testSpecialMailbox (mailbox, flag) {
     // Check Tree
     const mailboxLabel = mailbox.get('label');
     assert.notEqual(mailboxLabel, undefined);
@@ -75,10 +70,7 @@ describe('AccountStore', () => {
     });
   }
 
-  function isSpecialMailbox (type, flag) {
-    const mailbox = AccountStore.getMailbox(account.id, account[type]);
-    assert.equal(AccountStore.isInbox(account.id, account[type]), true);
-
+  function isSpecialMailbox (flag) {
     // Check for children
     const mailboxes = AccountStore.getAllMailboxes(account.id);
     mailboxes.forEach((mailbox) => {
@@ -135,24 +127,57 @@ describe('AccountStore', () => {
     });
 
     it('getInbox', () => {
-      testSpecialMailbox('inboxMailbox', MailboxFlags.INBOX);
+      const flag = MailboxFlags.INBOX;
+      const mailbox = AccountStore.getInbox(account.id);
+      const mailbox0 = AccountStore.getMailbox(account.id, account.inboxMailbox);
+      const mailbox1 = AccountStore.getAllMailboxes(account.id).find((mailbox) => {
+          if (mailbox.get('attribs') !== undefined) {
+            return -1 < mailbox.get('attribs').indexOf(flag);
+          }
+        });
+      assert.notEqual(mailbox, undefined);
+      assert.equal(mailbox, mailbox0);
+      assert.equal(mailbox, mailbox1);
+
+      testSpecialMailbox(mailbox, flag);
     });
 
     it('isInbox', () => {
-      isSpecialMailbox('inboxMailbox', MailboxFlags.INBOX);
+      const mailbox = AccountStore.getInbox(account.id);
+
+      assert.notEqual(mailbox, undefined);
+      assert.equal(AccountStore.isInbox(account.id, mailbox.get('id')), true);
+      isSpecialMailbox(MailboxFlags.INBOX);
     });
 
     it('isTrashbox', () => {
-      testSpecialMailbox('trashMailbox', MailboxFlags.TRASH);
-      isSpecialMailbox('inboxMailbox', MailboxFlags.TRASH);
+      const flag = MailboxFlags.TRASH;
+      const mailbox = AccountStore.getMailbox(account.id, account.trashMailbox);
+
+      assert.notEqual(mailbox, undefined);
+      assert.equal(AccountStore.isTrashbox(account.id, mailbox.get('id')), true);
+      testSpecialMailbox(mailbox, flag);
+      isSpecialMailbox(flag);
     });
 
     it('getAllMailbox', () => {
+      const flag = MailboxFlags.ALL;
+      let output = AccountStore.getAllMailboxes(account.id).find((mailbox) => {
+        if (mailbox.get('attribs') !== undefined) {
+          return -1 < mailbox.get('attribs').indexOf(flag);
+        }
+      });
 
+      assert.notEqual(output, undefined);
+      testSpecialMailbox(output, MailboxFlags.ALL);
+      isSpecialMailbox(MailboxFlags.ALL);
     });
 
     it('getMailboxOrder', () => {
-
+      const mailboxes = AccountStore.getAllMailboxes(account.id);
+      account.mailboxes.forEach((mailbox) => {
+        console.log(mailbox.id, mailboxes.get(mailbox.id).values())
+      });
     });
 
     it('getByMailbox', () => {
