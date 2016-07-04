@@ -72,6 +72,9 @@ describe('AccountStore', () => {
     // const mailboxId1 = fixtures.account2.mailboxes[0].id;
     // const mailboxId2 = fixtures.account2.mailboxes[1].id;
 
+    it('getAllMailboxes', () => {
+      account.mailboxes.forEach(testMailboxValues);
+    });
     it('getByID', () => {
       testAccountValues(AccountStore.getByID(account.id));
     });
@@ -84,27 +87,6 @@ describe('AccountStore', () => {
     it('getByLabel', () => {
       testAccountValues(AccountStore.getByLabel(account.label));
     });
-    // //  TODO: add test for OVH know issues
-    // //  TODO: add test for GMAIL know issues
-    // it('getAllMailboxes', () => {
-    //   let mailboxes = AccountStore.getAllMailboxes(id2);
-    //   assert.deepEqual(mailboxes.get(mailboxId1).toObject(), {
-    //     id: mailboxId1,
-    //     label,
-    //     attribs: undefined,
-    //     tree: undefined,
-    //     accountID: id2,
-    //   });
-    //   assert.deepEqual(mailboxes.get(mailboxId2).toObject(), {
-    //     id: mailboxId2,
-    //     label: mailboxLabel,
-    //     attribs: undefined,
-    //     tree: undefined,
-    //     accountID: id2,
-    //   });
-    //   mailboxes = AccountStore.getAllMailboxes();
-    //   assert.isUndefined(mailboxes);
-    // });
     // it('makeEmptyAccount', () => {
     //   const account = AccountStore.makeEmptyAccount();
     //   assert.deepEqual(account.toObject(), fixtures.emptyAccount);
