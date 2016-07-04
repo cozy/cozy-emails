@@ -33,6 +33,7 @@ describe('AccountStore', () => {
     });
   }
 
+
   function testMailboxValues(account, mailbox) {
     let output = AccountStore.getMailbox(account.id, mailbox.id);
     assert.notEqual(output, undefined);
@@ -45,6 +46,49 @@ describe('AccountStore', () => {
 
     assert.deepEqual(mailbox, output);
     assert.equal(mailbox.order, undefined);
+  }
+
+
+  function testSpecialMailbox (type, flag) {
+    assert.notEqual(account[type], undefined);
+
+    const mailbox = AccountStore.getMailbox(account.id, account[type]);
+    assert.equal(account[type], mailbox.get('id'));
+
+    // Check Tree
+    const mailboxLabel = mailbox.get('label');
+    assert.notEqual(mailboxLabel, undefined);
+    assert.notEqual(mailbox.get('tree'), undefined);
+    assert.equal(mailboxLabel, mailbox.get('tree').join(''));
+    assert.equal(mailbox.get('tree').length, 1);
+
+    // Check for children
+    const mailboxes = AccountStore.getAllMailboxes(account.id);
+    mailboxes.forEach((mailbox) => {
+      if (mailbox.attribs === undefined) return;
+      const index = mailbox.attribs.indexOf(flag);
+      if (index > -1) {
+        assert.equal(index, 0);
+        assert.notEqual(mailbox.tree, undefined);
+        assert.equal(mailbox.tree.indexOf(mailboxLabel), 0);
+      }
+    });
+  }
+
+  function isSpecialMailbox (type, flag) {
+    const mailbox = AccountStore.getMailbox(account.id, account[type]);
+    assert.equal(AccountStore.isInbox(account.id, account[type]), true);
+
+    // Check for children
+    const mailboxes = AccountStore.getAllMailboxes(account.id);
+    mailboxes.forEach((mailbox) => {
+      if (mailbox.attribs === undefined) {
+        assert.equal(AccountStore.isInbox(account.id, mailbox.id), false);
+      } else {
+        const index = mailbox.attribs.indexOf(flag);
+        assert.equal(AccountStore.isInbox(account.id, mailbox.id), index > -1);
+      }
+    });
   }
 
 
@@ -91,55 +135,16 @@ describe('AccountStore', () => {
     });
 
     it('getInbox', () => {
-      assert.notEqual(account.inboxMailbox, undefined);
-
-      const inbox = AccountStore.getMailbox(account.id, account.inboxMailbox);
-      assert.equal(account.inboxMailbox, inbox.get('id'));
-
-      // Check flags
-      assert.equal(inbox.get('attribs').indexOf(MailboxFlags.INBOX), 0);
-      assert.equal(inbox.get('attribs').length, 1);
-
-      // Check Tree
-      const inboxLabel = inbox.get('label');
-      assert.notEqual(inboxLabel, undefined);
-      assert.notEqual(inbox.get('tree'), undefined);
-      assert.equal(inboxLabel, inbox.get('tree').join(''));
-      assert.equal(inbox.get('tree').length, 1);
-
-      // Check for children
-      const mailboxes = AccountStore.getAllMailboxes(account.id);
-      mailboxes.forEach((mailbox) => {
-        if (mailbox.attribs === undefined) return;
-        const index = mailbox.attribs.indexOf(MailboxFlags.INBOX);
-        if (index > -1) {
-          assert.equal(index, 0);
-          assert.notEqual(mailbox.tree, undefined);
-          assert.equal(mailbox.tree.indexOf(inboxLabel), 0);
-        }
-      });
-
+      testSpecialMailbox('inboxMailbox', MailboxFlags.INBOX);
     });
 
     it('isInbox', () => {
-      const inbox = AccountStore.getMailbox(account.id, account.inboxMailbox);
-      assert.equal(AccountStore.isInbox(account.id, account.inboxMailbox), true);
-
-      // Check for children
-      const mailboxes = AccountStore.getAllMailboxes(account.id);
-      mailboxes.forEach((mailbox) => {
-        if (mailbox.attribs === undefined) {
-          assert.equal(AccountStore.isInbox(account.id, mailbox.id), false);
-        } else {
-          const index = mailbox.attribs.indexOf(MailboxFlags.INBOX);
-          assert.equal(AccountStore.isInbox(account.id, mailbox.id), index > -1);
-        }
-      });
-
+      isSpecialMailbox('inboxMailbox', MailboxFlags.INBOX);
     });
 
     it('isTrashbox', () => {
-
+      testSpecialMailbox('trashMailbox', MailboxFlags.TRASH);
+      isSpecialMailbox('inboxMailbox', MailboxFlags.TRASH);
     });
 
     it('getAllMailbox', () => {
