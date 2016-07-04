@@ -176,8 +176,17 @@ describe('AccountStore', () => {
     it('getMailboxOrder', () => {
       const mailboxes = AccountStore.getAllMailboxes(account.id);
       account.mailboxes.forEach((mailbox) => {
-        console.log(mailbox.id, mailboxes.get(mailbox.id).values())
+        const output = mailboxes.get(mailbox.id);
+        const mailboxOrder = AccountStore.getMailboxOrder(account.id, mailbox.id);
+
+        assert.equal(mailbox.order, undefined);
+        assert.equal(mailboxOrder, output.get('order'));
       });
+
+      // Should return default value
+      assert.equal(AccountStore.getMailboxOrder(), 100);
+      assert.equal(AccountStore.getMailboxOrder(account.id, null), 100);
+      assert.equal(AccountStore.getMailboxOrder(null, account.inboxMailbox), 100);
     });
 
     it('getByMailbox', () => {
