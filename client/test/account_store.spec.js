@@ -53,18 +53,75 @@ describe('AccountStore', () => {
   });
 
 
-  // Test default Account values
-  describe('_initialize()', () => {
-    it('window.accounts should be stored', () => {
-      assert.equal(AccountStore.getAll().size, accounts.length);
-      Dispatcher.dispatch({
-        type: ActionTypes.RESET_ACCOUNT_REQUEST,
+  describe('Methods', () => {
+    // const id1 = fixtures.account1.id;
+    // const id2 = fixtures.account2.id;
+    // const label = 'mailbox-edited';
+    // const mailboxLabel = fixtures.account2.mailboxes[1].label;
+    // const mailboxId1 = fixtures.account2.mailboxes[0].id;
+    // const mailboxId2 = fixtures.account2.mailboxes[1].id;
+
+
+    it('getByID', () => {
+      const account = AccountStore.getByID(id2);
+      assert.equal(account.get('id'), id2);
+    });
+    it('getByMailbox', () => {
+      const account = AccountStore.getByMailbox(mailboxId1);
+      assert.equal(account.get('id'), id2);
+    });
+    it('getDefault', () => {
+      const account = AccountStore.getDefault();
+      assert.equal(account.get('id'), id1);
+    });
+    it('getByLabel', () => {
+      const account = AccountStore.getByLabel('pro');
+      assert.equal(account.get('id'), id2);
+    });
+    // TODO: add test for mailbox mappinf
+    // no attribs Case
+    // no tree cases
+
+    //  TODO: add test for OVH know issues
+    //  TODO: add test for GMAIL know issues
+    it('getAllMailboxes', () => {
+      let mailboxes = AccountStore.getAllMailboxes(id2);
+      assert.deepEqual(mailboxes.get(mailboxId1).toObject(), {
+        id: mailboxId1,
+        label,
+        attribs: undefined,
+        tree: undefined,
+        accountID: id2,
       });
+      assert.deepEqual(mailboxes.get(mailboxId2).toObject(), {
+        id: mailboxId2,
+        label: mailboxLabel,
+        attribs: undefined,
+        tree: undefined,
+        accountID: id2,
+      });
+      mailboxes = AccountStore.getAllMailboxes();
+      assert.isUndefined(mailboxes);
+    });
+    it('makeEmptyAccount', () => {
+      const account = AccountStore.makeEmptyAccount();
+      assert.deepEqual(account.toObject(), fixtures.emptyAccount);
     });
   });
 
 
-  describe('Account Actions', () => {
+  describe('AccountActions', () => {
+
+    // Test default Account values
+    describe('_initialize()', () => {
+      it('window.accounts should be stored', () => {
+        assert.equal(AccountStore.getAll().size, accounts.length);
+        Dispatcher.dispatch({
+          type: ActionTypes.RESET_ACCOUNT_REQUEST,
+        });
+      });
+    });
+
 
     describe('ADD_ACCOUNT_SUCCESS', () => {
 
@@ -160,7 +217,7 @@ describe('AccountStore', () => {
   });
 
 
-  describe('Mailbox Actions', () => {
+  describe('MailboxActions', () => {
 
     beforeEach(() => {
       Dispatcher.dispatch({
@@ -230,7 +287,7 @@ describe('AccountStore', () => {
         assert.deepEqual(mailbox, output.toJS());
       });
     });
-  });
+
     // it.skip('REMOVE_ACCOUNT_SUCCESS', () => {
     //   // FIXME Nothing is done here in the store code.
     // });
@@ -243,59 +300,5 @@ describe('AccountStore', () => {
     //   assert.isUndefined(accounts.get(id).get('password'));
     // });
   });
-  //
-  // describe('Methods', () => {
-  //   // const id1 = fixtures.account1.id;
-  //   // const id2 = fixtures.account2.id;
-  //   // const label = 'mailbox-edited';
-  //   // const mailboxLabel = fixtures.account2.mailboxes[1].label;
-  //   // const mailboxId1 = fixtures.account2.mailboxes[0].id;
-  //   // const mailboxId2 = fixtures.account2.mailboxes[1].id;
-  //
-  //
-  //   it('getByID', () => {
-  //     const account = AccountStore.getByID(id2);
-  //     assert.equal(account.get('id'), id2);
-  //   });
-  //   it('getByMailbox', () => {
-  //     const account = AccountStore.getByMailbox(mailboxId1);
-  //     assert.equal(account.get('id'), id2);
-  //   });
-  //   it('getDefault', () => {
-  //     const account = AccountStore.getDefault();
-  //     assert.equal(account.get('id'), id1);
-  //   });
-  //   it('getByLabel', () => {
-  //     const account = AccountStore.getByLabel('pro');
-  //     assert.equal(account.get('id'), id2);
-  //   });
-  //   // TODO: add test for mailbox mappinf
-  //   // no attribs Case
-  //   // no tree cases
-  //
-  //   //  TODO: add test for OVH know issues
-  //   //  TODO: add test for GMAIL know issues
-  //   it('getAllMailboxes', () => {
-  //     let mailboxes = AccountStore.getAllMailboxes(id2);
-  //     assert.deepEqual(mailboxes.get(mailboxId1).toObject(), {
-  //       id: mailboxId1,
-  //       label,
-  //       attribs: undefined,
-  //       tree: undefined,
-  //       accountID: id2,
-  //     });
-  //     assert.deepEqual(mailboxes.get(mailboxId2).toObject(), {
-  //       id: mailboxId2,
-  //       label: mailboxLabel,
-  //       attribs: undefined,
-  //       tree: undefined,
-  //       accountID: id2,
-  //     });
-  //     mailboxes = AccountStore.getAllMailboxes();
-  //     assert.isUndefined(mailboxes);
-  //   });
-  //   it('makeEmptyAccount', () => {
-  //     const account = AccountStore.makeEmptyAccount();
-  //     assert.deepEqual(account.toObject(), fixtures.emptyAccount);
-  //   });
-  // });
+
+});
