@@ -131,7 +131,7 @@ class AccountStore extends Store
                     path2 = mb2.tree.join('/').toLowerCase()
                     return path1.localeCompare path2
 
-            .map (mailbox, index) -> Immutable.Map mailbox
+            .map (mailbox) -> Immutable.Map mailbox
             .toOrderedMap()
 
         delete _account.totalUnread

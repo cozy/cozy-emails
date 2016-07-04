@@ -139,8 +139,10 @@ module.exports.createAccount = function Account() {
   const trashMailbox = new module.exports.createTrashMailbox();
   const unreadMailbox = new module.exports.createUnreadMailbox();
   const flaggedMailbox = new module.exports.createFlaggedMailbox();
+  const allMailbox = new module.exports.createAllMailbox();
 
   let mailboxes = [];
+  mailboxes.push(allMailbox);
   mailboxes.push(inboxMailbox);
   mailboxes.push(draftMailbox);
   mailboxes.push(junkMailbox);
