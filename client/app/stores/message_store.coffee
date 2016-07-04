@@ -5,6 +5,14 @@ Store = require '../libs/flux/store/store'
 
 {ActionTypes, MessageFlags, MessageFilter} = require '../constants/app_constants'
 
+
+# FIXME: server side data
+#  - The fact that the conversation length is calculated remotely,
+#  is not clear for the developer.
+#
+#  - Most operations, like getting raw messages,
+#  don't update conversation length.
+
 class MessageStore extends Store
 
     ###
@@ -17,7 +25,6 @@ class MessageStore extends Store
 
 
     _updateMessages = (result={}, timestamp) ->
-
         {messages, conversationLength} = result
 
         # This prevent to override local updates
@@ -49,7 +56,6 @@ class MessageStore extends Store
         message.mailboxID = mailboxIDs.shift()
 
         if _shouldUpdateMessage message, timestamp
-
             attachments = message.attachments or Immutable.List []
 
             message.date          ?= new Date().toISOString()
@@ -69,7 +75,6 @@ class MessageStore extends Store
                 return """
                     #{message.id} "#{message.from[0].name}" "#{message.subject}"
                 """
-
             _messages = _messages.set message.id, messageMap
 
 
