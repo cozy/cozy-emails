@@ -65,32 +65,27 @@ describe('AccountStore', () => {
 
 
   describe('Methods', () => {
-    // const id1 = fixtures.account1.id;
-    // const id2 = fixtures.account2.id;
-    // const label = 'mailbox-edited';
-    // const mailboxLabel = fixtures.account2.mailboxes[1].label;
-    // const mailboxId1 = fixtures.account2.mailboxes[0].id;
-    // const mailboxId2 = fixtures.account2.mailboxes[1].id;
 
     it('getAllMailboxes', () => {
       account.mailboxes.forEach(testMailboxValues);
     });
+
     it('getByID', () => {
       testAccountValues(AccountStore.getByID(account.id));
     });
+
     it('getByMailbox', () => {
       testAccountValues(AccountStore.getByMailbox(account.mailboxes[0].id));
     });
+
     it('getDefault', () => {
       testAccountValues(AccountStore.getDefault());
     });
+
     it('getByLabel', () => {
       testAccountValues(AccountStore.getByLabel(account.label));
     });
-    // it('makeEmptyAccount', () => {
-    //   const account = AccountStore.makeEmptyAccount();
-    //   assert.deepEqual(account.toObject(), fixtures.emptyAccount);
-    // });
+    
   });
 
 
