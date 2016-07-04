@@ -17,16 +17,17 @@ describe('AccountStore', () => {
   const account = AccountFixture.createAccount();
   let accounts = [];
 
-  function testAccountValues() {
-    let output = AccountStore.getAll().get(account.id).toJS();
+  function testAccountValues(output) {
+    output = output.toJS();
 
     // mailboxes is a specific case
-    // it will be test after this
+    // if not specified it will be test afterwards
     delete output.mailboxes;
-
     _.each(output, (value, property) => {
       assert.equal(value, account[property]);
     });
+
+    account.mailboxes.forEach(testMailboxValues);
   }
 
   function testMailboxValues(mailbox) {
@@ -72,8 +73,7 @@ describe('AccountStore', () => {
     // const mailboxId2 = fixtures.account2.mailboxes[1].id;
 
     it('getByID', () => {
-      testAccountValues();
-      account.mailboxes.forEach(testMailboxValues);
+      testAccountValues(AccountStore.getByID(account.id));
     });
     // it('getByMailbox', () => {
     //   const account = AccountStore.getByMailbox(mailboxId1);
@@ -152,7 +152,9 @@ describe('AccountStore', () => {
           assert.equal(AccountStore.getAll().size, 1);
         });
 
-        it('should be equal to its input value', testAccountValues);
+        it('should be equal to its input value', () => {
+          testAccountValues(AccountStore.getAll().get(account.id))
+        });
       });
 
       describe('Account.mailboxes', () => {
@@ -220,7 +222,9 @@ describe('AccountStore', () => {
         });
       });
 
-      it('should add a new item', testAccountValues);
+      it('should add a new item', () => {
+        testAccountValues(AccountStore.getAll().get(account.id))
+      });
     });
   });
 
