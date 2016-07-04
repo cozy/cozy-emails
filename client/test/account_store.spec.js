@@ -66,8 +66,36 @@ describe('AccountStore', () => {
 
   describe('Methods', () => {
 
+    it('getAll', () => {
+
+    });
+
+    it('getMailbox', () => {
+
+    });
+
     it('getAllMailboxes', () => {
       account.mailboxes.forEach(testMailboxValues);
+    });
+
+    it('isInbox', () => {
+
+    });
+
+    it('getInbox', () => {
+
+    });
+
+    it('isTrashbox', () => {
+
+    });
+
+    it('getAllMailbox', () => {
+
+    });
+
+    it('getMailboxOrder', () => {
+
     });
 
     it('getByID', () => {
@@ -85,7 +113,7 @@ describe('AccountStore', () => {
     it('getByLabel', () => {
       testAccountValues(AccountStore.getByLabel(account.label));
     });
-    
+
   });
 
 
