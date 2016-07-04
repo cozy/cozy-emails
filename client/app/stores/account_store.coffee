@@ -308,25 +308,4 @@ class AccountStore extends Store
             -1 < mailbox.get('attribs')?.indexOf MailboxFlags.ALL
 
 
-    makeEmptyAccount: ->
-        Immutable.Map
-            label: ''
-            login: ''
-            password: ''
-            imapServer: ''
-            imapLogin: ''
-            smtpServer: ''
-            label: ''
-            id: null
-            smtpPort: 465
-            smtpSSL: true
-            smtpTLS: false
-            smtpMethod: 'PLAIN'
-            imapPort: 993
-            imapSSL: true
-            imapTLS: false
-            accountType: 'IMAP'
-            favoriteMailboxes: null
-
-
 module.exports = new AccountStore()
