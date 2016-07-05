@@ -13,7 +13,7 @@ describe('Message Store', () => {
   let MessageStore;
   let Dispatcher;
   const date = new Date();
-  const message = MessageFixtures.createMessage({date})
+  const message = MessageFixtures.createMessage({date});
   const messages = [];
 
 
@@ -25,10 +25,26 @@ describe('Message Store', () => {
     output = output.toJS();
     if (undefined === input) input = message;
 
+    assert.equal(input.mailboxID, undefined);
+    assert.equal(typeof output.mailboxID, 'string');
+    delete output.mailboxID;
+
+    if (undefined === input.attachments) {
+      assert.equal(input.attachments, undefined);
+      assert.deepEqual(output.attachments, []);
+      delete output.attachments;
+    }
+
+    // When Message is only flagged as Unread
+    // sometime value can be undefined
+    // instead of []
+    if (undefined === input.flags) {
+      delete output.flags;
+    }
+
     _.each(output, (value, property) => {
       if ('object' === typeof value) {
-        // TODO: gérer les cas Immutable.List
-        // assert.deepEqual(value, input[property]);
+        assert.deepEqual(value, input[property]);
       } else if (!isDate(property)) {
         assert.equal(value, input[property]);
       }
@@ -39,13 +55,16 @@ describe('Message Store', () => {
   before(() => {
     messages.push(message);
     messages.push(MessageFixtures.createMessage({date}));
-    messages.push(MessageFixtures.createMessage({date}));
+
+    // FIXME: bug sur ce message
+    messages.push(MessageFixtures.createAttached({date}));
+
     messages.push(MessageFixtures.createMessage({date}));
     messages.push(MessageFixtures.createMessage({images: true, date}));
     messages.push(MessageFixtures.createMessage({images: false, date}));
-    messages.push(MessageFixtures.createMessage({date}));
-    messages.push(MessageFixtures.createMessage({date}));
-    messages.push(MessageFixtures.createMessage({date}));
+    messages.push(MessageFixtures.createUnread({date}));
+    messages.push(MessageFixtures.createFlagged({date}));
+    messages.push(MessageFixtures.createDraft({date}));
 
     const path = '../app/stores/message_store';
     Dispatcher = new SpecDispatcher();

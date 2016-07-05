@@ -60,6 +60,7 @@ module.exports.createDraftMailbox = function DraftMailbox() {
     label: mailboxLabel,
     attribs: [MailboxFlags.DRAFT],
     tree: [mailboxLabel],
+    nbTotal: 124,
   });
 };
 
@@ -72,6 +73,9 @@ module.exports.createSentMailbox = function SentMailbox() {
     label: mailboxLabel,
     attribs: [MailboxFlags.SENT],
     tree: [mailboxLabel],
+    nbFlagged: 2,
+    nbTotal: 300,
+    nbUnread: 0,
   });
 };
 
@@ -84,6 +88,9 @@ module.exports.createTrashMailbox = function TrashMailbox() {
     label: mailboxLabel,
     attribs: [MailboxFlags.TRASH],
     tree: [mailboxLabel],
+    nbFlagged: 76,
+    nbTotal: 867,
+    nbUnread: 40,
   });
 };
 
@@ -130,8 +137,8 @@ module.exports.createFlaggedMailbox = function FlaggedMailbox() {
   });
 };
 
-module.exports.createAccount = function Account() {
 
+module.exports.createAccount = function Account() {
   const inboxMailbox = new module.exports.createInboxMailbox();
   const draftMailbox = new module.exports.createDraftMailbox();
   const junkMailbox = new module.exports.createJunkMailbox();
@@ -200,7 +207,7 @@ module.exports.createAccount = function Account() {
 
 
 module.exports.createGmailAccount = function Account() {
-  let account = new module.exports.createAccount();
+  let account = module.exports.createAccount();
 
   // TODO: add [Gmail] mailbox:
   // - account.mailboxes.get('[Gmail]').attribs = [\Noselect]
@@ -220,7 +227,7 @@ module.exports.createGmailAccount = function Account() {
 
 
 module.exports.createOVHAccount = function Account() {
-  let account = new module.exports.createAccount();
+  let account = module.exports.createAccount();
 
   // TODO: add twice INBOX mailbox
   // with different ID
