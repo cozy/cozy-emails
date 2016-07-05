@@ -22,6 +22,14 @@ var cssOptions = optimize? 'css?-svgo&-autoprefixer!postcss':'css';
 var imgPath = 'img/' + '[name]' + (optimize? '.[hash]': '') + '.[ext]';
 var loaders = [
     {
+        test: /\.js$/,
+        loader: 'babel',
+        exclude: /node_modules(?!\/superagent-throttle)/,
+        query: {
+            presets: ['es2015']
+        }
+    },
+    {
         test: /\.coffee$/,
         loader: 'coffee'
     },
