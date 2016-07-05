@@ -309,6 +309,15 @@ describe('AccountStore', () => {
         testAccountValues(AccountStore.getAll().get(account.id));
       });
 
+      it('RECEIVE_ACCOUNT_UPDATE', () => {
+        Dispatcher.dispatch({
+          type: ActionTypes.RECEIVE_ACCOUNT_UPDATE,
+          value: account,
+        });
+
+        testAccountValues(AccountStore.getAll().get(account.id));
+      });
+
       it('MAILBOX_CREATE_SUCCESS', () => {
         const mailbox = AccountFixture.createMailbox();
 
@@ -364,10 +373,7 @@ describe('AccountStore', () => {
     });
 
 
-    // TODO: add missing tests
-    // REMOVE_ACCOUNT_SUCCESS
     describe('Should REMOVE account(s)', () => {
-
       it.skip('REMOVE_ACCOUNT_SUCCESS', () => {
         // FIXME Nothing is done here in the store code.
       });
