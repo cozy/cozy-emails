@@ -431,32 +431,12 @@ describe('Message Store', () => {
       });
     });
 
-
     it('getConversationLength', () => {
+      let length = MessageStore.getConversationLength(conversationID);
+      assert.equal(outputLength, conversationLength);
 
-      // const id1 = fixtures.message10.id;
-      // const conversationId1 = fixtures.message10.conversationID;
-      //
-      // // Message10 should exist into MessageStore
-      // assert.deepEqual(MessageStore.getByID(id1).toObject(), fixtures.message10);
-      //
-      // // Its length is 1
-      // let length = MessageStore.getConversationLength(conversationId1);
-      // assert.equal(length, 1);
-      //
-      // const id2 = fixtures.message11.id;
-      // const conversationId2 = fixtures.message11.conversationID;
-      //
-      // // Message11 should exist into MessageStore
-      // assert.deepEqual(MessageStore.getByID(id2).toObject(), fixtures.message11);
-      //
-      // // Its length is 2
-      // length = MessageStore.getConversationLength(conversationId2);
-      // assert.equal(length, 2);
-      //
-      // // Empty conversation should return length: null
-      // length = MessageStore.getConversationLength('c5');
-      // assert.isNull(length);
+      length = MessageStore.getConversation(conversationID, account.inboxMailbox).length;
+      assert.equal(length, conversationLength);
     });
   });
 
