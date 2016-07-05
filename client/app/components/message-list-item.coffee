@@ -117,7 +117,7 @@ module.exports = React.createClass
                             @getDate()
 
                         div className: 'extras',
-                            if @props.message.get 'hasAttachments'
+                            if @props.message.get('attachements')?.size
                                 i className: 'attachments fa fa-paperclip'
                             if @props.conversationLengths > 1
                                 span className: 'conversation-length',

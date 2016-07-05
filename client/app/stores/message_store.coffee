@@ -1,4 +1,4 @@
-_         = require 'underscore'
+_         = require 'lodash'
 Immutable = require 'immutable'
 
 Store = require '../libs/flux/store/store'
@@ -25,7 +25,7 @@ class MessageStore extends Store
 
 
     _updateMessages = (result={}) ->
-        {messages, conversationLength} = result
+        {messages, conversationLength} = _.cloneDeep result
 
         # This prevent to override local updates
         # with older ones from server
@@ -44,21 +44,20 @@ class MessageStore extends Store
 
 
     _saveMessage = (message) ->
-        # Save reference mailbox into message informations
-        mailboxIDs = _.keys(message.mailboxIDs).sort (value0, value1) ->
-            value0.localeCompare value1
-        message.mailboxID = mailboxIDs.shift()
+        message = _.cloneDeep message
 
+        # Save reference mailbox into message informations
+        message.mailboxID = _.keys(message.mailboxIDs).shift()
 
         if _shouldUpdateMessage message
-            attachments = message.attachments or Immutable.List []
-
             message.date          ?= new Date().toISOString()
             message.createdAt     ?= message.date
             message.flags         ?= []
-            message.hasAttachments = attachments.size > 0
+
+            attachments            = message.attachments or []
             message.attachments    = Immutable.List attachments.map (file) ->
                 Immutable.Map file
+
 
             # message loaded from fixtures for test purpose have a docType
             # that may cause some troubles
@@ -212,8 +211,7 @@ class MessageStore extends Store
 
     isAttached: ({flags=[], message}) ->
         if message?
-            flags = message.get('flags') or []
-            MessageFlags.ATTACH in flags
+            message.get('attachments').size
         else
             MessageFilter.ATTACH in flags
 
