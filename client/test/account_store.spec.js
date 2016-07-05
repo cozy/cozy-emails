@@ -14,7 +14,7 @@ describe('AccountStore', () => {
   let AccountStore;
   let Dispatcher;
   const account = AccountFixture.createAccount();
-  let accounts = [];
+  const accounts = [];
 
   function testAccountValues(output, input) {
     output = output.toJS();

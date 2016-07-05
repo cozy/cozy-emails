@@ -24,12 +24,12 @@ class MessageStore extends Store
     _conversationLength = Immutable.Map()
 
 
-    _updateMessages = (result={}, timestamp) ->
+    _updateMessages = (result={}) ->
         {messages, conversationLength} = result
 
         # This prevent to override local updates
         # with older ones from server
-        messages?.forEach (msg) -> _saveMessage msg, timestamp if msg
+        messages?.forEach (msg) -> _saveMessage msg if msg
 
         # Shortcut to know conversationLength
         # withount loading all massages of the conversation
@@ -38,24 +38,19 @@ class MessageStore extends Store
                 _updateConversationLength conversationID, length
 
 
-    _shouldUpdateMessage = (message, timestamp) ->
-        unless message?.id
-            return false
-
-        timestamp ?= new Date()
-        updated = (_messages.get message.id)?.get 'updated'
-        isNewer = timestamp? and updated? and updated <= timestamp
-
-        (not updated? or isNewer) and not message._deleted
+    _shouldUpdateMessage = (message) ->
+        value = (_messages.get message?.id)?.get 'updated'
+        (not value?) or (not message.updated?) or (value < message.updated)
 
 
-    _saveMessage = (message, timestamp) ->
+    _saveMessage = (message) ->
         # Save reference mailbox into message informations
         mailboxIDs = _.keys(message.mailboxIDs).sort (value0, value1) ->
             value0.localeCompare value1
         message.mailboxID = mailboxIDs.shift()
 
-        if _shouldUpdateMessage message, timestamp
+
+        if _shouldUpdateMessage message
             attachments = message.attachments or Immutable.List []
 
             message.date          ?= new Date().toISOString()
@@ -69,7 +64,7 @@ class MessageStore extends Store
             # that may cause some troubles
             delete message.docType
 
-            message.updated = Date.now()
+            message.updated = (new Date()).toISOString()
             messageMap = Immutable.Map message
             messageMap.prettyPrint = ->
                 return """
@@ -112,8 +107,8 @@ class MessageStore extends Store
             @emit 'change'
 
 
-        handle ActionTypes.MESSAGE_FETCH_SUCCESS, ({result, timestamp}) ->
-            _updateMessages result, timestamp
+        handle ActionTypes.MESSAGE_FETCH_SUCCESS, ({result}) ->
+            _updateMessages result
             @emit 'change'
 
 
@@ -144,8 +139,8 @@ class MessageStore extends Store
             @emit 'change'
 
 
-        handle ActionTypes.MESSAGE_FLAGS_SUCCESS, ({updated, timestamp}) ->
-            _updateMessages updated, timestamp
+        handle ActionTypes.MESSAGE_FLAGS_SUCCESS, ({updated}) ->
+            _updateMessages updated
             @emit 'change'
 
 

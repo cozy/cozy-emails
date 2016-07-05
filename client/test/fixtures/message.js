@@ -1,44 +1,56 @@
 "use strict";
 
-const AccountFixture = require('./account')
+const getUID = require('../utils/guid').getUID;
+const getName = require('../utils/guid').getName;
+
+const AccountFixture = require('./account');
+
 
 // # TODO: il faudra tester les types des données
-module.exports.createMessage = function createMessage() {
+module.exports.createMessage = function createMessage(data) {
 
   const mailbox = AccountFixture.createMailbox()
-
   // let mailboxIDs = {};
   // mailboxIDs[mailbox.id] = 'PLOP';
 
-  return {
-    'id': 'bfcf4e2da3383533fb2b1dc1a807e114',
-    'conversationID': 'aa036272-ab8f-4252-bdb6-d30986c4be35',
-    'accountID': 'bfcf4e2da3383533fb2b1dc1a8049123',
-    'mailboxID': 'bfcf4e2da3383533fb2b1dc1a804e5c1',
-    'mailboxIDs': {},
-    'messageID': 'CAFvPtfJP2UXp0B+jkCo0PSnxdPfM8=sVdyXBsPspCZeqDRu68Q@mail.gmail.com',
-    'attachments': [],
-    'date': '2016-04-26T08:19:08.000Z',
-    'docType': 'message',
-    'flags': [],
+  // TODO: voir pour créer les mailboxIDs
+  // Regarder dasn les tests les types de données qui seront necessaires
+  const date = (data.date || new Date()).toISOString();
 
-    // TODO: add test
-    // about these properties
-    // 'from': Array[1]
-    // 'to': Array[1]
-    // 'bcc': Array[0]
-    // 'cc': Array[0]
-    // 'replyTo': Array[0]
-    // 'inReplyTo': Array[1]
-    // 'hasTwin': Array[0]
-    // 'headers': Object
-    // 'subject': 'Re: Salut"
-    // 'normSubject': 'Salut"
-    // 'priority': 'normal"
-    // 'html': 'test"
-    // 'ignoreInCount': false
-    // 'references': Array[7]
-    // 'text': ''
+  return {
+    id: `message-${getUID()}`,
+
+    messageID: "cozy/cozy-ui/pull/19@github.com",
+    conversationID: "79348a40-f084-458b-9994-dfc85fc60eb5",
+    accountID: "0d73a98a97651572eeb6e00c41f5817a",
+    mailboxIDs: {},
+
+    normSubject: "[cozy/cozy-ui] Add mixed checkbox style (#19)",
+    subject: "[cozy/cozy-ui] Add mixed checkbox style (#19)",
+    priority: "normal",
+
+    // updated: date,
+    createdAt: date,
+    date: date,
+
+    headers: {},
+    html: "contenu de mon emails",
+    text: "sqdd",
+    attachments: [],
+    hasAttachments: false,
+    references: [],
+    to: [],
+    replyTo: [],
+    bcc: [],
+    cc: [],
+    inReplyTo: [],
+    flags: [],
+    from: [],
+    hasTwin: [],
+    ignoreInCount: false,
+
+    // settings
+    _displayImages: data.images
   }
 }
 

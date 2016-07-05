@@ -14,7 +14,7 @@ const inboxLabel = 'Boite principale';
 module.exports.createMailbox = function Mailbox() {
   return {
     label: getName('mailbox'),
-    id: getUID(),
+    id: `mailbox-${getUID()}`,
     lastSync: new Date(),
 
     attribs: undefined,
@@ -159,7 +159,7 @@ module.exports.createAccount = function Account() {
   }
 
   return {
-    id: getUID(),
+    id: `account-${getUID()}`,
 
     docType: 'account',
     initialized: true,

@@ -12,9 +12,41 @@ const MessageFixtures = require('./fixtures/message')
 describe('Message Store', () => {
   let MessageStore;
   let Dispatcher;
+  const date = new Date();
+  const message = MessageFixtures.createMessage({date})
+  const messages = [];
+
+
+  function isDate(key) {
+    return -1 < ['date', 'updated', 'createdAt'].indexOf(key)
+  }
+
+  function testValues(output, input) {
+    output = output.toJS();
+    if (undefined === input) input = message;
+
+    _.each(output, (value, property) => {
+      if ('object' === typeof value) {
+        // TODO: gérer les cas Immutable.List
+        // assert.deepEqual(value, input[property]);
+      } else if (!isDate(property)) {
+        assert.equal(value, input[property]);
+      }
+    });
+  }
 
 
   before(() => {
+    messages.push(message);
+    messages.push(MessageFixtures.createMessage({date}));
+    messages.push(MessageFixtures.createMessage({date}));
+    messages.push(MessageFixtures.createMessage({date}));
+    messages.push(MessageFixtures.createMessage({images: true, date}));
+    messages.push(MessageFixtures.createMessage({images: false, date}));
+    messages.push(MessageFixtures.createMessage({date}));
+    messages.push(MessageFixtures.createMessage({date}));
+    messages.push(MessageFixtures.createMessage({date}));
+
     const path = '../app/stores/message_store';
     Dispatcher = new SpecDispatcher();
     mockeryUtils.initDispatcher(Dispatcher);
@@ -34,7 +66,6 @@ describe('Message Store', () => {
    */
 
   describe('Actions', () => {
-
 
     beforeEach(() => {
 
@@ -73,21 +104,21 @@ describe('Message Store', () => {
 
     describe('Should UPDATE message(s)', () => {
 
-        it('MESSAGE_FLAGS_SUCCESS', () => {
-            // MESSAGE_FLAGS_SUCCESS, {result, timestamp}
-        });
+      it('MESSAGE_FLAGS_SUCCESS', () => {
+          // MESSAGE_FLAGS_SUCCESS, {result, timestamp}
+      });
 
-        it('MESSAGE_MOVE_SUCCESS', () => {
-            // MESSAGE_MOVE_SUCCESS, ({updated})
-        });
+      it('MESSAGE_MOVE_SUCCESS', () => {
+          // MESSAGE_MOVE_SUCCESS, ({updated})
+      });
 
-        it('SEARCH_SUCCESS', () => {
-          // SEARCH_SUCCESS, ((message))
-        });
+      it('SEARCH_SUCCESS', () => {
+        // SEARCH_SUCCESS, ((message))
+      });
 
-        it('SETTINGS_UPDATE_REQUEST', () => {
-          // SETTINGS_UPDATE_REQUEST, ({messageID, displayImages=true})
-        });
+      it('SETTINGS_UPDATE_REQUEST', () => {
+        // SETTINGS_UPDATE_REQUEST, ({messageID, displayImages=true})
+      });
     });
 
 
@@ -272,37 +303,35 @@ describe('Message Store', () => {
   });
 
   describe('Methods', () => {
-    const message = MessageFixtures.createMessage();
-
 
     beforeEach(() => {
-      // Dispatcher.dispatch({
-      //   type: ActionTypes.ADD_ACCOUNT_SUCCESS,
-      //   // value: { account },
-      // });
+      Dispatcher.dispatch({
+        type: ActionTypes.RECEIVE_RAW_MESSAGES,
+        value: messages,
+      });
     });
 
     afterEach(() => {
-      // Dispatcher.dispatch({
-      //   type: ActionTypes.MESSAGE_RESET_REQUEST,
-      // });
-    });
-
-
-    it('getAll', () => {
-
+      Dispatcher.dispatch({
+        type: ActionTypes.MESSAGE_RESET_REQUEST,
+      });
     });
 
     it('getByID', () => {
-      // const id10 = fixtures.message10.id;
-      // assert.deepEqual(
-      //   MessageStore.getByID(id10).toObject(),
-      //   fixtures.message10
-      // );
+      testValues(MessageStore.getByID(message.id));
+    });
+
+    it('getAll', () => {
+      messages.forEach((input) => {
+        testValues(MessageStore.getByID(input.id), input);
+      });
     });
 
     it('isImagesDisplayed', () => {
-
+      messages.forEach((input) => {
+        const msg = MessageStore.getByID(input.id);
+        testValues(MessageStore.getByID(input.id), input);
+      });
     });
 
     it('isUnread', () => {
