@@ -1,4 +1,5 @@
 'use strict';
+
 const assert = require('chai').assert;
 const _ = require('lodash');
 const Map = require('immutable').Map;
@@ -7,17 +8,26 @@ const mockeryUtils = require('./utils/mockery_utils');
 const SpecDispatcher = require('./utils/specs_dispatcher');
 const ActionTypes = require('../app/constants/app_constants').ActionTypes;
 
-const MessageFixtures = require('./fixtures/message')
+const getUID = require('./utils/guid').getUID;
+const MessageFixtures = require('./fixtures/message');
+const AccountFixture = require('./fixtures/account');
 
 describe('Message Store', () => {
   let MessageStore;
   let Dispatcher;
+
+  const conversationLength = 6;
+  const conversationID = `plop-${getUID()}`;
+  const account = AccountFixture.createAccount();
+
   const date = new Date();
+
   const message = MessageFixtures.createMessage({date});
   const messageUnread = MessageFixtures.createUnread({date});
   const messageFlagged = MessageFixtures.createFlagged({date});
   const messageDraft = MessageFixtures.createDraft({date});
   const messageAttached = MessageFixtures.createAttached({date});
+
   const messages = [];
 
 
@@ -57,14 +67,25 @@ describe('Message Store', () => {
 
 
   before(() => {
+    // Add several messages
+    // to create a conversation
+    let params = {date, conversationID, account};
+    messages.push(MessageFixtures.createMessage(params));
+    messages.push(MessageFixtures.createMessage(params));
+    messages.push(MessageFixtures.createMessage(params));
+    messages.push(MessageFixtures.createMessage(params));
+    messages.push(MessageFixtures.createMessage(params));
+    messages.push(MessageFixtures.createMessage(params));
+
+
+
     messages.push(message);
     messages.push(MessageFixtures.createMessage({date}));
-
-
     messages.push(MessageFixtures.createMessage({date}));
     messages.push(MessageFixtures.createMessage({images: true, date}));
     messages.push(MessageFixtures.createMessage({images: false, date}));
 
+    // Add flagged messages
     messages.push(messageAttached);
     messages.push(messageUnread);
     messages.push(messageFlagged);
@@ -391,25 +412,28 @@ describe('Message Store', () => {
     });
 
     it('getConversation', () => {
-      // const id11 = fixtures.message11.id;
-      // const mailbox11 = _.keys(fixtures.message11.mailboxIDs)[0];
-      // const conversationId = fixtures.message11.conversationID;
-      // const messages = MessageStore.getConversation(conversationId, mailbox11);
-      // if (messages[0].get('id') === id11) {
-      //   assert.deepEqual(messages[0].toObject(), fixtures.message11);
-      //   assert.deepEqual(messages[1].toObject(), fixtures.message12);
-      // } else {
-      //   assert.deepEqual(messages[1].toObject(), fixtures.message11);
-      //   assert.deepEqual(messages[0].toObject(), fixtures.message12);
-      // }
-      //
-      // //  If conversation doesnt exist
-      // // then return empty Array
-      // const id5 = fixtures.message5.id;
-      // const conversation5 = MessageStore.getConversation(id5, 'inbox')
-      // assert.deepEqual(MessageStore.getConversation(id5, 'inbox'), []);
+      account.mailboxes.forEach((mailbox) => {
+        const output = MessageStore.getConversation(conversationID, mailbox.id);
+        output.forEach((msg) => {
+          // All messages must have the same
+          // conversationID && mailboxID
+          assert.equal(msg.get('conversationID'), conversationID);
+          assert.notEqual(msg.get('mailboxIDs')[mailbox.id], undefined);
+        });
+
+        // All messages should belongs to inbox otherwise
+        // conversationLength must be smaller or equal
+        if (mailbox.id === account.inboxMailbox) {
+          assert.equal(output.length, conversationLength);
+        } else {
+          assert.isTrue(output.length <= conversationLength);
+        }
+      });
     });
+
+
     it('getConversationLength', () => {
+
       // const id1 = fixtures.message10.id;
       // const conversationId1 = fixtures.message10.conversationID;
       //

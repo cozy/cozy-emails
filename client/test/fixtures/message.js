@@ -11,34 +11,13 @@ const getName = require('../utils/guid').getName;
 const AccountFixture = require('./account');
 
 
-function createMailboxIDs (account) {
-  const max = Math.round(Math.random() * account.mailboxes.length);
-  const min = Math.round(Math.random() * max);
-  const mailboxes = account.mailboxes.slice(min, max);
-
-  // Create MailboxIDs
-  const mailboxIDs = _.transform(mailboxes, (result, mailbox) => {
-    result[mailbox.id] = mailbox.nbTotal
-  }, {})
-
-  // inboxMailbox must be there
-  if (undefined === mailboxIDs[account.inboxMailbox]) {
-    const inbox = account.mailboxes.find((mailbox) => {
-      return account.inboxMailbox === mailbox.id;
-    });
-    mailboxIDs[inbox.id] = inbox.nbTotal;
-  }
-
-  return mailboxIDs;
-}
-
 module.exports.createMessage = function createMessage(data) {
-  const account = AccountFixture.createAccount();
+  const account = data.account || AccountFixture.createAccount();
   const date = (data.date || new Date()).toISOString();
 
   return {
     id: `message-${getUID()}`,
-    conversationID: `conversationID-${getUID()}`,
+    conversationID: data.conversationID || `conversationID-${getUID()}`,
 
     accountID: account.id,
     mailboxIDs: createMailboxIDs(account),
@@ -104,4 +83,26 @@ module.exports.createAttached = function AttachedMessage(data) {
     {id: `attachments-${getUID()}`, value: `../monFichier-${getUID()}.png` },
     {id: `attachments-${getUID()}`, value: `../monFichier-${getUID()}.png` },
   ] });
+}
+
+
+function createMailboxIDs (account) {
+  const max = Math.round(Math.random() * account.mailboxes.length);
+  const min = Math.round(Math.random() * max);
+  const mailboxes = account.mailboxes.slice(min, max);
+
+  // Create MailboxIDs
+  const mailboxIDs = _.transform(mailboxes, (result, mailbox) => {
+    result[mailbox.id] = mailbox.nbTotal
+  }, {})
+
+  // inboxMailbox must be there
+  if (undefined === mailboxIDs[account.inboxMailbox]) {
+    const inbox = account.mailboxes.find((mailbox) => {
+      return account.inboxMailbox === mailbox.id;
+    });
+    mailboxIDs[inbox.id] = inbox.nbTotal;
+  }
+
+  return mailboxIDs;
 }
