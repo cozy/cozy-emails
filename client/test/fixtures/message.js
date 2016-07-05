@@ -88,12 +88,14 @@ module.exports.createUnread = function UnreadMessage(data) {
 
 module.exports.createFlagged = function FlaggedMessage(data) {
   const message = module.exports.createMessage(data);
-  return Object.assign(message, { flags: [MessageFlags.FLAGGED] });
+  message.flags.push(MessageFlags.FLAGGED);
+  return message;
 }
 
 module.exports.createDraft = function DraftMessage(data) {
   const message = module.exports.createMessage(data);
-  return Object.assign(message, { flags: [MessageFlags.DRAFT] });
+  message.flags.push(MessageFlags.DRAFT);
+  return message;
 }
 
 module.exports.createAttached = function AttachedMessage(data) {

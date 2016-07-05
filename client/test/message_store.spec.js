@@ -14,6 +14,10 @@ describe('Message Store', () => {
   let Dispatcher;
   const date = new Date();
   const message = MessageFixtures.createMessage({date});
+  const messageUnread = MessageFixtures.createUnread({date});
+  const messageFlagged = MessageFixtures.createFlagged({date});
+  const messageDraft = MessageFixtures.createDraft({date});
+  const messageAttached = MessageFixtures.createAttached({date});
   const messages = [];
 
 
@@ -56,15 +60,15 @@ describe('Message Store', () => {
     messages.push(message);
     messages.push(MessageFixtures.createMessage({date}));
 
-    // FIXME: bug sur ce message
-    messages.push(MessageFixtures.createAttached({date}));
 
     messages.push(MessageFixtures.createMessage({date}));
     messages.push(MessageFixtures.createMessage({images: true, date}));
     messages.push(MessageFixtures.createMessage({images: false, date}));
-    messages.push(MessageFixtures.createUnread({date}));
-    messages.push(MessageFixtures.createFlagged({date}));
-    messages.push(MessageFixtures.createDraft({date}));
+
+    messages.push(messageAttached);
+    messages.push(messageUnread);
+    messages.push(messageFlagged);
+    messages.push(messageDraft);
 
     const path = '../app/stores/message_store';
     Dispatcher = new SpecDispatcher();
@@ -354,15 +358,36 @@ describe('Message Store', () => {
     });
 
     it('isUnread', () => {
+      let input = _.cloneDeep(messageUnread);
+      assert.isTrue(MessageStore.isUnread({message: input}));
 
+      input = _.cloneDeep(messageFlagged);
+      assert.isFalse(MessageStore.isUnread({message: input}));
+
+      input = _.cloneDeep(message);
+      assert.isFalse(MessageStore.isUnread({message: input}));
     });
 
     it('isFlagged', () => {
+      let input = _.cloneDeep(messageFlagged);
+      assert.isTrue(MessageStore.isFlagged({message: input}));
 
+      input = _.cloneDeep(messageAttached);
+      assert.isFalse(MessageStore.isFlagged({message: input}));
+
+      input = _.cloneDeep(message);
+      assert.isFalse(MessageStore.isFlagged({message: input}));
     });
 
     it('isAttached', () => {
+      let input = _.cloneDeep(messageAttached);
+      assert.isTrue(MessageStore.isAttached({message: input}));
 
+      input = _.cloneDeep(messageFlagged);
+      assert.isFalse(MessageStore.isAttached({message: input}));
+
+      input = _.cloneDeep(message);
+      assert.isFalse(MessageStore.isAttached({message: input}));
     });
 
     it('getConversation', () => {

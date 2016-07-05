@@ -194,14 +194,18 @@ class MessageStore extends Store
 
 
     isUnread: ({flags=[], message}) ->
+        if message and message not instanceof Immutable.Map
+            message = Immutable.Map message
         if message?
             flags = message.get('flags') or []
-            return MessageFlags.SEEN not in flags
+            MessageFlags.SEEN not in flags
         else
-            return MessageFilter.UNSEEN in flags
+            MessageFilter.UNSEEN in flags
 
 
     isFlagged: ({flags=[], message}) ->
+        if message and message not instanceof Immutable.Map
+            message = Immutable.Map message
         if message?
             flags = message.get('flags') or []
             MessageFlags.FLAGGED in flags
@@ -210,8 +214,10 @@ class MessageStore extends Store
 
 
     isAttached: ({flags=[], message}) ->
+        if message and message not instanceof Immutable.Map
+            message = Immutable.Map message
         if message?
-            message.get('attachments').size
+            !!message.get('attachments')?.length
         else
             MessageFilter.ATTACH in flags
 
