@@ -9,7 +9,6 @@ const MailboxFlags = require('../app/constants/app_constants').MailboxFlags;
 
 const AccountFixture = require('./fixtures/account');
 
-const sinon = require('sinon');
 
 describe('AccountStore', () => {
   let AccountStore;
@@ -96,10 +95,11 @@ describe('AccountStore', () => {
     accounts.push(AccountFixture.createAccount());
     global.window = { accounts };
 
+    const path = '../app/stores/account_store';
     Dispatcher = new SpecDispatcher();
     mockeryUtils.initDispatcher(Dispatcher);
-    mockeryUtils.initForStores(['../app/stores/account_store']);
-    AccountStore = require('../app/stores/account_store');
+    mockeryUtils.initForStores([path]);
+    AccountStore = require(path);
   });
 
   after(() => {
@@ -208,20 +208,84 @@ describe('AccountStore', () => {
   });
 
 
-  describe('AccountActions', () => {
+  describe('Actions', () => {
 
-    // Test default Account values
-    describe('_initialize()', () => {
-      it('window.accounts should be stored', () => {
-        assert.equal(AccountStore.getAll().size, accounts.length);
-        Dispatcher.dispatch({
-          type: ActionTypes.RESET_ACCOUNT_REQUEST,
-        });
+    after(() => {
+      Dispatcher.dispatch({
+        type: ActionTypes.RESET_ACCOUNT_REQUEST,
       });
     });
 
 
-    describe('ADD_ACCOUNT_SUCCESS', () => {
+    describe('Should ADD account(s)', () => {
+      it('REQUIRE', () => {
+        // window.accounts should be stored
+        assert.equal(AccountStore.getAll().size, accounts.length);
+      });
+
+      it('ADD_ACCOUNT_SUCCESS', () => {
+        Dispatcher.dispatch({
+          type: ActionTypes.ADD_ACCOUNT_SUCCESS,
+          value: { account: AccountFixture.createAccount() },
+        });
+
+        const output = AccountStore.getAll().get(account.id);
+
+        // should ADD a new account
+        assert.equal(AccountStore.getAll().size, accounts.length + 1);
+        testAccountValues(output);
+
+        // Should ADD mailboxes
+        const mailboxes = output.get('mailboxes');
+        assert.equal(mailboxes.toArray().length, account.mailboxes.length);
+
+        // Should be sorted in the same order
+        // than into MailboxFlags
+        const defaultOrder = AccountStore.getMailboxOrder();
+        const flags = _.toArray(MailboxFlags);
+        _.toArray(mailboxes.toJS()).forEach((mailbox, index) => {
+          let order = mailbox.order;
+          let attribs = mailbox.attribs;
+
+          // Get Mailbox.child right order
+          // - get 1rst decimal if attribs.lenth is 1
+          // - get 2nd decimal if attribs.lenth is 2
+          // etc.
+          if (mailbox.attribs != undefined) {
+            const index = mailbox.attribs.length - 1;
+            if (index > 0) {
+              order = `${mailbox.order}`.split('.')[index];
+              attribs = [mailbox.attribs[index]]
+            }
+          }
+
+          const flag = flags[order]
+          if (flag != undefined) {
+            // Test order for each flagged mailbox
+            assert.notEqual(attribs.indexOf(flag), -1);
+
+          } else {
+            // Unflagged mailbox always have the same order
+            // alphanumeric sorted is applied then
+            assert.equal(order, defaultOrder);
+
+            // If this mailbox has flags
+            // ensure that it is unknown flags
+            if (attribs != undefined) {
+              attribs.forEach((attrib) => {
+                assert.equal(flags.indexOf(flags), -1);
+              });
+            }
+          }
+        });
+
+        });
+
+    });
+
+    // TODO: add missing tests
+    // RECEIVE_ACCOUNT_UPDATE
+    describe('Should UPDATE account(s)', () => {
 
       beforeEach(() => {
         Dispatcher.dispatch({
@@ -236,105 +300,16 @@ describe('AccountStore', () => {
         });
       });
 
-      describe('Account.value', () => {
-        it('should add a new item', () => {
-          assert.equal(AccountStore.getAll().size, 1);
-        });
-
-        it('should be equal to its input value', () => {
-          testAccountValues(AccountStore.getAll().get(account.id))
-        });
-      });
-
-      describe('Account.mailboxes', () => {
-        it('should have the same size than its input', () => {
-            const output = AccountStore.getAll().get(account.id).get('mailboxes');
-            assert.equal(_.toArray(output.toJS()).length, account.mailboxes.length);
-        });
-
-        it('should be sorted as CONST MailboxFlags', () => {
-          const output = AccountStore.getByID(account.id).get('mailboxes');
-          const defaultOrder = AccountStore.getMailboxOrder();
-          const flags = _.toArray(MailboxFlags);
-
-          _.toArray(output.toJS()).forEach((mailbox, index) => {
-            let order = mailbox.order;
-            let attribs = mailbox.attribs;
-
-            // Get Mailbox.child right order
-            // - get 1rst decimal if attribs.lenth is 1
-            // - get 2nd decimal if attribs.lenth is 2
-            // etc.
-            if (mailbox.attribs != undefined) {
-              const index = mailbox.attribs.length - 1;
-              if (index > 0) {
-                order = `${mailbox.order}`.split('.')[index];
-                attribs = [mailbox.attribs[index]]
-              }
-            }
-
-            const flag = flags[order]
-            if (flag != undefined) {
-              // Test order for each flagged mailbox
-              assert.notEqual(attribs.indexOf(flag), -1);
-
-            } else {
-              // Unflagged mailbox always have the same order
-              // alphanumeric sorted is applied then
-              assert.equal(order, defaultOrder);
-
-              // If this mailbox has flags
-              // ensure that it is unknown flags
-              if (attribs != undefined) {
-                attribs.forEach((attrib) => {
-                  assert.equal(flags.indexOf(flags), -1);
-                });
-              }
-            }
-          });
-        });
-      });
-    });
-
-    describe('EDIT_ACCOUNT_SUCCESS', () => {
-
-      beforeEach(() => {
+      it('EDIT_ACCOUNT_SUCCESS', () => {
         Dispatcher.dispatch({
           type: ActionTypes.EDIT_ACCOUNT_SUCCESS,
           value: { rawAccount: account },
         });
+
+        testAccountValues(AccountStore.getAll().get(account.id));
       });
 
-      afterEach(() => {
-        Dispatcher.dispatch({
-          type: ActionTypes.RESET_ACCOUNT_REQUEST,
-        });
-      });
-
-      it('should add a new item', () => {
-        testAccountValues(AccountStore.getAll().get(account.id))
-      });
-    });
-  });
-
-
-  describe('MailboxActions', () => {
-
-    beforeEach(() => {
-      Dispatcher.dispatch({
-        type: ActionTypes.ADD_ACCOUNT_SUCCESS,
-        value: { account },
-      });
-    });
-
-    afterEach(() => {
-      Dispatcher.dispatch({
-        type: ActionTypes.RESET_ACCOUNT_REQUEST,
-      });
-    });
-
-    describe('MAILBOX_CREATE_SUCCESS', () => {
-      it('should add a new item', () => {
+      it('MAILBOX_CREATE_SUCCESS', () => {
         const mailbox = AccountFixture.createMailbox();
 
         Dispatcher.dispatch({
@@ -344,10 +319,8 @@ describe('AccountStore', () => {
 
         testMailboxValues(account, mailbox);
       });
-    });
 
-    describe('RECEIVE_MAILBOX_CREATE', () => {
-      it('should add a new item', () => {
+      it('RECEIVE_MAILBOX_CREATE', () => {
         const mailbox = AccountFixture.createMailbox();
 
         Dispatcher.dispatch({
@@ -357,10 +330,8 @@ describe('AccountStore', () => {
 
         testMailboxValues(account, mailbox);
       });
-    });
 
-    describe('MAILBOX_UPDATE_SUCCESS', () => {
-      it('should update item', () => {
+      it('MAILBOX_UPDATE_SUCCESS', () => {
         const mailbox = AccountFixture.createMailbox();
 
         Dispatcher.dispatch({
@@ -370,10 +341,8 @@ describe('AccountStore', () => {
 
         testMailboxValues(account, mailbox);
       });
-    });
 
-    describe('RECEIVE_MAILBOX_UPDATE', () => {
-      it('should update item', () => {
+      it('RECEIVE_MAILBOX_UPDATE', () => {
         const mailbox = AccountFixture.createMailbox();
 
         Dispatcher.dispatch({
@@ -383,19 +352,26 @@ describe('AccountStore', () => {
 
         testMailboxValues(account, mailbox);
       });
+
+      it.skip('MAILBOX_DELETE_SUCCESS', () => {
+        // Dispatcher.dispatch({
+        //   type: ActionTypes.MAILBOX_DELETE_SUCCESS,
+        //   value: { id },
+        // });
+        // const accounts = AccountStore.getAll();
+        // assert.isUndefined(accounts.get(id).get('password'));
+      });
     });
 
-    // it.skip('REMOVE_ACCOUNT_SUCCESS', () => {
-    //   // FIXME Nothing is done here in the store code.
-    // });
-    // it('MAILBOX_DELETE_SUCCESS', () => {
-    //   Dispatcher.dispatch({
-    //     type: ActionTypes.MAILBOX_DELETE_SUCCESS,
-    //     value: { id },
-    //   });
-    //   const accounts = AccountStore.getAll();
-    //   assert.isUndefined(accounts.get(id).get('password'));
-    // });
+
+    // TODO: add missing tests
+    // REMOVE_ACCOUNT_SUCCESS
+    describe('Should REMOVE account(s)', () => {
+
+      it.skip('REMOVE_ACCOUNT_SUCCESS', () => {
+        // FIXME Nothing is done here in the store code.
+      });
+    });
   });
 
 });
