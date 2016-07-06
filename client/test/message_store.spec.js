@@ -282,11 +282,10 @@ describe('Message Store', () => {
         assert.equal(output.get('mailboxID'), defaultValue);
       });
 
-      it('SEARCH_SUCCESS', () => {
-        // 1. dispatcher l'action
-        // 2. vérifier que le messge du store a bien été modifier
-        // 3. vérifier propriétés par propriétés
-
+      // TODO: this feature is not fixed yet
+      // 1. fix the feature
+      // 2. add test
+      it.skip('SEARCH_SUCCESS', () => {
         // ((message))
       });
 
