@@ -357,18 +357,19 @@ describe('Message Store', () => {
       });
 
       it('REMOVE_ACCOUNT_SUCCESS', () => {
-          // (accountID)
-          // should delete all messages from this account
-          // const accountId = fixtures.message5.accountID;
-          // const id5 = fixtures.message5.id;
-          // const id6 = fixtures.message6.id;
-          // dispatcher.dispatch({
-          //   type: ActionTypes.REMOVE_ACCOUNT_SUCCESS,
-          //   value: accountId,
-          // });
-          // const messages = MessageStore.getAll();
-          // assert.isUndefined(messages.get(id5));
-          // assert.isUndefined(messages.get(id6));
+        const accountID = message.accountID;
+        let output = MessageStore.getByID(message.id);
+
+        let countAfter = MessageStore.getAll().filter((msg) => {
+          return msg.get('accountID') !== accountID
+        }).size
+        Dispatcher.dispatch({
+          type: ActionTypes.REMOVE_ACCOUNT_SUCCESS,
+          value: accountID,
+        });
+        output = MessageStore.getByID(message.id);
+        assert.isUndefined(output);
+        assert.equal(MessageStore.getAll().size, countAfter)
       });
 
       // TODO: this feature is not fixed yet
