@@ -16,7 +16,6 @@ describe('Message Store', () => {
   let MessageStore;
   let Dispatcher;
 
-  const conversationLength = 6;
   const conversationID = `plop-${getUID()}`;
   const account = AccountFixture.createAccount();
 
@@ -28,6 +27,7 @@ describe('Message Store', () => {
   const messageDraft = MessageFixtures.createDraft({date});
   const messageAttached = MessageFixtures.createAttached({date});
 
+  let conversationLength = {};
   const messages = [];
 
 
@@ -77,8 +77,6 @@ describe('Message Store', () => {
     messages.push(MessageFixtures.createMessage(params));
     messages.push(MessageFixtures.createMessage(params));
 
-
-
     messages.push(message);
     messages.push(MessageFixtures.createMessage({date}));
     messages.push(MessageFixtures.createMessage({date}));
@@ -90,6 +88,12 @@ describe('Message Store', () => {
     messages.push(messageUnread);
     messages.push(messageFlagged);
     messages.push(messageDraft);
+
+    // Define conversationLength
+    // from messages entries
+    let keys = messages.map((msg) => msg.conversationID);
+    let values = _.groupBy(messages, 'conversationID');
+    conversationLength = _.mapValues(values, (value) => value.length);
 
     const path = '../app/stores/message_store';
     Dispatcher = new SpecDispatcher();
@@ -323,9 +327,10 @@ describe('Message Store', () => {
   describe('Methods', () => {
 
     beforeEach(() => {
+      const result = {messages, conversationLength}
       Dispatcher.dispatch({
-        type: ActionTypes.RECEIVE_RAW_MESSAGES,
-        value: messages,
+        type: ActionTypes.MESSAGE_FETCH_SUCCESS,
+        value: {result},
       });
     });
 
@@ -398,19 +403,19 @@ describe('Message Store', () => {
         // All messages should belongs to inbox otherwise
         // conversationLength must be smaller or equal
         if (mailbox.id === account.inboxMailbox) {
-          assert.equal(output.length, conversationLength);
+          assert.equal(output.length, conversationLength[conversationID]);
         } else {
-          assert.isTrue(output.length <= conversationLength);
+          assert.isTrue(output.length <= conversationLength[conversationID]);
         }
       });
     });
 
     it('getConversationLength', () => {
       let length = MessageStore.getConversationLength(conversationID);
-      assert.equal(length, conversationLength);
+      assert.equal(length, conversationLength[conversationID]);
 
       length = MessageStore.getConversation(conversationID, account.inboxMailbox).length;
-      assert.equal(length, conversationLength);
+      assert.equal(length, conversationLength[conversationID]);
     });
   });
 
