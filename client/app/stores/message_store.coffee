@@ -51,15 +51,17 @@ class MessageStore extends Store
 
             # Save reference mailbox into message informations
             if not _.isString(message.mailboxID) or _.isEmpty(message.mailboxID)
-                message.mailboxID  = oldMessage?.get('mailboxID')
-                message.mailboxID ?= _.keys(message.mailboxIDs).shift()
+                message.mailboxID   = oldMessage?.get('mailboxID')
+                message.mailboxID  ?= _.keys(message.mailboxIDs).shift()
 
-            message.date          ?= new Date().toISOString()
-            message.createdAt     ?= message.date
-            message.flags         ?= []
+            message.date           ?= new Date().toISOString()
+            message.createdAt      ?= message.date
+            message.flags          ?= []
 
-            attachments            = message.attachments or []
-            message.attachments    = Immutable.List attachments.map (file) ->
+            message._displayImages  = !!message._displayImages
+
+            attachments             = message.attachments or []
+            message.attachments     = Immutable.List attachments.map (file) ->
                 Immutable.Map file
 
 
@@ -174,10 +176,14 @@ class MessageStore extends Store
             @emit 'change'
 
 
-        handle ActionTypes.SETTINGS_UPDATE_REQUEST, ({messageID, displayImages=true}) ->
+        handle ActionTypes.SETTINGS_UPDATE_REQUEST, ({messageID, displayImages}) ->
             # Update settings into component,
             # but not definitly into settingsStore
-            message = @getByID(messageID)?.set '_displayImages', displayImages
+            if not _.isBoolean(displayImages) and displayImages
+                value = displayImages and not _.isEmpty(displayImages)
+            else
+                value = !!displayImages
+            message = @getByID(messageID)?.set '_displayImages', value
             _messages = _messages.set messageID, message
             @emit 'change'
 

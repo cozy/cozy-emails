@@ -44,9 +44,13 @@ describe('Message Store', () => {
     delete output.mailboxID;
 
     if (undefined === input.attachments) {
-      assert.equal(input.attachments, undefined);
       assert.deepEqual(output.attachments, []);
       delete output.attachments;
+    }
+
+    if (undefined === input._displayImages) {
+      assert.equal(output._displayImages, false);
+      delete output._displayImages;
     }
 
     // When Message is only flagged as Unread
@@ -141,7 +145,6 @@ describe('Message Store', () => {
 
   /*
    * Problems noticed in the store file:
-   * FIXME Underscore is used instead of lodash.
    * FIXME Action values are not normalized.
    */
 
@@ -290,10 +293,30 @@ describe('Message Store', () => {
       });
 
       it('SETTINGS_UPDATE_REQUEST', () => {
-        // 1. mettre à jour la valeur _displayImages
-        // testter pour les valeurs, true, false, undefined, NaN, Number, String
+        let output = MessageStore.getByID(message.id);
+        assert.equal(output.get('_displayImages'), !!message._displayImages);
 
-        // ({messageID, displayImages=true})
+        function testDisplayImage(value, result) {
+          Dispatcher.dispatch({
+            type: ActionTypes.SETTINGS_UPDATE_REQUEST,
+            value: { messageID: message.id, displayImages: value },
+          });
+          output = MessageStore.getByID(message.id);
+          assert.equal(output.get('_displayImages'), result);
+        }
+
+        testDisplayImage(true, true);
+        testDisplayImage('plop', true);
+        testDisplayImage('2', true);
+        testDisplayImage('0', true);
+
+        testDisplayImage(false, false);
+        testDisplayImage(0, false);
+        testDisplayImage(null, false);
+        testDisplayImage(undefined, false);
+        testDisplayImage(NaN, false);
+        testDisplayImage({}, false);
+        testDisplayImage([], false);
       });
     });
 
