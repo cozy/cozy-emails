@@ -407,7 +407,7 @@ describe('Message Store', () => {
 
     it('getConversationLength', () => {
       let length = MessageStore.getConversationLength(conversationID);
-      assert.equal(outputLength, conversationLength);
+      assert.equal(length, conversationLength);
 
       length = MessageStore.getConversation(conversationID, account.inboxMailbox).length;
       assert.equal(length, conversationLength);
