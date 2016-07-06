@@ -166,7 +166,9 @@ class MessageStore extends Store
 
         handle ActionTypes.MAILBOX_EXPUNGE, (mailboxID) ->
             _messages = _messages.filter (message) ->
-                not (mailboxID of message.get 'mailboxIDs')
+                test0 = mailboxID isnt message.get('mailboxID')
+                test1 = not (mailboxID of message.get 'mailboxIDs')
+                test0 or test1
             .toOrderedMap()
             @emit 'change'
 

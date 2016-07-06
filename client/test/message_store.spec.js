@@ -323,24 +323,37 @@ describe('Message Store', () => {
 
     describe('Should REMOVE message(s)', () => {
 
-      // TODO: this feature is not fixed yet
-      // 1. fix the feature
-      // 2. add test
-      it.skip('MAILBOX_EXPUNGE', () => {
-        // (mailboxID),
-        // should remove all message from mailbox
-        // const id1 = fixtures.message1.id;
-        // const id2 = fixtures.message2.id;
-        // const id3 = fixtures.message3.id;
-        // const mailboxId = Object.keys(fixtures.message3.mailboxIDs)[0];
-        // dispatcher.dispatch({
-        //   type: ActionTypes.MAILBOX_EXPUNGE,
-        //   value: mailboxId,
-        // });
-        // const messages = MessageStore.getAll();
-        // assert.isDefined(messages.get(id1));
-        // assert.isUndefined(messages.get(id2));
-        // assert.isUndefined(messages.get(id3));
+      beforeEach(() => {
+        Dispatcher.dispatch({
+          type: ActionTypes.RECEIVE_RAW_MESSAGES,
+          value: messages,
+        });
+      });
+
+      afterEach(() => {
+        Dispatcher.dispatch({
+          type: ActionTypes.MESSAGE_RESET_REQUEST,
+        });
+      });
+
+      it('MAILBOX_EXPUNGE', () => {
+        let output = MessageStore.getByID(message.id);
+        let mailboxID = getMailboxID();
+
+        let countAfter = MessageStore.getAll().filter((msg) => {
+          return msg.get('mailboxIDs')[mailboxID] === undefined
+        }).size
+        Dispatcher.dispatch({
+          type: ActionTypes.MAILBOX_EXPUNGE,
+          value: mailboxID,
+        });
+        output = MessageStore.getByID(message.id);
+        assert.isUndefined(output);
+        assert.equal(MessageStore.getAll().size, countAfter)
+
+        function getMailboxID(mailboxID) {
+          return _.keys(message.mailboxIDs).find((id) => id != mailboxID);
+        }
       });
 
       it('REMOVE_ACCOUNT_SUCCESS', () => {

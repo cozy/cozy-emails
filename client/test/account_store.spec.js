@@ -279,7 +279,7 @@ describe('AccountStore', () => {
           }
         });
 
-        });
+      });
 
     });
 
@@ -363,12 +363,16 @@ describe('AccountStore', () => {
       });
 
       it.skip('MAILBOX_DELETE_SUCCESS', () => {
-        // Dispatcher.dispatch({
-        //   type: ActionTypes.MAILBOX_DELETE_SUCCESS,
-        //   value: { id },
-        // });
-        // const accounts = AccountStore.getAll();
-        // assert.isUndefined(accounts.get(id).get('password'));
+        // It should remove mailboxID from
+        // - all messages.mailboxIDs
+        // - account.mailboxes
+      });
+
+      it.skip('MAILBOX_EXPUNGE', () => {
+        // # TODO: should update account counter
+        // # if a mailbox came empty
+        // # - mailbox.nbTotal should be equal to 0
+        // # - account.nbTotal shoudl also be updated: missing args to do this
       });
     });
 

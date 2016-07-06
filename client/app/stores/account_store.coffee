@@ -184,7 +184,6 @@ class AccountStore extends Store
     ###
     __bindHandlers: (handle) ->
 
-
         handle ActionTypes.RESET_ACCOUNT_REQUEST, () ->
             _accounts = Immutable.OrderedMap()
             @emit 'change'
@@ -235,6 +234,13 @@ class AccountStore extends Store
             _updateMailbox mailbox
             @emit 'change'
 
+
+        handle ActionTypes.MAILBOX_EXPUNGE, (mailboxID) ->
+            # TODO: should update account counter
+            # if a mailbox came empty
+            # - mailbox.nbTotal should be equal to 0
+            # - account.nbTotal shoudl also be updated: missing args to do this
+            @emit 'change'
 
     ###
         Public API
