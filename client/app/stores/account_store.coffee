@@ -109,8 +109,9 @@ class AccountStore extends Store
             return true
 
 
-    _toImmutable = (account) ->
+    _formatAccount = (account) ->
         _account = _.cloneDeep account
+
         _mailboxes = _.compact _.map _account.mailboxes, (mailbox) ->
                 _formatMailbox account, mailbox
             .filter (mailbox) ->
@@ -148,7 +149,7 @@ class AccountStore extends Store
             .mapKeys (_, account) -> account.id
 
             # makes account object an immutable Map
-            .map _toImmutable
+            .map _formatAccount
 
             .toOrderedMap()
 
@@ -159,17 +160,22 @@ class AccountStore extends Store
 
 
     _updateMailbox = (mailbox) ->
-        unless (account = _getByMailbox(mailbox.id)?.toJS())
+        unless (account = _getByMailbox mailbox.id)?
             accountID = mailbox.accountID or _accounts?.first()?.get 'id'
-            account = _accounts?.get(accountID)?.toJS()
+            account = _accounts?.get(accountID)
             return unless account?
-        account.mailboxes[mailbox.id] = mailbox
-        _updateAccount account
+
+        return unless (mailbox = _formatMailbox account.toJS(), mailbox)
+        return unless _filterMailbox account.toJS(), mailbox
+
+        mailboxes = account.get('mailboxes')
+        mailboxes = mailboxes.set mailbox.id, Immutable.OrderedMap mailbox
+        account = account.set 'mailboxes', mailboxes
+        _accounts = _accounts?.set account.get('id'), account
 
 
     _updateAccount = (account) ->
-        account = _toImmutable account
-        _accounts = _accounts?.set account.get('id'), account
+        _accounts = _accounts?.set account.id, _formatAccount account
 
 
 

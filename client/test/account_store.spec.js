@@ -40,11 +40,11 @@ describe('AccountStore', () => {
 
     output = output.toJS();
 
-    assert.equal(typeof output.order, 'number');
-    delete output.order;
+    if (mailbox.order === undefined) {
+      delete output.order;
+    }
 
     assert.deepEqual(mailbox, output);
-    assert.equal(mailbox.order, undefined);
   }
 
 
