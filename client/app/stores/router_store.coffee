@@ -553,16 +553,17 @@ class RouterStore extends Store
             @emit 'change'
 
 
-        handle ActionTypes.ADD_ACCOUNT_SUCCESS, ({account, timeout}) ->
-            _timerRouteChange = setTimeout =>
-                _action = MessageActions.SHOW_ALL
-                _setCurrentAccount
-                    accountID: account.id
-                    mailboxID: account.inboxMailbox
-                _updateURL()
+        handle ActionTypes.ADD_ACCOUNT_SUCCESS, ({modalTimer}) ->
+            _timerRouteChange = modalTimer
 
-                @emit 'change'
-            , timeout or 5000
+
+        handle ActionTypes.CLOSE_MODAL, ({id, mailboxID}) ->
+            clearTimeout _timerRouteChange
+            _action = MessageActions.SHOW_ALL
+            _setCurrentAccount id, mailboxID
+            _updateURL()
+
+            @emit 'change'
 
 
         handle ActionTypes.MESSAGE_FETCH_SUCCESS, ({result, conversationID, lastPage}) ->
@@ -585,6 +586,7 @@ class RouterStore extends Store
         handle ActionTypes.DISPLAY_MODAL, (params) ->
             _modal = params
             @emit 'change'
+
 
         handle ActionTypes.HIDE_MODAL, (value) ->
             _modal = null

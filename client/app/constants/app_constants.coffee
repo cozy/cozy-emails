@@ -89,6 +89,7 @@ module.exports =
 
         # Layout
         'DISPLAY_MODAL'             : 'DISPLAY_MODAL'
+        'CLOSE_MODAL'               : 'CLOSE_MODAL'
         'HIDE_MODAL'                : 'HIDE_MODAL'
         'INTENT_AVAILABLE'          : 'INTENT_AVAILABLE'
 

@@ -3,10 +3,10 @@ Immutable = require 'immutable'
 
 AppDispatcher   = require '../libs/flux/dispatcher/dispatcher'
 
-RouterStore     = require '../stores/router_store'
-RequestsStore   = require '../stores/requests_store'
-AccountStore    = require '../stores/account_store'
-MessageStore    = require '../stores/message_store'
+AccountStore  = require '../stores/account_store'
+MessageStore  = require '../stores/message_store'
+RequestsStore = require '../stores/requests_store'
+RouterStore   = require '../stores/router_store'
 
 Notification = require '../libs/notification'
 
@@ -186,19 +186,18 @@ RouterActionCreator =
             value: {mailboxID, action, filter}
 
 
-    closeModal: ->
-        account = AccountStore.getDefault()
-        mailbox = AccountStore.getInbox account.get 'id'
-        return unless (mailboxID = mailbox?.get 'id')?
+    closeModal: (mailboxID = RouterStore.getMailboxID()) ->
+        return unless mailboxID
+
+        account = AccountStore.getByMailbox mailboxID
 
         # Load last messages
         @refreshMailbox {mailboxID}
 
-        # Display defaultMailbox
-        action = MessageActions.SHOW_ALL
+        # Dispatch modal close
         AppDispatcher.dispatch
-            type: ActionTypes.ROUTE_CHANGE
-            value: {mailboxID, action}
+            type: ActionTypes.CLOSE_MODAL
+            value: {id: account.get('id'), mailboxID}
 
 
     showMessageList: (params={}) ->

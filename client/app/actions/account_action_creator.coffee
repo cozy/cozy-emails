@@ -36,9 +36,17 @@ module.exports = AccountActionCreator =
                                          account.draftMailbox? and \
                                          account.trashMailbox?
 
+                modalTimer = setTimeout ->
+                    AppDispatcher.dispatch
+                        type: ActionTypes.CLOSE_MODAL,
+                        value: {id: account.id, mailboxID: account.inboxMailbox}
+                , 5000
+
+                # We pass the timer so we can store and clear it in RouterStore
                 AppDispatcher.dispatch
                     type: ActionTypes.ADD_ACCOUNT_SUCCESS
-                    value: {account, areMailboxesConfigured}
+                    value: {account, areMailboxesConfigured, modalTimer}
+
 
     edit: ({value, accountID}) ->
         newAccount = AccountStore.getByID(accountID).mergeDeep value

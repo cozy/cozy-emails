@@ -45,6 +45,8 @@ module.exports = LayoutActionCreator =
             value: availability
 
 
+    # FIXME: Need to rethink the way modals can be shown / hidden (see account
+    # creation wizard use-case)
     displayModal: (params) ->
         params.closeModal ?= -> LayoutActionCreator.hideModal()
         AppDispatcher.dispatch
