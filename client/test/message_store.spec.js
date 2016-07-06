@@ -73,6 +73,30 @@ describe('Message Store', () => {
     assert.equal(length, conversationLength[id]);
   }
 
+  function testMessageAction(action, value) {
+    assert.equal(MessageStore.getAll().size, 0);
+
+    Dispatcher.dispatch({
+      type: ActionTypes[action],
+      value,
+    });
+
+    assert.equal(MessageStore.getAll().size, 1);
+    testValues(MessageStore.getByID(message.id), message);
+  }
+
+  function testMessagesAction(action, value) {
+    assert.equal(MessageStore.getAll().size, 0);
+
+    Dispatcher.dispatch({
+      type: ActionTypes[action],
+      value,
+    });
+
+    assert.equal(MessageStore.getAll().size, messages.length);
+    messages.forEach((msg) => testValues(MessageStore.getByID(msg.id), msg));
+  }
+
 
   before(() => {
     // Add several messages
@@ -136,80 +160,23 @@ describe('Message Store', () => {
     describe('Should ADD message(s)', () => {
 
       it('MESSAGE_FETCH_SUCCESS', () => {
-        assert.equal(MessageStore.getAll().size, 0);
-
-        Dispatcher.dispatch({
-          type: ActionTypes.MESSAGE_FETCH_SUCCESS,
-          value: {result: { messages }}
-        });
-
-        assert.equal( MessageStore.getAll().size, messages.length);
-        messages.forEach((msg) => testValues(MessageStore.getByID(msg.id), msg));
+        testMessagesAction('MESSAGE_FETCH_SUCCESS', {result: { messages }});
       });
 
       it('RECEIVE_RAW_MESSAGES', () => {
-        // TODO: vérifier que :
-        // - les messages postés sont bien présent dans le Store
-        // - Vérifier que ttes les propriétés correspondent bien
-        // (idem FETH_SUCCESS)
-
-        // (messages)
-        // addMessages([
-        //   fixtures.message4,
-        //   null,
-        //   fixtures.message5,
-        //   fixtures.message6,
-        // ],
-        // true);
-        // const messages = MessageStore.getAll();
-        // const id4 = fixtures.message4.id;
-        // const id5 = fixtures.message5.id;
-        // const id6 = fixtures.message6.id;
-        // assert.deepEqual(messages.get(id4).toObject(), fixtures.message4);
-        // assert.deepEqual(messages.get(id5).toObject(), fixtures.message5);
-        // assert.deepEqual(messages.get(id6).toObject(), fixtures.message6);
+        testMessagesAction('RECEIVE_RAW_MESSAGES', messages);
       });
 
       it('RECEIVE_RAW_MESSAGE', () => {
-        // TODO: vérifier que :
-        // - les messages postés sont bien présent dans le Store
-        // - Vérifier que ttes les propriétés correspondent bien
-        // (idem FETH_SUCCESS)
-
-        // (message)
-        // dispatcher.dispatch({
-        //   type: ActionTypes.RECEIVE_RAW_MESSAGE,
-        //   value: fixtures.rawMessage1,
-        // });
-        // const messages = MessageStore.getAll();
-        // const idr1 = fixtures.rawMessage1.id;
-        // assert.deepEqual(messages.get(idr1).toObject(), fixtures.rawMessage1);
+        testMessageAction('RECEIVE_RAW_MESSAGE', message);
       });
 
       it('RECEIVE_RAW_MESSAGE_REALTIME', () => {
-        // TODO: vérifier que :
-        // - les messages postés sont bien présent dans le Store
-        // - Vérifier que ttes les propriétés correspondent bien
-        // (idem FETH_SUCCESS)
-
-        // (message)
-        // dispatcher.dispatch({
-        //   type: ActionTypes.RECEIVE_RAW_MESSAGE_REALTIME,
-        //   value: fixtures.rawMessage2,
-        // });
-        // const messages = MessageStore.getAll();
-        // const idr2 = fixtures.rawMessage2.id;
-        // assert.deepEqual(messages.get(idr2).toObject(), fixtures.rawMessage2);
+        testMessageAction('RECEIVE_RAW_MESSAGE_REALTIME', message);
       });
 
       it('MESSAGE_SEND_SUCCESS', () => {
-        // TODO: vérifier que :
-        // - les messages postés sont bien présent dans le Store
-        // - Vérifier que ttes les propriétés correspondent bien
-        // (idem FETH_SUCCESS)
-
-        // ({message})
-
+        testMessageAction('MESSAGE_SEND_SUCCESS', {message});
       });
     });
 
