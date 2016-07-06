@@ -148,6 +148,100 @@ describe('Message Store', () => {
    * FIXME Action values are not normalized.
    */
 
+
+   describe('Methods', () => {
+
+     beforeEach(() => {
+       const result = {messages, conversationLength}
+       Dispatcher.dispatch({
+         type: ActionTypes.MESSAGE_FETCH_SUCCESS,
+         value: {result},
+       });
+     });
+
+     afterEach(() => {
+       Dispatcher.dispatch({
+         type: ActionTypes.MESSAGE_RESET_REQUEST,
+       });
+     });
+
+
+     it('getByID', () => {
+       testValues(MessageStore.getByID(message.id));
+     });
+
+     it('getAll', () => {
+       messages.forEach((input) => {
+         testValues(MessageStore.getByID(input.id), input);
+       });
+     });
+
+     it('isImagesDisplayed', () => {
+       messages.forEach((input) => {
+         const msg = MessageStore.getByID(input.id);
+         testValues(MessageStore.getByID(input.id), input);
+       });
+     });
+
+     it('isUnread', () => {
+       let input = _.cloneDeep(messageUnread);
+       assert.isTrue(MessageStore.isUnread({message: input}));
+
+       input = _.cloneDeep(messageFlagged);
+       assert.isFalse(MessageStore.isUnread({message: input}));
+
+       input = _.cloneDeep(message);
+       assert.isFalse(MessageStore.isUnread({message: input}));
+     });
+
+     it('isFlagged', () => {
+       let input = _.cloneDeep(messageFlagged);
+       assert.isTrue(MessageStore.isFlagged({message: input}));
+
+       input = _.cloneDeep(messageAttached);
+       assert.isFalse(MessageStore.isFlagged({message: input}));
+
+       input = _.cloneDeep(message);
+       assert.isFalse(MessageStore.isFlagged({message: input}));
+     });
+
+     it('isAttached', () => {
+       let input = _.cloneDeep(messageAttached);
+       assert.isTrue(MessageStore.isAttached({message: input}));
+
+       input = _.cloneDeep(messageFlagged);
+       assert.isFalse(MessageStore.isAttached({message: input}));
+
+       input = _.cloneDeep(message);
+       assert.isFalse(MessageStore.isAttached({message: input}));
+     });
+
+     it('getConversation', () => {
+       account.mailboxes.forEach((mailbox) => {
+         const output = MessageStore.getConversation(conversationID, mailbox.id);
+         output.forEach((msg) => {
+           // All messages must have the same
+           // conversationID && mailboxID
+           assert.equal(msg.get('conversationID'), conversationID);
+           assert.notEqual(msg.get('mailboxIDs')[mailbox.id], undefined);
+         });
+
+         // All messages should belongs to inbox otherwise
+         // conversationLength must be smaller or equal
+         if (mailbox.id === account.inboxMailbox) {
+           assert.equal(output.length, conversationLength[conversationID]);
+         } else {
+           assert.isTrue(output.length <= conversationLength[conversationID]);
+         }
+       });
+     });
+
+     it('getConversationLength', () => {
+       testConversationLength(conversationID, account.inboxMailbox);
+     });
+   });
+
+   
   describe('Actions', () => {
 
     beforeEach(() => {
@@ -393,98 +487,6 @@ describe('Message Store', () => {
 
         assert.isUndefined(MessageStore.getByID(message.id));
       });
-    });
-  });
-
-  describe('Methods', () => {
-
-    beforeEach(() => {
-      const result = {messages, conversationLength}
-      Dispatcher.dispatch({
-        type: ActionTypes.MESSAGE_FETCH_SUCCESS,
-        value: {result},
-      });
-    });
-
-    afterEach(() => {
-      Dispatcher.dispatch({
-        type: ActionTypes.MESSAGE_RESET_REQUEST,
-      });
-    });
-
-
-    it('getByID', () => {
-      testValues(MessageStore.getByID(message.id));
-    });
-
-    it('getAll', () => {
-      messages.forEach((input) => {
-        testValues(MessageStore.getByID(input.id), input);
-      });
-    });
-
-    it('isImagesDisplayed', () => {
-      messages.forEach((input) => {
-        const msg = MessageStore.getByID(input.id);
-        testValues(MessageStore.getByID(input.id), input);
-      });
-    });
-
-    it('isUnread', () => {
-      let input = _.cloneDeep(messageUnread);
-      assert.isTrue(MessageStore.isUnread({message: input}));
-
-      input = _.cloneDeep(messageFlagged);
-      assert.isFalse(MessageStore.isUnread({message: input}));
-
-      input = _.cloneDeep(message);
-      assert.isFalse(MessageStore.isUnread({message: input}));
-    });
-
-    it('isFlagged', () => {
-      let input = _.cloneDeep(messageFlagged);
-      assert.isTrue(MessageStore.isFlagged({message: input}));
-
-      input = _.cloneDeep(messageAttached);
-      assert.isFalse(MessageStore.isFlagged({message: input}));
-
-      input = _.cloneDeep(message);
-      assert.isFalse(MessageStore.isFlagged({message: input}));
-    });
-
-    it('isAttached', () => {
-      let input = _.cloneDeep(messageAttached);
-      assert.isTrue(MessageStore.isAttached({message: input}));
-
-      input = _.cloneDeep(messageFlagged);
-      assert.isFalse(MessageStore.isAttached({message: input}));
-
-      input = _.cloneDeep(message);
-      assert.isFalse(MessageStore.isAttached({message: input}));
-    });
-
-    it('getConversation', () => {
-      account.mailboxes.forEach((mailbox) => {
-        const output = MessageStore.getConversation(conversationID, mailbox.id);
-        output.forEach((msg) => {
-          // All messages must have the same
-          // conversationID && mailboxID
-          assert.equal(msg.get('conversationID'), conversationID);
-          assert.notEqual(msg.get('mailboxIDs')[mailbox.id], undefined);
-        });
-
-        // All messages should belongs to inbox otherwise
-        // conversationLength must be smaller or equal
-        if (mailbox.id === account.inboxMailbox) {
-          assert.equal(output.length, conversationLength[conversationID]);
-        } else {
-          assert.isTrue(output.length <= conversationLength[conversationID]);
-        }
-      });
-    });
-
-    it('getConversationLength', () => {
-      testConversationLength(conversationID, account.inboxMailbox);
     });
   });
 
