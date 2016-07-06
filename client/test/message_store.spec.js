@@ -219,7 +219,7 @@ describe('Message Store', () => {
         output = MessageStore.getByID(message0.id);
         assert.deepEqual(output.get('flags'), message0.flags);
 
-        // Try changes that are older
+        // Try to change with older data
         defaultValue = message0.flags;
         Object.assign(message0, {
           flags: defaultValue,
@@ -233,11 +233,53 @@ describe('Message Store', () => {
       });
 
       it('MESSAGE_MOVE_SUCCESS', () => {
-        // 1. dispatcher l'action
-        // 2. vérifier que le messge du store a bien été modifier
-        // 3. vérifier propriétés par propriétés
+        let output = MessageStore.getByID(message.id);
+        let message0 = output.toJS();
+        let defaultValue = output.get('mailboxID');
+        const mailboxIDs = _.keys(output.get('mailboxIDs'));
 
-        // ({updated})
+        function getMailboxID () {
+          return mailboxIDs.find((id) => id != defaultValue );
+        }
+
+        function updateMessage (value, date) {
+          message0.mailboxID = value;
+          message0.updated = (date).toISOString();
+          Dispatcher.dispatch({
+            type: ActionTypes.MESSAGE_MOVE_SUCCESS,
+            value: { updated: { messages: [message0] } },
+          });
+          output = MessageStore.getByID(message0.id);
+        }
+
+        // Change MailboxID
+        updateMessage(getMailboxID(), new Date());
+        defaultValue = output.get('mailboxID');
+        assert.equal(defaultValue, message0.mailboxID);
+
+        // Change mailboxID
+        // but set as older update
+        updateMessage(getMailboxID(), new Date('2013-1-1'));
+        assert.notEqual(output.get('mailboxID'), message0.mailboxID);
+        assert.equal(output.get('mailboxID'), defaultValue);
+
+        // Change mailboxID
+        // but with fake value
+        updateMessage(NaN, new Date());
+        assert.notEqual(output.get('mailboxID'), message0.mailboxID);
+        assert.equal(output.get('mailboxID'), defaultValue);
+
+        // Change mailboxID
+        // but with fake value
+        updateMessage(undefined, new Date());
+        assert.notEqual(output.get('mailboxID'), message0.mailboxID);
+        assert.equal(output.get('mailboxID'), defaultValue);
+
+        // Change mailboxID
+        // but with fake value
+        updateMessage('     ', new Date());
+        assert.notEqual(output.get('mailboxID'), message0.mailboxID);
+        assert.equal(output.get('mailboxID'), defaultValue);
       });
 
       it('SEARCH_SUCCESS', () => {

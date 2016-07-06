@@ -45,11 +45,15 @@ class MessageStore extends Store
 
     _saveMessage = (message) ->
         message = _.cloneDeep message
-
-        # Save reference mailbox into message informations
-        message.mailboxID = _.keys(message.mailboxIDs).shift()
+        oldMessage = _messages.get(message.id);
 
         if _shouldUpdateMessage message
+
+            # Save reference mailbox into message informations
+            if not _.isString(message.mailboxID) or _.isEmpty(message.mailboxID)
+                message.mailboxID  = oldMessage?.get('mailboxID')
+                message.mailboxID ?= _.keys(message.mailboxIDs).shift()
+
             message.date          ?= new Date().toISOString()
             message.createdAt     ?= message.date
             message.flags         ?= []
