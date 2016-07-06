@@ -337,18 +337,18 @@ describe('Message Store', () => {
       });
 
       it('MAILBOX_EXPUNGE', () => {
-        let output = MessageStore.getByID(message.id);
         let mailboxID = getMailboxID();
-
         let countAfter = MessageStore.getAll().filter((msg) => {
           return msg.get('mailboxIDs')[mailboxID] === undefined
         }).size
+
+        assert.isTrue(!!MessageStore.getByID(message.id));
+
         Dispatcher.dispatch({
           type: ActionTypes.MAILBOX_EXPUNGE,
           value: mailboxID,
         });
-        output = MessageStore.getByID(message.id);
-        assert.isUndefined(output);
+        assert.isUndefined(MessageStore.getByID(message.id));
         assert.equal(MessageStore.getAll().size, countAfter)
 
         function getMailboxID(mailboxID) {
