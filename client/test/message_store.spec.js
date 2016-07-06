@@ -157,6 +157,7 @@ describe('Message Store', () => {
       });
     });
 
+
     describe('Should ADD message(s)', () => {
 
       it('MESSAGE_FETCH_SUCCESS', () => {
@@ -196,27 +197,39 @@ describe('Message Store', () => {
         });
       });
 
-      it('MESSAGE_FLAGS_SUCCESS', () => {
-        // 1. dispatcher l'action
-        // 2. vérifier que le messge du store a bien été modifier
-        // 3. vérifier propriétés par propriétés
 
-        // ({result, timestamp})
-        // const changes = { flags: seenFlags };
-        // const message1 = _.extend({}, fixtures.message1, changes);
-        // const message2 = _.extend({}, fixtures.message2, changes);
-        // const updated = { messages: [message1, message2]}
-        // dispatcher.dispatch({
-        //   type: ActionTypes.MESSAGE_FLAGS_SUCCESS,
-        //   value: { updated, timestamp: Date.now() },
-        // });
-        //
-        // const id1 = fixtures.message1.id;
-        // const id2 = fixtures.message2.id;
-        // const messages = MessageStore.getAll();
-        //
-        // assert.deepEqual(messages.get(id1).toObject(), message1);
-        // assert.deepEqual(messages.get(id2).toObject(), message2);
+      it('MESSAGE_FLAGS_SUCCESS', () => {
+        let message0 = _.cloneDeep(message);
+        let output = MessageStore.getByID(message0.id);
+        let defaultValue = message0.flags;
+        assert.deepEqual(output.get('flags'), message0.flags);
+
+        // Change values
+        Object.assign(message0, {
+          flags: [],
+          updated: (new Date()).toISOString()
+        });
+
+        // Dispatch change
+        Dispatcher.dispatch({
+          type: ActionTypes.MESSAGE_FLAGS_SUCCESS,
+          value: { updated: { messages: [message0] } },
+        });
+
+        output = MessageStore.getByID(message0.id);
+        assert.deepEqual(output.get('flags'), message0.flags);
+
+        // Try changes that are older
+        defaultValue = message0.flags;
+        Object.assign(message0, {
+          flags: defaultValue,
+          updated: (new Date('2014-1-1')).toISOString(),
+        })
+        Dispatcher.dispatch({
+          type: ActionTypes.MESSAGE_FLAGS_SUCCESS,
+          value: { updated: { messages: [message0] } },
+        });
+        output = MessageStore.getByID(message0.id);
       });
 
       it('MESSAGE_MOVE_SUCCESS', () => {
@@ -319,6 +332,7 @@ describe('Message Store', () => {
         type: ActionTypes.MESSAGE_RESET_REQUEST,
       });
     });
+
 
     it('getByID', () => {
       testValues(MessageStore.getByID(message.id));
