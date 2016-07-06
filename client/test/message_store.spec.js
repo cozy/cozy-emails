@@ -372,25 +372,26 @@ describe('Message Store', () => {
         assert.equal(MessageStore.getAll().size, countAfter)
       });
 
-      // TODO: this feature is not fixed yet
-      // 1. fix the feature
-      // 2. add test
-      it.skip('MESSAGE_TRASH_SUCCESS', () => {
-        // MESSAGE_TRASH_SUCCESS, (target)
+      it('MESSAGE_TRASH_SUCCESS', () => {
+        assert.isTrue(!!MessageStore.getByID(message.id));
+
+        Dispatcher.dispatch({
+          type: ActionTypes.MESSAGE_TRASH_SUCCESS,
+          value: { target: { messageID: message.id } },
+        });
+
+        assert.isUndefined(MessageStore.getByID(message.id));
       });
 
-      // TODO: this feature is not fixed yet
-      // 1. fix the feature
-      // 2. add test
-      it.skip('RECEIVE_MESSAGE_DELETE', () => {
-        // RECEIVE_MESSAGE_DELETE, (messageID)
-        // const id4 = fixtures.message2.id;
-        // dispatcher.dispatch({
-        //   type: ActionTypes.RECEIVE_MESSAGE_DELETE,
-        //   value: id4,
-        // });
-        // const messages = MessageStore.getAll();
-        // assert.isUndefined(messages.get(id4));
+      it('RECEIVE_MESSAGE_DELETE', () => {
+        assert.isTrue(!!MessageStore.getByID(message.id));
+
+        Dispatcher.dispatch({
+          type: ActionTypes.RECEIVE_MESSAGE_DELETE,
+          value: message.id,
+        });
+
+        assert.isUndefined(MessageStore.getByID(message.id));
       });
     });
   });
