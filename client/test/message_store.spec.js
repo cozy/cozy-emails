@@ -65,6 +65,14 @@ describe('Message Store', () => {
     });
   }
 
+  function testConversationLength (id, mailboxID) {
+    let length = MessageStore.getConversationLength(id);
+    assert.equal(length, conversationLength[id]);
+
+    length = MessageStore.getConversation(id, mailboxID).length;
+    assert.equal(length, conversationLength[id]);
+  }
+
 
   before(() => {
     // Add several messages
@@ -125,37 +133,26 @@ describe('Message Store', () => {
       });
     });
 
-
     describe('Should ADD message(s)', () => {
 
       it('MESSAGE_FETCH_SUCCESS', () => {
-        // ({result, timestamp})
-        // const messages = MessageStore.getAll();
-        // assert.deepEqual(messages.get(id1).toObject(), fixtures.message1);
-        // assert.deepEqual(messages.get(id2).toObject(), fixtures.message2);
-        // assert.deepEqual(messages.get(id3).toObject(), fixtures.message3);
-        //
-        // let length = MessageStore.getConversationLength(conversationId2);
-        // assert.equal(length, 2);
-        // length = MessageStore.getConversationLength(conversationId1);
-        // assert.equal(length, 1);
-        //
-        // fixtures.message3.flags = seenFlags;
-        //
-        // // Test that update don't occur with older timestamp
-        // // addMessages([fixtures.message1, fixtures.message2, fixtures.message3],
-        // //             false,
-        // //             new Date().getTime() - 100000);
-        // let message = MessageStore.getByID(id3);
-        // assert.equal(message.get('flags').length, 0);
-        //
-        // // Test that update occur with newest addition
-        // addMessages([fixtures.message1, fixtures.message2, fixtures.message3]);
-        // message = MessageStore.getByID(id3);
-        // assert.equal(message.get('flags')[0], seenFlags);
+        assert.equal(MessageStore.getAll().size, 0);
+
+        Dispatcher.dispatch({
+          type: ActionTypes.MESSAGE_FETCH_SUCCESS,
+          value: {result: { messages }}
+        });
+
+        assert.equal( MessageStore.getAll().size, messages.length);
+        messages.forEach((msg) => testValues(MessageStore.getByID(msg.id), msg));
       });
 
       it('RECEIVE_RAW_MESSAGES', () => {
+        // TODO: vérifier que :
+        // - les messages postés sont bien présent dans le Store
+        // - Vérifier que ttes les propriétés correspondent bien
+        // (idem FETH_SUCCESS)
+
         // (messages)
         // addMessages([
         //   fixtures.message4,
@@ -174,6 +171,11 @@ describe('Message Store', () => {
       });
 
       it('RECEIVE_RAW_MESSAGE', () => {
+        // TODO: vérifier que :
+        // - les messages postés sont bien présent dans le Store
+        // - Vérifier que ttes les propriétés correspondent bien
+        // (idem FETH_SUCCESS)
+
         // (message)
         // dispatcher.dispatch({
         //   type: ActionTypes.RECEIVE_RAW_MESSAGE,
@@ -185,6 +187,11 @@ describe('Message Store', () => {
       });
 
       it('RECEIVE_RAW_MESSAGE_REALTIME', () => {
+        // TODO: vérifier que :
+        // - les messages postés sont bien présent dans le Store
+        // - Vérifier que ttes les propriétés correspondent bien
+        // (idem FETH_SUCCESS)
+
         // (message)
         // dispatcher.dispatch({
         //   type: ActionTypes.RECEIVE_RAW_MESSAGE_REALTIME,
@@ -195,18 +202,38 @@ describe('Message Store', () => {
         // assert.deepEqual(messages.get(idr2).toObject(), fixtures.rawMessage2);
       });
 
-      // TODO: this feature is not fixed yet
-      // 1. fix the feature
-      // 2. add test
-      it.skip('MESSAGE_SEND_SUCCESS', () => {
+      it('MESSAGE_SEND_SUCCESS', () => {
+        // TODO: vérifier que :
+        // - les messages postés sont bien présent dans le Store
+        // - Vérifier que ttes les propriétés correspondent bien
+        // (idem FETH_SUCCESS)
+
         // ({message})
+
       });
     });
 
 
     describe('Should UPDATE message(s)', () => {
 
+      beforeEach(() => {
+        Dispatcher.dispatch({
+          type: ActionTypes.RECEIVE_RAW_MESSAGES,
+          value: messages,
+        });
+      });
+
+      afterEach(() => {
+        Dispatcher.dispatch({
+          type: ActionTypes.MESSAGE_RESET_REQUEST,
+        });
+      });
+
       it('MESSAGE_FLAGS_SUCCESS', () => {
+        // 1. dispatcher l'action
+        // 2. vérifier que le messge du store a bien été modifier
+        // 3. vérifier propriétés par propriétés
+
         // ({result, timestamp})
         // const changes = { flags: seenFlags };
         // const message1 = _.extend({}, fixtures.message1, changes);
@@ -225,41 +252,27 @@ describe('Message Store', () => {
         // assert.deepEqual(messages.get(id2).toObject(), message2);
       });
 
-      // TODO: this feature is not fixed yet
-      // 1. fix the feature
-      // 2. add test
-      it.skip('MESSAGE_MOVE_SUCCESS', () => {
-          // ({updated})
+      it('MESSAGE_MOVE_SUCCESS', () => {
+        // 1. dispatcher l'action
+        // 2. vérifier que le messge du store a bien été modifier
+        // 3. vérifier propriétés par propriétés
+
+        // ({updated})
       });
 
-      // TODO: this feature is not fixed yet
-      // 1. fix the feature
-      // 2. add test
-      it.skip('SEARCH_SUCCESS', () => {
+      it('SEARCH_SUCCESS', () => {
+        // 1. dispatcher l'action
+        // 2. vérifier que le messge du store a bien été modifier
+        // 3. vérifier propriétés par propriétés
+
         // ((message))
       });
 
       it('SETTINGS_UPDATE_REQUEST', () => {
+        // 1. mettre à jour la valeur _displayImages
+        // testter pour les valeurs, true, false, undefined, NaN, Number, String
+
         // ({messageID, displayImages=true})
-        // const id1 = fixtures.message1.id;
-        //
-        // // Message must exist into MessageStore
-        // assert.equal(MessageStore.getByID(id1).get('id'), id1);
-        // assert.isUndefined(MessageStore.getByID(id1).get('_displayImages'));
-        //
-        // // displayImage value has changed
-        // dispatcher.dispatch({
-        //   type: ActionTypes.SETTINGS_UPDATE_REQUEST,
-        //   value: { messageID: id1, displayImages: true },
-        // });
-        // assert.isTrue(MessageStore.getByID(id1).get('_displayImages'));
-        //
-        // // displayImage value has changed
-        // dispatcher.dispatch({
-        //   type: ActionTypes.SETTINGS_UPDATE_REQUEST,
-        //   value: { messageID: id1, displayImages: false },
-        // });
-        // assert.isFalse(MessageStore.getByID(id1).get('_displayImages'));
       });
     });
 
@@ -411,11 +424,7 @@ describe('Message Store', () => {
     });
 
     it('getConversationLength', () => {
-      let length = MessageStore.getConversationLength(conversationID);
-      assert.equal(length, conversationLength[conversationID]);
-
-      length = MessageStore.getConversation(conversationID, account.inboxMailbox).length;
-      assert.equal(length, conversationLength[conversationID]);
+      testConversationLength(conversationID, account.inboxMailbox);
     });
   });
 
