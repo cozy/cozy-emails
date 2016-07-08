@@ -480,7 +480,7 @@ class RouterStore extends Store
 
 
             {accountID, mailboxID, tab} = payload
-            {action, conversationID, messageID, query} = payload
+            {action, conversationID, messageID, filter} = payload
 
             # We cant display any informations
             # without accounts
@@ -499,7 +499,7 @@ class RouterStore extends Store
             # _resetSelection()
 
             # Save current filters
-            _setFilter query
+            _setFilter filter
 
             # From searchStore
             if _isSearchAction()

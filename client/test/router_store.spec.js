@@ -110,7 +110,7 @@ const fixtures = {
       currentURL = url;
     },
     routes: {
-      'mailbox/:mailboxID(?:query)': 'messageList',
+      'mailbox/:mailboxID(?:filter)': 'messageList',
       'account/new': 'accountNew',
       'account/:accountID/settings/:tab': 'accountEdit',
       'mailbox/:mailboxID/new': 'messageNew',
@@ -118,7 +118,7 @@ const fixtures = {
       'mailbox/:mailboxID/:messageID/forward': 'messageForward',
       'mailbox/:mailboxID/:messageID/reply': 'messageReply',
       'mailbox/:mailboxID/:messageID/reply-all': 'messageReplyAll',
-      'mailbox/:mailboxID/:conversationID/:messageID(?:query)': 'messageShow',
+      'mailbox/:mailboxID/:conversationID/:messageID(?:filter)': 'messageShow',
       '': 'defaultView',
     },
   },
@@ -130,7 +130,7 @@ describe.skip('Router Store', () => {
   let dispatcher;
 
 
-  function changeRoute(query, message) {
+  function changeRoute(filter, message) {
     if (message === undefined) message = fixtures.message1;
     dispatcher.dispatch({
       type: ActionTypes.ROUTE_CHANGE,
@@ -141,7 +141,7 @@ describe.skip('Router Store', () => {
         action: MessageActions.SHOW,
         conversationID: message.conversationID,
         messageID: message.id,
-        query,
+        filter,
       },
     });
   }
@@ -240,7 +240,7 @@ describe.skip('Router Store', () => {
           action: MessageActions.SHOW,
           conversationID: fixtures.message1.conversationID,
           messageID: fixtures.message1.id,
-          query: '',
+          filter: '',
         },
       });
       assert.equal(routerStore.getAction(), MessageActions.SHOW);
@@ -320,7 +320,7 @@ describe.skip('Router Store', () => {
           action: MessageActions.SHOW,
           conversationID: fixtures.message1.conversationID,
           messageID: fixtures.message1.id,
-          query: '',
+          filter: '',
         },
       });
 

@@ -23,7 +23,7 @@ moment   = require 'moment'
 class Router extends Backbone.Router
 
     routes:
-        'mailbox/:mailboxID(?:query)':                              'messageList'
+        'mailbox/:mailboxID(?:filter)':                             'messageList'
         'account/new':                                              'accountNew'
         'account/:accountID/settings/:tab':                         'accountEdit'
         # 'search/?q=:search':                                      'search'
@@ -33,7 +33,7 @@ class Router extends Backbone.Router
         'mailbox/:mailboxID/:messageID/forward':                    'messageForward'
         'mailbox/:mailboxID/:messageID/reply':                      'messageReply'
         'mailbox/:mailboxID/:messageID/reply-all':                  'messageReplyAll'
-        'mailbox/:mailboxID/:conversationID/:messageID(?:query)':   'messageShow'
+        'mailbox/:mailboxID/:conversationID/:messageID(?:filter)':  'messageShow'
         '':                                                         'defaultView'
 
 
@@ -102,21 +102,23 @@ class Router extends Backbone.Router
 
 
 # Dispatch payload with extracted query if available
-_dispatch = (payload, query) ->
-    payload.query = _parseQuery query if query
+_dispatch = (payload, filter) ->
+    {accountID, mailboxID, conversationID} = payload
+    filter = _parseQuery filter if filter
 
-    # Always get freshest data as possible
-    if payload.action in [MessageActions.SHOW_ALL, MessageActions.SHOW]
-        RouterActionCreator.refreshMailbox payload
+    if mailboxID?
+        # Always get freshest data as possible
+        RouterActionCreator.refreshMailbox {mailboxID}
 
-    # Get all informations to display application
-    if payload.action in [MessageActions.SHOW_ALL, MessageActions.SHOW]
-        RouterActionCreator.getCurrentPage()
+        # Get all messages to display messages list
+        action = MessageActions.SHOW_ALL
+        RouterActionCreator.getCurrentPage {action, accountID, mailboxID, filter}
 
     # Get all messages from conversation
-    if payload.action is MessageActions.SHOW
-        RouterActionCreator.getConversation payload.conversationID
+    if conversationID?
+        RouterActionCreator.getConversation conversationID
 
+    payload.filter = filter
     AppDispatcher.dispatch
         type: ActionTypes.ROUTE_CHANGE
         value: payload
