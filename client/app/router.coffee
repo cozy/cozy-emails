@@ -103,20 +103,22 @@ class Router extends Backbone.Router
 
 # Dispatch payload with extracted query if available
 _dispatch = (payload, query) ->
-    payload.query = _parseQuery query if query
+    {accountID, mailboxID, conversationID} = payload
+    query = _parseQuery query if query
 
-    # Always get freshest data as possible
-    if payload.action in [MessageActions.SHOW_ALL, MessageActions.SHOW]
-        RouterActionCreator.refreshMailbox payload
+    if mailboxID?
+        # Always get freshest data as possible
+        RouterActionCreator.refreshMailbox {mailboxID}
 
-    # Get all informations to display application
-    if payload.action in [MessageActions.SHOW_ALL, MessageActions.SHOW]
-        RouterActionCreator.getCurrentPage()
+        # Get all messages to display messages list
+        action = MessageActions.SHOW_ALL
+        RouterActionCreator.getCurrentPage {action, accountID, mailboxID, query}
 
     # Get all messages from conversation
-    if payload.action is MessageActions.SHOW
-        RouterActionCreator.getConversation payload.conversationID
+    if conversationID?
+        RouterActionCreator.getConversation conversationID
 
+    payload.query = query
     AppDispatcher.dispatch
         type: ActionTypes.ROUTE_CHANGE
         value: payload

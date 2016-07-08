@@ -48,9 +48,9 @@ RouterActionCreator =
 
 
     getCurrentPage: (params={}) ->
-        {url} = params
-        url ?= RouterStore.getCurrentURL {action}
+        {url, action, mailboxID, accountID, query} = params
 
+        url ?= RouterStore.getCurrentURL {action, accountID, mailboxID, query}
         _currentRequest = url
 
         # Always load messagesList
