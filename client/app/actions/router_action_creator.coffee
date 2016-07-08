@@ -48,9 +48,10 @@ RouterActionCreator =
 
 
     getCurrentPage: (params={}) ->
-        {url, action, mailboxID, accountID, query} = params
+        {url, action, mailboxID, accountID, filter} = params
 
-        url ?= RouterStore.getCurrentURL {action, accountID, mailboxID, query}
+        url ?= RouterStore.getCurrentURL {action, accountID, mailboxID, filter}
+
         _currentRequest = url
 
         # Always load messagesList
@@ -146,18 +147,18 @@ RouterActionCreator =
 
         messageID ?= RouterStore.getMessageID()
         mailboxID ?= RouterStore.getMailboxID messageID
-        query = filter or RouterStore.getFilter()
+        filter = filter or RouterStore.getFilter()
 
         unless messageID
             action = MessageActions.SHOW_ALL
             AppDispatcher.dispatch
                 type: ActionTypes.ROUTE_CHANGE
-                value: {mailboxID, action, query}
+                value: {mailboxID, action, filter}
         else
             action = MessageActions.SHOW
             AppDispatcher.dispatch
                 type: ActionTypes.ROUTE_CHANGE
-                value: {conversationID, messageID, mailboxID, action, query}
+                value: {conversationID, messageID, mailboxID, action, filter}
 
 
     gotoPreviousConversation: ->
@@ -174,10 +175,10 @@ RouterActionCreator =
         {mailboxID} = params
         mailboxID ?= RouterStore.getMailboxID()
         action = MessageActions.SHOW_ALL
-        query = RouterStore.getFilter()
+        filter = RouterStore.getFilter()
         AppDispatcher.dispatch
             type: ActionTypes.ROUTE_CHANGE
-            value: {mailboxID, action, query}
+            value: {mailboxID, action, filter}
 
 
     closeModal: ->
@@ -338,7 +339,7 @@ RouterActionCreator =
         action = SearchActions.SHOW_ALL
         AppDispatcher.dispatch
             type: ActionTypes.ROUTE_CHANGE
-            value: {query, action}
+            value: {filter, action}
 
 
 _getPage = ->
