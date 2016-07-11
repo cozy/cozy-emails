@@ -85,6 +85,13 @@ subaction()
         position    relative
         align-items center
 
+
+    .badges
+        flex         1 0 auto
+        min-width    3em
+        padding-right 0.625em
+        text-align   right
+
     .badge
         order       2
         margin-left auto
@@ -140,9 +147,6 @@ subaction()
         .account
             flex 1
 
-        .badge
-            margin-right 1em
-
 
     .menu-subaction
         color #aaa
@@ -163,7 +167,6 @@ subaction()
 
         li
             display       flex
-            padding-left 0.875em
             border-radius .25rem
 
             &.active
@@ -179,15 +182,12 @@ subaction()
                         font-size 0.875em
 
             a
-                flex 1
+                flex 6 1 auto    // regarding from badges section at flex: 1
 
                 .fa
                     // horizontally centered icons
                     width      1em
                     text-align center
-
-            .badge
-                margin-right .5em
 
             &:hover
                 a
