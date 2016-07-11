@@ -72,7 +72,6 @@ class RouterStore extends Store
 
     getURL: (params={}) ->
         action = _getRouteAction params
-        filter = _getURIQueryParams params
 
         isMessage = !!params.messageID or _.includes action, 'message'
         if isMessage and not params.mailboxID
@@ -88,16 +87,19 @@ class RouterStore extends Store
         if isAccount and not params.tab
             params.tab = 'account'
 
-        if (route = _getRoute action)
-            isValid = true
-            prefix = unless params.isServer then '#' else ''
-            filter = '/' + filter if params.isServer
-            url = route.replace /\:\w*/gi, (match) =>
-                # Get Route pattern of action
-                # Replace param name by its value
-                param = match.substring 1, match.length
-                params[param] or match
-            return prefix + url.replace(/\(\?:query\)$/, filter)
+        return unless (route = _getRoute action)
+
+        prefix = unless params.isServer then '#' else ''
+        query = _getURIQueryParams params
+        query = '/' + query if params.isServer
+
+        prefix + route.replace(/\(\?:filter\)$/, query)
+                .replace /\:\w*/gi, (match) =>
+                    # Get Route pattern of action
+                    # Replace param name by its value
+                    param = match.substring 1, match.length
+                    params[param] or match
+
 
 
     getCurrentURL: (options={}) ->
@@ -128,12 +130,12 @@ class RouterStore extends Store
         {filter, resetFilter, isServer} = params
         _.extend _filter, _currentFilter, filter unless resetFilter
 
+
         query = _.compact _.map _filter, (value, key) ->
             if value? and _defaultFilter[key] isnt value
                 # Server Side request:
                 # Flags query doesnt exist
                 key = 'flag' if isServer and key is 'flags'
-
                 return key + '=' + encodeURIComponent(value)
 
         if query.length then "?#{query.join '&'}" else ""
