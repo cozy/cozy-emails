@@ -198,6 +198,10 @@ class RouterStore extends Store
             return _accountID
 
 
+    getDefaultAccount: () ->
+        AccountStore.getAll().first()
+
+
     getMailboxID: (messageID) ->
         if messageID
             # Get mailboxID from message first
