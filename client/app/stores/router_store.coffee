@@ -556,7 +556,9 @@ class RouterStore extends Store
         handle ActionTypes.ADD_ACCOUNT_SUCCESS, ({account, timeout}) ->
             _timerRouteChange = setTimeout =>
                 _action = MessageActions.SHOW_ALL
-                _setCurrentAccount account.id, account.inboxMailbox
+                _setCurrentAccount
+                    accountID: account.id
+                    mailboxID: account.inboxMailbox
                 _updateURL()
 
                 @emit 'change'
