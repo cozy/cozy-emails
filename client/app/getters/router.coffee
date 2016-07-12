@@ -198,10 +198,11 @@ module.exports =
 
     getLastSync: ->
         accountID = @getAccountID()
+        mailboxID = @getMailboxID()
 
         # If current mailboxID is inbox
         # test Inbox instead of 1rst mailbox
-        if (isInbox = AccountStore.isInbox accountID, @getMailboxID())
+        if (isInbox = AccountStore.isInbox accountID, mailboxID)
             # Gmail issue
             # Test \All tag insteadof \INBOX
             mailbox = AccountStore.getAllMailbox accountID

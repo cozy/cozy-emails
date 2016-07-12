@@ -103,7 +103,7 @@ class Router extends Backbone.Router
 
 # Dispatch payload with extracted query if available
 _dispatch = (payload, filter) ->
-    {accountID, mailboxID, conversationID} = payload
+    {mailboxID, conversationID} = payload
     filter = _parseQuery filter if filter
 
     if mailboxID?
@@ -112,7 +112,7 @@ _dispatch = (payload, filter) ->
 
         # Get all messages to display messages list
         action = MessageActions.SHOW_ALL
-        RouterActionCreator.getCurrentPage {action, accountID, mailboxID, filter}
+        RouterActionCreator.getCurrentPage {action, mailboxID, filter}
 
     # Get all messages from conversation
     if conversationID?
