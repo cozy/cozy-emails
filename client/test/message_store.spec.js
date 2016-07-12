@@ -1,396 +1,496 @@
 'use strict';
+
 const assert = require('chai').assert;
 const _ = require('lodash');
+const Map = require('immutable').Map;
 
 const mockeryUtils = require('./utils/mockery_utils');
 const SpecDispatcher = require('./utils/specs_dispatcher');
 const ActionTypes = require('../app/constants/app_constants').ActionTypes;
 
-const fixtures = {
-  message1: {
-    id: 'i1',
-    accountID: 'a1',
-    messageID: 'm1',
-    conversationID: 'ac1',
-    mailboxIDs: { inbox: 1 },
-  },
-  message2: {
-    id: 'i2',
-    accountID: 'a2',
-    messageID: 'm2',
-    conversationID: 'c2',
-    mailboxIDs: { mb1: 1, inbox: 1 },
-  },
-  message3: {
-    id: 'i3',
-    accountID: 'a2',
-    messageID: 'm3',
-    conversationID: 'c2',
-    mailboxIDs: { mb1: 1, inbox: 1 },
-  },
-  message4: {
-    id: 'i4',
-    accountID: 'a4',
-    messageID: 'm4',
-    conversationID: 'c4',
-    mailboxIDs: { inbox: 1 },
-  },
-  message5: {
-    id: 'i5',
-    accountID: 'a5',
-    messageID: 'm5',
-    conversationID: 'c5',
-    mailboxIDs: { inbox: 1 },
-  },
-  message6: {
-    id: 'i6',
-    messageID: 'm6',
-    accountID: 'a5',
-    conversationID: 'c5',
-    mailboxIDs: { inbox: 1 },
-  },
-  message7: {
-    id: 'i7',
-    accountID: 'a7',
-    messageID: 'm7',
-    conversationID: 'c7',
-    mailboxIDs: { inbox: 1 },
-  },
-  message8: {
-    id: 'i8',
-    accountID: 'a8',
-    messageID: 'm8',
-    conversationID: 'c8',
-    mailboxIDs: { inbox: 1 },
-  },
-  message9: {
-    id: 'i9',
-    messageID: 'm9',
-    accountID: 'a8',
-    conversationID: 'c8',
-    mailboxIDs: { inbox: 1 },
-  },
-  message10: {
-    id: 'i10',
-    accountID: 'a10',
-    messageID: 'm10',
-    conversationID: 'c10',
-    mailboxIDs: { inbox: 1 },
-  },
-  message11: {
-    id: 'i11',
-    accountID: 'a11',
-    messageID: 'm11',
-    conversationID: 'c11',
-    mailboxIDs: { inbox: 1 },
-  },
-  message12: {
-    id: 'i12',
-    accountID: 'a12',
-    messageID: 'm12',
-    conversationID: 'c11',
-    mailboxIDs: { inbox: 1 },
-  },
-  rawMessage1: {
-    id: 'rai1',
-    accountID: 'ra1',
-    messageID: 'rm1',
-    conversationID: 'rc1',
-    mailboxIDs: { inbox: 1 },
-  },
-  rawMessage2: {
-    id: 'rai2',
-    accountID: 'ra2',
-    messageID: 'rm2',
-    conversationID: 'rc2',
-    mailboxIDs: { inbox: 1 },
-  },
-};
+const getUID = require('./utils/guid').getUID;
+const MessageFixtures = require('./fixtures/message');
+const AccountFixture = require('./fixtures/account');
 
 describe('Message Store', () => {
-  let messageStore;
-  let dispatcher;
+  let MessageStore;
+  let Dispatcher;
 
-  function addMessages(messages, isRaw, timestamp) {
-    const conversationLength = {};
-    let action;
-    let value;
+  const conversationID = `plop-${getUID()}`;
+  const account = AccountFixture.createAccount();
 
-    if (isRaw) {
-      action = ActionTypes.RECEIVE_RAW_MESSAGES;
-      value = messages;
-    } else {
-      action = ActionTypes.MESSAGE_FETCH_SUCCESS;
-      value = {
-        result: { messages, conversationLength },
-        timestamp: timestamp || new Date().getTime(),
-      };
+  const date = new Date();
+
+  const message = MessageFixtures.createMessage({date});
+  const messageUnread = MessageFixtures.createUnread({date});
+  const messageFlagged = MessageFixtures.createFlagged({date});
+  const messageDraft = MessageFixtures.createDraft({date});
+  const messageAttached = MessageFixtures.createAttached({date});
+
+  let conversationLength = {};
+  const messages = [];
+
+
+  function isDate(key) {
+    return -1 < ['date', 'updated', 'createdAt'].indexOf(key)
+  }
+
+  function testValues(output, input) {
+    output = output.toJS();
+    if (undefined === input) input = message;
+
+    assert.equal(input.mailboxID, undefined);
+    assert.equal(typeof output.mailboxID, 'string');
+    delete output.mailboxID;
+
+    if (undefined === input.attachments) {
+      assert.deepEqual(output.attachments, []);
+      delete output.attachments;
     }
 
-    messages.forEach((message) => {
-      if (message !== null && message !== undefined) {
-        if (conversationLength[message.conversationID] === undefined) {
-          conversationLength[message.conversationID] = 1;
-        } else {
-          conversationLength[message.conversationID] += 1;
-        }
+    if (undefined === input._displayImages) {
+      assert.equal(output._displayImages, false);
+      delete output._displayImages;
+    }
+
+    // When Message is only flagged as Unread
+    // sometime value can be undefined
+    // instead of []
+    if (undefined === input.flags) {
+      delete output.flags;
+    }
+
+    _.each(output, (value, property) => {
+      if ('object' === typeof value) {
+        assert.deepEqual(value, input[property]);
+      } else if (!isDate(property)) {
+        assert.equal(value, input[property]);
       }
-    });
-    dispatcher.dispatch({
-      type: action,
-      value,
     });
   }
 
+  function testConversationLength (id, mailboxID) {
+    let length = MessageStore.getConversationLength(id);
+    assert.equal(length, conversationLength[id]);
+
+    length = MessageStore.getConversation(id, mailboxID).length;
+    assert.equal(length, conversationLength[id]);
+  }
+
+  function testMessageAction(action, value) {
+    assert.equal(MessageStore.getAll().size, 0);
+
+    Dispatcher.dispatch({
+      type: ActionTypes[action],
+      value,
+    });
+
+    assert.equal(MessageStore.getAll().size, 1);
+    testValues(MessageStore.getByID(message.id), message);
+  }
+
+  function testMessagesAction(action, value) {
+    assert.equal(MessageStore.getAll().size, 0);
+
+    Dispatcher.dispatch({
+      type: ActionTypes[action],
+      value,
+    });
+
+    assert.equal(MessageStore.getAll().size, messages.length);
+    messages.forEach((msg) => testValues(MessageStore.getByID(msg.id), msg));
+  }
+
+
   before(() => {
-    dispatcher = new SpecDispatcher();
-    mockeryUtils.initDispatcher(dispatcher);
-    mockeryUtils.initForStores(['../app/stores/message_store']);
-  });
+    // Add several messages
+    // to create a conversation
+    let params = {date, conversationID, account};
+    messages.push(MessageFixtures.createMessage(params));
+    messages.push(MessageFixtures.createMessage(params));
+    messages.push(MessageFixtures.createMessage(params));
+    messages.push(MessageFixtures.createMessage(params));
+    messages.push(MessageFixtures.createMessage(params));
+    messages.push(MessageFixtures.createMessage(params));
 
-  /*
-   * Problems noticed in the store file:
-   *
-   * FIXME Underscore is used instead of lodash.
-   * FIXME The fact that the conversation length is calculated remotely, is
-   *       not clear for the developer.
-   * FIXME The coffeescript code is not linted.
-   * FIXME Most operations, like getting raw messages, don't update
-   *       conversation length.
-   * FIXME Action values are not normalized.
-   */
-  describe('Actions', () => {
-    const id1 = fixtures.message1.id;
-    const id2 = fixtures.message2.id;
-    const id3 = fixtures.message3.id;
-    const conversationId1 = fixtures.message1.conversationID;
-    const conversationId2 = fixtures.message2.conversationID;
-    const seenFlags = ['\\Seen'];
+    messages.push(message);
+    messages.push(MessageFixtures.createMessage({date}));
+    messages.push(MessageFixtures.createMessage({date}));
+    messages.push(MessageFixtures.createMessage({images: true, date}));
+    messages.push(MessageFixtures.createMessage({images: false, date}));
 
-    // Reinit a new MessageStore before each test
-    beforeEach(() => {
-      messageStore = require('../app/stores/message_store');
-      addMessages([fixtures.message1, fixtures.message2, fixtures.message3]);
-    });
+    // Add flagged messages
+    messages.push(messageAttached);
+    messages.push(messageUnread);
+    messages.push(messageFlagged);
+    messages.push(messageDraft);
 
-    it('MESSAGE_FETCH_SUCCESS', () => {
-      const messages = messageStore.getAll();
-      assert.deepEqual(messages.get(id1).toObject(), fixtures.message1);
-      assert.deepEqual(messages.get(id2).toObject(), fixtures.message2);
-      assert.deepEqual(messages.get(id3).toObject(), fixtures.message3);
+    // Define conversationLength
+    // from messages entries
+    let keys = messages.map((msg) => msg.conversationID);
+    let values = _.groupBy(messages, 'conversationID');
+    conversationLength = _.mapValues(values, (value) => value.length);
 
-      let length = messageStore.getConversationLength(conversationId2);
-      assert.equal(length, 2);
-      length = messageStore.getConversationLength(conversationId1);
-      assert.equal(length, 1);
-
-      fixtures.message3.flags = seenFlags;
-
-      // Test that update don't occur with older timestamp
-      addMessages([fixtures.message1, fixtures.message2, fixtures.message3],
-                  false,
-                  new Date().getTime() - 100000);
-      let message = messageStore.getByID(id3);
-      assert.equal(message.get('flags').length, 0);
-
-      // Test that update occur with newest addition
-      addMessages([fixtures.message1, fixtures.message2, fixtures.message3]);
-      message = messageStore.getByID(id3);
-      assert.equal(message.get('flags')[0], seenFlags);
-    });
-    it('RECEIVE_RAW_MESSAGE', () => {
-      dispatcher.dispatch({
-        type: ActionTypes.RECEIVE_RAW_MESSAGE,
-        value: fixtures.rawMessage1,
-      });
-      const messages = messageStore.getAll();
-      const idr1 = fixtures.rawMessage1.id;
-      assert.deepEqual(messages.get(idr1).toObject(), fixtures.rawMessage1);
-    });
-    it('RECEIVE_RAW_MESSAGE_REALTIME', () => {
-      dispatcher.dispatch({
-        type: ActionTypes.RECEIVE_RAW_MESSAGE_REALTIME,
-        value: fixtures.rawMessage2,
-      });
-      const messages = messageStore.getAll();
-      const idr2 = fixtures.rawMessage2.id;
-      assert.deepEqual(messages.get(idr2).toObject(), fixtures.rawMessage2);
-    });
-    it('RECEIVE_RAW_MESSAGES', () => {
-      addMessages([
-        fixtures.message4,
-        null,
-        fixtures.message5,
-        fixtures.message6,
-      ],
-      true);
-      const messages = messageStore.getAll();
-      const id4 = fixtures.message4.id;
-      const id5 = fixtures.message5.id;
-      const id6 = fixtures.message6.id;
-      assert.deepEqual(messages.get(id4).toObject(), fixtures.message4);
-      assert.deepEqual(messages.get(id5).toObject(), fixtures.message5);
-      assert.deepEqual(messages.get(id6).toObject(), fixtures.message6);
-    });
-    it('REMOVE_ACCOUNT_SUCCESS', () => {
-      const accountId = fixtures.message5.accountID;
-      const id5 = fixtures.message5.id;
-      const id6 = fixtures.message6.id;
-      dispatcher.dispatch({
-        type: ActionTypes.REMOVE_ACCOUNT_SUCCESS,
-        value: accountId,
-      });
-      const messages = messageStore.getAll();
-      assert.isUndefined(messages.get(id5));
-      assert.isUndefined(messages.get(id6));
-    });
-    it('MESSAGE_FLAGS_SUCCESS', () => {
-      const changes = { flags: seenFlags };
-      const message1 = _.extend({}, fixtures.message1, changes);
-      const message2 = _.extend({}, fixtures.message2, changes);
-      const updated = { messages: [message1, message2]}
-      dispatcher.dispatch({
-        type: ActionTypes.MESSAGE_FLAGS_SUCCESS,
-        value: { updated, timestamp: Date.now() },
-      });
-
-      const id1 = fixtures.message1.id;
-      const id2 = fixtures.message2.id;
-      const messages = messageStore.getAll();
-      assert.deepEqual(messages.get(id1).toObject(), message1);
-      assert.deepEqual(messages.get(id2).toObject(), message2);
-    });
-    it.skip('MESSAGE_MOVE_SUCCESS', () => {
-      // FIXME: Don't know how to implement this test.
-    });
-    it.skip('MESSAGE_SEND_SUCCESS', () => {
-      // FIXME: Don't know how to implement this test.
-    });
-    it('RECEIVE_MESSAGE_DELETE', () => {
-      const id4 = fixtures.message2.id;
-      dispatcher.dispatch({
-        type: ActionTypes.RECEIVE_MESSAGE_DELETE,
-        value: id4,
-      });
-      const messages = messageStore.getAll();
-      assert.isUndefined(messages.get(id4));
-    });
-    it('MAILBOX_EXPUNGE', () => {
-      const id1 = fixtures.message1.id;
-      const id2 = fixtures.message2.id;
-      const id3 = fixtures.message3.id;
-      const mailboxId = Object.keys(fixtures.message3.mailboxIDs)[0];
-      dispatcher.dispatch({
-        type: ActionTypes.MAILBOX_EXPUNGE,
-        value: mailboxId,
-      });
-      const messages = messageStore.getAll();
-      assert.isDefined(messages.get(id1));
-      assert.isUndefined(messages.get(id2));
-      assert.isUndefined(messages.get(id3));
-    });
-    it.skip('SEARCH_SUCCESS', () => {
-      // TODO: update this test when feature will be back
-      dispatcher.dispatch({
-        type: ActionTypes.SEARCH_SUCCESS,
-        value: { result: { rows: [
-          fixtures.message7, fixtures.message8, fixtures.message9,
-        ] } },
-      });
-      const messages = messageStore.getAll();
-      const id7 = fixtures.message7.id;
-      const id8 = fixtures.message8.id;
-      const id9 = fixtures.message9.id;
-      assert.deepEqual(messages.get(id7).toObject(), fixtures.message7);
-      assert.deepEqual(messages.get(id8).toObject(), fixtures.message8);
-      assert.deepEqual(messages.get(id9).toObject(), fixtures.message9);
-    });
-    it('SETTINGS_UPDATE_REQUEST', () => {
-      const id1 = fixtures.message1.id;
-
-      // Message must exist into messageStore
-      assert.equal(messageStore.getByID(id1).get('id'), id1);
-      assert.isUndefined(messageStore.getByID(id1).get('_displayImages'));
-
-      // displayImage value has changed
-      dispatcher.dispatch({
-        type: ActionTypes.SETTINGS_UPDATE_REQUEST,
-        value: { messageID: id1, displayImages: true },
-      });
-      assert.isTrue(messageStore.getByID(id1).get('_displayImages'));
-
-      // displayImage value has changed
-      dispatcher.dispatch({
-        type: ActionTypes.SETTINGS_UPDATE_REQUEST,
-        value: { messageID: id1, displayImages: false },
-      });
-      assert.isFalse(messageStore.getByID(id1).get('_displayImages'));
-    });
-  });
-
-  describe('Methods', () => {
-
-    // Reinit a new MessageStore before each test
-    beforeEach(() => {
-      messageStore = require('../app/stores/message_store');
-      addMessages([fixtures.message10, fixtures.message11, fixtures.message12]);
-    });
-
-
-    it('getByID', () => {
-      const id10 = fixtures.message10.id;
-      assert.deepEqual(
-        messageStore.getByID(id10).toObject(),
-        fixtures.message10
-      );
-    });
-    it('getConversation', () => {
-      const id11 = fixtures.message11.id;
-      const mailbox11 = _.keys(fixtures.message11.mailboxIDs)[0];
-      const conversationId = fixtures.message11.conversationID;
-      const messages = messageStore.getConversation(conversationId, mailbox11);
-      if (messages[0].get('id') === id11) {
-        assert.deepEqual(messages[0].toObject(), fixtures.message11);
-        assert.deepEqual(messages[1].toObject(), fixtures.message12);
-      } else {
-        assert.deepEqual(messages[1].toObject(), fixtures.message11);
-        assert.deepEqual(messages[0].toObject(), fixtures.message12);
-      }
-
-      //  If conversation doesnt exist
-      // then return empty Array
-      const id5 = fixtures.message5.id;
-      const conversation5 = messageStore.getConversation(id5, 'inbox')
-      assert.deepEqual(messageStore.getConversation(id5, 'inbox'), []);
-    });
-    it('getConversationLength', () => {
-      const id1 = fixtures.message10.id;
-      const conversationId1 = fixtures.message10.conversationID;
-
-      // Message10 should exist into messageStore
-      assert.deepEqual(messageStore.getByID(id1).toObject(), fixtures.message10);
-
-      // Its length is 1
-      let length = messageStore.getConversationLength(conversationId1);
-      assert.equal(length, 1);
-
-      const id2 = fixtures.message11.id;
-      const conversationId2 = fixtures.message11.conversationID;
-
-      // Message11 should exist into messageStore
-      assert.deepEqual(messageStore.getByID(id2).toObject(), fixtures.message11);
-
-      // Its length is 2
-      length = messageStore.getConversationLength(conversationId2);
-      assert.equal(length, 2);
-
-      // Empty conversation should return length: null
-      length = messageStore.getConversationLength('c5');
-      assert.isNull(length);
-    });
+    const path = '../app/stores/message_store';
+    Dispatcher = new SpecDispatcher();
+    mockeryUtils.initDispatcher(Dispatcher);
+    mockeryUtils.initForStores([path]);
+    MessageStore = require(path);
   });
 
   after(() => {
     mockeryUtils.clean();
   });
+
+
+  /*
+   * Problems noticed in the store file:
+   * FIXME Action values are not normalized.
+   */
+
+
+   describe('Methods', () => {
+
+     beforeEach(() => {
+       const result = {messages, conversationLength}
+       Dispatcher.dispatch({
+         type: ActionTypes.MESSAGE_FETCH_SUCCESS,
+         value: {result},
+       });
+     });
+
+     afterEach(() => {
+       Dispatcher.dispatch({
+         type: ActionTypes.MESSAGE_RESET_REQUEST,
+       });
+     });
+
+
+     it('getByID', () => {
+       testValues(MessageStore.getByID(message.id));
+     });
+
+     it('getAll', () => {
+       messages.forEach((input) => {
+         testValues(MessageStore.getByID(input.id), input);
+       });
+     });
+
+     it('isImagesDisplayed', () => {
+       messages.forEach((input) => {
+         const msg = MessageStore.getByID(input.id);
+         testValues(MessageStore.getByID(input.id), input);
+       });
+     });
+
+     it('isUnread', () => {
+       let input = _.cloneDeep(messageUnread);
+       assert.isTrue(MessageStore.isUnread({message: input}));
+
+       input = _.cloneDeep(messageFlagged);
+       assert.isFalse(MessageStore.isUnread({message: input}));
+
+       input = _.cloneDeep(message);
+       assert.isFalse(MessageStore.isUnread({message: input}));
+     });
+
+     it('isFlagged', () => {
+       let input = _.cloneDeep(messageFlagged);
+       assert.isTrue(MessageStore.isFlagged({message: input}));
+
+       input = _.cloneDeep(messageAttached);
+       assert.isFalse(MessageStore.isFlagged({message: input}));
+
+       input = _.cloneDeep(message);
+       assert.isFalse(MessageStore.isFlagged({message: input}));
+     });
+
+     it('isAttached', () => {
+       let input = _.cloneDeep(messageAttached);
+       assert.isTrue(MessageStore.isAttached({message: input}));
+
+       input = _.cloneDeep(messageFlagged);
+       assert.isFalse(MessageStore.isAttached({message: input}));
+
+       input = _.cloneDeep(message);
+       assert.isFalse(MessageStore.isAttached({message: input}));
+     });
+
+     it('getConversation', () => {
+       account.mailboxes.forEach((mailbox) => {
+         const output = MessageStore.getConversation(conversationID, mailbox.id);
+         output.forEach((msg) => {
+           // All messages must have the same
+           // conversationID && mailboxID
+           assert.equal(msg.get('conversationID'), conversationID);
+           assert.notEqual(msg.get('mailboxIDs')[mailbox.id], undefined);
+         });
+
+         // All messages should belongs to inbox otherwise
+         // conversationLength must be smaller or equal
+         if (mailbox.id === account.inboxMailbox) {
+           assert.equal(output.length, conversationLength[conversationID]);
+         } else {
+           assert.isTrue(output.length <= conversationLength[conversationID]);
+         }
+       });
+     });
+
+     it('getConversationLength', () => {
+       testConversationLength(conversationID, account.inboxMailbox);
+     });
+   });
+
+
+  describe('Actions', () => {
+
+    beforeEach(() => {
+
+    });
+
+    afterEach(() => {
+      Dispatcher.dispatch({
+        type: ActionTypes.MESSAGE_RESET_REQUEST,
+      });
+    });
+
+
+    describe('Should ADD message(s)', () => {
+
+      it('MESSAGE_FETCH_SUCCESS', () => {
+        testMessagesAction('MESSAGE_FETCH_SUCCESS', {result: { messages }});
+      });
+
+      it('RECEIVE_RAW_MESSAGES', () => {
+        testMessagesAction('RECEIVE_RAW_MESSAGES', messages);
+      });
+
+      it('RECEIVE_RAW_MESSAGE', () => {
+        testMessageAction('RECEIVE_RAW_MESSAGE', message);
+      });
+
+      it('RECEIVE_RAW_MESSAGE_REALTIME', () => {
+        testMessageAction('RECEIVE_RAW_MESSAGE_REALTIME', message);
+      });
+
+      it('MESSAGE_SEND_SUCCESS', () => {
+        testMessageAction('MESSAGE_SEND_SUCCESS', {message});
+      });
+    });
+
+
+    describe('Should UPDATE message(s)', () => {
+
+      beforeEach(() => {
+        Dispatcher.dispatch({
+          type: ActionTypes.RECEIVE_RAW_MESSAGES,
+          value: messages,
+        });
+      });
+
+      afterEach(() => {
+        Dispatcher.dispatch({
+          type: ActionTypes.MESSAGE_RESET_REQUEST,
+        });
+      });
+
+
+      it('MESSAGE_FLAGS_SUCCESS', () => {
+        let message0 = _.cloneDeep(message);
+        let output = MessageStore.getByID(message0.id);
+        let defaultValue = message0.flags;
+        assert.deepEqual(output.get('flags'), message0.flags);
+
+        const timestamp = (new Date()).valueOf()
+
+        // Change values
+        Object.assign(message0, {
+          flags: [],
+          updated: timestamp
+        });
+
+        // Dispatch change
+        Dispatcher.dispatch({
+          type: ActionTypes.MESSAGE_FLAGS_SUCCESS,
+          value: { updated: { messages: [message0] } },
+        });
+
+        output = MessageStore.getByID(message0.id);
+        assert.deepEqual(output.get('flags'), message0.flags);
+
+        // Try to change with older data
+        defaultValue = message0.flags;
+        Object.assign(message0, {
+          flags: defaultValue,
+          updated: (new Date('2014-1-1')).valueOf(),
+        })
+        Dispatcher.dispatch({
+          type: ActionTypes.MESSAGE_FLAGS_SUCCESS,
+          value: { updated: { messages: [message0] } },
+        });
+        output = MessageStore.getByID(message0.id);
+        assert.deepEqual(output.get('flags'), []);
+      });
+
+      it('MESSAGE_MOVE_SUCCESS', () => {
+        let output = MessageStore.getByID(message.id);
+        let message0 = output.toJS();
+        let defaultValue = output.get('mailboxID');
+        const mailboxIDs = _.keys(output.get('mailboxIDs'));
+
+        function getMailboxID () {
+          return mailboxIDs.find((id) => id != defaultValue );
+        }
+
+        function updateMessage (value, date) {
+          message0.mailboxID = value;
+          message0.updated = (date).valueOf();
+          Dispatcher.dispatch({
+            type: ActionTypes.MESSAGE_MOVE_SUCCESS,
+            value: { updated: { messages: [message0] } },
+          });
+          output = MessageStore.getByID(message0.id);
+        }
+
+        // Change MailboxID
+        updateMessage(getMailboxID(), new Date());
+        defaultValue = output.get('mailboxID');
+        assert.equal(defaultValue, message0.mailboxID);
+
+        // Change mailboxID
+        // but set as older update
+        updateMessage(getMailboxID(), new Date('2013-1-1'));
+        assert.notEqual(output.get('mailboxID'), message0.mailboxID);
+        assert.equal(output.get('mailboxID'), defaultValue);
+
+        // Change mailboxID
+        // but with fake value
+        updateMessage(NaN, new Date());
+        assert.notEqual(output.get('mailboxID'), message0.mailboxID);
+        assert.equal(output.get('mailboxID'), defaultValue);
+
+        // Change mailboxID
+        // but with fake value
+        updateMessage(undefined, new Date());
+        assert.notEqual(output.get('mailboxID'), message0.mailboxID);
+        assert.equal(output.get('mailboxID'), defaultValue);
+
+        // Change mailboxID
+        // but with fake value
+        updateMessage('     ', new Date());
+        assert.notEqual(output.get('mailboxID'), message0.mailboxID);
+        assert.equal(output.get('mailboxID'), defaultValue);
+      });
+
+      // TODO: this feature is not fixed yet
+      // 1. fix the feature
+      // 2. add test
+      it.skip('SEARCH_SUCCESS', () => {
+        // ((message))
+      });
+
+      it('SETTINGS_UPDATE_REQUEST', () => {
+        let output = MessageStore.getByID(message.id);
+        assert.equal(output.get('_displayImages'), !!message._displayImages);
+
+        function testDisplayImage(value, result) {
+          Dispatcher.dispatch({
+            type: ActionTypes.SETTINGS_UPDATE_REQUEST,
+            value: { messageID: message.id, displayImages: value },
+          });
+          output = MessageStore.getByID(message.id);
+          assert.equal(output.get('_displayImages'), result);
+        }
+
+        testDisplayImage(true, true);
+        testDisplayImage('plop', true);
+        testDisplayImage('2', true);
+        testDisplayImage('0', true);
+
+        testDisplayImage(false, false);
+        testDisplayImage(0, false);
+        testDisplayImage(null, false);
+        testDisplayImage(undefined, false);
+        testDisplayImage(NaN, false);
+        testDisplayImage({}, false);
+        testDisplayImage([], false);
+      });
+    });
+
+
+    describe('Should REMOVE message(s)', () => {
+
+      beforeEach(() => {
+        Dispatcher.dispatch({
+          type: ActionTypes.RECEIVE_RAW_MESSAGES,
+          value: messages,
+        });
+      });
+
+      afterEach(() => {
+        Dispatcher.dispatch({
+          type: ActionTypes.MESSAGE_RESET_REQUEST,
+        });
+      });
+
+      it('MAILBOX_EXPUNGE', () => {
+        let mailboxID = getMailboxID();
+        let countAfter = MessageStore.getAll().filter((msg) => {
+          return msg.get('mailboxIDs')[mailboxID] === undefined
+        }).size
+
+        assert.isTrue(!!MessageStore.getByID(message.id));
+
+        Dispatcher.dispatch({
+          type: ActionTypes.MAILBOX_EXPUNGE,
+          value: mailboxID,
+        });
+        assert.isUndefined(MessageStore.getByID(message.id));
+        assert.equal(MessageStore.getAll().size, countAfter)
+
+        function getMailboxID(mailboxID) {
+          return _.keys(message.mailboxIDs).find((id) => id != mailboxID);
+        }
+      });
+
+      it('REMOVE_ACCOUNT_SUCCESS', () => {
+        const accountID = message.accountID;
+        let output = MessageStore.getByID(message.id);
+
+        let countAfter = MessageStore.getAll().filter((msg) => {
+          return msg.get('accountID') !== accountID
+        }).size
+        Dispatcher.dispatch({
+          type: ActionTypes.REMOVE_ACCOUNT_SUCCESS,
+          value: accountID,
+        });
+        output = MessageStore.getByID(message.id);
+        assert.isUndefined(output);
+        assert.equal(MessageStore.getAll().size, countAfter)
+      });
+
+      it('MESSAGE_TRASH_SUCCESS', () => {
+        assert.isTrue(!!MessageStore.getByID(message.id));
+
+        Dispatcher.dispatch({
+          type: ActionTypes.MESSAGE_TRASH_SUCCESS,
+          value: { target: { messageID: message.id } },
+        });
+
+        assert.isUndefined(MessageStore.getByID(message.id));
+      });
+
+      it('RECEIVE_MESSAGE_DELETE', () => {
+        assert.isTrue(!!MessageStore.getByID(message.id));
+
+        Dispatcher.dispatch({
+          type: ActionTypes.RECEIVE_MESSAGE_DELETE,
+          value: message.id,
+        });
+
+        assert.isUndefined(MessageStore.getByID(message.id));
+      });
+    });
+  });
+
 });

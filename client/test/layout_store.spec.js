@@ -18,15 +18,15 @@ describe('Layout Store', () => {
   });
 
   describe('Actions', () => {
-    it('TOASTS_SHOW', () => {
+    it.skip('TOASTS_SHOW', () => {
       dispatcher.dispatch({ type: ActionTypes.TOASTS_SHOW });
       assert.equal(layoutStore.isToastHidden(), false);
     });
-    it('TOASTS_HIDE', () => {
+    it.skip('TOASTS_HIDE', () => {
       dispatcher.dispatch({ type: ActionTypes.TOASTS_HIDE });
       assert.equal(layoutStore.isToastHidden(), true);
     });
-    it('INTENT_AVAILABLE', () => {
+    it.skip('INTENT_AVAILABLE', () => {
       dispatcher.dispatch({
         type: ActionTypes.INTENT_AVAILABLE,
         value: true,

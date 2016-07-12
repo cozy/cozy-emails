@@ -27,6 +27,7 @@ module.exports =
         'MAILBOX_CREATE_SUCCESS'    : 'MAILBOX_CREATE_SUCCESS'
         'MAILBOX_CREATE_FAILURE'    : 'MAILBOX_CREATE_FAILURE'
         'MAILBOX_UPDATE_REQUEST'    : 'MAILBOX_UPDATE_REQUEST'
+        'MAILBOX_UPDATE_SUCCESS'    : 'MAILBOX_UPDATE_SUCCESS'
         'MAILBOX_UPDATE_FAILURE'    : 'MAILBOX_UPDATE_FAILURE'
         'MAILBOX_DELETE_REQUEST'    : 'MAILBOX_DELETE_REQUEST'
         'MAILBOX_DELETE_SUCCESS'    : 'MAILBOX_DELETE_SUCCESS'
@@ -41,9 +42,11 @@ module.exports =
         # Message
         'RECEIVE_ACCOUNT_CREATE'        : 'RECEIVE_ACCOUNT_CREATE'
         'RECEIVE_ACCOUNT_UPDATE'        : 'RECEIVE_ACCOUNT_UPDATE'
+        'RESET_ACCOUNT_REQUEST'         : 'RESET_ACCOUNT_REQUEST'
         'RECEIVE_RAW_MESSAGE'           : 'RECEIVE_RAW_MESSAGE'
         'RECEIVE_RAW_MESSAGES'          : 'RECEIVE_RAW_MESSAGES'
         'RECEIVE_RAW_MESSAGE_REALTIME'  : 'RECEIVE_RAW_MESSAGE_REALTIME'
+        'MESSAGE_RESET_REQUEST'         : 'MESSAGE_RESET_REQUEST'
         'MESSAGE_SEND_REQUEST'          : 'MESSAGE_SEND_REQUEST'
         'MESSAGE_SEND_SUCCESS'          : 'MESSAGE_SEND_SUCCESS'
         'MESSAGE_SEND_FAILURE'          : 'MESSAGE_SEND_FAILURE'
@@ -185,15 +188,19 @@ module.exports =
         'TRASH'   :  '\\Trash'
         'ALL'     :  '\\All'
         'SPAM'    :  '\\Junk'
+        'JUNK'    :  '\\Junk'
+        'UNSEEN'  : 'Unseen'
         'FLAGGED' :  '\\Flagged'
 
     MailboxSpecial:
-        'inboxMailbox'  : 'INBOX'
-        'draftMailbox'  : 'DRAFT'
-        'sentMailbox'   : 'SENT'
-        'trashMailbox'  : 'TRASH'
-        'junkMailbox'   : 'SPAM'
-        'allMailbox'    : 'ALL'
+        'inboxMailbox'      : 'INBOX'
+        'unreadMailbox'     : 'DRAFT'
+        'flaggedMailbox'    : 'FLAGGED'
+        'draftMailbox'      : 'DRAFT'
+        'sentMailbox'       : 'SENT'
+        'trashMailbox'      : ['TRASH', 'DELETE']
+        'junkMailbox'       : ['SPAM', 'JUNK']
+        'allMailbox'        : 'ALL'
 
     # FIXME: should decide between:
     # FlagsConstants or MessageFlags

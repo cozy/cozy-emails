@@ -61,7 +61,7 @@ describe.skip('Contact Store', () => {
     const email2           = fixtures.contact2.datapoints[0].value;
     const email3           = fixtures.contact3.datapoints[1].value;
 
-    it('CREATE_CONTACT_SUCCESS', () => {
+    it.skip('CREATE_CONTACT_SUCCESS', () => {
       dispatcher.dispatch({
         type: ActionTypes.CREATE_CONTACT_SUCCESS,
         value: [fixtures.contact1, fixtures.contact2, fixtures.contact3],
@@ -77,7 +77,7 @@ describe.skip('Contact Store', () => {
       assert.sameDeepMembers(_email1b.get('datapoints'), email1datapoints);
     });
 
-    it('CONTACT_LOCAL_SEARCH', () => {
+    it.skip('CONTACT_LOCAL_SEARCH', () => {
       let results = search('test');
       assert.isDefined(results);
       assert.equal(results.size, 3);
@@ -98,7 +98,7 @@ describe.skip('Contact Store', () => {
   describe('Methods', () => {
     const id1 = fixtures.contact1.id;
     const email1a = fixtures.contact1.datapoints[0].value;
-    it('getByAddress', () => {
+    it.skip('getByAddress', () => {
       const _contact = contactStore.getByAddress(email1a).toObject();
       assert.equal(_contact.fn, fixtures.contact1.fn)
       assert.sameDeepMembers(_contact.datapoints, fixtures.contact1.datapoints);
@@ -106,12 +106,12 @@ describe.skip('Contact Store', () => {
 
       assert.isUndefined(contactStore.getByAddress('test@wrong.com'));
     });
-    it('getAvatar', () => {
+    it.skip('getAvatar', () => {
       assert.isUndefined(contactStore.getAvatar('test@wrong.com'));
       assert.equal(contactStore.getAvatar(email1a),
                    `contacts/${id1}/picture.jpg`);
     });
-    it('isExist', () => {
+    it.skip('isExist', () => {
       assert.isFalse(contactStore.isExist('test@wrong.com'));
       assert.isTrue(contactStore.isExist(email1a));
     });

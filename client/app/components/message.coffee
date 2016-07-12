@@ -61,6 +61,7 @@ module.exports = React.createClass
                     ref         : "message-#{@props.messageID}-toolbar"
                     key         : "message-#{@props.messageID}-toolbar"
                     isFull      : true
+                    accountID   : @props.accountID
                     messageID   : @props.messageID
 
             if @props.isActive

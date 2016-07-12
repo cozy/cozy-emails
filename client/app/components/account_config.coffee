@@ -39,15 +39,7 @@ module.exports = React.createClass
 
     getStateFromStores: ->
         nstate = {}
-
-        # dont overwrite editedAccount when stores state changed
-        # nstate.serverErrors      = RouterStore.getErrors()
         nstate.selectedAccount   = RouterStore.getAccount()
-        # nstate.isWaiting         = RouterStore.isWaiting()
-        # nstate.isChecking        = RouterStore.isChecking()
-
-        # unless (nstate.editedAccount = nstate.selectedAccount)
-        #     nstate.editedAccount = AccountStore.makeEmptyAccount()
 
         unless @state
             nstate.isWaiting = false

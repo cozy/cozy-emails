@@ -109,7 +109,7 @@ module.exports = Menu = React.createClass
         className = classNames active: props.isSelected
         div
             className: className
-            ref: "menuLink-account-#{accountID}"
+            ref: "menuLink-account"
             key: "menuLink-account-#{accountID}",
             div className: 'account-title',
                 a

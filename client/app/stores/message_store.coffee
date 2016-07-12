@@ -1,11 +1,17 @@
-_         = require 'underscore'
+_         = require 'lodash'
 Immutable = require 'immutable'
-
-AppDispatcher = require '../libs/flux/dispatcher/dispatcher'
 
 Store = require '../libs/flux/store/store'
 
 {ActionTypes, MessageFlags, MessageFilter} = require '../constants/app_constants'
+
+
+# FIXME: server side data
+#  - The fact that the conversation length is calculated remotely,
+#  is not clear for the developer.
+#
+#  - Most operations, like getting raw messages,
+#  don't update conversation length.
 
 class MessageStore extends Store
 
@@ -18,12 +24,12 @@ class MessageStore extends Store
     _conversationLength = Immutable.Map()
 
 
-    _updateMessages = (result={}, timestamp) ->
-        {messages, conversationLength} = result
+    _updateMessages = (result={}) ->
+        {messages, conversationLength} = _.cloneDeep result
 
         # This prevent to override local updates
         # with older ones from server
-        messages?.forEach (msg) -> _saveMessage msg, timestamp if msg
+        messages?.forEach (msg) -> _saveMessage msg if msg
 
         # Shortcut to know conversationLength
         # withount loading all massages of the conversation
@@ -32,40 +38,49 @@ class MessageStore extends Store
                 _updateConversationLength conversationID, length
 
 
-    _saveMessage = (message, timestamp) ->
-        # Save reference mailbox into message informations
-        mailboxIDs = _.keys(message.mailboxIDs).sort (value0, value1) ->
-            value0.localeCompare value1
-        message.mailboxID = mailboxIDs.shift()
+    _shouldUpdateMessage = (message) ->
+        value = (_messages.get message?.id)?.get 'updated'
+        (not value?) or (not message.updated?) or (value < message.updated)
 
-        updated = (_messages.get message.id)?.get 'updated'
-        isNewer = timestamp? and updated? and updated < timestamp
-        if (not updated? or isNewer) and not message._deleted
 
-            attachments = message.attachments or Immutable.List []
+    _saveMessage = (message) ->
+        message = _.cloneDeep message
+        oldMessage = _messages.get(message.id);
 
-            message.date          ?= new Date().toISOString()
-            message.createdAt     ?= message.date
-            message.flags         ?= []
-            message.hasAttachments = attachments.size > 0
-            message.attachments    = Immutable.List attachments.map (file) ->
+        if _shouldUpdateMessage message
+
+            updated = new Date()
+
+            # Save reference mailbox into message informations
+            if not _.isString(message.mailboxID) or _.isEmpty(message.mailboxID)
+                message.mailboxID   = oldMessage?.get('mailboxID')
+                message.mailboxID  ?= _.keys(message.mailboxIDs).shift()
+
+            message.date           ?= updated.toISOString()
+            message.createdAt      ?= message.date
+            message.flags          ?= []
+
+            message._displayImages  = !!message._displayImages
+
+            attachments             = message.attachments or []
+            message.attachments     = Immutable.List attachments.map (file) ->
                 Immutable.Map file
+
 
             # message loaded from fixtures for test purpose have a docType
             # that may cause some troubles
             delete message.docType
 
-            message.updated = Date.now()
+            message.updated = updated.valueOf()
             messageMap = Immutable.Map message
             messageMap.prettyPrint = ->
                 return """
                     #{message.id} "#{message.from[0].name}" "#{message.subject}"
                 """
-
             _messages = _messages.set message.id, messageMap
 
 
-    _deleteMessage = ({messageID}) ->
+    _deleteMessage = ({messageID}, timestamp) ->
         conversationID = _messages.get(messageID)?.get 'conversationID'
 
         _messages = _messages.remove messageID
@@ -93,8 +108,14 @@ class MessageStore extends Store
     ###
     __bindHandlers: (handle) ->
 
-        handle ActionTypes.MESSAGE_FETCH_SUCCESS, ({result, timestamp}) ->
-            _updateMessages result, timestamp
+
+        handle ActionTypes.MESSAGE_RESET_REQUEST, ->
+            _messages = Immutable.OrderedMap();
+            @emit 'change'
+
+
+        handle ActionTypes.MESSAGE_FETCH_SUCCESS, ({result}) ->
+            _updateMessages result
             @emit 'change'
 
 
@@ -125,8 +146,8 @@ class MessageStore extends Store
             @emit 'change'
 
 
-        handle ActionTypes.MESSAGE_FLAGS_SUCCESS, ({updated, timestamp}) ->
-            _updateMessages updated, timestamp
+        handle ActionTypes.MESSAGE_FLAGS_SUCCESS, ({updated}) ->
+            _updateMessages updated
             @emit 'change'
 
 
@@ -147,7 +168,9 @@ class MessageStore extends Store
 
         handle ActionTypes.MAILBOX_EXPUNGE, (mailboxID) ->
             _messages = _messages.filter (message) ->
-                not (mailboxID of message.get 'mailboxIDs')
+                isSameMailbox = mailboxID is message.get('mailboxID')
+                hasSameMailbox = mailboxID of message.get 'mailboxIDs'
+                not isSameMailbox or not hasSameMailbox
             .toOrderedMap()
             @emit 'change'
 
@@ -157,10 +180,14 @@ class MessageStore extends Store
             @emit 'change'
 
 
-        handle ActionTypes.SETTINGS_UPDATE_REQUEST, ({messageID, displayImages=true}) ->
+        handle ActionTypes.SETTINGS_UPDATE_REQUEST, ({messageID, displayImages}) ->
             # Update settings into component,
             # but not definitly into settingsStore
-            message = @getByID(messageID)?.set '_displayImages', displayImages
+            if not _.isBoolean(displayImages) and displayImages
+                value = displayImages and not _.isEmpty(displayImages)
+            else
+                value = !!displayImages
+            message = @getByID(messageID)?.set '_displayImages', value
             _messages = _messages.set messageID, message
             @emit 'change'
 
@@ -181,14 +208,18 @@ class MessageStore extends Store
 
 
     isUnread: ({flags=[], message}) ->
+        if message and message not instanceof Immutable.Map
+            message = Immutable.Map message
         if message?
             flags = message.get('flags') or []
-            return MessageFlags.SEEN not in flags
+            MessageFlags.SEEN not in flags
         else
-            return MessageFilter.UNSEEN in flags
+            MessageFilter.UNSEEN in flags
 
 
     isFlagged: ({flags=[], message}) ->
+        if message and message not instanceof Immutable.Map
+            message = Immutable.Map message
         if message?
             flags = message.get('flags') or []
             MessageFlags.FLAGGED in flags
@@ -197,9 +228,10 @@ class MessageStore extends Store
 
 
     isAttached: ({flags=[], message}) ->
+        if message and message not instanceof Immutable.Map
+            message = Immutable.Map message
         if message?
-            flags = message.get('flags') or []
-            MessageFlags.ATTACH in flags
+            !!message.get('attachments')?.length
         else
             MessageFilter.ATTACH in flags
 

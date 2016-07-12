@@ -103,6 +103,8 @@ class RouterStore extends Store
 
 
     getCurrentURL: (options={}) ->
+        return unless (action = @getAction() or options.action)
+
         params = _.extend {isServer: true}, options
         params.action ?= @getAction()
         params.mailboxID ?= @getMailboxID()
@@ -170,10 +172,10 @@ class RouterStore extends Store
         filter.type in ['from', 'dest']
 
 
-    _setCurrentAccount = (accountID, mailboxID, tab="account") ->
+    _setCurrentAccount = ({accountID, mailboxID, tab="account"}) ->
         _accountID = accountID
         _mailboxID = mailboxID
-        _tab = tab
+        _tab = if _action is AccountActions.EDIT then tab else null
 
 
     _getFlags = (message) ->
@@ -192,8 +194,6 @@ class RouterStore extends Store
     getAccountID: (mailboxID) ->
         if mailboxID
             return AccountStore.getByMailbox('mailboxID')?.get 'id'
-        unless _accountID
-            return AccountStore.getDefault()?.get 'id'
         else
             return _accountID
 
@@ -205,10 +205,7 @@ class RouterStore extends Store
             if _mailboxID in _.keys(mailboxIDs)
                 return _mailboxID
 
-        unless _mailboxID
-            return AccountStore.getDefault()?.get 'inboxMailbox'
-        else
-            return _mailboxID
+        return _mailboxID
 
 
     getMailbox: (accountID, mailboxID) ->
@@ -226,15 +223,27 @@ class RouterStore extends Store
         _tab
 
 
-    _setCurrentMessage = (conversationID=null, messageID=null) ->
+    _setCurrentMessage = ({conversationID, messageID}) ->
         # Return to message list
         # if no messages are found
-        if not messageID and _action is MessageActions.SHOW
-            _action = MessageActions.SHOW_ALL
+        if not messageID or not conversationID
+            conversationID = null
+            messageID = null
 
         _conversationID = conversationID
         _messageID = messageID
         _messagesLength = 0
+
+
+    _setCurrentAction = (payload={}) ->
+        {action, accountID, mailboxID, messageID, conversationID} = payload
+        if AccountStore.getAll()?.size
+            if mailboxID
+                if messageID and conversationID
+                    action = MessageActions.SHOW
+                else if accountID and action isnt AccountActions.EDIT
+                    action = MessageActions.SHOW_ALL
+        _action = action or AccountActions.CREATE
 
 
     getConversationID: (messageID) ->
@@ -335,8 +344,9 @@ class RouterStore extends Store
         accountID ?= @getAccountID()
         mailboxID ?= @getMailboxID()
 
-        inboxID = (inbox = AccountStore.getInbox accountID).get 'id'
-        inboxTotal = inbox.get 'nbTotal'
+        inbox = AccountStore.getInbox accountID
+        inboxID = (inbox = AccountStore.getInbox accountID)?.get 'id'
+        inboxTotal = inbox?.get 'nbTotal'
         isInbox = AccountStore.isInbox accountID, mailboxID
 
         {sort} = @getFilter()
@@ -355,7 +365,6 @@ class RouterStore extends Store
                     mailboxIDs[inboxID] = inboxTotal
                     message.set 'mailboxIDs', mailboxIDs
                     return true
-
             # Display only last Message of conversation
             path = [message.get('mailboxID'), message.get('conversationID')].join '/'
             conversations[path] = true unless (exist = conversations[path])
@@ -439,6 +448,10 @@ class RouterStore extends Store
         _URI
 
 
+    getMessagesPerPage: ->
+        MSGBYPAGE
+
+
     _updateURL = ->
         currentURL = _self.getCurrentURL isServer: false
         if location?.hash isnt currentURL
@@ -480,23 +493,19 @@ class RouterStore extends Store
 
             clearTimeout _timerRouteChange
 
-
             {accountID, mailboxID, tab} = payload
             {action, conversationID, messageID, filter} = payload
 
             # We cant display any informations
             # without accounts
-            if AccountStore.getAll()?.size
-                _action = action
-            else
-                _action = AccountActions.CREATE
+            _setCurrentAction payload
 
-            # From AccountStore
-            _setCurrentAccount accountID, mailboxID, tab
+            _setCurrentAccount payload
 
             # From MessageStore
             # Update currentMessageID
-            _setCurrentMessage conversationID, messageID
+            _setCurrentMessage payload
+
             # Handle all Selection
             # _resetSelection()
 
@@ -522,20 +531,30 @@ class RouterStore extends Store
             @emit 'change'
 
 
-        handle ActionTypes.REMOVE_ACCOUNT_SUCCESS, ->
-            _action = AccountActions.CREATE
-            _setCurrentAccount()
+        # Do not redirect to default account
+        # if silent is true
+        handle ActionTypes.REMOVE_ACCOUNT_SUCCESS, ({accountID, silent})  ->
+            accountID = @getAccountID()
+            mailboxID = @getAccount(accountID)?.get 'inboxMailbox'
+            _setCurrentAccount {accountID, mailboxID}
+
+            unless silent
+                action = AccountActions[if mailboxID then 'EDIT' else 'CREATE']
+                _setCurrentAction {action}
+
+            _updateURL()
+
             @emit 'change'
 
 
-        handle ActionTypes.ADD_ACCOUNT_SUCCESS, ({account}) ->
+        handle ActionTypes.ADD_ACCOUNT_SUCCESS, ({account, timeout}) ->
             _timerRouteChange = setTimeout =>
                 _action = MessageActions.SHOW_ALL
                 _setCurrentAccount account.id, account.inboxMailbox
                 _updateURL()
 
                 @emit 'change'
-            , 5000
+            , timeout or 5000
 
 
         handle ActionTypes.MESSAGE_FETCH_SUCCESS, ({result, conversationID, lastPage}) ->
@@ -549,7 +568,7 @@ class RouterStore extends Store
                 inner = _.find result.messages, (msg) -> msg.id is _messageID
                 unless inner
                     messageID = @getMessageID conversationID
-                    _setCurrentMessage conversationID, messageID
+                    _setCurrentMessage {conversationID, messageID}
                     _updateURL()
 
             @emit 'change'
@@ -586,7 +605,7 @@ class RouterStore extends Store
                 # Update currentMessage so that:
                 # - all counters should be updated
                 # - all messagesList should be updated too
-                _setCurrentMessage conversationID, messageID
+                _setCurrentMessage {conversationID, messageID}
                 _updateURL()
 
             @emit 'change'
@@ -610,7 +629,7 @@ class RouterStore extends Store
                 # Update currentMessage so that:
                 # - all counters should be updated
                 # - all messagesList should be updated too
-                _setCurrentMessage conversationID, messageID
+                _setCurrentMessage {conversationID, messageID}
                 _updateURL()
 
             @emit 'change'
