@@ -241,7 +241,7 @@ describe('Message Store', () => {
      });
    });
 
-   
+
   describe('Actions', () => {
 
     beforeEach(() => {
@@ -301,10 +301,12 @@ describe('Message Store', () => {
         let defaultValue = message0.flags;
         assert.deepEqual(output.get('flags'), message0.flags);
 
+        const timestamp = (new Date()).valueOf()
+
         // Change values
         Object.assign(message0, {
           flags: [],
-          updated: (new Date()).toISOString()
+          updated: timestamp
         });
 
         // Dispatch change
@@ -320,13 +322,14 @@ describe('Message Store', () => {
         defaultValue = message0.flags;
         Object.assign(message0, {
           flags: defaultValue,
-          updated: (new Date('2014-1-1')).toISOString(),
+          updated: (new Date('2014-1-1')).valueOf(),
         })
         Dispatcher.dispatch({
           type: ActionTypes.MESSAGE_FLAGS_SUCCESS,
           value: { updated: { messages: [message0] } },
         });
         output = MessageStore.getByID(message0.id);
+        assert.deepEqual(output.get('flags'), []);
       });
 
       it('MESSAGE_MOVE_SUCCESS', () => {
@@ -341,7 +344,7 @@ describe('Message Store', () => {
 
         function updateMessage (value, date) {
           message0.mailboxID = value;
-          message0.updated = (date).toISOString();
+          message0.updated = (date).valueOf();
           Dispatcher.dispatch({
             type: ActionTypes.MESSAGE_MOVE_SUCCESS,
             value: { updated: { messages: [message0] } },

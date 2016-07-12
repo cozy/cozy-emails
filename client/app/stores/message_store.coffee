@@ -49,12 +49,14 @@ class MessageStore extends Store
 
         if _shouldUpdateMessage message
 
+            updated = new Date()
+
             # Save reference mailbox into message informations
             if not _.isString(message.mailboxID) or _.isEmpty(message.mailboxID)
                 message.mailboxID   = oldMessage?.get('mailboxID')
                 message.mailboxID  ?= _.keys(message.mailboxIDs).shift()
 
-            message.date           ?= new Date().toISOString()
+            message.date           ?= updated.toISOString()
             message.createdAt      ?= message.date
             message.flags          ?= []
 
@@ -69,7 +71,7 @@ class MessageStore extends Store
             # that may cause some troubles
             delete message.docType
 
-            message.updated = (new Date()).toISOString()
+            message.updated = updated.valueOf()
             messageMap = Immutable.Map message
             messageMap.prettyPrint = ->
                 return """
