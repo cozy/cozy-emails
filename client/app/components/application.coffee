@@ -128,6 +128,7 @@ module.exports = React.createClass
                             Conversation
                                 ref                     : "conversation"
                                 key                     : "conversation-#{@state.messageID}"
+                                accountID               : @state.accountID
                                 messageID               : @state.messageID
                                 conversationID          : @state.conversationID
                                 subject                 : @state.subject

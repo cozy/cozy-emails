@@ -11,7 +11,6 @@ throttle = new Throttle
     concurrent: 5
 
 
-
 discovery2Fields = (provider) ->
     infos = {}
 
@@ -133,6 +132,7 @@ module.exports =
             _cb = handleResponse callback, 'fetchConversation', {messageID, conversationID}
             _cb err, res
 
+
     fetchMessagesByFolder: (url, callback) ->
         request
         .get url
@@ -140,12 +140,14 @@ module.exports =
         .use throttle.plugin
         .end handleResponse callback, "fetchMessagesByFolder", url
 
+
     mailboxCreate: (mailbox, callback) ->
         request
         .post "mailbox"
         .send mailbox
         .set 'Accept', 'application/json'
         .end handleResponse callback, "mailboxCreate", mailbox
+
 
     mailboxUpdate: (data, callback) ->
         request
@@ -155,11 +157,13 @@ module.exports =
         .use throttle.plugin
         .end handleResponse callback, "mailboxUpdate", data
 
+
     mailboxDelete: (data, callback) ->
         request
         .del "mailbox/#{data.mailboxID}"
         .set 'Accept', 'application/json'
         .end handleResponse callback, "mailboxDelete", data
+
 
     mailboxExpunge: (data, callback) ->
         request
@@ -168,16 +172,18 @@ module.exports =
         .use throttle.plugin
         .end handleResponse callback, "mailboxExpunge", data
 
+
     messageSend: (message, callback) ->
         req = request
         .post "message"
         .set 'Accept', 'application/json'
 
         files = {}
-        message.attachments = message.attachments.map (file) ->
-            files[file.get('generatedFileName')] = file.get 'rawFileObject'
-            return file.remove 'rawFileObject'
-        .toJS()
+        if message.attachements?.map?
+            message.attachments = message.attachments.map (file) ->
+                files[file.get('generatedFileName')] = file.get 'rawFileObject'
+                return file.remove 'rawFileObject'
+            .toJS()
 
         req.field 'body', JSON.stringify message
         for name, blob of files
@@ -195,6 +201,7 @@ module.exports =
         .send target
         .use throttle.plugin
         .end handleResponse callback, "batchFetch"
+
 
     batchFlag: ({target, action}, callback) ->
         switch action
@@ -221,6 +228,7 @@ module.exports =
         .use throttle.plugin
         .end handleResponse callback, operation
 
+
     batchDelete: (target, callback) ->
         body = _.extend {}, target
 
@@ -229,6 +237,7 @@ module.exports =
         .send body
         .use throttle.plugin
         .end handleResponse callback, "batchDelete"
+
 
     batchMove: (target, from, to, callback) ->
         body = _.extend {from, to}, target
@@ -247,8 +256,8 @@ module.exports =
         .set 'Accept', 'application/json'
         .end handleResponse callback, "createAccount", account
 
-    editAccount: (account, callback) ->
 
+    editAccount: (account, callback) ->
         # TODO: validation & sanitization
         rawAccount = account.toJS()
 
@@ -258,6 +267,7 @@ module.exports =
         .set 'Accept', 'application/json'
         .end handleResponse callback, "editAccount", account
 
+
     checkAccount: (account, callback) ->
         request
         .put "accountUtil/check"
@@ -265,12 +275,13 @@ module.exports =
         .set 'Accept', 'application/json'
         .end handleResponse callback, "checkAccount"
 
-    removeAccount: (accountID, callback) ->
 
+    removeAccount: (accountID, callback) ->
         request
         .del "account/#{accountID}"
         .set 'Accept', 'application/json'
         .end handleResponse callback, "removeAccount"
+
 
     accountDiscover: (domain, callback) ->
         _callback = (error, provider) =>

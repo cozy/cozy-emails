@@ -13,4 +13,5 @@ module.exports = React.createClass
             ToolboxActions
                 key             : 'ToolboxActions-' + @props.conversationID
                 direction       : 'right'
+                accountID       : @props.accountID
                 conversationID  : @props.conversationID

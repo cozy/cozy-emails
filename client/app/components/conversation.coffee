@@ -89,6 +89,7 @@ module.exports = React.createClass
                         Message _.extend RouterGetter.formatMessage(message),
                             ref             : "message-#{messageID}"
                             key             : "message-#{messageID}"
+                            accountID       : @props.accountID
                             messageID       : @props.messageID
                             isActive        : @props.messageID is messageID
                             isTrashbox      : RouterGetter.isTrashbox()

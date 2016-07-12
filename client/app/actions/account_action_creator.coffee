@@ -123,6 +123,8 @@ module.exports = AccountActionCreator =
                     type: ActionTypes.DISCOVER_ACCOUNT_SUCCESS
                     value: {domain, provider}
 
+    # FIXME: move this elsewhere
+    # Action is not a getter/setter!
     saveEditTab: (tab) ->
         AppDispatcher.dispatch
             type: ActionTypes.EDIT_ACCOUNT_TAB
