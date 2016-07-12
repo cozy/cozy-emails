@@ -110,7 +110,7 @@ module.exports = AccountWizardCreation = React.createClass
                                      type="button"
                                      onClick={@close}>
                                 {t('app cancel')}
-                            </button> if @props.hasDefaultAccount and not @state.success}
+                            </button> if @props.hasAccount and not @state.success}
                             {<button type="submit"
                                      form="account-wizard-creation"
                                      aria-busy={@state.isBusy}
@@ -154,7 +154,7 @@ module.exports = AccountWizardCreation = React.createClass
     # aforementioned element and if there's already one account available
     # (otherwise this setting step is mandatory).
     close: (event) ->
-        isDisabled    = not @props.hasDefaultAccount
+        isDisabled    = not @props.hasAccount
         isContainer   = event.target is ReactDOM.findDOMNode @
         isCloseButton = event.target.name is 'cancel'
         return if isDisabled or not(isContainer or isCloseButton)

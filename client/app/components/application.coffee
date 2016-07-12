@@ -143,7 +143,7 @@ module.exports = React.createClass
             if @state.action is AccountActions.CREATE
                 AccountWizardCreation
                     key: 'modal-account-wizard'
-                    hasDefaultAccount: RouterGetter.getAccountID()?
+                    hasAccount: !!RouterGetter.getAccounts().size
 
 
             # Display feedback
