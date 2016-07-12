@@ -142,8 +142,7 @@ class AccountStore extends Store
     # Creates an OrderedMap of accounts
     # this map will contains the base information for an account
     _initialize = ->
-        _accounts = _.cloneDeep(window?.accounts) or []
-        _accounts = Immutable.Iterable _accounts
+        _accounts = Immutable.Iterable _.cloneDeep(window?.accounts) or []
             .toKeyedSeq()
             # sets account ID as index
             .mapKeys (_, account) -> account.id
