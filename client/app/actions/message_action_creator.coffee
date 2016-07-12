@@ -109,7 +109,7 @@ MessageActionCreator =
             if error
                 AppDispatcher.dispatch
                     type: ActionTypes.MESSAGE_TRASH_FAILURE
-                    value: {target, error, updated}
+                    value: {target, error}
             else
                 message.updated = timestamp for message in updated
                 AppDispatcher.dispatch
