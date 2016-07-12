@@ -373,8 +373,6 @@ class RouterStore extends Store
             # Message should be in mailbox
             inMailbox = mailboxID of message.get 'mailboxIDs'
 
-            # console.log 'PLOP', message.get 'mailboxIDs'
-
             return inMailbox and not exist and hasSameFlag
         .sort _sortByDate sortOrder
         .toOrderedMap()
