@@ -493,14 +493,15 @@ class RouterStore extends Store
 
             clearTimeout _timerRouteChange
 
-            {accountID, mailboxID, tab} = payload
-            {action, conversationID, messageID, filter} = payload
+            {accountID, mailboxID, conversationID, messageID} = payload
+            {action, tab, filter} = payload
 
             # We cant display any informations
             # without accounts
             _setCurrentAction payload
 
-            _setCurrentAccount payload
+            accountID ?= AccountStore.getByMailbox(mailboxID).get 'id'
+            _setCurrentAccount {accountID, mailboxID, tab}
 
             # From MessageStore
             # Update currentMessageID

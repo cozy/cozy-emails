@@ -52,9 +52,9 @@ RouterActionCreator =
 
 
     getCurrentPage: (params={}) ->
-        {url, action, mailboxID, accountID, filter} = params
+        {url, action, mailboxID, filter} = params
 
-        url ?= RouterStore.getCurrentURL {action, accountID, mailboxID, filter}
+        url ?= RouterStore.getCurrentURL {action, mailboxID, filter}
 
         _currentRequest = url
 
