@@ -89,7 +89,7 @@ module.exports.createAttached = function AttachedMessage(data) {
 function createMailboxIDs (account) {
   const max = Math.round(Math.random() * account.mailboxes.length);
   const min = Math.round(Math.random() * max);
-  const mailboxes = account.mailboxes.slice(min, max);
+  const mailboxes = account.mailboxes.slice(min, max + 1);
 
   // Create MailboxIDs
   const mailboxIDs = _.transform(mailboxes, (result, mailbox) => {
@@ -102,6 +102,15 @@ function createMailboxIDs (account) {
       return account.inboxMailbox === mailbox.id;
     });
     mailboxIDs[inbox.id] = inbox.nbTotal;
+  }
+
+  // MailboxID must contain more than 1 value
+  // becauseof tests cases
+  if (1 >= mailboxIDs.length) {
+    const unreadMailbox = account.mailboxes.find((mailbox) => {
+      return account.sentMailbox === mailbox.id;
+    });
+    mailboxIDs[unreadMailbox.id] = unreadMailbox.nbSent;
   }
 
   return mailboxIDs;
