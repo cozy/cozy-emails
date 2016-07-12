@@ -168,9 +168,9 @@ class MessageStore extends Store
 
         handle ActionTypes.MAILBOX_EXPUNGE, (mailboxID) ->
             _messages = _messages.filter (message) ->
-                test0 = mailboxID isnt message.get('mailboxID')
-                test1 = not (mailboxID of message.get 'mailboxIDs')
-                test0 or test1
+                isSameMailbox = mailboxID is message.get('mailboxID')
+                hasSameMailbox = mailboxID of message.get 'mailboxIDs'
+                not isSameMailbox or not hasSameMailbox
             .toOrderedMap()
             @emit 'change'
 
