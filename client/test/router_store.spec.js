@@ -97,8 +97,8 @@ describe('Router Store', () => {
       // - lorsque l'on va créer un compte
       // -> il ne devrait pas y avoir de valeur (undefined)
       it.skip('Select Mailbox', () => {
-        const accountID = account[0]id;
-        const mailboxID = account[0]inboxMailbox;
+        const accountID = account[0].id;
+        const mailboxID = account[0].inboxMailbox;
 
         dispatcher.dispatch({
           type: ActionTypes.ROUTE_CHANGE,
@@ -114,8 +114,8 @@ describe('Router Store', () => {
 
 
       it.skip('Select Tab from AccountEdit page', () => {
-        const accountID = account[0]id;
-        const mailboxID = account[0]inboxMailbox;
+        const accountID = account[0].id;
+        const mailboxID = account[0].inboxMailbox;
         const accountAction = AccountActions.EDIT;
         const messageAction = MessageActions.SHOW;
 
@@ -123,8 +123,8 @@ describe('Router Store', () => {
         dispatcher.dispatch({
           type: ActionTypes.ROUTE_CHANGE,
           value: {
-            accountID: account[0]id,
-            mailboxID: account[0]inboxMailbox,
+            accountID: account[0].id,
+            mailboxID: account[0].inboxMailbox,
           }
         });
         assert.isNull(RouterStore.getSelectedTab());
@@ -132,8 +132,8 @@ describe('Router Store', () => {
         dispatcher.dispatch({
           type: ActionTypes.ROUTE_CHANGE,
           value: {
-            accountID: account[0]id,
-            mailboxID: account[0]inboxMailbox,
+            accountID: account[0].id,
+            mailboxID: account[0].inboxMailbox,
             action: messageAction,
           }
         });
@@ -143,8 +143,8 @@ describe('Router Store', () => {
         dispatcher.dispatch({
           type: ActionTypes.ROUTE_CHANGE,
           value: {
-            accountID: account[0]id,
-            mailboxID: account[0]inboxMailbox,
+            accountID: account[0].id,
+            mailboxID: account[0].inboxMailbox,
             action: accountAction,
           }
         });
@@ -154,8 +154,8 @@ describe('Router Store', () => {
         dispatcher.dispatch({
           type: ActionTypes.ROUTE_CHANGE,
           value: {
-            accountID: account[0]id,
-            mailboxID: account[0]inboxMailbox,
+            accountID: account[0].id,
+            mailboxID: account[0].inboxMailbox,
             action: accountAction,
             tab: 'selected'
           }
@@ -183,10 +183,10 @@ describe('Router Store', () => {
         // const draftMessage = MessageFixture.createDraft();
         // const attachedMessage = MessageFixture.createAttached();
 
-        const messageID = fixtures.message1.id;
-        const conversationID = fixtures.message1.conversationID;
-        const accountID = fixtures.message1.accountID;
-        const mailboxID = _.keys(fixtures.message1.mailboxIDs)[0];
+        const messageID = message.id;
+        const conversationID = message.conversationID;
+        const accountID = message.accountID;
+        const mailboxID = _.keys(message.mailboxIDs)[0];
         const action = MessageActions.SHOW;
 
 
@@ -229,62 +229,25 @@ describe('Router Store', () => {
         assert.equal(RouterStore.getAction(), MessageActions.SHOW_ALL);
       });
 
-      it.skip('isUnread', () => {
-        // TODO: tester le FLAGS_REQUEST, FLAGS_SUCCESS, FLAGS_FAILURE ici
-        assert.isFalse(RouterStore.isUnread(map(fixtures.message1)));
-        assert.isTrue(RouterStore.isUnread(map(fixtures.message3)));
-      });
-
-      it.skip('isFlagged', () => {
-        assert.isFalse(RouterStore.isFlagged(map(fixtures.message1)));
-        assert.isTrue(RouterStore.isFlagged(map(fixtures.message3)));
-      });
-
-      it.skip('isAttached', () => {
-        assert.isFalse(
-          RouterStore.isAttached(map(fixtures.message1)));
-        assert.isTrue(
-          RouterStore.isAttached(map(fixtures.message3)));
-      });
-
-      it.skip('isDeleted', () => {
-        // TODO: test here result after the events:
-        // - MESSAGE_TRASH_REQUEST,
-        // - MESSAGE_TRASH_SUCCESS,
-        // - MESSAGE_TRASH_FAILURE
-        // - RECEIVE_MESSAGE_DELETE
-        assert.isFalse(
-          RouterStore.isDeleted(map(fixtures.message1)));
-        assert.isTrue(
-          RouterStore.isDeleted(map(fixtures.message3)));
-      });
-
-      it.skip('isDraft', () => {
-        assert.isFalse(
-          RouterStore.isDraft(map(fixtures.message1)));
-        assert.isTrue(
-          RouterStore.isDraft(map(fixtures.message4)));
-      });
-
       it.skip('getInboxTotal', () => {
-        const total = account[0]mailboxes[0].nbTotal
+        const total = account[0].mailboxes[0].nbTotal
         dispatcher.dispatch({
           type: ActionTypes.ROUTE_CHANGE,
           value: {
-            accountID: account[0]id,
-            mailboxID: account[0]inboxMailbox,
+            accountID: account[0].id,
+            mailboxID: account[0].inboxMailbox,
           }
         });
         assert.equal(RouterStore.getMailboxTotal(), total);
       });
 
       it.skip('getFlagboxTotal', () => {
-        const total = account[0]mailboxes[0].nbFlagged
+        const total = account[0].mailboxes[0].nbFlagged
         dispatcher.dispatch({
           type: ActionTypes.ROUTE_CHANGE,
           value: {
-            accountID: account[0]id,
-            mailboxID: account[0]inboxMailbox,
+            accountID: account[0].id,
+            mailboxID: account[0].inboxMailbox,
             query: {flags: MessageFilter.FLAGGED},
           }
         });
@@ -292,12 +255,12 @@ describe('Router Store', () => {
       });
 
       it.skip('getUnreadTotal', () => {
-        const total = account[0]mailboxes[0].nbUnread
+        const total = account[0].mailboxes[0].nbUnread
         dispatcher.dispatch({
           type: ActionTypes.ROUTE_CHANGE,
           value: {
-            accountID: account[0]id,
-            mailboxID: account[0]inboxMailbox,
+            accountID: account[0].id,
+            mailboxID: account[0].inboxMailbox,
             query: {flags: MessageFilter.UNSEEN},
           }
         });
@@ -316,28 +279,30 @@ describe('Router Store', () => {
 
       before(() => {
 
-        // Create fake Messages
-        // no need of mailboxIDs or flags properties
-        const perPage = RouterStore.getMessagesPerPage();
-        const pageLength = 3.5;
-        const messagesLength = perPage * pageLength
-
-        const keys = _.keys(fixtures.message1);
-        const values = _.values(fixtures.message1);
-        const accountID = RouterStore.getAccountID()
-
-        for (let i = 0; i < messagesLength; i++) {
-          let message = {};
-          for (let ii = 0; ii < keys.length; ii++) {
-
-            //  TODO: ajouter une valeur pour mailboxID
-            //  sinon erreur dans getMessagesList
-            if ('mailboxIDs' == keys[ii] || 'flags' == keys[ii]) continue;
-            if ('accountID' == keys[ii]) message[keys[ii]] = accountID;
-            else message[keys[ii]] = `${values[ii]}-${i}`;
-          }
-          if (!_.isEmpty(message)) messages.push(message);
-        }
+        // // Create fake Messages
+        // // no need of mailboxIDs or flags properties
+        // const perPage = RouterStore.getMessagesPerPage();
+        // const pageLength = 3.5;
+        // const messagesLength = perPage * pageLength
+        //
+        //
+        // const message = MessageFixture.createMessage();
+        // const keys = _.keys(message);
+        // const values = _.values(message);
+        // const accountID = message.accountID
+        //
+        // for (let i = 0; i < messagesLength; i++) {
+        //   let message = {};
+        //   for (let ii = 0; ii < keys.length; ii++) {
+        //
+        //     //  TODO: ajouter une valeur pour mailboxID
+        //     //  sinon erreur dans getMessagesList
+        //     if ('mailboxIDs' == keys[ii] || 'flags' == keys[ii]) continue;
+        //     if ('accountID' == keys[ii]) message[keys[ii]] = accountID;
+        //     else message[keys[ii]] = `${values[ii]}-${i}`;
+        //   }
+        //   if (!_.isEmpty(message)) messages.push(message);
+        // }
       });
 
       // TODO: test getURL
@@ -352,8 +317,8 @@ describe('Router Store', () => {
         dispatcher.dispatch({
           type: ActionTypes.ROUTE_CHANGE,
           value: {
-            accountID: account[0]id,
-            mailboxID: account[0]inboxMailbox,
+            accountID: account[0].id,
+            mailboxID: account[0].inboxMailbox,
           },
         });
 
@@ -365,7 +330,7 @@ describe('Router Store', () => {
         });
         assert.equal(RouterStore.getLastPage(), lastPage);
         assert.equal(RouterStore.hasNextPage(), true);
-        assert.equal(RouterStore.getURI(), account[0]inboxMailbox);
+        assert.equal(RouterStore.getURI(), account[0].inboxMailbox);
 
         // Fetch 2nd page of messages
         lastPage = { start: start[1], isComplete: true };
