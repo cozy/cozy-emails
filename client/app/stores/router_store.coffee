@@ -198,6 +198,10 @@ class RouterStore extends Store
             return _accountID
 
 
+    getDefaultAccount: () ->
+        AccountStore.getAll().first()
+
+
     getMailboxID: (messageID) ->
         if messageID
             # Get mailboxID from message first
@@ -500,6 +504,7 @@ class RouterStore extends Store
             # without accounts
             _setCurrentAction payload
 
+            mailboxID ?= AccountStore.getDefault().get 'inboxMailbox'
             accountID ?= AccountStore.getByMailbox(mailboxID).get 'id'
             _setCurrentAccount {accountID, mailboxID, tab}
 
@@ -551,7 +556,9 @@ class RouterStore extends Store
         handle ActionTypes.ADD_ACCOUNT_SUCCESS, ({account, timeout}) ->
             _timerRouteChange = setTimeout =>
                 _action = MessageActions.SHOW_ALL
-                _setCurrentAccount account.id, account.inboxMailbox
+                _setCurrentAccount
+                    accountID: account.id
+                    mailboxID: account.inboxMailbox
                 _updateURL()
 
                 @emit 'change'
