@@ -57,7 +57,7 @@ SpecsUseragent.prototype.post = function postRequest(type) {
 
 
 SpecsUseragent.prototype.del = function delRequest() {
-  console.log('DELETE', arguments);
+  return this;
 };
 
 
