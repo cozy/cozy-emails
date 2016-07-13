@@ -89,39 +89,49 @@ describe('MessagesActionCreator', () => {
     });
 
 
-    it.skip('send', () => {
+    describe('send', () => {
+      let spySend;
+      let callback;
       let action = 'mon action';
       let message = { conversationID: 'plop', text: 'coucou' };
-      let result = {
-        type: ActionTypes.MESSAGE_SEND_SUCCESS,
-        value: {
-          action,
-          message: {
-            conversationID: 'plop',
-            text: 'coucou',
-            html: 'coucou'
-          }
+
+      beforeEach(() => {
+        if (spySend === undefined) {
+          spySend = sinon.spy(XHRUtils, 'messageSend');
         }
-      };
-
-      let spySend = sinon.spy(XHRUtils, 'messageSend');
-      MessageActionCreator.send(action, message);
-
-      assert.equal(spySend.callCount, 1);
-
-      // Dis is supposed to be called twice
-      // 1rst one for REQUEST
-      // Last one for SUCCESS
-      assert.equal(spyDispatcher.callCount, 2);
-
-      let args = Dispatcher.dispatch.getCall(1).args[0];
-      assert.equal(args.type, result.type);
-      assert.equal(args.value.action, result.value.action);
-      _.each(JSON.parse(args.value.message), (value, key) => {
-        assert.equal(value, result.value.message[key]);
       });
 
-      spySend.reset();
+      afterEach(() => {
+        spySend.reset();
+      });
+
+      it.skip('should MESSAGE_SEND_SUCCESS dispatched', () => {
+        const type = ActionTypes.MESSAGE_SEND_SUCCESS;
+        const message = {
+          conversationID: 'plop',
+          text: 'coucou',
+          html: 'coucou'
+        };
+
+        MessageActionCreator.send(action, message);
+
+        assert.equal(spySend.callCount, 1);
+
+        callback = spySend.getCall(0).args[1];
+        assert.equal(typeof callback, 'function');
+
+        // Dis is supposed to be called twice
+        // 1rst one for REQUEST
+        // Last one for SUCCESS
+        assert.equal(spyDispatcher.callCount, 2);
+
+        let args = spyDispatcher.getCall(1).args[0];
+        assert.equal(args.type, type);
+        assert.equal(args.value.action, action);
+        _.each(JSON.parse(args.value.message), (value, key) => {
+          assert.equal(value, message[key]);
+        });
+      });
     });
 
 
@@ -153,7 +163,7 @@ describe('MessagesActionCreator', () => {
       });
 
 
-      it('should nothing happened', () => {
+      it('should nothing dispatched', () => {
           MessageActionCreator.deleteMessage({});
           assert.equal(spyDispatcher.callCount, 0);
 
@@ -170,7 +180,7 @@ describe('MessagesActionCreator', () => {
           assert.equal(spyDispatcher.callCount, 0);
       });
 
-      it('should dispatch SUCCESS when response', () => {
+      it('should MESSAGE_TRASH_SUCCESS dispatched', () => {
         MessageActionCreator.deleteMessage(target);
 
         // Check REQUEST call
@@ -194,7 +204,7 @@ describe('MessagesActionCreator', () => {
 
       });
 
-      it('should dispatch FAILURE when error', () => {
+      it('should MESSAGE_TRASH_FAILURE dispatched', () => {
         const error = 'PLOP';
         callback(error);
 
