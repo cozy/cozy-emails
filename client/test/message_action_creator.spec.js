@@ -95,6 +95,7 @@ describe('MessagesActionCreator', () => {
       let action = 'mon action';
       const message = { conversationID: 'plop', text: 'coucou' };
 
+      let message = { conversationID: 'plop', text: 'coucou' };
 
       beforeEach(() => {
         if (spySend === undefined) {
