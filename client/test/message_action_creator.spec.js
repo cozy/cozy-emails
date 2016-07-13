@@ -93,7 +93,8 @@ describe('MessagesActionCreator', () => {
       let spySend;
       let callback;
       let action = 'mon action';
-      let message = { conversationID: 'plop', text: 'coucou' };
+      const message = { conversationID: 'plop', text: 'coucou' };
+
 
       beforeEach(() => {
         if (spySend === undefined) {
@@ -105,13 +106,9 @@ describe('MessagesActionCreator', () => {
         spySend.reset();
       });
 
-      it.skip('should MESSAGE_SEND_SUCCESS dispatched', () => {
+
+      it('should MESSAGE_SEND_SUCCESS dispatched', () => {
         const type = ActionTypes.MESSAGE_SEND_SUCCESS;
-        const message = {
-          conversationID: 'plop',
-          text: 'coucou',
-          html: 'coucou'
-        };
 
         MessageActionCreator.send(action, message);
 
@@ -127,11 +124,25 @@ describe('MessagesActionCreator', () => {
 
         let args = spyDispatcher.getCall(1).args[0];
         assert.equal(args.type, type);
+
+        let res = { conversationID: 'plop', text: 'coucou', html: 'coucou'};
         assert.equal(args.value.action, action);
         _.each(JSON.parse(args.value.message), (value, key) => {
-          assert.equal(value, message[key]);
+          assert.equal(value, res[key]);
         });
       });
+
+
+      it('should MESSAGE_SEND_FAILURE dispatched', () => {
+        const error = 'PLOP';
+        callback(error);
+
+        assert.equal(spyDispatcher.callCount, 1);
+        assert.isTrue(spyDispatcher.getCall(0).calledWith({
+          type: ActionTypes.MESSAGE_SEND_FAILURE,
+          value: { error, action, message: undefined }
+        }));
+      })
     });
 
 
@@ -213,7 +224,6 @@ describe('MessagesActionCreator', () => {
           type: ActionTypes.MESSAGE_TRASH_FAILURE,
           value: { target, updated: [], error }
         }));
-
       });
     });
 
