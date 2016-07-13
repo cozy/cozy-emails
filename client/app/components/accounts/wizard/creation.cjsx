@@ -19,6 +19,10 @@ RouterActionCreator = require '../../../actions/router_action_creator'
 StoreWatchMixin = require '../../../mixins/store_watch_mixin'
 
 
+# Top var for redirect timeout
+redirectTimer = undefined
+
+
 module.exports = AccountWizardCreation = React.createClass
 
     displayName: 'AccountWizardCreation'
@@ -51,6 +55,12 @@ module.exports = AccountWizardCreation = React.createClass
         nextState.enableSubmit = not nextState.isBusy and
             not _.isEmpty(nextState.login) and
             not _.isEmpty(nextState.password)
+
+        # Enable auto-redirect only on update after an ADD_ACCOUNT_SUCCESS
+        redirectTimer = setTimeout ->
+            if RequestsGetter.getAccountCreationSuccess()
+                RouterActionCreator.closeModal nextState.mailboxID
+        , 5000 if nextState.mailboxID
 
 
     componentDidMount: ->
@@ -163,6 +173,9 @@ module.exports = AccountWizardCreation = React.createClass
 
         event.stopPropagation()
         event.preventDefault()
+
+        # Disable auto-redirect
+        clearTimeout redirectTimer
 
         # Redirect to mailboxID if available, will automatically fallback to
         # current mailbox if no mailboxID is given (cancel case)

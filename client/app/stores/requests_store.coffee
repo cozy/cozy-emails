@@ -89,7 +89,7 @@ class RequestsStore extends Store
         # Assume that when a route 'change',
         # we won't need to keep track of
         # requests anymore, so we reset them
-        handle ActionTypes.CLOSE_MODAL, ->
+        handle ActionTypes.ROUTE_CHANGE, ->
             _requests = _setRequests()
             @emit 'change'
 

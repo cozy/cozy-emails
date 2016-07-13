@@ -196,8 +196,11 @@ RouterActionCreator =
 
         # Dispatch modal close
         AppDispatcher.dispatch
-            type: ActionTypes.CLOSE_MODAL
-            value: {id: account.get('id'), mailboxID}
+            type: ActionTypes.ROUTE_CHANGE
+            value:
+                action:    MessageActions.SHOW_ALL
+                accountID: account.get('id')
+                mailboxID: mailboxID
 
 
     showMessageList: (params={}) ->

@@ -553,19 +553,6 @@ class RouterStore extends Store
             @emit 'change'
 
 
-        handle ActionTypes.ADD_ACCOUNT_SUCCESS, ({modalTimer}) ->
-            _timerRouteChange = modalTimer
-
-
-        handle ActionTypes.CLOSE_MODAL, ({id, mailboxID}) ->
-            clearTimeout _timerRouteChange
-            _action = MessageActions.SHOW_ALL
-            _setCurrentAccount id, mailboxID
-            _updateURL()
-
-            @emit 'change'
-
-
         handle ActionTypes.MESSAGE_FETCH_SUCCESS, ({result, conversationID, lastPage}) ->
             # Save last message references
             _lastPage[_URI] = lastPage if lastPage?
