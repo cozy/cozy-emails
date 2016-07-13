@@ -193,6 +193,18 @@ describe('MessagesActionCreator', () => {
         assert.isTrue(spyDispatcher.getCall(1).calledWith(value));
 
       });
+
+      it('should dispatch FAILURE when error', () => {
+        const error = 'PLOP';
+        callback(error);
+
+        assert.equal(spyDispatcher.callCount, 1);
+        assert.isTrue(spyDispatcher.getCall(0).calledWith({
+          type: ActionTypes.MESSAGE_TRASH_FAILURE,
+          value: { target, updated: [], error }
+        }));
+
+      });
     });
 
 
