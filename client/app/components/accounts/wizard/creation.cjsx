@@ -111,12 +111,14 @@ module.exports = AccountWizardCreation = React.createClass
                     <footer>
                         <nav>
                             {<button className="success"
+                                     ref="success"
                                      name="redirect"
                                      onClick={@close}>
                                 {t('account wizard creation success')}
                             </button> if @state.mailboxID}
 
                             {<button name="cancel"
+                                     ref="cancel"
                                      type="button"
                                      onClick={@close}>
                                 {t('app cancel')}
@@ -165,11 +167,11 @@ module.exports = AccountWizardCreation = React.createClass
     # aforementioned element and if there's already one account available
     # (otherwise this setting step is mandatory).
     close: (event) ->
-        isDisabled   = not @props.hasAccount
-        isContainer  = event.target is ReactDOM.findDOMNode @
-        isCloseBtn   = event.target.name is 'cancel'
-        isSuccessBtn = event.target.name is 'redirect'
-        return if isDisabled or not(isContainer or isCloseBtn or isSuccessBtn)
+        disabled  = not @props.hasAccount
+        success   = event.target is @refs.success
+        backdrops = event.target in [ReactDOM.findDOMNode(@), @refs.cancel]
+
+        return if not success and (disabled or not(backdrops))
 
         event.stopPropagation()
         event.preventDefault()
