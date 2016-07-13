@@ -64,6 +64,10 @@ module.exports = React.createClass
                 isIndexing              : RouterGetter.isMailboxIndexing()
                 hasNextPage             : RouterGetter.hasNextPage()
                 hasSettingsChanged      : RouterGetter.hasSettingsChanged()
+                allSelected             : SelectionGetter.isAllSelected()
+                selection               : SelectionGetter.getSelection()
+                messages                : RouterGetter.getMessagesList()
+                emptyMessages           : RouterGetter.getEmptyMessage()
             }
 
         return {
@@ -114,10 +118,10 @@ module.exports = React.createClass
                                 accountID           : @state.accountID
                                 mailboxID           : @state.mailboxID
                                 conversationID      : @state.conversationID
-                                messages            : (messages = RouterGetter.getMessagesList())
-                                emptyMessages       : RouterGetter.getEmptyMessage()
-                                isAllSelected       : SelectionGetter.isAllSelected()
-                                selection           : SelectionGetter.getSelection messages
+                                messages            : @state.messages
+                                emptyMessages       : @state.emptyMessages
+                                isAllSelected       : @state.isAllSelected
+                                selection           : @state.selection
                                 hasNextPage         : @state.hasNextPage
                                 lastSync            : @state.lastSync
                                 isLoading           : @state.isLoading

@@ -12,9 +12,11 @@
  ###
 
 invariant = require '../invariant'
-
 _lastID = 1
 _prefix = 'ID_'
+
+
+
 
 class Dispatcher
     constructor: ->

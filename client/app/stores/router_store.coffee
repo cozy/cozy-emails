@@ -9,10 +9,7 @@ RequestsStore = require '../stores/requests_store'
 
 {AccountActions
 ActionTypes
-MessageActions
-MessageFilter
-MessageFlags
-SearchActions} = require '../constants/app_constants'
+MessageActions} = require '../constants/app_constants'
 
 {MSGBYPAGE} = require '../../../server/utils/constants'
 TAB = 'account'
@@ -58,10 +55,8 @@ class RouterStore extends Store
 
     _timerRouteChange = null
 
-
     getRouter: ->
         _router
-
 
     getAction: ->
         _action
@@ -102,7 +97,7 @@ class RouterStore extends Store
         query = '/' + query if params.isServer
 
         prefix + route.replace(/\(\?:filter\)$/, query)
-                .replace /\:\w*/gi, (match) =>
+                .replace /\:\w*/gi, (match) ->
                     # Get Route pattern of action
                     # Replace param name by its value
                     param = match.substring 1, match.length
@@ -111,7 +106,7 @@ class RouterStore extends Store
 
 
     getCurrentURL: (options={}) ->
-        return unless (action = @getAction() or options.action)
+        return unless (@getAction() or options.action)
 
         params = _.cloneDeep options
         params.isServer ?= true
@@ -247,21 +242,16 @@ class RouterStore extends Store
 
     _sortByDate = (order) ->
         order = if order is '+' then -1 else 1
-        return sortFunction = (message1, message2) ->
+        return (message1, message2) ->
             val1 = message1.get('date')
             val2 = message2.get('date')
             _sortValues val1, val2, order
 
 
-    _sortValues = (val1, val2, order=1) =>
+    _sortValues = (val1, val2, order=1) ->
         if val1 > val2 then return -1 * order
         else if val1 < val2 then return 1 * order
         else return 0
-
-
-    _isSearchAction = ->
-        _action is SearchActions.SHOW_ALL
-
 
     _setCurrentAccount = ({accountID=null, mailboxID=null, tab=TAB}) ->
         _accountID = accountID
@@ -289,7 +279,7 @@ class RouterStore extends Store
             return _accountID
 
 
-    getDefaultAccount: () ->
+    getDefaultAccount: ->
         AccountStore.getAll().first()
 
 
@@ -354,7 +344,7 @@ class RouterStore extends Store
         _action = action or AccountActions.CREATE
 
 
-    getConversationID: (messageID) ->
+    getConversationID: ->
         _conversationID
 
     # Get default message of a conversation
@@ -519,16 +509,14 @@ class RouterStore extends Store
     # - go to next conversation
     # - otherwise go to previous conversation
     getNearestMessage: (target={}, type='conversation') ->
-        {messageID, conversationID, mailboxID, accountID} = target
+        {messageID, conversationID, mailboxID} = target
         unless messageID
             messageID = _messageID
             conversationID = _conversationID
             mailboxID = _mailboxID
-            accountID = _accountID
 
         if 'conversation' is type
             conversation = _self.getConversation conversationID, mailboxID
-            messages = Immutable.OrderedMap conversation
             message = _self.getNextConversation conversation
             message ?= _self.getPreviousConversation conversation
             return message if message?.size
@@ -651,8 +639,9 @@ class RouterStore extends Store
 
             clearTimeout _timerRouteChange
 
-            {accountID, mailboxID, conversationID, messageID} = payload
-            {action, tab, filter} = payload
+            {accountID, mailboxID} = payload
+            {tab, filter} = payload
+            {filter} = payload
 
             # We cant display any informations
             # without accounts
@@ -682,9 +671,6 @@ class RouterStore extends Store
             # Save current filters
             _setFilter filter
 
-            # From searchStore
-            if _isSearchAction()
-                _resetSearch()
 
             # Update URL if it didnt
             _updateURL()
@@ -773,8 +759,7 @@ class RouterStore extends Store
             _modal = params
             @emit 'change'
 
-
-        handle ActionTypes.HIDE_MODAL, (value) ->
+        handle ActionTypes.HIDE_MODAL, ->
             _modal = null
             @emit 'change'
 

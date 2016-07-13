@@ -1,15 +1,19 @@
 
-_ = require 'lodash'
-
-SelectionStore = require '../stores/selection_store'
+reduxStore = require '../reducers/_store'
+RouterGetter = require './router'
 
 module.exports =
 
     isAllSelected: ->
-        SelectionStore.getAllSelected()
+        reduxStore.getState().selection.allSelected
 
-    getSelection: (messages) ->
+    getSelection: ->
+        messages = RouterGetter.getMessagesList()
+
+
         if @isAllSelected() and messages?.size
             messages = messages.map (message) -> message.get('id')
-            return messages.toArray()
-        return SelectionStore.getSelected()?.toArray()
+            return messages?.toArray()
+
+        else
+            return reduxStore.getState().selection.selected.toArray()
