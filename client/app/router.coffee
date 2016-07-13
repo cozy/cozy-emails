@@ -53,7 +53,7 @@ class Router extends Backbone.Router
 
 
     defaultView: ->
-        url = if (mboxID = RouterStore.getDefaultAccount().get 'inboxMailbox')
+        url = if (mboxID = RouterStore.getDefaultAccount()?.get 'inboxMailbox')
         then "mailbox/#{mboxID}"
         else "account/new"
 
