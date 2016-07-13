@@ -143,14 +143,6 @@ module.exports = class Message extends cozydb.CozyModel
         else
             callback null, uuid.v4()
 
-    # Public: get messages in cozy by their uids
-    #
-    # mailboxID - {String} id of the mailbox to check
-    #
-    # Returns (callback) an {Array} of {String} uids in the cozy
-    @UIDsInCozy: (mailboxID, callback) ->
-
-
     # Public: find a message by its message id
     #
     # accountID - id of the account to scan
@@ -586,7 +578,6 @@ module.exports = class Message extends cozydb.CozyModel
     @doGroupedByBox: (messages, iterator, done) ->
         return done null if messages.length is 0
 
-        accountID = messages[0].accountID
         messagesByBoxID = {}
         for message in messages
             for boxID, uid of message.mailboxIDs
@@ -656,8 +647,8 @@ module.exports = class Message extends cozydb.CozyModel
 module.exports = Message
 mailutils = require '../utils/jwz_tools'
 CONSTANTS = require '../utils/constants'
-{MSGBYPAGE, LIMIT_DESTROY, CONCURRENT_DESTROY} = CONSTANTS
-{NotFound, BadRequest, AccountConfigError} = require '../utils/errors'
+{MSGBYPAGE} = CONSTANTS
+{NotFound, BadRequest} = require '../utils/errors'
 uuid = require 'uuid'
 _ = require 'lodash'
 async = require 'async'

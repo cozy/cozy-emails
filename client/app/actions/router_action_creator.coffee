@@ -1,11 +1,9 @@
 _ = require 'lodash'
-Immutable = require 'immutable'
 
 AppDispatcher   = require '../libs/flux/dispatcher/dispatcher'
 
 AccountStore  = require '../stores/account_store'
 MessageStore  = require '../stores/message_store'
-RequestsStore = require '../stores/requests_store'
 RouterStore   = require '../stores/router_store'
 
 Notification = require '../libs/notification'
@@ -14,10 +12,7 @@ XHRUtils = require '../libs/xhr'
 
 {ActionTypes,
 MessageActions,
-SearchActions,
-FlagsConstants,
-MessageFilter,
-MessageFlags} = require '../constants/app_constants'
+FlagsConstants} = require '../constants/app_constants'
 
 # TODO: move this into RouterStore
 # or create a module paginate
@@ -215,7 +210,7 @@ RouterActionCreator =
             type: ActionTypes.MESSAGE_FETCH_REQUEST
             value: {conversationID, timestamp}
 
-        XHRUtils.fetchConversation {conversationID}, (error, messages) =>
+        XHRUtils.fetchConversation {conversationID}, (error, messages) ->
             if error?
                 AppDispatcher.dispatch
                     type: ActionTypes.MESSAGE_FETCH_FAILURE
@@ -272,13 +267,6 @@ RouterActionCreator =
         # then into routerStore, use navigate
         @navigate url: RouterStore.getCurrentURL {filter, isServer: false}
 
-
-    searchAll: (params={}) ->
-        {query} = params
-        action = SearchActions.SHOW_ALL
-        AppDispatcher.dispatch
-            type: ActionTypes.ROUTE_CHANGE
-            value: {filter, action}
 
 
 _getPage = ->

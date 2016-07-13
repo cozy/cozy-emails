@@ -1,11 +1,7 @@
-_          = require 'underscore'
 React      = require 'react'
 classNames = require 'classnames'
 
-{div, aside, nav, ul, li, span, a, i, button} = React.DOM
-
-{Tooltips} = require '../constants/app_constants'
-
+{div, li, span, a, i} = React.DOM
 
 module.exports = React.createClass
     displayName: 'MenuMailboxItem'

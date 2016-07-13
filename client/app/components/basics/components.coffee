@@ -18,7 +18,7 @@ classNames                                   = require 'classnames'
     form
 } = DOM
 
-PropTypes = require '../libs/prop_types'
+PropTypes = require '../../libs/prop_types'
 
 registry = {}
 factories = {}
@@ -309,7 +309,7 @@ registry.Spinner = createClass
         suffix = if @props.color then "-#{@props.color}" else ''
 
         img
-            src:       require "../assets/images/spinner#{suffix}.svg"
+            src:       require "../../assets/images/spinner#{suffix}.svg"
             alt:       'spinner'
             className: 'button-spinner spin-animate'
 

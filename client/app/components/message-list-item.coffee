@@ -5,7 +5,7 @@ classNames = require 'classnames'
 
 RouterActionCreator = require '../actions/router_action_creator'
 
-{Icon}       = require('./basic_components').factories
+{Icon}       = require('./basics/components').factories
 Participants = React.createFactory require './participants'
 
 RouterGetter = require '../getters/router'
@@ -130,6 +130,6 @@ module.exports = React.createClass
         p options, props...
 
 
-    onMessageClick: (event) ->
+    onMessageClick: ->
         conversationID = @props.message.get 'conversationID'
         RouterActionCreator.gotoConversation {conversationID}

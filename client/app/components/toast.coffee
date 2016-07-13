@@ -6,7 +6,7 @@ classNames = require 'classnames'
 LayoutActionCreator = require '../actions/layout_action_creator'
 NotificationActionCreator = require '../actions/notification_action_creator'
 
-{ActionTypes, AlertLevel} = require '../constants/app_constants'
+{AlertLevel} = require '../constants/app_constants'
 
 
 # The toast is a notification widget displayed on the top right of the screen.
