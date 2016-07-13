@@ -14,7 +14,7 @@ describe('MessagesActionCreator', () => {
   let XHRUtils;
   let MessageActionCreator;
   let Dispatcher;
-  let spy;
+  let spyDispatcher;
 
 
   before(() => {
@@ -34,13 +34,13 @@ describe('MessagesActionCreator', () => {
 
 
   beforeEach(() => {
-    if (spy === undefined) {
-      spy = sinon.spy(Dispatcher, 'dispatch');
+    if (spyDispatcher === undefined) {
+      spyDispatcher = sinon.spy(Dispatcher, 'dispatch');
     }
   });
 
   afterEach(() => {
-    spy.reset();
+    spyDispatcher.reset();
   });
 
 
@@ -50,8 +50,8 @@ describe('MessagesActionCreator', () => {
       const result = { type: ActionTypes.RECEIVE_RAW_MESSAGES, value };
       MessageActionCreator.receiveRawMessages(value);
 
-      assert.equal(Dispatcher.dispatch.callCount, 1);
-      assert.isTrue(Dispatcher.dispatch.calledWith(result));
+      assert.equal(spyDispatcher.callCount, 1);
+      assert.isTrue(spyDispatcher.calledWith(result));
      });
 
 
@@ -60,8 +60,8 @@ describe('MessagesActionCreator', () => {
        const result = { type: ActionTypes.RECEIVE_RAW_MESSAGE, value };
        MessageActionCreator.receiveRawMessage(value);
 
-       assert.equal(Dispatcher.dispatch.callCount, 1);
-       assert.isTrue(Dispatcher.dispatch.calledWith(result));
+       assert.equal(spyDispatcher.callCount, 1);
+       assert.isTrue(spyDispatcher.calledWith(result));
      });
 
 
@@ -74,18 +74,18 @@ describe('MessagesActionCreator', () => {
       };
 
       MessageActionCreator.displayImages({ messageID, displayImages: undefined });
-      assert.equal(Dispatcher.dispatch.callCount, 1);
-      assert.isTrue(Dispatcher.dispatch.calledWith(result));
+      assert.equal(spyDispatcher.callCount, 1);
+      assert.isTrue(spyDispatcher.calledWith(result));
 
       result.value.displayImages = false;
       MessageActionCreator.displayImages({ messageID, displayImages: false });
-      assert.equal(Dispatcher.dispatch.callCount, 2);
-      assert.isTrue(Dispatcher.dispatch.calledWith(result));
+      assert.equal(spyDispatcher.callCount, 2);
+      assert.isTrue(spyDispatcher.calledWith(result));
 
       result.value.displayImages = true;
       MessageActionCreator.displayImages({ messageID, displayImages: true });
-      assert.equal(Dispatcher.dispatch.callCount, 3);
-      assert.isTrue(Dispatcher.dispatch.calledWith(result));
+      assert.equal(spyDispatcher.callCount, 3);
+      assert.isTrue(spyDispatcher.calledWith(result));
     });
 
 
@@ -104,15 +104,15 @@ describe('MessagesActionCreator', () => {
         }
       };
 
-      var spy0 = sinon.spy(XHRUtils, 'messageSend');
+      let spySend = sinon.spy(XHRUtils, 'messageSend');
       MessageActionCreator.send(action, message);
 
-      assert.equal(spy0.callCount, 1);
+      assert.equal(spySend.callCount, 1);
 
       // Dis is supposed to be called twice
       // 1rst one for REQUEST
       // Last one for SUCCESS
-      assert.equal(Dispatcher.dispatch.callCount, 2);
+      assert.equal(spyDispatcher.callCount, 2);
 
       let args = Dispatcher.dispatch.getCall(1).args[0];
       assert.equal(args.type, result.type);
@@ -121,7 +121,7 @@ describe('MessagesActionCreator', () => {
         assert.equal(value, result.value.message[key]);
       });
 
-      spy0.reset();
+      spySend.reset();
     });
 
 
@@ -135,49 +135,64 @@ describe('MessagesActionCreator', () => {
     });
 
 
-    it('deleteMessage({ messageID })', () => {
+    describe('deleteMessage({ messageID })', () => {
+
       const type = ActionTypes.MESSAGE_TRASH_REQUEST;
       const target = { accountID: 'accountID', messageID: 'messageID' };
+      let spyDelete;
+      let callback;
 
-      // Nothing should happen
-      // with these values in arguments
+      beforeEach(() => {
+        if (spyDelete === undefined) {
+          spyDelete = sinon.spy(XHRUtils, 'batchDelete');
+        }
+      });
 
-      MessageActionCreator.deleteMessage({});
-      assert.equal(Dispatcher.dispatch.callCount, 0);
+      afterEach(() => {
+        spyDelete.reset();
+      });
 
-      MessageActionCreator.deleteMessage(null);
-      assert.equal(Dispatcher.dispatch.callCount, 0);
 
-      MessageActionCreator.deleteMessage(undefined);
-      assert.equal(Dispatcher.dispatch.callCount, 0);
+      it('should nothing happened', () => {
+          MessageActionCreator.deleteMessage({});
+          assert.equal(spyDispatcher.callCount, 0);
 
-      MessageActionCreator.deleteMessage();
-      assert.equal(Dispatcher.dispatch.callCount, 0);
+          MessageActionCreator.deleteMessage(null);
+          assert.equal(spyDispatcher.callCount, 0);
 
-      MessageActionCreator.deleteMessage('plop');
-      assert.equal(Dispatcher.dispatch.callCount, 0);
+          MessageActionCreator.deleteMessage(undefined);
+          assert.equal(spyDispatcher.callCount, 0);
 
-      let spyXHR = sinon.spy(XHRUtils, 'batchDelete');
-      MessageActionCreator.deleteMessage(target);
+          MessageActionCreator.deleteMessage();
+          assert.equal(spyDispatcher.callCount, 0);
 
-      // Check REQUEST call
-      assert.equal(spyXHR.callCount, 1);
-      assert.equal(spyXHR.args[0].length, 2);
-      assert.deepEqual(spyXHR.args[0][0], target);
-      assert.equal(typeof spyXHR.args[0][1], 'function');
+          MessageActionCreator.deleteMessage('plop');
+          assert.equal(spyDispatcher.callCount, 0);
+      });
 
-      // 2 dispatch should be done
-      // 1rst REQUEST then SUCCESS
-      assert.equal(Dispatcher.dispatch.callCount, 2);
+      it('should dispatch SUCCESS when response', () => {
+        MessageActionCreator.deleteMessage(target);
 
-      // Checkout SUCCESS dispatch
-      let value = {
-        type: ActionTypes.MESSAGE_TRASH_SUCCESS,
-        value: { target, updated: [] }
-      };
-      assert.isTrue(Dispatcher.dispatch.getCall(1).calledWith(value));
+        // Check REQUEST call
+        assert.equal(spyDelete.callCount, 1);
+        assert.equal(spyDelete.getCall(0).args.length, 2);
+        assert.deepEqual(spyDelete.getCall(0).args[0], target);
 
-      spyXHR.reset();
+        callback = spyDelete.getCall(0).args[1];
+        assert.equal(typeof callback, 'function');
+
+        // 2 dispatch should be done
+        // 1rst REQUEST then SUCCESS
+        assert.equal(spyDispatcher.callCount, 2);
+
+        // Checkout SUCCESS dispatch
+        let value = {
+          type: ActionTypes.MESSAGE_TRASH_SUCCESS,
+          value: { target, updated: [] }
+        };
+        assert.isTrue(spyDispatcher.getCall(1).calledWith(value));
+
+      });
     });
 
 
