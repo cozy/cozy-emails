@@ -21,6 +21,7 @@ module.exports.createMailbox = function Mailbox() {
     tree: undefined,
 
     nbFlagged: 117,
+    nbSent: 0,
     nbRecent: 0,
     nbTotal: 3351,
     nbUnread: 164,

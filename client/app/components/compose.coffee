@@ -218,8 +218,9 @@ module.exports = React.createClass
             # After deleting message
             @resetChange()
 
+            accountID = @props.accountID
             messageID = @state.id
-            RouterActionCreator.deleteMessage {messageID}
+            MessageActionCreator.deleteMessage {messageID, accountID}
             LayoutActionCreator.hideModal()
 
             # specific callback

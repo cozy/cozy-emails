@@ -40,7 +40,7 @@ class MessageStore extends Store
 
     _shouldUpdateMessage = (message) ->
         value = (_messages.get message?.id)?.get 'updated'
-        (not value?) or (not message.updated?) or (value < message.updated)
+        (not value?) or (not message.updated?) or (value <= message.updated)
 
 
     _saveMessage = (message) ->
@@ -52,7 +52,7 @@ class MessageStore extends Store
             updated = new Date()
 
             # Save reference mailbox into message informations
-            if not _.isString(message.mailboxID) or _.isEmpty(message.mailboxID)
+            if not _.isString(message.mailboxID) or _.isEmpty(message.mailboxID?.trim())
                 message.mailboxID   = oldMessage?.get('mailboxID')
                 message.mailboxID  ?= _.keys(message.mailboxIDs).shift()
 

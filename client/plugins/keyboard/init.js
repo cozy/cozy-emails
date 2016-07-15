@@ -4,6 +4,7 @@ require('./css/mailkeys.css');
 require('./js/mousetrap.js');
 
 var LayoutActionCreator = require('../../app/actions/layout_action_creator');
+var RouterStore = require('../../app/stores/router_store');
 var LayoutStore = require('../../app/stores/layout_store');
 var MessageActionCreator = require('../../app/actions/message_action_creator');
 var RouterActionCreator = require('../../app/actions/router_action_creator');
@@ -190,7 +191,9 @@ if (typeof window.plugins !== "object") {
         alias: ['backspace', 'del'],
         action: function (e) {
           if (e && e instanceof Event) { e.preventDefault(); }
-          RouterActionCreator.deleteMessage();
+          var accountID = RouterStore.getAccountID();
+          var messageID = RouterStore.getMessageID();
+          MessageActionCreator.deleteMessage({accountID, messageID});
         }
       },
       'ctrl+z': {

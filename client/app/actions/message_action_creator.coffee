@@ -1,10 +1,9 @@
-AppDispatcher = require '../libs/flux/dispatcher/dispatcher'
+AppDispatcher   = require '../libs/flux/dispatcher/dispatcher'
 
-{ActionTypes} = require '../constants/app_constants'
+{ActionTypes}   = require '../constants/app_constants'
+XHRUtils        = require '../libs/xhr'
 
-XHRUtils      = require '../libs/xhr'
-
-MessageStore  = require '../stores/message_store'
+MessageStore    = require '../stores/message_store'
 
 MessageActionCreator =
 
@@ -20,16 +19,14 @@ MessageActionCreator =
             value: message
 
 
-    displayImages: ({messageID, displayImages=true})->
-        message = MessageStore.getByID messageID
+    displayImages: ({messageID, displayImages})->
+        displayImages ?= true;
         AppDispatcher.dispatch
             type: ActionTypes.SETTINGS_UPDATE_REQUEST
             value: {messageID, displayImages}
 
 
     send: (action, message) ->
-        conversationID = message.conversationID
-
         # Message should have a html content
         # event if it is a simple text
         unless message.composeInHTML
@@ -49,5 +46,74 @@ MessageActionCreator =
                     type: ActionTypes.MESSAGE_SEND_SUCCESS
                     value: {action, message}
 
+
+    markAsRead: (target) ->
+        {messageID, accountID} = target
+
+        # Do not mark a message that is ever flagged
+        message = MessageStore.getByID messageID
+        if message and MessageStore.isUnread {message}
+            @mark {messageID, accountID}, FlagsConstants.SEEN
+
+
+    mark: (target, flags) ->
+        timestamp = Date.now()
+
+        # Do not mark a removed message
+        {messageID} = target
+        if messageID and not (message = MessageStore.getByID messageID)
+            return
+
+        AppDispatcher.dispatch
+            type: ActionTypes.MESSAGE_FLAGS_REQUEST
+            value: {target, flags, timestamp}
+
+        XHRUtils.batchFlag {target, action: flags}, (error, updated) =>
+            if error
+                AppDispatcher.dispatch
+                    type: ActionTypes.MESSAGE_FLAGS_FAILURE
+                    value: {target, error, flags, timestamp}
+            else
+                # Update _conversationLength value
+                # that is only displayed by the server
+                # with method fetchMessagesByFolder
+                # FIXME: should be sent by server
+
+                # FIXME: clent shouldnt add this information
+                # it shoul be done server side
+                updated = {messages}
+                AppDispatcher.dispatch
+                    type: ActionTypes.MESSAGE_FLAGS_SUCCESS
+                    value: {target, updated, flags, timestamp}
+
+
+    # Delete message(s)
+    # target:
+    # - messageID or
+    # - messageIDs or
+    # - conversationIDs or
+    # - conversationIDs
+    deleteMessage: (target={}) ->
+        {messageID, accountID} = target
+        return if not messageID? or not accountID?
+
+        timestamp = Date.now()
+        target = {messageID, accountID}
+
+        AppDispatcher.dispatch
+            type: ActionTypes.MESSAGE_TRASH_REQUEST
+            value: {target}
+
+        # send request
+        XHRUtils.batchDelete target, (error, updated=[]) =>
+            if error
+                AppDispatcher.dispatch
+                    type: ActionTypes.MESSAGE_TRASH_FAILURE
+                    value: {target, error, updated}
+            else
+                message.updated = timestamp for message in updated
+                AppDispatcher.dispatch
+                    type: ActionTypes.MESSAGE_TRASH_SUCCESS
+                    value: {target, updated}
 
 module.exports = MessageActionCreator

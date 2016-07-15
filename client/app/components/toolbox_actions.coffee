@@ -6,7 +6,7 @@ React = require 'react'
 
 ToolboxMailboxes = React.createFactory require './toolbox_mailboxes'
 
-RouterActionCreator = require '../actions/router_action_creator'
+MessageActionCreator = require '../actions/message_action_creator'
 
 {FlagsConstants} = require '../constants/app_constants'
 
@@ -20,13 +20,13 @@ module.exports = React.createClass
 
 
     doMark: (flag) ->
-        {conversationID, messageIDs} = @props
-        RouterActionCreator.mark {conversationID, messageIDs}, flag
+        {accountID, conversationID, messageIDs} = @props
+        MessageActionCreator.mark {accountID, conversationID, messageIDs}, flag
 
 
     doDelete: ->
-        {conversationID, messageIDs} = @props
-        RouterActionCreator.deleteMessage {conversationID, messageIDs}
+        {accountID, conversationID, messageIDs} = @props
+        MessageActionCreator.deleteMessage {accountID, conversationID, messageIDs}
 
 
     render: ->

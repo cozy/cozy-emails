@@ -60,7 +60,7 @@ RouterActionCreator =
 
         # Always load messagesList
         action = MessageActions.SHOW_ALL
-        timestamp = (new Date()).toISOString()
+        timestamp = (new Date()).valueOf()
 
         AppDispatcher.dispatch
             type: ActionTypes.MESSAGE_FETCH_REQUEST
@@ -243,76 +243,6 @@ RouterActionCreator =
                 AppDispatcher.dispatch
                     type: ActionTypes.MESSAGE_FETCH_SUCCESS
                     value: {result, conversationID, timestamp}
-
-
-    markAsRead: (target) ->
-        {messageID, accountID} = target
-
-        # Do not mark a message that is ever flagged
-        message = MessageStore.getByID messageID
-        if message and MessageStore.isUnread {message}
-            @mark {messageID, accountID}, FlagsConstants.SEEN
-
-
-    mark: (target, flags) ->
-        timestamp = Date.now()
-
-        # Do not mark a removed message
-        {messageID} = target
-        if messageID and not (message = MessageStore.getByID messageID)
-            return
-
-        AppDispatcher.dispatch
-            type: ActionTypes.MESSAGE_FLAGS_REQUEST
-            value: {target, flags, timestamp}
-
-        XHRUtils.batchFlag {target, action: flags}, (error, updated) =>
-            if error
-                AppDispatcher.dispatch
-                    type: ActionTypes.MESSAGE_FLAGS_FAILURE
-                    value: {target, error, flags, timestamp}
-            else
-                # Update _conversationLength value
-                # that is only displayed by the server
-                # with method fetchMessagesByFolder
-                # FIXME: should be sent by server
-
-                # FIXME: clent shouldnt add this information
-                # it shoul be done server side
-                updated = {messages}
-                AppDispatcher.dispatch
-                    type: ActionTypes.MESSAGE_FLAGS_SUCCESS
-                    value: {target, updated, flags, timestamp}
-
-
-    # Delete message(s)
-    # target:
-    # - messageID or
-    # - messageIDs or
-    # - conversationIDs or
-    # - conversationIDs
-    deleteMessage: (target={}) ->
-        timestamp = Date.now()
-        {messageID, accountID} = target
-        messageID ?= RouterStore.getMessageID()
-        accountID ?= RouterStore.getAccountID()
-        target = {messageID, accountID}
-
-        AppDispatcher.dispatch
-            type: ActionTypes.MESSAGE_TRASH_REQUEST
-            value: {target}
-
-        # send request
-        XHRUtils.batchDelete target, (error, updated) =>
-            if error
-                AppDispatcher.dispatch
-                    type: ActionTypes.MESSAGE_TRASH_FAILURE
-                    value: {target, error}
-            else
-                message.updated = timestamp for message in updated
-                AppDispatcher.dispatch
-                    type: ActionTypes.MESSAGE_TRASH_SUCCESS
-                    value: {target, updated}
 
 
     addFilter: (params) ->
