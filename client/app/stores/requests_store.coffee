@@ -14,14 +14,10 @@ handled by realtime stack and this store should be deprecated.
 Immutable = require 'immutable'
 
 Store = require '../libs/flux/store/store'
-AppDispatcher = require '../libs/flux/dispatcher/dispatcher'
 
 {ActionTypes
-AccountActions
 Requests
 RequestStatus} = require '../constants/app_constants'
-
-MessageStore  = require '../stores/message_store'
 
 _setRefreshes = (refreshes=[]) ->
     new Immutable.Iterable refreshes

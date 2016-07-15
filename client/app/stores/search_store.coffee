@@ -1,7 +1,7 @@
 Immutable = require 'immutable'
 
 Store = require '../libs/flux/store/store'
-MessageStore = require './message_store'
+MessageGetter = require '../getters/message'
 
 {ActionTypes} = require '../constants/app_constants'
 
@@ -107,7 +107,7 @@ class SearchStore extends Store
         _currentSearchResults
         .toOrderedMap()
         .mapEntries ([id]) ->
-            [id, MessageStore.getByID id]
+            [id, MessageGetter.getByID id]
         .filter (message) ->
             message isnt null
 

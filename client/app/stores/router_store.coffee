@@ -4,8 +4,9 @@ Store         = require '../libs/flux/store/store'
 AppDispatcher = require '../libs/flux/dispatcher/dispatcher'
 
 AccountStore  = require '../stores/account_store'
-MessageStore  = require '../stores/message_store'
 RequestsStore = require '../stores/requests_store'
+
+MessageGetter  = require '../getters/message'
 
 {AccountActions
 ActionTypes
@@ -158,7 +159,7 @@ class RouterStore extends Store
 
     _setCurrentRequest = (url) ->
         key = _getPreviousURI()
-        _currentRequest = if url isnt _requests[key] then url else null;
+        _currentRequest = if url isnt _requests[key] then url else null
 
 
     _getPage = ->
@@ -253,6 +254,12 @@ class RouterStore extends Store
         else if val1 < val2 then return 1 * order
         else return 0
 
+    # Useless for MessageGetter
+    # to clean messages
+    isResetFilter: (filter) ->
+        filter = @getFilter() unless filter
+        filter.type in ['from', 'dest']
+
     _setCurrentAccount = ({accountID=null, mailboxID=null, tab=TAB}) ->
         _accountID = accountID
         _mailboxID = mailboxID
@@ -286,7 +293,7 @@ class RouterStore extends Store
     getMailboxID: (messageID) ->
         if messageID
             # Get mailboxID from message first
-            mailboxIDs = MessageStore.getByID(messageID)?.get 'mailboxIDs'
+            mailboxIDs = MessageGetter.getByID(messageID)?.get 'mailboxIDs'
             if _mailboxID in _.keys(mailboxIDs)
                 return _mailboxID
 
@@ -365,23 +372,19 @@ class RouterStore extends Store
 
     isUnread: (message) ->
         flags = _getFlags message
-        # test flags but also mailboxID
-        unless (result = MessageStore.isUnread {flags, message})
-            result = @getMailboxID() is @getAccount()?.get('unreadMailbox')
-        result
+        return MessageGetter.isUnread({flags, message}) or
+                    @getMailboxID() is @getAccount()?.get('unreadMailbox')
 
 
     isFlagged: (message) ->
         flags = _getFlags message
-        # test flags but also mailboxID
-        unless (result = MessageStore.isFlagged {flags, message})
-            result = @getMailboxID() is @getAccount()?.get('flaggedMailbox')
-        result
+        return MessageGetter.isFlagged({flags, message}) or
+                    @getMailboxID() is @getAccount()?.get('flaggedMailbox')
 
 
     isAttached: (message) ->
         flags = _getFlags message
-        MessageStore.isAttached {flags, message}
+        MessageGetter.isAttached {flags, message}
 
 
     isDeleted: (message) ->
@@ -399,7 +402,7 @@ class RouterStore extends Store
     isDraft: (message) ->
         if message?
             flags = _getFlags message
-            MessageStore.isDraft {flags, message}
+            MessageGetter.isDraft {flags, message}
         else
             draftID = @getAccount()?.get 'draftMailbox'
             draftID? and draftID is @getMailboxID()
@@ -430,7 +433,7 @@ class RouterStore extends Store
         # Do not infinite fetch
         # when message doesnt exist anymore
         messageID = @getMessageID()
-        if messageID and not MessageStore.getByID(messageID)?.size
+        if messageID and not MessageGetter.getByID(messageID)?.size
             return @hasNextPage()
 
         # Do not get all messages
@@ -469,7 +472,7 @@ class RouterStore extends Store
         sortOrder = parseInt "#{sort.charAt(0)}1", 10
 
         conversations = {}
-        messages = MessageStore.getAll()?.filter (message) =>
+        messages = MessageGetter.getAll()?.filter (message) =>
             # do not have twice INBOX
             # see OVH twice Inbox issue
             # FIXME: should be executed server side
@@ -533,7 +536,7 @@ class RouterStore extends Store
 
         # Filter messages
         mailboxID ?= @getMailboxID()
-        messages = MessageStore.getConversation conversationID, mailboxID
+        messages = MessageGetter.getConversation conversationID, mailboxID
         _.filter messages, @filterByFlags
 
 
@@ -556,7 +559,7 @@ class RouterStore extends Store
 
     getConversationLength: (conversationID) ->
         conversationID ?= @getConversationID()
-        MessageStore.getConversationLength conversationID
+        MessageGetter.getConversationLength conversationID
 
 
     getURI: ->
@@ -633,9 +636,9 @@ class RouterStore extends Store
             # Ensure all stores that listen ROUTE_CHANGE have vanished
             AppDispatcher.waitFor [RequestsStore.dispatchToken]
 
-            # Make sure that MessageStore is up to date
+            # Make sure that MessageGetter is up to date
             # before gettings data from it
-            AppDispatcher.waitFor [MessageStore.dispatchToken]
+            AppDispatcher.waitFor [MessageGetter.dispatchToken]
 
             clearTimeout _timerRouteChange
 
@@ -661,7 +664,7 @@ class RouterStore extends Store
             mailboxID ?= AccountStore.getByID(accountID)?.get 'inboxMailbox'
             _setCurrentAccount {accountID, mailboxID, tab}
 
-            # From MessageStore
+            # From MessageGetter
             # Update currentMessageID
             _setCurrentMessage payload
 
