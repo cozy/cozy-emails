@@ -6,7 +6,7 @@ AccountStore  = require '../stores/account_store'
 MessageStore  = require '../stores/message_store'
 RouterStore   = require '../stores/router_store'
 
-Notification = require '../libs/notification'
+Realtime = require '../libs/realtime'
 
 XHRUtils = require '../libs/xhr'
 
@@ -94,7 +94,7 @@ RouterActionCreator =
                 lastMessage = _.last result?.messages
                 mailboxID = lastMessage?.mailboxID
                 before = lastMessage?.date or timestamp
-                Notification.setServerScope {mailboxID, before}
+                Realtime.setServerScope {mailboxID, before}
 
                 AppDispatcher.dispatch
                     type: ActionTypes.MESSAGE_FETCH_SUCCESS
@@ -225,7 +225,7 @@ RouterActionCreator =
                 lastMessage = _.last messages
                 mailboxID = lastMessage?.mailboxID
                 before = lastMessage?.date or timestamp
-                Notification.setServerScope {mailboxID, before}
+                Realtime.setServerScope {mailboxID, before}
 
                 # Update _conversationLength value
                 # that is only displayed by the server
