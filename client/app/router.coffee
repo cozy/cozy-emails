@@ -53,9 +53,8 @@ class Router extends Backbone.Router
 
 
     defaultView: ->
-        url = if (mboxID = RouterStore.getDefaultAccount()?.get 'inboxMailbox')
-        then "mailbox/#{mboxID}"
-        else "account/new"
+        mailboxID = RouterStore.getDefaultAccount()?.get 'inboxMailbox'
+        url = if mailboxID then "mailbox/#{mailboxID}" else "account/new"
 
         @navigate url, trigger: true
 

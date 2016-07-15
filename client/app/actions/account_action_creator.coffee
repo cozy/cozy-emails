@@ -45,7 +45,6 @@ module.exports = AccountActionCreator =
                                          account.draftMailbox? and \
                                          account.trashMailbox?
 
-                # We pass the timer so we can store and clear it in RouterStore
                 AppDispatcher.dispatch
                     type: ActionTypes.ADD_ACCOUNT_SUCCESS
                     value: {account, areMailboxesConfigured}
