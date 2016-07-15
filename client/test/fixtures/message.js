@@ -77,8 +77,30 @@ module.exports.createDraft = function DraftMessage(data) {
   return message;
 }
 
+module.exports.createTrash = function TrashMessage(data) {
+  const message = module.exports.createMessage(data);
+
+  if (data.account) {
+    // Remove Inbox form mailboxIDs
+    message.mailboxIDs = _.filter(message.mailboxIDs, (value, key) => {
+      return data.account.inboxMailbox !== key;
+    });
+    // Replace it by TrashMailbox
+    const trashMailbox = data.account.mailboxes.find((mailbox) => {
+      return data.account.trashMailbox  === mailbox.id;
+    });
+    message.mailboxIDs[data.account.trashMailbox] = trashMailbox.nbTotal;
+  }
+  return message;
+}
+
+
 module.exports.createAttached = function AttachedMessage(data) {
   const message = module.exports.createMessage(data);
+
+  const flags = (message.flags || []).push(MessageFlags.ATTACH);
+  message.flags = flags;
+
   return Object.assign(message, { attachments: [
     {id: `attachments-${getUID()}`, value: `../monFichier-${getUID()}.png` },
     {id: `attachments-${getUID()}`, value: `../monFichier-${getUID()}.png` },

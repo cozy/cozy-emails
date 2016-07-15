@@ -120,6 +120,11 @@ describe('AccountStore', () => {
       });
     });
 
+    it('getDefault', () => {
+      const input = accounts[0];
+      testAccountValues(AccountStore.getDefault(), input);
+    });
+
     it('getAllMailboxes', () => {
       account.mailboxes.forEach((mailbox) => {
         testMailboxValues(account, mailbox);

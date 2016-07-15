@@ -31,77 +31,6 @@ describe('Message Store', () => {
   const messages = [];
 
 
-  function isDate(key) {
-    return -1 < ['date', 'updated', 'createdAt'].indexOf(key)
-  }
-
-  function testValues(output, input) {
-    output = output.toJS();
-    if (undefined === input) input = message;
-
-    assert.equal(input.mailboxID, undefined);
-    assert.equal(typeof output.mailboxID, 'string');
-    delete output.mailboxID;
-
-    if (undefined === input.attachments) {
-      assert.deepEqual(output.attachments, []);
-      delete output.attachments;
-    }
-
-    if (undefined === input._displayImages) {
-      assert.equal(output._displayImages, false);
-      delete output._displayImages;
-    }
-
-    // When Message is only flagged as Unread
-    // sometime value can be undefined
-    // instead of []
-    if (undefined === input.flags) {
-      delete output.flags;
-    }
-
-    _.each(output, (value, property) => {
-      if ('object' === typeof value) {
-        assert.deepEqual(value, input[property]);
-      } else if (!isDate(property)) {
-        assert.equal(value, input[property]);
-      }
-    });
-  }
-
-  function testConversationLength (id, mailboxID) {
-    let length = MessageStore.getConversationLength(id);
-    assert.equal(length, conversationLength[id]);
-
-    length = MessageStore.getConversation(id, mailboxID).length;
-    assert.equal(length, conversationLength[id]);
-  }
-
-  function testMessageAction(action, value) {
-    assert.equal(MessageStore.getAll().size, 0);
-
-    Dispatcher.dispatch({
-      type: ActionTypes[action],
-      value,
-    });
-
-    assert.equal(MessageStore.getAll().size, 1);
-    testValues(MessageStore.getByID(message.id), message);
-  }
-
-  function testMessagesAction(action, value) {
-    assert.equal(MessageStore.getAll().size, 0);
-
-    Dispatcher.dispatch({
-      type: ActionTypes[action],
-      value,
-    });
-
-    assert.equal(MessageStore.getAll().size, messages.length);
-    messages.forEach((msg) => testValues(MessageStore.getByID(msg.id), msg));
-  }
-
-
   before(() => {
     // Add several messages
     // to create a conversation
@@ -493,4 +422,75 @@ describe('Message Store', () => {
     });
   });
 
+
+
+  function isDate(key) {
+    return -1 < ['date', 'updated', 'createdAt'].indexOf(key)
+  }
+
+  function testValues(output, input) {
+    output = output.toJS();
+    if (undefined === input) input = message;
+
+    assert.equal(input.mailboxID, undefined);
+    assert.equal(typeof output.mailboxID, 'string');
+    delete output.mailboxID;
+
+    if (undefined === input.attachments) {
+      assert.deepEqual(output.attachments, []);
+      delete output.attachments;
+    }
+
+    if (undefined === input._displayImages) {
+      assert.equal(output._displayImages, false);
+      delete output._displayImages;
+    }
+
+    // When Message is only flagged as Unread
+    // sometime value can be undefined
+    // instead of []
+    if (undefined === input.flags) {
+      delete output.flags;
+    }
+
+    _.each(output, (value, property) => {
+      if ('object' === typeof value) {
+        assert.deepEqual(value, input[property]);
+      } else if (!isDate(property)) {
+        assert.equal(value, input[property]);
+      }
+    });
+  }
+
+  function testConversationLength (id, mailboxID) {
+    let length = MessageStore.getConversationLength(id);
+    assert.equal(length, conversationLength[id]);
+
+    length = MessageStore.getConversation(id, mailboxID).length;
+    assert.equal(length, conversationLength[id]);
+  }
+
+  function testMessageAction(action, value) {
+    assert.equal(MessageStore.getAll().size, 0);
+
+    Dispatcher.dispatch({
+      type: ActionTypes[action],
+      value,
+    });
+
+    assert.equal(MessageStore.getAll().size, 1);
+    testValues(MessageStore.getByID(message.id), message);
+  }
+
+  function testMessagesAction(action, value) {
+    assert.equal(MessageStore.getAll().size, 0);
+
+    Dispatcher.dispatch({
+      type: ActionTypes[action],
+      value,
+    });
+
+    assert.equal(MessageStore.getAll().size, messages.length);
+    messages.forEach((msg) => testValues(MessageStore.getByID(msg.id), msg));
+  }
 });

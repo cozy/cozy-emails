@@ -32,14 +32,10 @@ class RouterStore extends Store
 
     _currentFilter = _defaultFilter =
         sort: '-date'
-
         flags: null
-
         value: null
         before: null
         after: null
-        pageAfter: null
-
 
     _accountID = null
     _mailboxID = null
@@ -51,15 +47,14 @@ class RouterStore extends Store
     _nearestMessage = null
 
     _timerRouteChange = null
-    _timer = {}
 
 
     getRouter: ->
-        return _router
+        _router
 
 
     getAction: ->
-        return _action
+        _action
 
 
     getFilter: ->
@@ -165,13 +160,6 @@ class RouterStore extends Store
         _action is SearchActions.SHOW_ALL
 
 
-    # Useless for MessageStore
-    # to clean messages
-    isResetFilter: (filter) ->
-        filter = @getFilter() unless filter
-        filter.type in ['from', 'dest']
-
-
     _setCurrentAccount = ({accountID, mailboxID, tab="account"}) ->
         _accountID = accountID
         _mailboxID = mailboxID
@@ -271,17 +259,23 @@ class RouterStore extends Store
 
     isUnread: (message) ->
         flags = _getFlags message
-        MessageStore.isUnread {flags, message}
+        # test flags but also mailboxID
+        unless (result = MessageStore.isUnread {flags, message})
+            result = @getMailboxID() is @getAccount()?.get('unreadMailbox')
+        result
 
 
     isFlagged: (message) ->
         flags = _getFlags message
-        MessageStore.isFlagged {flags, message}
+        # test flags but also mailboxID
+        unless (result = MessageStore.isFlagged {flags, message})
+            result = @getMailboxID() is @getAccount()?.get('flaggedMailbox')
+        result
 
 
     isAttached: (message) ->
         flags = _getFlags message
-        MessageStore.isFlagged {flags, message}
+        MessageStore.isAttached {flags, message}
 
 
     isDeleted: (message) ->
@@ -291,16 +285,18 @@ class RouterStore extends Store
         if (trashID in mailboxIDs)
             return true
 
-        # Message is not totally removed
-        deletedLabel = 'Deleted Messages'.toLowerCase()
-        label = @getMailbox()?.get('label')?.toLowerCase()
-        label is deletedLabel
+        # Mailbox selected is trashbox
+        label = @getMailboxID()
+        trashID? and trashID is @getMailboxID()
 
 
     isDraft: (message) ->
-        draftID = @getAccount()?.get 'draftMailbox'
-        mailboxIDs = _.keys message?.get 'mailboxIDs'
-        draftID in mailboxIDs
+        if message?
+            flags = _getFlags message
+            MessageStore.isDraft {flags, message}
+        else
+            draftID = @getAccount()?.get 'draftMailbox'
+            draftID? and draftID is @getMailboxID()
 
 
     getMailboxTotal: ->
@@ -330,17 +326,15 @@ class RouterStore extends Store
         (_messagesLength + 1) >= MSGBYPAGE
 
 
-    # We dont filter for type from and dest because it is
-    # complicated by collation and name vs address.
-    filterFlags: (message) =>
+    filterByFlags: (message) =>
         if message and message not instanceof Immutable.Map
             message = Immutable.Map message
         if @isFlagged()
-            return @isFlagged message
+            return MessageStore.isFlagged message
         if @isAttached()
-            return @isAttached message
+            return MessageStore.isAttached message
         if @isUnread()
-            return @isUnread message
+            return MessageStore.isUnread message
         return true
 
 
@@ -374,7 +368,7 @@ class RouterStore extends Store
             conversations[path] = true unless (exist = conversations[path])
 
             # Should have the same flags
-            hasSameFlag = @filterFlags message
+            hasSameFlag = @filterByFlags message
 
             # Message should be in mailbox
             inMailbox = mailboxID of message.get 'mailboxIDs'
@@ -423,7 +417,7 @@ class RouterStore extends Store
         # Filter messages
         mailboxID ?= @getMailboxID()
         messages = MessageStore.getConversation conversationID, mailboxID
-        _.filter messages, @filterFlags
+        _.filter messages, @filterByFlags
 
 
     _getConversationIndex = (messages) ->
@@ -504,8 +498,17 @@ class RouterStore extends Store
             # without accounts
             _setCurrentAction payload
 
-            mailboxID ?= AccountStore.getDefault().get 'inboxMailbox'
-            accountID ?= AccountStore.getByMailbox(mailboxID).get 'id'
+            # get Account from mailbox
+            accountID ?= AccountStore.getByMailbox(mailboxID)?.get 'id' if mailboxID
+
+            # Get default account
+            # and set accountID and mailboxID
+            if not accountID and not mailboxID
+                account = AccountStore.getDefault()
+                accountID = account?.get 'id'
+                mailboxID = account?.get 'inboxMailbox'
+
+            mailboxID ?= AccountStore.getByID(accountID)?.get 'inboxMailbox'
             _setCurrentAccount {accountID, mailboxID, tab}
 
             # From MessageStore
@@ -534,18 +537,45 @@ class RouterStore extends Store
 
         handle ActionTypes.ROUTES_INITIALIZE, (router) ->
             _router = router
+
+            _action = null
+            _URI = null
+            _lastPage = {}
+
+            _modal = null
+
+            _currentFilter = _defaultFilter =
+                sort: '-date'
+                flags: null
+                value: null
+                before: null
+                after: null
+
+            _accountID = null
+            _mailboxID = null
+            _tab = null
+
+            _conversationID = null
+            _messageID = null
+            _messagesLength = 0
+            _nearestMessage = null
+
+            clearTimeout _timerRouteChange if _timerRouteChange
+            _timerRouteChange = null
+
             @emit 'change'
 
 
         # Do not redirect to default account
         # if silent is true
-        handle ActionTypes.REMOVE_ACCOUNT_SUCCESS, ({accountID, silent})  ->
-            accountID = @getAccountID()
-            mailboxID = @getAccount(accountID)?.get 'inboxMailbox'
+        handle ActionTypes.REMOVE_ACCOUNT_SUCCESS, ({silent})  ->
+            account = @getDefaultAccount()
+            accountID = account?.get 'id'
+            mailboxID = account?.get 'inboxMailbox'
             _setCurrentAccount {accountID, mailboxID}
 
             unless silent
-                action = AccountActions[if mailboxID then 'EDIT' else 'CREATE']
+                action = AccountActions[if account then 'EDIT' else 'CREATE']
                 _setCurrentAction {action}
 
             _updateURL()

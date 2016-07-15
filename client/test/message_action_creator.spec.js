@@ -23,7 +23,12 @@ describe('MessagesActionCreator', () => {
     mockeryUtils.initActionsStores();
 
     const path = '../app/actions/message_action_creator';
-    mockeryUtils.initForStores(['superagent-throttle', '../app/libs/xhr', '../libs/xhr', path]);
+    mockeryUtils.initForStores([
+      'superagent-throttle',
+      '../app/libs/xhr',
+      '../libs/xhr',
+      path
+    ]);
     XHRUtils = require('../app/libs/xhr');
     MessageActionCreator = require(path);
   });
@@ -94,8 +99,6 @@ describe('MessagesActionCreator', () => {
       let callback;
       let action = 'mon action';
       const message = { conversationID: 'plop', text: 'coucou' };
-
-      let message = { conversationID: 'plop', text: 'coucou' };
 
       beforeEach(() => {
         if (spySend === undefined) {

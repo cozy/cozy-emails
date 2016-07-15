@@ -211,8 +211,7 @@ class MessageStore extends Store
         if message and message not instanceof Immutable.Map
             message = Immutable.Map message
         if message?
-            flags = message.get('flags') or []
-            MessageFlags.SEEN not in flags
+            MessageFlags.SEEN not in (message.get('flags') or [])
         else
             MessageFilter.UNSEEN in flags
 
@@ -221,19 +220,27 @@ class MessageStore extends Store
         if message and message not instanceof Immutable.Map
             message = Immutable.Map message
         if message?
-            flags = message.get('flags') or []
-            MessageFlags.FLAGGED in flags
+            MessageFlags.FLAGGED in (message.get('flags') or [])
         else
             MessageFilter.FLAGGED in flags
 
 
     isAttached: ({flags=[], message}) ->
         if message and message not instanceof Immutable.Map
+            message.attachments = Immutable.List message.attachments?.map (file) ->
+                Immutable.Map file
             message = Immutable.Map message
         if message?
-            !!message.get('attachments')?.length
+            !!message.get('attachments')?.size
         else
             MessageFilter.ATTACH in flags
+
+
+    isDraft: ({flags=[], message}) ->
+        if message and message not instanceof Immutable.Map
+            message = Immutable.Map message
+        if message?
+            MessageFlags.DRAFT in (message.get('flags') or [])
 
 
     getConversation: (conversationID, mailboxID) ->
