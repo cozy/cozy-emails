@@ -90,7 +90,7 @@ class RequestsStore extends Store
         # we won't need to keep track of
         # requests anymore, so we reset them
         handle ActionTypes.ROUTE_CHANGE, ->
-            _requests ?= _setRequests()
+            _requests = _setRequests()
             @emit 'change'
 
 

@@ -19,6 +19,10 @@ RouterActionCreator = require '../../../actions/router_action_creator'
 StoreWatchMixin = require '../../../mixins/store_watch_mixin'
 
 
+# Top var for redirect timeout
+redirectTimer = undefined
+
+
 module.exports = AccountWizardCreation = React.createClass
 
     displayName: 'AccountWizardCreation'
@@ -39,7 +43,7 @@ module.exports = AccountWizardCreation = React.createClass
             alert:          RequestsGetter.getAccountCreationAlert()
             OAuth:          RequestsGetter.isAccountOAuth()
 
-        state.success = _.partial @redirect, account if account
+        state.mailboxID = account.inboxMailbox if account
         _.extend state, AccountsUtils.parseProviders discover if discover
 
         return state
@@ -51,6 +55,12 @@ module.exports = AccountWizardCreation = React.createClass
         nextState.enableSubmit = not nextState.isBusy and
             not _.isEmpty(nextState.login) and
             not _.isEmpty(nextState.password)
+
+        # Enable auto-redirect only on update after an ADD_ACCOUNT_SUCCESS
+        redirectTimer = setTimeout ->
+            if RequestsGetter.getAccountCreationSuccess()
+                RouterActionCreator.closeModal nextState.mailboxID
+        , 5000 if nextState.mailboxID
 
 
     componentDidMount: ->
@@ -101,22 +111,24 @@ module.exports = AccountWizardCreation = React.createClass
                     <footer>
                         <nav>
                             {<button className="success"
+                                     ref="success"
                                      name="redirect"
-                                     onClick={@state.success}>
+                                     onClick={@close}>
                                 {t('account wizard creation success')}
-                            </button> if @state.success}
+                            </button> if @state.mailboxID}
 
                             {<button name="cancel"
+                                     ref="cancel"
                                      type="button"
                                      onClick={@close}>
                                 {t('app cancel')}
-                            </button> if @props.hasAccount and not @state.success}
+                            </button> if @props.hasAccount and not @state.mailboxID}
                             {<button type="submit"
                                      form="account-wizard-creation"
                                      aria-busy={@state.isBusy}
                                      disabled={not @state.enableSubmit}>
                                 {t('account wizard creation save')}
-                            </button> unless @state.success}
+                            </button> unless @state.mailboxID}
                         </nav>
                     </footer>
                 </section>
@@ -149,25 +161,27 @@ module.exports = AccountWizardCreation = React.createClass
     # Close the modal when:
     # 1/ click on the modal backdrop
     # 2/ click on the cancel button
+    # 3/ click on the success button
     #
     # The close action only occurs if the click event is on one of the
     # aforementioned element and if there's already one account available
     # (otherwise this setting step is mandatory).
     close: (event) ->
-        isDisabled    = not @props.hasAccount
-        isContainer   = event.target is ReactDOM.findDOMNode @
-        isCloseButton = event.target.name is 'cancel'
-        return if isDisabled or not(isContainer or isCloseButton)
+        disabled  = not @props.hasAccount
+        success   = event.target is @refs.success
+        backdrops = event.target in [ReactDOM.findDOMNode(@), @refs.cancel]
+
+        return if not success and (disabled or not(backdrops))
 
         event.stopPropagation()
         event.preventDefault()
 
-        RouterActionCreator.closeModal()
+        # Disable auto-redirect
+        clearTimeout redirectTimer
 
-
-    # Redirect on success to the freshly created account's mailbox
-    redirect: (account) ->
-        RouterActionCreator.showMessageList mailboxID: account.inboxMailbox
+        # Redirect to mailboxID if available, will automatically fallback to
+        # current mailbox if no mailboxID is given (cancel case)
+        RouterActionCreator.closeModal @state.mailboxID
 
 
     # Update state according to user inputs

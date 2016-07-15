@@ -553,18 +553,6 @@ class RouterStore extends Store
             @emit 'change'
 
 
-        handle ActionTypes.ADD_ACCOUNT_SUCCESS, ({account, timeout}) ->
-            _timerRouteChange = setTimeout =>
-                _action = MessageActions.SHOW_ALL
-                _setCurrentAccount
-                    accountID: account.id
-                    mailboxID: account.inboxMailbox
-                _updateURL()
-
-                @emit 'change'
-            , timeout or 5000
-
-
         handle ActionTypes.MESSAGE_FETCH_SUCCESS, ({result, conversationID, lastPage}) ->
             # Save last message references
             _lastPage[_URI] = lastPage if lastPage?
@@ -585,6 +573,7 @@ class RouterStore extends Store
         handle ActionTypes.DISPLAY_MODAL, (params) ->
             _modal = params
             @emit 'change'
+
 
         handle ActionTypes.HIDE_MODAL, (value) ->
             _modal = null
