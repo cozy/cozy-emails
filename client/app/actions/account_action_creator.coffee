@@ -9,7 +9,16 @@ XHRUtils      = require '../libs/xhr'
 AccountStore = require '../stores/account_store'
 RouterStore  = require '../stores/router_store'
 
-
+###
+FIXME: making sagas with default Flux lib is a little bit tricky. Currently,
+       adding a new account is splited in 3 parts : 1/ (optionnal) try to
+       discover params ; 2/ check the authentication against servers ; 3/ create
+       account in the DS.
+       We choose a temporary solution to automate call to next step on success
+       by calling actions directly inside ActionCreator. This is a not so good
+       pattern, so we need to fix it later when transitioning to a more modern
+       store framework (like Redux + Sagas).
+###
 
 module.exports = AccountActionCreator =
 
