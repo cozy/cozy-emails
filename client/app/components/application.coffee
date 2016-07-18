@@ -6,14 +6,12 @@ React = require 'react'
 AriaTips = require '../../vendor/aria-tips/aria-tips'
 
 # React components
-Menu                  = React.createFactory require './menu'
+Menu                  = React.createFactory require './menu/menu'
 Modal                 = React.createFactory require './modal'
 ToastContainer        = React.createFactory require './toast_container'
 Tooltips              = React.createFactory require './tooltips-manager'
 MessageList           = React.createFactory require './message-list'
 Conversation          = React.createFactory require './conversation'
-AccountConfig         = React.createFactory require './account_config'
-Compose               = React.createFactory require './compose'
 AccountWizardCreation = React.createFactory require './accounts/wizard/creation'
 
 # React Mixins
@@ -27,7 +25,7 @@ RouterGetter = require '../getters/router'
 LayoutGetter = require '../getters/layout'
 SelectionGetter = require '../getters/selection'
 
-{MessageActions, AccountActions} = require '../constants/app_constants'
+{AccountActions} = require '../constants/app_constants'
 
 ###
     This component is the root of the React tree.

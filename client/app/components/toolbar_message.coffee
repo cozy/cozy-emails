@@ -4,9 +4,6 @@ React = require 'react'
 {Tooltips} = require '../constants/app_constants'
 MessageActionCreator = require '../actions/message_action_creator'
 
-RouterGetter = require '../getters/router'
-
-
 module.exports = React.createClass
     displayName: 'ToolbarMessage'
 

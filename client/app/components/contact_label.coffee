@@ -3,7 +3,7 @@ React = require 'react'
 
 {Tooltips} = require '../constants/app_constants'
 
-{AddressLabel} = require('./basic_components').factories
+{AddressLabel} = require('./basics/components').factories
 
 ContactActionCreator = require '../actions/contact_action_creator'
 LayoutActionCreator = require '../actions/layout_action_creator'

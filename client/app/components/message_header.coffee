@@ -2,8 +2,6 @@ _     = require 'underscore'
 React = require 'react'
 {header, div, span, span, i, img, a} = React.DOM
 
-{Tooltips} = require '../constants/app_constants'
-
 ContactLabel = React.createFactory require '../components/contact_label'
 
 RouterActionCreator = require '../actions/router_action_creator'

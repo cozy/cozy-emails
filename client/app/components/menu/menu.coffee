@@ -1,18 +1,17 @@
-_          = require 'underscore'
 React      = require 'react'
 
-{div, aside, nav, ul, li, span, a, i, button} = React.DOM
+{div, aside, nav, ul, span, a, i} = React.DOM
 
 MenuMailboxItem = React.createFactory require './menu_mailbox_item'
 
 classNames = require 'classnames'
 
-LayoutActionCreator  = require '../actions/layout_action_creator'
-{MessageFilter, Tooltips, AccountActions, MessageActions} = require '../constants/app_constants'
+LayoutActionCreator  = require '../../actions/layout_action_creator'
+{MessageFilter} = require '../../constants/app_constants'
 
-RouterGetter = require '../getters/router'
-ContactGetter = require '../getters/contact'
-FileGetter = require '../getters/file'
+RouterGetter = require '../../getters/router'
+ContactGetter = require '../../getters/contact'
+FileGetter = require '../../getters/file'
 
 module.exports = Menu = React.createClass
     displayName: 'Menu'

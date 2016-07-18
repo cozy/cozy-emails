@@ -11,11 +11,6 @@ MessageGetter = require '../getters/message'
 ContactGetter = require '../getters/contact'
 FileGetter = require '../getters/file'
 
-RouterActionCreator = require '../actions/router_action_creator'
-
-{MessageFlags} = require '../constants/app_constants'
-
-
 module.exports = React.createClass
     displayName: 'Message'
 

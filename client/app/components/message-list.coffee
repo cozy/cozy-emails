@@ -1,18 +1,14 @@
-Immutable = require 'immutable'
 React     = require 'react'
-ReactDOM  = require 'react-dom'
 
-{div, section, p, a, button, ul, strong} = React.DOM
+{div, section, p, button, ul, strong} = React.DOM
 
 RouterActionCreator = require '../actions/router_action_creator'
 
 MessageItem         = React.createFactory require './message-list-item'
 
-{Spinner, Progress} = require('./basic_components').factories
-MessageListLoader   = React.createFactory require './message-list-loader'
+{Spinner, Progress} = require('./basics/components').factories
 
 RouterGetter = require '../getters/router'
-SelectionGetter = require '../getters/selection'
 LayoutGetter = require '../getters/layout'
 
 

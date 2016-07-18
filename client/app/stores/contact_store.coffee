@@ -13,8 +13,6 @@ class ContactStore extends Store
         Defines private variables here.
     ###
 
-    _query = ""
-
     # all known contacts
     _contacts = Immutable.OrderedMap()
 
@@ -86,10 +84,6 @@ class ContactStore extends Store
 
     getResults: ->
         return _results
-
-
-    getQuery: ->
-        return _query
 
 
     getByAddress: (address) ->
