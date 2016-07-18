@@ -590,8 +590,192 @@ describe('RouterStore', () => {
     });
 
 
-    it('getURL', () => {
+    describe('getURL', () => {
+      let routes;
+      let url;
 
+      before(() => {
+       // Reverse relation value to simplify tests
+       // ie. routes['messageList'] = url
+       routes = RouterStore.getRouter().routes;
+       routes = _.transform(routes, (result, value, key) => {
+         result[value] = key;
+       }, {});
+      });
+
+      beforeEach(() => {
+        Dispatcher.dispatch({
+          type: ActionTypes.RESET_ACCOUNT_REQUEST,
+        });
+      });
+
+      describe('defaultView', () => {
+        it('should goto `AccountNew` (no account found)', () => {
+          url = RouterStore.getURL().replace('#', '');
+          assert.equal(url, routes['accountNew']);
+          assert.equal(url, RouterStore.getURL({ isServer: true }));
+        });
+
+        it('should goto `MessageList` (default account)', () => {
+          testMessagesList();
+        });
+      });
+
+      describe('messagesList', () => {
+        it('shouldnt handle filters', () => {
+          testMessagesList();
+        });
+
+        it('should handle filter', () => {
+          const filter = {'plop': 'one value'};
+          testMessagesList({filter});
+        });
+
+        it('should handle all filters', () => {
+          const filter = {'plop': ['several', 'values', 'with special chars']};
+          testMessagesList({filter});
+        });
+      });
+
+      it('accountNew', () => {
+        const action = AccountActions.CREATE;
+        testAccount({action}, 'accountNew');
+      });
+
+      it('accountEdit', () => {
+        const action = AccountActions.EDIT;
+        testAccount({action}, 'accountEdit');
+      });
+
+      it('messageNew', () => {
+        const action = MessageActions.CREATE;
+        testMessage({action}, 'messageNew');
+      });
+
+      it('messageEdit', () => {
+        const action = MessageActions.EDIT;
+        testMessage({action}, 'messageEdit');
+      });
+
+      it('messageForward', () => {
+        const action = MessageActions.FORWARD;
+        testMessage({action}, 'messageForward');
+      });
+
+      it('messageReply', () => {
+        const action = MessageActions.REPLY;
+        testMessage({action}, 'messageReply');
+      });
+
+      it('messageReplyAll', () => {
+        const action = MessageActions.REPLY_ALL;
+        testMessage({action}, 'messageReplyAll');
+      });
+
+      it('messageShow', () => {
+        const action = MessageActions.SHOW;
+        testMessage({action}, 'messageShow');
+      });
+
+
+      function testAccount(data, keyRoute) {
+        let route = _.cloneDeep(routes[keyRoute]);
+        let params = Object.assign({
+          mailboxID: 'mailboxID',
+          accountID: 'accountID',
+          tab: RouterStore.getDefaultTab(),
+        }, data);
+
+        url = RouterStore.getURL(params).replace('#', '');
+        _.forEach(params, (value, key) => {
+          route = route.replace(`:${key}`, value);
+        });
+        assert.equal(url, route);
+
+        let paramsServer = Object.assign({}, params, { isServer: true });
+        assert.equal(url, RouterStore.getURL(paramsServer));
+
+        // Select specific tab
+        params = Object.assign(params, { tab: 'PLOP' });
+        url = RouterStore.getURL(params).replace('#', '');
+        route = _.cloneDeep(routes[keyRoute]);
+        _.forEach(params, (value, key) => {
+          route = route.replace(`:${key}`, value);
+        });
+        assert.equal(url, route);
+
+        paramsServer = Object.assign({}, params, { isServer: true });
+        assert.equal(url, RouterStore.getURL(paramsServer));
+      }
+
+      function testMessage(data, keyRoute) {
+        let route = _.cloneDeep(routes[keyRoute]);
+        const params = Object.assign({
+          conversationID: 'conversationID',
+          messageID: 'messageID',
+          mailboxID: 'mailboxID',
+          filter: null,
+        }, data);
+
+        url = RouterStore.getURL(params).replace('#', '');
+
+        let query = toQueryParameters(params.filter);
+        route = route.replace('(?:filter)', query);
+        _.forEach(params, (value, key) => {
+          route = route.replace(`:${key}`, value);
+        });
+        assert.equal(url, route);
+
+        // ServerSide URL need a / between URI and Query
+        // Only for mailbox/mailboxID/conversationID/messageID/
+        if (MessageActions.SHOW === params.action)
+          if (query.length) url = url.replace(query, '/' + query);
+          else url += '/';
+        const paramsServer = Object.assign({}, params, { isServer: true });
+        assert.equal(url, RouterStore.getURL(paramsServer));
+      }
+
+
+      function toQueryParameters(data) {
+        if (data) {
+          let key = encodeURI(_.keys(data)[0]);
+
+          // Be carefull of Array values
+          let value = _.values(data)[0];
+          if (_.isArray(value)) value = value.join('&');
+
+          return `?${key}=${encodeURI(value)}`;
+        }
+        return '';
+      }
+
+      function testMessagesList(data) {
+        Dispatcher.dispatch({
+          type: ActionTypes.ADD_ACCOUNT_SUCCESS,
+          value: { account: AccountFixtures.createAccount() },
+        });
+
+
+        const params = Object.assign({
+          action: MessageActions.SHOW_ALL,
+          mailboxID: RouterStore.getDefaultAccount().get('inboxMailbox')
+        }, data);
+
+        let url = RouterStore.getURL(params).replace('#', '');
+        let route = routes['messageList'];
+        let query = toQueryParameters(params.filter);
+
+        route = route.replace('(?:filter)', query);
+        route = route.replace(':mailboxID', params.mailboxID);
+
+        assert.equal(url, route);
+
+        // ServerSide URL need a / between URI and Query
+        if (query.length) url = url.replace(query, '/' + query);
+        else url += '/';
+        const paramsServer = Object.assign({}, params, { isServer: true });
+        assert.equal(url, RouterStore.getURL(paramsServer));
+      }
     });
 
 
@@ -602,7 +786,6 @@ describe('RouterStore', () => {
     it.skip('getURI', () => {
 
     });
-
 
     it.skip('getMessagesPerPage', () => {
 

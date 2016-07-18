@@ -15,6 +15,7 @@ MessageFlags
 SearchActions} = require '../constants/app_constants'
 
 {MSGBYPAGE} = require '../../../server/utils/constants'
+TAB = 'account'
 
 
 class RouterStore extends Store
@@ -69,16 +70,18 @@ class RouterStore extends Store
         action = _getRouteAction params
 
         isMessage = !!params.messageID or _.includes action, 'message'
-        if isMessage and not params.mailboxID
-            params.mailboxID = @getMailboxID()
-
         isMailbox = _.includes action, 'mailbox'
-        if isMailbox and not params.mailboxID
-            params.mailboxID = @getMailboxID()
+        if (isMessage or isMailbox) and not params.mailboxID
+            unless (params.mailboxID = @getMailboxID())
+                account = @getDefaultAccount()
+                params.accountID = account?.get 'id'
+                params.mailboxID = account?.get 'inboxMailbox'
 
         isAccount = _.includes action, 'account'
         if isAccount and not params.accountID
-            params.accountID = @getAccountID()
+            unless (params.accountID = @getAccountID())
+                params.accountID = @getDefaultAccount()?.get 'id'
+
         if isAccount and not params.tab
             params.tab = 'account'
 
@@ -110,8 +113,12 @@ class RouterStore extends Store
 
     _getRouteAction = (params) ->
         unless (action = params.action)
-            return MessageActions.SHOW if params.messageID
-            return MessageActions.SHOW_ALL
+            if params.messageID
+                action = MessageActions.SHOW
+            else if AccountStore.getAll()?.size
+                action = MessageActions.SHOW_ALL
+            else
+                action = AccountActions.CREATE
         action
 
     _getRoute = (action) ->
@@ -133,9 +140,10 @@ class RouterStore extends Store
                 # Server Side request:
                 # Flags query doesnt exist
                 key = 'flag' if isServer and key is 'flags'
-                return key + '=' + encodeURIComponent(value)
+                value = value.join '&' if _.isArray value
+                return key + '=' + value
 
-        if query.length then "?#{query.join '&'}" else ""
+        if query.length then '?' + encodeURI query.join '&' else ''
 
 
     _setFilter = (query=_defaultFilter) ->
@@ -160,7 +168,7 @@ class RouterStore extends Store
         _action is SearchActions.SHOW_ALL
 
 
-    _setCurrentAccount = ({accountID, mailboxID, tab="account"}) ->
+    _setCurrentAccount = ({accountID, mailboxID, tab=TAB}) ->
         _accountID = accountID
         _mailboxID = mailboxID
         _tab = if _action is AccountActions.EDIT then tab else null
@@ -209,6 +217,11 @@ class RouterStore extends Store
     getAllMailboxes: (accountID) ->
         accountID ?= @getAccountID()
         AccountStore.getAllMailboxes accountID
+
+
+
+    getDefaultTab: ->
+        TAB
 
 
     getSelectedTab: ->
