@@ -8,6 +8,7 @@ const _ = require('lodash');
 const mockeryUtils = require('./utils/mockery_utils');
 const SpecDispatcher = require('./utils/specs_dispatcher');
 const SpecRouter = require('./utils/specs_router');
+const sinon = require('sinon');
 
 const UtilConstants = require('../../server/utils/constants');
 const Constants = require('../app/constants/app_constants');
@@ -65,50 +66,19 @@ describe('RouterStore', () => {
       type: ActionTypes.ROUTES_INITIALIZE,
       value: router,
     });
-
-    // Add 3 accounts to test
-    // several usecases
-    account = AccountFixtures.createAccount();
-    Dispatcher.dispatch({
-      type: ActionTypes.ADD_ACCOUNT_SUCCESS,
-      value: { account },
-    });
-    Dispatcher.dispatch({
-      type: ActionTypes.ADD_ACCOUNT_SUCCESS,
-      value: { account: AccountFixtures.createAccount() },
-    });
-    Dispatcher.dispatch({
-      type: ActionTypes.ADD_ACCOUNT_SUCCESS,
-      value: { account: AccountFixtures.createAccount() },
-    });
-
-    // Add messages
-    // that belongs to defaultAccount
-    const conversationID = `coucou-${getUID()}`;
-    const params = {conversationID, account};
-    const messages = [];
-    messages.push(MessageFixtures.createMessage(params));
-    messages.push(MessageFixtures.createMessage(params));
-    messages.push(MessageFixtures.createMessage(params));
-    messages.push(MessageFixtures.createMessage(params));
-    messages.push(MessageFixtures.createMessage(params));
-    messages.push(MessageFixtures.createMessage(params));
-    Dispatcher.dispatch({
-      type: ActionTypes.RECEIVE_RAW_MESSAGES,
-      value: messages,
-    });
   });
 
-  afterEach(() => {
-    Dispatcher.dispatch({
-      type: ActionTypes.MESSAGE_RESET_REQUEST,
-    });
-    Dispatcher.dispatch({
-      type: ActionTypes.RESET_ACCOUNT_REQUEST,
-    });
-  });
 
-  describe('Methods', () => {
+  describe('Basics', () => {
+
+    beforeEach(() => {
+      createAccountFixtures()
+    });
+
+    afterEach(() => {
+      resetAccountFixtures()
+    });
+
 
     it('getRouter', () => {
       const result = RouterStore.getRouter();
@@ -118,61 +88,72 @@ describe('RouterStore', () => {
     });
 
 
-    it('getAccountID', () => {
-      const accounts = AccountStore.getAll().toArray();
+    describe('getAccountID', () => {
+      let accounts;
 
-      // Get default value
-      let output = RouterStore.getAccountID();
-      assert.equal(output, undefined);
-
-      // Save direct value
-      Dispatcher.dispatch({
-        type: ActionTypes.ROUTE_CHANGE,
+      beforeEach(() => {
+        accounts = AccountStore.getAll().toArray();
       });
-      output = RouterStore.getAccountID();
-      assert.equal(output, accounts[0].get('id'));
-      assert.notEqual(output, undefined);
 
-      // Save direct value
-      Dispatcher.dispatch({
-        type: ActionTypes.ROUTE_CHANGE,
-        value: { accountID: accounts[1].get('id') },
+      it('Should return (default) `value`', () => {
+        assert.equal(RouterStore.getAccountID(), undefined);
       });
-      output = RouterStore.getAccountID();
-      assert.equal(output, accounts[1].get('id'));
-      assert.notEqual(output, undefined);
 
-      // Get AccountID from mailboxID
-      Dispatcher.dispatch({
-        type: ActionTypes.ROUTE_CHANGE,
-        value: { mailboxID: accounts[2].get('inboxMailbox') },
+      it('Should save `value`', () => {
+        Dispatcher.dispatch({
+          type: ActionTypes.ROUTE_CHANGE,
+        });
+        const output = RouterStore.getAccountID();
+        assert.equal(output, accounts[0].get('id'));
+        assert.notEqual(output, undefined);
       });
-      output = RouterStore.getAccountID();
-      assert.equal(output, accounts[2].get('id'));
-      assert.notEqual(output, undefined);
+
+      it('Should define `mailboxID` from `accountID`', () => {
+        Dispatcher.dispatch({
+          type: ActionTypes.ROUTE_CHANGE,
+          value: { accountID: accounts[1].get('id') },
+        });
+        const output = RouterStore.getAccountID();
+        assert.equal(output, accounts[1].get('id'));
+        assert.notEqual(output, undefined);
+      });
+
+      it('Should define `accountID` from `mailboxID`', () => {
+        Dispatcher.dispatch({
+          type: ActionTypes.ROUTE_CHANGE,
+          value: { mailboxID: accounts[2].get('inboxMailbox') },
+        });
+        const output = RouterStore.getAccountID();
+        assert.equal(output, accounts[2].get('id'));
+        assert.notEqual(output, undefined);
+      });
     });
 
-    it('getAccount', () => {
-      // Default value is undefined
-      assert.equal(RouterStore.getAccount(), undefined);
-
-      // Should save defaultValue
-      Dispatcher.dispatch({
-        type: ActionTypes.ROUTE_CHANGE,
+    describe('getAccount', () => {
+      it('Shouldnt find `(default) Account`', () => {
+        assert.equal(RouterStore.getAccount(), undefined);
       });
-      let input = AccountStore.getDefault();
-      let output = RouterStore.getAccount();
-      assert.equal(output.get('id'), input.get('id'));
 
-      // Should save accountID
-      input = AccountStore.getAll().toArray()[1];
-      Dispatcher.dispatch({
-        type: ActionTypes.ROUTE_CHANGE,
-        value: { accountID: input.get('id') }
+      it('Should save `Account`', () => {
+        Dispatcher.dispatch({
+          type: ActionTypes.ROUTE_CHANGE,
+        });
+        const input = AccountStore.getDefault();
+        const output = RouterStore.getAccount();
+        assert.equal(output.get('id'), input.get('id'));
       });
-      output = RouterStore.getAccount(input.get('id'));
-      assert.equal(output.get('id'), input.get('id'));
+
+      it('Should save `accountID`', () => {
+        const input = AccountStore.getAll().toArray()[1];
+        Dispatcher.dispatch({
+          type: ActionTypes.ROUTE_CHANGE,
+          value: { accountID: input.get('id') }
+        });
+        const output = RouterStore.getAccount(input.get('id'));
+        assert.equal(output.get('id'), input.get('id'));
+      });
     });
+
 
     it('getDefaultAccount', () => {
       const input = AccountStore.getAll().first();
@@ -181,419 +162,552 @@ describe('RouterStore', () => {
     });
 
 
-    it('getMailboxID', () => {
-      const accounts = AccountStore.getAll().toArray();
+    describe('getMailboxID', () => {
+      let accounts;
+
+      beforeEach(() => {
+        accounts = AccountStore.getAll().toArray();
+      });
 
       // Get default value
-      let output = RouterStore.getMailboxID();
-      assert.equal(output, undefined);
-
-      // Save direct value
-      Dispatcher.dispatch({
-        type: ActionTypes.ROUTE_CHANGE,
+      it('Should return null', () => {
+        assert.equal(RouterStore.getMailboxID(), undefined);
       });
-      output = RouterStore.getMailboxID();
-      assert.equal(output, accounts[0].get('inboxMailbox'));
-      assert.notEqual(output, undefined);
 
-      // Save direct value
-      Dispatcher.dispatch({
-        type: ActionTypes.ROUTE_CHANGE,
-        value: { mailboxID: accounts[1].get('inboxMailbox') },
+      it('Should save `mailboxID`', () => {
+        // Save direct value
+        Dispatcher.dispatch({
+          type: ActionTypes.ROUTE_CHANGE,
+        });
+        const output = RouterStore.getMailboxID();
+        assert.equal(output, accounts[0].get('inboxMailbox'));
+        assert.notEqual(output, undefined);
       });
-      output = RouterStore.getMailboxID();
-      assert.equal(output, accounts[1].get('inboxMailbox'));
-      assert.notEqual(output, undefined);
 
-      // Get AccountID from mailboxID
-      Dispatcher.dispatch({
-        type: ActionTypes.ROUTE_CHANGE,
-        value: { accountID: accounts[2].get('id') },
+      it('Should save `accountID` from `mailboxID`', () => {
+        Dispatcher.dispatch({
+          type: ActionTypes.ROUTE_CHANGE,
+          value: { mailboxID: accounts[1].get('inboxMailbox') },
+        });
+        const output = RouterStore.getMailboxID();
+        assert.equal(output, accounts[1].get('inboxMailbox'));
+        assert.notEqual(output, undefined);
       });
-      output = RouterStore.getMailboxID();
-      assert.equal(output, accounts[2].get('inboxMailbox'));
-      assert.notEqual(output, undefined);
+
+      it('Should save `mailboxID` from `accountID`', () => {
+        Dispatcher.dispatch({
+          type: ActionTypes.ROUTE_CHANGE,
+          value: { accountID: accounts[2].get('id') },
+        });
+        const output = RouterStore.getMailboxID();
+        assert.equal(output, accounts[2].get('inboxMailbox'));
+        assert.notEqual(output, undefined);
+      });
     });
 
-    it('getMailbox', () => {
-      // Default value is undefined
-      assert.equal(RouterStore.getMailbox(), undefined);
-
-      // Should save defaultValue
-      Dispatcher.dispatch({
-        type: ActionTypes.ROUTE_CHANGE,
+    describe('getMailbox', () => {
+      it('Shouldnt find `(default) Account.mailbox`', () => {
+        assert.equal(RouterStore.getMailbox(), undefined);
       });
-      let input = AccountStore.getAll().toArray()[0];
-      let output = RouterStore.getMailbox();
-      assert.equal(output.get('id'), input.get('inboxMailbox'));
-      assert.equal(output.get('id'), RouterStore.getMailboxID());
 
-      // Should save value
-      input = AccountStore.getAll().toArray()[1];
-      Dispatcher.dispatch({
-        type: ActionTypes.ROUTE_CHANGE,
-        value: { mailboxID: input.get('inboxMailbox') }
+      it('Should find `(default) Account.mailbox`', () => {
+        Dispatcher.dispatch({
+          type: ActionTypes.ROUTE_CHANGE,
+        });
+        const input = AccountStore.getAll().toArray()[0];
+        const output = RouterStore.getMailbox();
+        assert.equal(output.get('id'), input.get('inboxMailbox'));
+        assert.equal(output.get('id'), RouterStore.getMailboxID());
       });
-      output = RouterStore.getMailbox();
-      assert.equal(output.get('id'), input.get('inboxMailbox'));
+
+      it('Should save `Account.mailbox` from mailboxID', () => {
+        // Should save value
+        const input = AccountStore.getAll().toArray()[1];
+        Dispatcher.dispatch({
+          type: ActionTypes.ROUTE_CHANGE,
+          value: { mailboxID: input.get('inboxMailbox') }
+        });
+        const output = RouterStore.getMailbox();
+        assert.equal(output.get('id'), input.get('inboxMailbox'));
+      });
     });
 
-    it('getAllMailboxes', () => {
-      const accounts = AccountStore.getAll().toArray();
+    describe('getAllMailboxes', () => {
+      let accounts;
 
-      // Default value is undefined
-      assert.equal(RouterStore.getAllMailboxes(), undefined);
-
-      // Test default Account
-      let input = accounts[0].get('mailboxes');
-      Dispatcher.dispatch({
-        type: ActionTypes.ROUTE_CHANGE,
+      beforeEach(() => {
+        accounts = AccountStore.getAll().toArray();
       });
 
-      let output = RouterStore.getAllMailboxes();
-      assert.deepEqual(input.toJS(), output.toJS())
-
-      // Test with defined account
-      input = accounts[2].get('mailboxes');
-      Dispatcher.dispatch({
-        type: ActionTypes.ROUTE_CHANGE,
-        value: { accountID: accounts[2].get('id') },
+      it('Should return `(default) Account`', () => {
+        const input = accounts[0].get('mailboxes');
+        Dispatcher.dispatch({
+          type: ActionTypes.ROUTE_CHANGE,
+        });
+        const output = RouterStore.getAllMailboxes();
+        assert.deepEqual(input.toJS(), output.toJS())
       });
-      output = RouterStore.getAllMailboxes(accounts[2].get('id'));
-      assert.deepEqual(input.toJS(), output.toJS());
-    });
 
-
-    it('getMessageID', () => {
-      assert.equal(RouterStore.getMessageID(), null);
-
-      // Preset value
-      Dispatcher.dispatch({
-        type: ActionTypes.ROUTE_CHANGE,
+      it('Should return `Account` from `accountID`', () => {
+        const input = accounts[2].get('mailboxes');
+        Dispatcher.dispatch({
+          type: ActionTypes.ROUTE_CHANGE,
+          value: { accountID: accounts[2].get('id') },
+        });
+        const output = RouterStore.getAllMailboxes(accounts[2].get('id'));
+        assert.deepEqual(input.toJS(), output.toJS());
       });
-      assert.equal(RouterStore.getMessageID(), null);
-
-      // MessageID always works with conversationID
-      const messages = MessageStore.getAll().toArray();
-      let messageID = messages[2].get('id');
-      let conversationID = messages[2].get('conversationID');
-      Dispatcher.dispatch({
-        type: ActionTypes.ROUTE_CHANGE,
-        value: { messageID }
-      });
-      assert.equal(RouterStore.getMessageID(), null);
-
-      Dispatcher.dispatch({
-        type: ActionTypes.ROUTE_CHANGE,
-        value: { messageID, conversationID }
-      });
-      assert.equal(RouterStore.getMessageID(), messageID);
-    });
-
-    it('getConversationID', () => {
-      assert.equal(RouterStore.getConversationID(), null);
-
-      // Preset value
-      Dispatcher.dispatch({
-        type: ActionTypes.ROUTE_CHANGE,
-      });
-      assert.equal(RouterStore.getConversationID(), null);
-
-      // MessageID always works with conversationID
-      const messages = MessageStore.getAll().toArray();
-      let messageID = messages[1].get('id');
-      let conversationID = messages[1].get('conversationID');
-      Dispatcher.dispatch({
-        type: ActionTypes.ROUTE_CHANGE,
-        value: { conversationID }
-      });
-      assert.equal(RouterStore.getConversationID(), null);
-
-      Dispatcher.dispatch({
-        type: ActionTypes.ROUTE_CHANGE,
-        value: { messageID, conversationID }
-      });
-      assert.equal(RouterStore.getConversationID(), conversationID);
     });
 
 
-    it('getAction', () => {
-      const accounts = AccountStore.getAll();
-      const accountIDs = _.keys(accounts.toJS());
+    describe('getMessageID', () => {
+      let messages;
+      let messageID;
+      let conversationID;
 
-      // Default value
-      assert.equal(RouterStore.getAction(), null)
+      beforeEach(() => {
+        messages = MessageStore.getAll().toArray();
+        messageID = messages[2].get('id');
+        conversationID = messages[2].get('conversationID');
+      })
 
-      //  Set action
-      Dispatcher.dispatch({
-        type: ActionTypes.ROUTE_CHANGE,
-        value: { action: 'ploups' },
+      it('Should return `null`', () => {
+        assert.equal(RouterStore.getMessageID(), null);
       });
-      assert.equal(RouterStore.getAction(), 'ploups');
+
+      it('Shouldnt be updated', () => {
+        Dispatcher.dispatch({
+          type: ActionTypes.ROUTE_CHANGE,
+        });
+        assert.equal(RouterStore.getMessageID(), null);
+
+        // MessageID always works with conversationID
+        Dispatcher.dispatch({
+          type: ActionTypes.ROUTE_CHANGE,
+          value: { messageID }
+        });
+        assert.equal(RouterStore.getMessageID(), null);
+      });
+
+      it('Should be updated', () => {
+        Dispatcher.dispatch({
+          type: ActionTypes.ROUTE_CHANGE,
+          value: { messageID, conversationID }
+        });
+        assert.equal(RouterStore.getMessageID(), messageID);
+      });
+    });
+
+    describe('getConversationID', () => {
+      let messages;
+      let messageID;
+      let conversationID;
+
+      beforeEach(() => {
+        messages = MessageStore.getAll().toArray();
+        messageID = messages[1].get('id');
+        conversationID = messages[1].get('conversationID');
+      })
+
+      it('Should return `null`', () => {
+        assert.equal(RouterStore.getConversationID(), null);
+
+        Dispatcher.dispatch({
+          type: ActionTypes.ROUTE_CHANGE,
+        });
+        assert.equal(RouterStore.getConversationID(), null);
+      });
+
+      it('Shouldnt be updated', () => {
+        Dispatcher.dispatch({
+          type: ActionTypes.ROUTE_CHANGE,
+          value: { conversationID }
+        });
+        assert.equal(RouterStore.getConversationID(), null);
+      });
+
+      it('Should be updated', () => {
+        Dispatcher.dispatch({
+          type: ActionTypes.ROUTE_CHANGE,
+          value: { messageID, conversationID }
+        });
+        assert.equal(RouterStore.getConversationID(), conversationID);
+      });
+    });
+
+
+    describe('getAction', () => {
+      let accounts;
+      let accountIDs;
+
+      beforeEach(() => {
+        accounts = AccountStore.getAll();
+        accountIDs = _.keys(accounts.toJS());
+      });
+
+      it('Should return null', () => {
+        assert.equal(RouterStore.getAction(), null)
+      });
+
+      it('Should be updated', () => {
+        Dispatcher.dispatch({
+          type: ActionTypes.ROUTE_CHANGE,
+          value: { action: 'ploups' },
+        });
+        assert.equal(RouterStore.getAction(), 'ploups');
+      });
     });
 
 
     // TODO: add test for value, sort, before and after
     // when it will be handled by components
-    it('getFilter', () => {
-      const defaultValue = RouterStore.getFilter();
-      assert.notEqual(defaultValue, undefined);
-      assert.equal(defaultValue.sort, '-date');
-      assert.isNull(defaultValue.flags);
-      assert.isNull(defaultValue.value);
-      assert.isNull(defaultValue.before);
-      assert.isNull(defaultValue.after);
+    describe('getFilter', () => {
+      let defaultValue;
 
-      let flags = MessageFilter.UNSEEN
-      Dispatcher.dispatch({
-        type: ActionTypes.ROUTE_CHANGE,
-        value: { filter: {flags} }
+      beforeEach(() => {
+        defaultValue = RouterStore.getFilter();
       });
 
-      // Filter.flags should have change
-      let filter = RouterStore.getFilter();
-      assert.equal(filter.flags, flags);
-      assert.equal(filter.sort, defaultValue.sort);
-      assert.equal(filter.value, defaultValue.value);
-      assert.equal(filter.before, defaultValue.before);
-      assert.equal(filter.after, defaultValue.after);
-
-      Dispatcher.dispatch({
-        type: ActionTypes.ROUTE_CHANGE,
-        value: { filter: null }
+      it('Shouldnt return `undefined`', () => {
+        assert.notEqual(defaultValue, undefined);
+        assert.equal(defaultValue.sort, '-date');
+        assert.isNull(defaultValue.flags);
+        assert.isNull(defaultValue.value);
+        assert.isNull(defaultValue.before);
+        assert.isNull(defaultValue.after);
       });
 
-      // Filter should be reset
-      filter = RouterStore.getFilter();
-      assert.deepEqual(filter, defaultValue);
+      it('Should be updated', () => {
+        const flags = MessageFilter.UNSEEN
+        Dispatcher.dispatch({
+          type: ActionTypes.ROUTE_CHANGE,
+          value: { filter: {flags} }
+        });
+
+        // Filter.flags should have change
+        const filter = RouterStore.getFilter();
+        assert.equal(filter.flags, flags);
+        assert.equal(filter.sort, defaultValue.sort);
+        assert.equal(filter.value, defaultValue.value);
+        assert.equal(filter.before, defaultValue.before);
+        assert.equal(filter.after, defaultValue.after);
+      });
+
+      it('Should be reset', () => {
+        Dispatcher.dispatch({
+          type: ActionTypes.ROUTE_CHANGE,
+          value: { filter: null }
+        });
+        assert.deepEqual(RouterStore.getFilter(), defaultValue);
+      });
     });
 
-    it('isUnread', () => {
-      assert.isFalse(RouterStore.isUnread());
+    describe('isUnread', () => {
+      it('Should return `mailbox.unread`', () => {
+        assert.isFalse(RouterStore.isUnread());
 
-      // Add Unseen filter into URI
-      Dispatcher.dispatch({
-        type: ActionTypes.ROUTE_CHANGE,
-        value: { filter: { flags: MessageFilter.UNSEEN } }
-      });
-      assert.isTrue(RouterStore.isUnread());
+        // Add Unseen filter into URI
+        Dispatcher.dispatch({
+          type: ActionTypes.ROUTE_CHANGE,
+          value: { filter: { flags: MessageFilter.UNSEEN } }
+        });
+        assert.isTrue(RouterStore.isUnread());
 
-      // Add unread message
-      Dispatcher.dispatch({
-        type: ActionTypes.RECEIVE_RAW_MESSAGE,
-        value: MessageFixtures.createUnread({ account }),
-      });
-
-      // Test unread message
-      let message = MessageStore.getAll().find((message) => {
-       return !message.get('flags').length;
-      });
-      assert.notEqual(message, undefined);
-      assert.isTrue(RouterStore.isUnread(message));
-
-      // Test on read message
-      message = MessageStore.getAll().find((message) => {
-       return message.get('flags').length;
-      });
-      assert.notEqual(message, undefined);
-      assert.isFalse(RouterStore.isUnread(message));
-
-      // Add Flagged filter into URI
-      Dispatcher.dispatch({
-        type: ActionTypes.ROUTE_CHANGE,
-        value: { filter: { flags: MessageFilter.FLAGGED } }
-      });
-      assert.isFalse(RouterStore.isUnread());
-    });
-
-
-    it('isFlagged', () => {
-      assert.isFalse(RouterStore.isFlagged());
-
-      // Add Unseen filter into URI
-      Dispatcher.dispatch({
-        type: ActionTypes.ROUTE_CHANGE,
-        value: { filter: { flags: MessageFilter.FLAGGED } }
-      });
-      assert.isTrue(RouterStore.isFlagged());
-
-      // Add flagged message
-      Dispatcher.dispatch({
-        type: ActionTypes.RECEIVE_RAW_MESSAGE,
-        value: MessageFixtures.createFlagged({ account }),
+        // Add Flagged filter into URI
+        Dispatcher.dispatch({
+          type: ActionTypes.ROUTE_CHANGE,
+          value: { filter: { flags: MessageFilter.FLAGGED } }
+        });
+        assert.isFalse(RouterStore.isUnread());
       });
 
-      // Test flagged message
-      let message = MessageStore.getAll().find((message) => {
-        return -1 < message.get('flags').indexOf(MessageFlags.FLAGGED)
-      });
-      assert.notEqual(message, undefined);
-      assert.isTrue(RouterStore.isFlagged(message));
+      it('Should return `message.unread`', () => {
+        // Add unread message
+        Dispatcher.dispatch({
+          type: ActionTypes.RECEIVE_RAW_MESSAGE,
+          value: MessageFixtures.createUnread({ account }),
+        });
 
-      // Test on un-flagged message
-      message = MessageStore.getAll().find((message) => {
-        return -1 === message.get('flags').indexOf(MessageFlags.FLAGGED)
-      });
-      assert.notEqual(message, undefined);
-      assert.isFalse(RouterStore.isFlagged(message));
+        // Test unread message
+        let message = MessageStore.getAll().find((message) => {
+         return !message.get('flags').length;
+        });
+        assert.notEqual(message, undefined);
+        assert.isTrue(RouterStore.isUnread(message));
 
-      // Add Flagged filter into URI
-      Dispatcher.dispatch({
-        type: ActionTypes.ROUTE_CHANGE,
-        value: { filter: { flags: MessageFilter.ATTACH } }
+        // Test on read message
+        message = MessageStore.getAll().find((message) => {
+         return message.get('flags').length;
+        });
+        assert.notEqual(message, undefined);
+        assert.isFalse(RouterStore.isUnread(message));
       });
-      assert.notEqual(message, undefined);
-      assert.isFalse(RouterStore.isFlagged());
 
     });
 
 
-    it('isAttached', () => {
-      assert.isFalse(RouterStore.isAttached());
+    describe('isFlagged', () => {
+      it('Should return `mailbox.flagged`', () => {
+        assert.isFalse(RouterStore.isFlagged());
 
-      // Add Attach filter into URI
-      Dispatcher.dispatch({
-        type: ActionTypes.ROUTE_CHANGE,
-        value: { filter: { flags: MessageFilter.ATTACH } }
-      });
-      assert.isTrue(RouterStore.isAttached());
+        Dispatcher.dispatch({
+          type: ActionTypes.ROUTE_CHANGE,
+          value: { filter: { flags: MessageFilter.FLAGGED } }
+        });
+        assert.isTrue(RouterStore.isFlagged());
 
-      // Add Attached message
-      Dispatcher.dispatch({
-        type: ActionTypes.RECEIVE_RAW_MESSAGE,
-        value: MessageFixtures.createAttached({ account }),
+        Dispatcher.dispatch({
+          type: ActionTypes.ROUTE_CHANGE,
+          value: { filter: { flags: MessageFilter.ATTACH } }
+        });
+        let message = MessageStore.getAll().find((message) => {
+         return message.get('flags').length;
+        });
+        assert.notEqual(message, undefined);
+        assert.isFalse(RouterStore.isFlagged());
       });
 
-      // Test Attached message
-      let message = MessageStore.getAll().find((message) => {
-        return message.get('attachments').size
-      });
-      assert.notEqual(message, undefined);
-      assert.isTrue(RouterStore.isAttached(message));
+      it('Should return `message.flagged`', () => {
+        // Add flagged message
+        Dispatcher.dispatch({
+          type: ActionTypes.RECEIVE_RAW_MESSAGE,
+          value: MessageFixtures.createFlagged({ account }),
+        });
 
-      // Test a none attached message
-      message = MessageStore.getAll().find((message) => {
-        return -1 === message.get('flags').indexOf(MessageFlags.ATTACH)
-      });
-      assert.notEqual(message, undefined);
-      assert.isFalse(RouterStore.isAttached(message));
+        // Test flagged message
+        let message = MessageStore.getAll().find((message) => {
+          return -1 < message.get('flags').indexOf(MessageFlags.FLAGGED)
+        });
+        assert.notEqual(message, undefined);
+        assert.isTrue(RouterStore.isFlagged(message));
 
-      // Add Attach filter into URI
-      Dispatcher.dispatch({
-        type: ActionTypes.ROUTE_CHANGE,
-        value: { filter: { flags: MessageFilter.UNREAD } }
+        // Test on un-flagged message
+        message = MessageStore.getAll().find((message) => {
+          return -1 === message.get('flags').indexOf(MessageFlags.FLAGGED)
+        });
+        assert.notEqual(message, undefined);
+        assert.isFalse(RouterStore.isFlagged(message));
       });
-      assert.isFalse(RouterStore.isAttached());
     });
 
 
-    it('isDeleted', () => {
-      Dispatcher.dispatch({
-        type: ActionTypes.ROUTE_CHANGE,
-        value: { mailboxID: account.inboxMailbox }
-      });
-      assert.isFalse(RouterStore.isDeleted());
+    describe('isAttached', () => {
+      it('Should return `mailbox.attached`', () => {
+        assert.isFalse(RouterStore.isAttached());
 
-      // Add Attached message
-      Dispatcher.dispatch({
-        type: ActionTypes.RECEIVE_RAW_MESSAGE,
-        value: MessageFixtures.createTrash({ account }),
+        Dispatcher.dispatch({
+          type: ActionTypes.ROUTE_CHANGE,
+          value: { filter: { flags: MessageFilter.ATTACH } }
+        });
+        assert.isTrue(RouterStore.isAttached());
+
+        Dispatcher.dispatch({
+          type: ActionTypes.ROUTE_CHANGE,
+          value: { filter: { flags: MessageFilter.UNREAD } }
+        });
+        assert.isFalse(RouterStore.isAttached());
       });
 
-      // Test Attached message
-      let message = MessageStore.getAll().find((message) => {
-        return message.get('mailboxIDs')[account.trashMailbox] !== undefined;
-      });
-      assert.notEqual(message, undefined);
-      assert.isTrue(RouterStore.isDeleted(message));
+      it('Should return `mailbox.attached`', () => {
+        Dispatcher.dispatch({
+          type: ActionTypes.RECEIVE_RAW_MESSAGE,
+          value: MessageFixtures.createAttached({ account }),
+        });
+        let message = MessageStore.getAll().find((message) => {
+          return message.get('attachments').size
+        });
+        assert.notEqual(message, undefined);
+        assert.isTrue(RouterStore.isAttached(message));
 
-      // Test a none attached message
-      message = MessageStore.getAll().find((message) => {
-        return message.get('mailboxIDs')[account.trashMailbox] === undefined;
+        message = MessageStore.getAll().find((message) => {
+          return -1 === message.get('flags').indexOf(MessageFlags.ATTACH)
+        });
+        assert.notEqual(message, undefined);
+        assert.isFalse(RouterStore.isAttached(message));
       });
-      assert.notEqual(message, undefined);
-      assert.isFalse(RouterStore.isDeleted(message));
+    });
 
-      Dispatcher.dispatch({
-        type: ActionTypes.ROUTE_CHANGE,
-        value: { mailboxID: account.trashMailbox }
+
+    describe('isDeleted', () => {
+      it('Should return `mailbox.deleted`', () => {
+        Dispatcher.dispatch({
+          type: ActionTypes.ROUTE_CHANGE,
+          value: { mailboxID: account.inboxMailbox }
+        });
+        assert.isFalse(RouterStore.isDeleted());
+
+        Dispatcher.dispatch({
+          type: ActionTypes.ROUTE_CHANGE,
+          value: { mailboxID: account.trashMailbox }
+        });
+        assert.isTrue(RouterStore.isDeleted());
       });
-      assert.isTrue(RouterStore.isDeleted());
+
+      it('Should return `message.deleted`', () => {
+        const input = MessageFixtures.createTrash({ account });
+
+        Dispatcher.dispatch({
+          type: ActionTypes.RECEIVE_RAW_MESSAGE,
+          value: input,
+        });
+        let message = MessageStore.getByID(input.id);
+        assert.notEqual(message, undefined);
+        assert.isTrue(RouterStore.isDeleted(message));
+
+        message = MessageStore.getAll().find((message) => {
+          return message.get('mailboxIDs')[account.trashMailbox] === undefined;
+        });
+        assert.notEqual(message, undefined);
+        assert.isFalse(RouterStore.isDeleted(message));
+      });
     });
 
     // Add test for MessageStore.isDraft()
-    it('isDraft', () => {
-      Dispatcher.dispatch({
-        type: ActionTypes.ROUTE_CHANGE,
-        value: { mailboxID: account.inboxMailbox }
-      });
-      assert.isFalse(RouterStore.isDraft());
-
-      // Add Attached message
-      Dispatcher.dispatch({
-        type: ActionTypes.RECEIVE_RAW_MESSAGE,
-        value: MessageFixtures.createDraft({ account }),
+    describe('isDraft', () => {
+      it('Should return `false`', () => {
+        Dispatcher.dispatch({
+          type: ActionTypes.ROUTE_CHANGE,
+          value: { mailboxID: account.inboxMailbox }
+        });
+        assert.isFalse(RouterStore.isDraft());
       });
 
-      // Test Draft message
-      let message = MessageStore.getAll().find((message) => {
-        return -1 < message.get('flags').indexOf(MessageFlags.DRAFT);
-      });
-      assert.notEqual(message, undefined);
-      assert.isTrue(RouterStore.isDraft(message));
+      it('Should return `message.isDraft`', () => {
+        // Add Attached message
+        Dispatcher.dispatch({
+          type: ActionTypes.RECEIVE_RAW_MESSAGE,
+          value: MessageFixtures.createDraft({ account }),
+        });
 
-      // Test a no-draft message
-      message = MessageStore.getAll().find((message) => {
-        return -1 === message.get('flags').indexOf(MessageFlags.DRAFT);
-      });
-      assert.notEqual(message, undefined);
-      assert.isFalse(RouterStore.isDraft(message));
+        // Test Draft message
+        let message = MessageStore.getAll().find((message) => {
+          return -1 < message.get('flags').indexOf(MessageFlags.DRAFT);
+        });
+        assert.notEqual(message, undefined);
+        assert.isTrue(RouterStore.isDraft(message));
 
-
-      Dispatcher.dispatch({
-        type: ActionTypes.ROUTE_CHANGE,
-        value: { mailboxID: account.draftMailbox }
+        message = MessageStore.getAll().find((message) => {
+          return -1 === message.get('flags').indexOf(MessageFlags.DRAFT);
+        });
+        assert.notEqual(message, undefined);
+        assert.isFalse(RouterStore.isDraft(message));
       });
-      assert.isTrue(RouterStore.isDraft());
+
+      it('Should return `mailbox.isDraft`', () => {
+        Dispatcher.dispatch({
+          type: ActionTypes.ROUTE_CHANGE,
+          value: { mailboxID: account.draftMailbox }
+        });
+        assert.isTrue(RouterStore.isDraft());
+      });
     });
 
-    it('getMailboxTotal', () => {
-      assert.equal(RouterStore.getMailboxTotal(), 0);
+    describe('getMailboxTotal', () => {
 
-      Dispatcher.dispatch({
-        type: ActionTypes.ROUTE_CHANGE,
-        value: { mailboxID: account.inboxMailbox }
+      it('Should return 0', () => {
+        assert.equal(RouterStore.getMailboxTotal(), 0);
       });
-      const _account = RouterStore.getAccount();
-      const accountID = _account.get('id');
-      const inboxID = _account.get('inboxMailbox');
-      const inbox = AccountStore.getMailbox(accountID, inboxID);
 
-      let mailbox = RouterStore.getMailbox();
-      assert.equal(RouterStore.getMailboxTotal(), mailbox.get('nbTotal'));
+      it('Should return `inboxMailbox.nbTotal`', () => {
+        Dispatcher.dispatch({
+          type: ActionTypes.ROUTE_CHANGE,
+          value: { mailboxID: account.inboxMailbox }
+        });
 
-      Dispatcher.dispatch({
-        type: ActionTypes.ROUTE_CHANGE,
-        value: { mailboxID: account.flaggedMailbox }
+        const mailbox = RouterStore.getMailbox();
+        const value = RouterStore.getMailboxTotal();
+        assert.equal(value, mailbox.get('nbTotal'));
       });
-      mailbox = RouterStore.getMailbox();
-      assert.equal(RouterStore.getMailboxTotal(), inbox.get('nbFlagged'));
-      assert.equal(RouterStore.getMailboxTotal(), mailbox.get('nbTotal'));
 
-      Dispatcher.dispatch({
-        type: ActionTypes.ROUTE_CHANGE,
-        value: { mailboxID: account.unreadMailbox }
+      it('Should return `flaggedMailbox.nbTotal`', () => {
+        Dispatcher.dispatch({
+          type: ActionTypes.ROUTE_CHANGE,
+          value: { mailboxID: account.flaggedMailbox }
+        });
+        const inbox = getInbox();
+        const mailbox = RouterStore.getMailbox();
+        const value = RouterStore.getMailboxTotal();
+        assert.equal(value, inbox.get('nbFlagged'));
+        assert.equal(value, mailbox.get('nbTotal'));
       });
-      mailbox = RouterStore.getMailbox();
-      assert.equal(RouterStore.getMailboxTotal(), inbox.get('nbUnread'));
-      assert.equal(RouterStore.getMailboxTotal(), mailbox.get('nbTotal'));
+
+      it('Should return `unreadMailbox.nbTotal`', () => {
+        Dispatcher.dispatch({
+          type: ActionTypes.ROUTE_CHANGE,
+          value: { mailboxID: account.unreadMailbox }
+        });
+        const inbox = getInbox();
+        const mailbox = RouterStore.getMailbox();
+        const value = RouterStore.getMailboxTotal();
+        assert.equal(value, inbox.get('nbUnread'));
+        assert.equal(value, mailbox.get('nbTotal'));
+      });
+
+      function getInbox() {
+        const account = RouterStore.getAccount();
+        const accountID = account.get('id');
+        const mailboxID = account.get('inboxMailbox');
+        return AccountStore.getMailbox(accountID, mailboxID);
+      }
     });
 
+
+    describe('getSelectedTab', () => {
+
+      it('Should return `null`', () => {
+        assert.equal(RouterStore.getSelectedTab(), null);
+      });
+
+      it('Shouldnt be stored (err)', () => {
+        Dispatcher.dispatch({
+          type: ActionTypes.ROUTE_CHANGE,
+          value: { action: AccountActions.CREATE }
+        });
+        assert.equal(RouterStore.getSelectedTab(), null);
+
+        Dispatcher.dispatch({
+          type: ActionTypes.ROUTE_CHANGE,
+          value: { action: AccountActions.CREATE, tab: 'plip' }
+        });
+        assert.equal(RouterStore.getSelectedTab(), null);
+      });
+
+      it('Should return (default) `value`', () => {
+        Dispatcher.dispatch({
+          type: ActionTypes.ROUTE_CHANGE,
+          value: { action: AccountActions.EDIT }
+        });
+        assert.equal(RouterStore.getSelectedTab(), 'account');
+        assert.equal(RouterStore.getSelectedTab(), RouterStore.getDefaultTab());
+      });
+
+      it('Should save dispatched `value`', () => {
+        Dispatcher.dispatch({
+          type: ActionTypes.ROUTE_CHANGE,
+          value: { action: AccountActions.EDIT, tab: 'plip' }
+        });
+        assert.equal(RouterStore.getSelectedTab(), 'plip');
+      });
+
+      it('Should reset `value` when `action` changes', () => {
+        Dispatcher.dispatch({
+          type: ActionTypes.ROUTE_CHANGE,
+          value: { action: MessageActions.SHOW }
+        });
+        assert.equal(RouterStore.getSelectedTab(), null);
+      });
+    });
+  });
+
+
+  describe('Routing', () => {
 
     describe('getURL', () => {
       let routes;
       let url;
 
+
+      // TODO: faire un reset des comptes ici
       before(() => {
        // Reverse relation value to simplify tests
        // ie. routes['messageList'] = url
@@ -603,35 +717,33 @@ describe('RouterStore', () => {
        }, {});
       });
 
-      beforeEach(() => {
-        Dispatcher.dispatch({
-          type: ActionTypes.RESET_ACCOUNT_REQUEST,
-        });
+      afterEach(() => {
+        resetAccountFixtures()
       });
 
       describe('defaultView', () => {
-        it('should goto `AccountNew` (no account found)', () => {
+        it('Should goto `AccountNew` (no account found)', () => {
           url = RouterStore.getURL().replace('#', '');
           assert.equal(url, routes['accountNew']);
           assert.equal(url, RouterStore.getURL({ isServer: true }));
         });
 
-        it('should goto `MessageList` (default account)', () => {
+        it('Should goto `MessageList` (default account)', () => {
           testMessagesList();
         });
       });
 
       describe('messagesList', () => {
-        it('shouldnt handle filters', () => {
+        it('Shouldnt handle filters', () => {
           testMessagesList();
         });
 
-        it('should handle filter', () => {
+        it('Should handle filter', () => {
           const filter = {'plop': 'one value'};
           testMessagesList({filter});
         });
 
-        it('should handle all filters', () => {
+        it('Should handle all filters', () => {
           const filter = {'plop': ['several', 'values', 'with special chars']};
           testMessagesList({filter});
         });
@@ -778,7 +890,6 @@ describe('RouterStore', () => {
       }
     });
 
-
     it.skip('getCurrentURL', () => {
 
     });
@@ -804,50 +915,12 @@ describe('RouterStore', () => {
     });
 
 
-    it('getSelectedTab', () => {
-      // Not defined value
-      assert.equal(RouterStore.getSelectedTab(), null);
 
-      // Shoulndt be setted: bad actions
-      Dispatcher.dispatch({
-        type: ActionTypes.ROUTE_CHANGE,
-        value: { action: AccountActions.CREATE }
-      });
-      assert.equal(RouterStore.getSelectedTab(), null);
-
-      Dispatcher.dispatch({
-        type: ActionTypes.ROUTE_CHANGE,
-        value: { action: AccountActions.CREATE, tab: 'plip' }
-      });
-      assert.equal(RouterStore.getSelectedTab(), null);
-
-      // Default Value
-      Dispatcher.dispatch({
-        type: ActionTypes.ROUTE_CHANGE,
-        value: { action: AccountActions.EDIT }
-      });
-      assert.equal(RouterStore.getSelectedTab(), 'account');
-
-      // Defined Value
-      Dispatcher.dispatch({
-        type: ActionTypes.ROUTE_CHANGE,
-        value: { action: AccountActions.EDIT, tab: 'plip' }
-      });
-      assert.equal(RouterStore.getSelectedTab(), 'plip');
-
-      // Change route: reset
-      Dispatcher.dispatch({
-        type: ActionTypes.ROUTE_CHANGE,
-        value: { action: MessageActions.SHOW }
-      });
-      assert.equal(RouterStore.getSelectedTab(), null);
-    });
-
-    it.skip('getMessagesList', () => {
+    describe.skip('getMessagesList', () => {
 
     });
 
-    it.skip('filterByFlags', () => {
+    describe.skip('filterByFlags', () => {
       /*
         1. ajouter un flag
         2. tester un message de la même mailbox
@@ -855,36 +928,36 @@ describe('RouterStore', () => {
       */
     });
 
-    it.skip('getNearestMessage', () => {
+    describe.skip('getNearestMessage', () => {
 
     });
 
-    it.skip('getConversation', () => {
+    describe.skip('getConversation', () => {
 
     });
 
-    it.skip('getNextConversation', () => {
+    describe.skip('getNextConversation', () => {
 
     });
 
-    it.skip('getPreviousConversation', () => {
+    describe.skip('getPreviousConversation', () => {
 
     });
 
-    it.skip('getConversationLength', () => {
+    describe.skip('getConversationLength', () => {
 
     });
   });
 
 
-  describe('Actions', () => {
+  describe.skip('Actions', () => {
 
     beforeEach(() => {
-
+      createAccountFixtures()
     });
 
     afterEach(() => {
-
+      resetAccountFixtures()
     });
 
     // testé dans tous les tests précédents
@@ -993,4 +1066,44 @@ describe('RouterStore', () => {
     });
 
   });
+
+  function createAccountFixtures() {
+    // Add 3 accounts to test
+    // several usecases
+    account = AccountFixtures.createAccount();
+    Dispatcher.dispatch({
+      type: ActionTypes.ADD_ACCOUNT_SUCCESS,
+      value: { account },
+    });
+    Dispatcher.dispatch({
+      type: ActionTypes.ADD_ACCOUNT_SUCCESS,
+      value: { account: AccountFixtures.createAccount() },
+    });
+    Dispatcher.dispatch({
+      type: ActionTypes.ADD_ACCOUNT_SUCCESS,
+      value: { account: AccountFixtures.createAccount() },
+    });
+
+    // Add messages
+    // that belongs to defaultAccount
+    const conversationID = `coucou-${getUID()}`;
+    const params = {conversationID, account};
+    const messages = [];
+    messages.push(MessageFixtures.createMessage(params));
+    messages.push(MessageFixtures.createMessage(params));
+    messages.push(MessageFixtures.createMessage(params));
+    Dispatcher.dispatch({
+      type: ActionTypes.RECEIVE_RAW_MESSAGES,
+      value: messages,
+    });
+  }
+
+  function resetAccountFixtures() {
+    Dispatcher.dispatch({
+      type: ActionTypes.MESSAGE_RESET_REQUEST,
+    });
+    Dispatcher.dispatch({
+      type: ActionTypes.RESET_ACCOUNT_REQUEST,
+    });
+  }
 });
