@@ -890,7 +890,71 @@ describe('RouterStore', () => {
       }
     });
 
-    it.skip('getCurrentURL', () => {
+
+    // TODO: testser avec options et parmas par défaut
+    describe('getCurrentURL', () => {
+      let action = MessageActions.EDIT;
+      let spy;
+
+      beforeEach(() => {
+        if (undefined === spy) spy = sinon.spy(RouterStore, 'getURL');
+      });
+
+      afterEach(() => {
+        Dispatcher.dispatch({
+          type: ActionTypes.ROUTE_CHANGE,
+          value: { action: null },
+        });
+        spy.reset();
+      });
+
+
+      it('Should action stored', () => {
+        // No actions saved
+        let url = RouterStore.getCurrentURL();
+        assert.equal(spy.callCount, 0);
+
+        // No actions saved
+        url = RouterStore.getCurrentURL({ messageID: 'plop' });
+        assert.equal(spy.callCount, 0);
+
+        Dispatcher.dispatch({
+          type: ActionTypes.ROUTE_CHANGE,
+          value: { action },
+        });
+        spy.reset();
+
+        url = RouterStore.getCurrentURL({ messageID: 'plop' });
+        assert.equal(spy.callCount, 1);
+      });
+
+      it('Should have action params', () => {
+        let url = RouterStore.getCurrentURL({ messageID: 'plop' });
+        assert.equal(spy.callCount, 0);
+
+        url = RouterStore.getCurrentURL({ action, messageID: 'plop' });
+        assert.equal(spy.callCount, 1);
+      });
+
+      it('Should get validated params', () => {
+        let url = RouterStore.getCurrentURL({ action });
+
+        const params = {
+          isServer: true,
+          action,
+          mailboxID: null,
+          accountID: null,
+          conversationID: null,
+          messageID: null,
+        }
+        console.log(spy.getCall(0).args)
+      });
+      // TODO: vérifier les params passés en args de getURL
+      // params = _.extend {isServer: true}, options
+      // params.action ?= @getAction()
+      // params.mailboxID ?= @getMailboxID()
+      // params.messageID ?= @getMessageID()
+      // params.conversationID ?= @getConversationID()
 
     });
 
