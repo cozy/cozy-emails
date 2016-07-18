@@ -82,14 +82,14 @@ module.exports.createTrash = function TrashMessage(data) {
 
   if (data.account) {
     // Remove Inbox form mailboxIDs
-    message.mailboxIDs = _.filter(message.mailboxIDs, (value, key) => {
-      return data.account.inboxMailbox !== key;
-    });
+    let mailboxIDs = _.omit(message.mailboxIDs, data.account.inboxMailbox);
+
     // Replace it by TrashMailbox
     const trashMailbox = data.account.mailboxes.find((mailbox) => {
       return data.account.trashMailbox  === mailbox.id;
     });
-    message.mailboxIDs[data.account.trashMailbox] = trashMailbox.nbTotal;
+    mailboxIDs[data.account.trashMailbox] = trashMailbox.nbTotal;
+    message.mailboxIDs = mailboxIDs;
   }
   return message;
 }

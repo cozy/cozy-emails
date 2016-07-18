@@ -292,15 +292,16 @@ class RouterStore extends Store
 
 
     isDeleted: (message) ->
+
         # Message is in trashbox
-        trashID = @getAccount()?.get 'trashMailbox'
-        mailboxIDs = _.keys message?.get 'mailboxIDs'
-        if (trashID in mailboxIDs)
-            return true
+        if message?
+            account = AccountStore.getByID message.get('accountID')
+            trashboxID = account?.get 'trashMailbox'
+            return message.get('mailboxIDs')[trashboxID]?
 
         # Mailbox selected is trashbox
-        label = @getMailboxID()
-        trashID? and trashID is @getMailboxID()
+        trashboxID = @getAccount()?.get 'trashMailbox'
+        trashboxID? and trashboxID is @getMailboxID()
 
 
     isDraft: (message) ->
