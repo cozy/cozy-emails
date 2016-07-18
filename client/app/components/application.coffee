@@ -18,7 +18,6 @@ AccountWizardCreation = React.createFactory require './accounts/wizard/creation'
 RouterStore          = require '../stores/router_store'
 SettingsStore        = require '../stores/settings_store'
 RequestsStore        = require '../stores/requests_store'
-MessageStore         = require '../stores/message_store'
 StoreWatchMixin      = require '../mixins/store_watch_mixin'
 
 RouterGetter = require '../getters/router'
@@ -36,46 +35,8 @@ SelectionGetter = require '../getters/selection'
           and re-render accordingly
 ###
 
-module.exports = React.createClass
+Application = React.createClass
     displayName: 'Application'
-
-    mixins: [
-        StoreWatchMixin [SettingsStore, RequestsStore, RouterStore, MessageStore]
-    ]
-
-    getStateFromStores: (props) ->
-        previewSize = LayoutGetter.getPreviewSize()
-        className = "layout layout-column layout-preview-#{previewSize}"
-
-        if (mailboxID = RouterGetter.getMailboxID())
-            return {
-                mailboxID               : mailboxID
-                accountID               : RouterGetter.getAccountID()
-                conversationID          : RouterGetter.getConversationID()
-                conversationLength      : RouterGetter.getConversationLength()
-                messageID               : RouterGetter.getMessageID()
-                subject                 : RouterGetter.getSubject()
-                action                  : RouterGetter.getAction()
-                modal                   : RouterGetter.getModal()
-                className               : className
-                lastSync                : RouterGetter.getLastSync()
-                isLoading               : RouterGetter.isMailboxLoading()
-                isConversationLoading   : RouterGetter.isConversationLoading()
-                isIndexing              : RouterGetter.isMailboxIndexing()
-                hasNextPage             : RouterGetter.hasNextPage()
-                hasSettingsChanged      : RouterGetter.hasSettingsChanged()
-                allSelected             : SelectionGetter.isAllSelected()
-                selection               : SelectionGetter.getSelection()
-                messages                : RouterGetter.getMessagesList()
-                emptyMessages           : RouterGetter.getEmptyMessage()
-            }
-
-        return {
-            action          : RouterGetter.getAction()
-            modal           : RouterGetter.getModal()
-            className       : className
-        }
-
 
     # AriaTips must bind the elements declared as tooltip to their
     # respective tooltip when the component is mounted (DOM elements exist).
@@ -84,7 +45,7 @@ module.exports = React.createClass
 
 
     render: ->
-        if @state.isIndexing
+        if @props.isIndexing
             return div className: 'reindexing-message',
                 img
                     className: 'spinner'
@@ -94,48 +55,48 @@ module.exports = React.createClass
                 p null,
                     'This page will refresh in a minute.'
 
-        div className: @state.className,
+        div className: "layout layout-column layout-preview-#{@props.previewSize}",
             div className: 'app',
                 Menu
                     ref             : 'menu'
-                    key             : 'menu-' + @state.accountID
-                    accountID       : @state.accountID
-                    mailboxID       : @state.mailboxID
-                    accounts        : RouterGetter.getAccounts()?.toArray()
-                    composeURL      : RouterGetter.getComposeURL()
-                    newAccountURL   : RouterGetter.getCreateAccountURL()
-                    nbUnread        : RouterGetter.getUnreadLength()
-                    nbFlagged       : RouterGetter.getFlaggedLength()
+                    key             : 'menu-' + @props.accountID
+                    accountID       : @props.accountID
+                    mailboxID       : @props.mailboxID
+                    accounts        : @props.accounts
+                    composeURL      : @props.composeURL
+                    newAccountURL   : @props.newAccountURL
+                    nbUnread        : @props.nbUnread
+                    nbFlagged       : @props.nbFlagged
 
                 main null,
                     div
                         className: 'panels',
 
-                        if @state.lastSync?
+                        if @props.lastSync?
                             MessageList
                                 ref                 : "messageList"
-                                key                 : "messageList-#{@state.mailboxID}-#{@state.conversationLength}"
-                                accountID           : @state.accountID
-                                mailboxID           : @state.mailboxID
-                                conversationID      : @state.conversationID
-                                messages            : @state.messages
-                                emptyMessages       : @state.emptyMessages
-                                isAllSelected       : @state.isAllSelected
-                                selection           : @state.selection
-                                hasNextPage         : @state.hasNextPage
-                                lastSync            : @state.lastSync
-                                isLoading           : @state.isLoading
+                                key                 : "messageList-#{@props.mailboxID}-#{@props.conversationLength}"
+                                accountID           : @props.accountID
+                                mailboxID           : @props.mailboxID
+                                conversationID      : @props.conversationID
+                                messages            : @props.messages
+                                emptyMessages       : @props.emptyMessages
+                                isAllSelected       : @props.isAllSelected
+                                selection           : @props.selection
+                                hasNextPage         : @props.hasNextPage
+                                lastSync            : @props.lastSync
+                                isLoading           : @props.isLoading
 
-                        if @state.lastSync? and @state.messageID
+                        if @props.lastSync? and @props.messageID
                             Conversation
                                 ref                     : "conversation"
-                                key                     : "conversation-#{@state.messageID}"
-                                accountID               : @state.accountID
-                                messageID               : @state.messageID
-                                conversationID          : @state.conversationID
-                                subject                 : @state.subject
-                                messages                : RouterGetter.getConversation()
-                                isConversationLoading   : @state.isConversationLoading
+                                key                     : "conversation-#{@props.messageID}"
+                                accountID               : @props.accountID
+                                messageID               : @props.messageID
+                                conversationID          : @props.conversationID
+                                subject                 : @props.subject
+                                messages                : @props.conversation
+                                isConversationLoading   : @props.isConversationLoading
 
                         else
                             section
@@ -143,14 +104,14 @@ module.exports = React.createClass
                                 'aria-expanded': false
 
 
-            if @state.action is AccountActions.CREATE
+            if @props.action is AccountActions.CREATE
                 AccountWizardCreation
                     key: 'modal-account-wizard'
-                    hasAccount: !!RouterGetter.getAccounts().size
+                    hasAccount: !!@props.accounts.size
 
 
             # Display feedback
-            Modal @state.modal if @state.modal?
+            Modal @props.modal if @props.modal?
 
 
             ToastContainer()
@@ -160,3 +121,50 @@ module.exports = React.createClass
             # It's hidden so it doesn't break the layout. Other components
             # can then reference the tooltips by their ID to trigger them.
             Tooltips key: "tooltips"
+
+
+
+
+# this component replace react-redux/connect while transitionning from stores
+module.exports = React.createClass(
+    displayName: 'StoreConnectedApplication'
+    mixins: [
+        StoreWatchMixin [SettingsStore, RequestsStore, RouterStore]
+    ]
+    componentDidMount: ->
+        store = require('../reducers/_store')
+        @unsubscribe = store.subscribe @_setStateFromStores
+
+    componentWillUnmount: ->
+        @unsubscribe?()
+
+    getStateFromStores: ->
+        action                  : RouterGetter.getAction()
+        modal                   : RouterGetter.getModal()
+        mailboxID               : RouterGetter.getMailboxID()
+        accounts                : RouterGetter.getAccounts()
+        accountID               : RouterGetter.getAccountID()
+        conversationID          : RouterGetter.getConversationID()
+        conversationLength      : RouterGetter.getConversationLength()
+        messageID               : RouterGetter.getMessageID()
+        subject                 : RouterGetter.getSubject()
+        lastSync                : RouterGetter.getLastSync()
+        isLoading               : RouterGetter.isMailboxLoading()
+        isConversationLoading   : RouterGetter.isConversationLoading()
+        isIndexing              : RouterGetter.isMailboxIndexing()
+        hasNextPage             : RouterGetter.hasNextPage()
+        hasSettingsChanged      : RouterGetter.hasSettingsChanged()
+        isAllSelected           : SelectionGetter.isAllSelected()
+        selection               : SelectionGetter.getSelection()
+        messages                : RouterGetter.getMessagesList()
+        emptyMessages           : RouterGetter.getEmptyMessage()
+        composeURL              : RouterGetter.getComposeURL()
+        newAccountURL           : RouterGetter.getCreateAccountURL()
+        nbUnread                : RouterGetter.getUnreadLength()
+        nbFlagged               : RouterGetter.getFlaggedLength()
+        conversation            : RouterGetter.getConversation()
+        previewSize             : LayoutGetter.getPreviewSize()
+
+    render: -> React.createElement Application, @state
+
+)
