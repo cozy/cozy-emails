@@ -14,6 +14,7 @@ SearchStore       = require '../stores/search_store'
 
 FileGetter    = require '../getters/file'
 MessageGetter = require '../getters/message'
+MessageUtils  = require '../components/utils/format_message'
 
 
 module.exports =
@@ -228,8 +229,6 @@ module.exports =
     isRefreshError: ->
         RequestsStore.isRefreshError()
 
-
-
     formatMessage: (message) ->
         _getResources = ->
             message?.get('attachments').groupBy (file) ->
@@ -237,7 +236,7 @@ module.exports =
                 attachementType = FileGetter.getAttachmentType contentType
                 if attachementType is 'image' then 'preview' else 'binary'
 
-        _.extend MessageGetter.formatContent(message), {
+        _.extend MessageUtils.formatContent(message), {
             resources   : _getResources()
             isDraft     : RouterStore.isDraft message
             isDeleted   : RouterStore.isDeleted message
