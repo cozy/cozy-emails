@@ -262,53 +262,71 @@ describe('Message Store', () => {
       });
 
       it('MESSAGE_MOVE_SUCCESS', () => {
-        let output = MessageStore.getByID(message.id);
-        let message0 = output.toJS();
-        let defaultValue = output.get('mailboxID');
-        const mailboxIDs = _.keys(output.get('mailboxIDs'));
+        let message0 = message;
+        let selectedValue;
+        let previousValue;
 
-        function getMailboxID () {
-          return mailboxIDs.find((id) => id != defaultValue );
+        function _indexOf(obj, index) {
+          const mailboxID = _.keys(obj)[index];
+          const count = _.values(obj)[index];
+          return { mailboxID, count };
         }
 
-        function updateMessage (value, date) {
-          message0.mailboxID = value;
+        function getMailboxIDs () {
+          return _.keys(MessageStore.getByID(message0.id).get('mailboxIDs'));
+        }
+
+        function getMailboxID () {
+          return getMailboxIDs().find((id) => id != message0.mailboxID)
+          return _.omit(getMailboxIDs(), selectedValue)[0];
+        }
+
+        function updateMessage (mailboxID, date) {
+          message0 = _.cloneDeep(message0);
+          message0.mailboxID = mailboxID;
           message0.updated = (date).valueOf();
           Dispatcher.dispatch({
             type: ActionTypes.MESSAGE_MOVE_SUCCESS,
             value: { updated: { messages: [message0] } },
           });
-          output = MessageStore.getByID(message0.id);
+          previousValue = selectedValue;
+          selectedValue = getMailboxIDs()[0];
         }
 
         // Change MailboxID
-        updateMessage(getMailboxID(), new Date());
-        defaultValue = output.get('mailboxID');
-        assert.equal(defaultValue, message0.mailboxID);
+        let mailboxID = getMailboxID()
+        updateMessage(mailboxID, new Date());
+        console.log(mailboxID, selectedValue, previousValue)
+        assert.notEqual(selectedValue, previousValue);
+        assert.equal(selectedValue, mailboxID);
 
         // Change mailboxID
         // but set as older update
-        updateMessage(getMailboxID(), new Date('2013-1-1'));
-        assert.notEqual(output.get('mailboxID'), message0.mailboxID);
-        assert.equal(output.get('mailboxID'), defaultValue);
+        mailboxID = getMailboxID();
+        updateMessage(mailboxID, new Date('2013-1-1'));
+        assert.equal(selectedValue, previousValue);
+        assert.notEqual(selectedValue, mailboxID);
 
         // Change mailboxID
         // but with fake value
-        updateMessage(NaN, new Date());
-        assert.notEqual(output.get('mailboxID'), message0.mailboxID);
-        assert.equal(output.get('mailboxID'), defaultValue);
+        mailboxID = NaN;
+        updateMessage(mailboxID, new Date());
+        assert.equal(selectedValue, previousValue);
+        assert.notEqual(selectedValue, mailboxID);
 
         // Change mailboxID
         // but with fake value
-        updateMessage(undefined, new Date());
-        assert.notEqual(output.get('mailboxID'), message0.mailboxID);
-        assert.equal(output.get('mailboxID'), defaultValue);
+        mailboxID = undefined;
+        updateMessage(mailboxID, new Date());
+        assert.equal(selectedValue, previousValue);
+        assert.notEqual(selectedValue, mailboxID);
 
         // Change mailboxID
         // but with fake value
-        updateMessage('     ', new Date());
-        assert.notEqual(output.get('mailboxID'), message0.mailboxID);
-        assert.equal(output.get('mailboxID'), defaultValue);
+        mailboxID = '     ';
+        updateMessage(mailboxID, new Date());
+        assert.equal(selectedValue, previousValue);
+        assert.notEqual(selectedValue, mailboxID);
       });
 
       // TODO: this feature is not fixed yet
