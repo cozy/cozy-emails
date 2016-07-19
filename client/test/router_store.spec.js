@@ -29,6 +29,7 @@ describe('RouterStore', () => {
   let MessageStore;
   let Dispatcher;
   let account;
+  let routes;
   const router = new SpecRouter();
 
   /*
@@ -66,6 +67,15 @@ describe('RouterStore', () => {
       type: ActionTypes.ROUTES_INITIALIZE,
       value: router,
     });
+
+    // Reverse relation value to simplify tests
+    // ie. routes['messageList'] = url
+    if (undefined === routes) {
+      routes = RouterStore.getRouter().routes;
+      routes = _.transform(routes, (result, value, key) => {
+        result[value] = key;
+      }, {});
+    }
   });
 
 
@@ -703,19 +713,6 @@ describe('RouterStore', () => {
   describe('Routing', () => {
 
     describe('getURL', () => {
-      let routes;
-      let url;
-
-
-      // TODO: faire un reset des comptes ici
-      before(() => {
-       // Reverse relation value to simplify tests
-       // ie. routes['messageList'] = url
-       routes = RouterStore.getRouter().routes;
-       routes = _.transform(routes, (result, value, key) => {
-         result[value] = key;
-       }, {});
-      });
 
       afterEach(() => {
         resetAccountFixtures()
@@ -723,7 +720,7 @@ describe('RouterStore', () => {
 
       describe('defaultView', () => {
         it('Should goto `AccountNew` (no account found)', () => {
-          url = RouterStore.getURL().replace('#', '');
+          let url = RouterStore.getURL().replace('#', '');
           assert.equal(url, routes['accountNew']);
           assert.equal(url, RouterStore.getURL({ isServer: true }));
         });
@@ -751,12 +748,12 @@ describe('RouterStore', () => {
 
       it('accountNew', () => {
         const action = AccountActions.CREATE;
-        testAccount({action}, 'accountNew');
+        testAccountURI({action}, 'accountNew');
       });
 
       it('accountEdit', () => {
         const action = AccountActions.EDIT;
-        testAccount({action}, 'accountEdit');
+        testAccountURI({action}, 'accountEdit');
       });
 
       it('messageNew', () => {
@@ -790,7 +787,7 @@ describe('RouterStore', () => {
       });
 
 
-      function testAccount(data, keyRoute) {
+      function testAccountURI(data, keyRoute) {
         let route = _.cloneDeep(routes[keyRoute]);
         let params = Object.assign({
           mailboxID: 'mailboxID',
@@ -798,7 +795,7 @@ describe('RouterStore', () => {
           tab: RouterStore.getDefaultTab(),
         }, data);
 
-        url = RouterStore.getURL(params).replace('#', '');
+        let url = RouterStore.getURL(params).replace('#', '');
         _.forEach(params, (value, key) => {
           route = route.replace(`:${key}`, value);
         });
@@ -829,7 +826,7 @@ describe('RouterStore', () => {
           filter: null,
         }, data);
 
-        url = RouterStore.getURL(params).replace('#', '');
+        let url = RouterStore.getURL(params).replace('#', '');
 
         let query = toQueryParameters(params.filter);
         route = route.replace('(?:filter)', query);
@@ -847,26 +844,11 @@ describe('RouterStore', () => {
         assert.equal(url, RouterStore.getURL(paramsServer));
       }
 
-
-      function toQueryParameters(data) {
-        if (data) {
-          let key = encodeURI(_.keys(data)[0]);
-
-          // Be carefull of Array values
-          let value = _.values(data)[0];
-          if (_.isArray(value)) value = value.join('&');
-
-          return `?${key}=${encodeURI(value)}`;
-        }
-        return '';
-      }
-
       function testMessagesList(data) {
         Dispatcher.dispatch({
           type: ActionTypes.ADD_ACCOUNT_SUCCESS,
           value: { account: AccountFixtures.createAccount() },
         });
-
 
         const params = Object.assign({
           action: MessageActions.SHOW_ALL,
@@ -951,8 +933,165 @@ describe('RouterStore', () => {
 
     });
 
-    it.skip('getURI', () => {
+    describe('getURI', () => {
 
+      afterEach(() => {
+        resetAccountFixtures()
+      });
+
+      it('defaultView', () => {
+        assert.isNull(RouterStore.getURI());
+      });
+
+      it('messagesList', () => {
+        const action = MessageActions.SHOW_ALL;
+        testMessageURI(action)
+      });
+
+      it('messageNew', () => {
+        const action = MessageActions.CREATE;
+        testMessageURI(action)
+      });
+
+      it('messageEdit', () => {
+        const action = MessageActions.EDIT;
+        testMessageURI(action)
+      });
+
+      it('messageForward', () => {
+        const action = MessageActions.FORWARD;
+        testMessageURI(action)
+      });
+
+      it('messageReply', () => {
+        const action = MessageActions.REPLY;
+        testMessageURI(action)
+      });
+
+      it('messageReplyAll', () => {
+        const action = MessageActions.REPLY_ALL;
+        testMessageURI(action)
+      });
+
+      it('messageShow', () => {
+        const action = MessageActions.SHOW;
+        testMessageURI(action)
+      });
+
+      it('accountNew', () => {
+        const action = AccountActions.CREATE;
+        testAccountURI(action);
+      });
+
+      it('accountEdit', () => {
+        const action = AccountActions.EDIT;
+        testAccountURI(action);
+      });
+
+
+      function testAccountURI(action) {
+        let accountID;
+        let result;
+
+        if (AccountActions.CREATE !== action) {
+          accountID = 'accountID';
+        }
+
+        // Without any params
+        Dispatcher.dispatch({
+          type: ActionTypes.ROUTE_CHANGE,
+          value: { action },
+        });
+        result = `action=${action}`
+        if (undefined !== accountID) result += `&accountID=null`;
+        assert.equal(RouterStore.getURI(), result);
+
+        // With accountID
+        Dispatcher.dispatch({
+          type: ActionTypes.ROUTE_CHANGE,
+          value: { action, accountID, mailboxID: 'PLOP' },
+        });
+        result = `action=${action}`
+        if (undefined !== accountID) result += `&accountID=${accountID}`;
+        assert.equal(RouterStore.getURI(), result);
+
+        // With one filter
+        let filter = {'plop': 'one value'}
+        Dispatcher.dispatch({
+          type: ActionTypes.ROUTE_CHANGE,
+          value: { action, filter },
+        });
+        result = `action=${action}`
+        if (undefined !== accountID) result += `&accountID=null`;
+        assert.equal(RouterStore.getURI(), result);
+      }
+
+      function testMessageURI(action) {
+        const mailboxID = 'mailboxID';
+        const accountID = 'accountID';
+
+        let conversationID;
+        let messageID;
+
+        if (MessageActions.SHOW_ALL !== action) {
+          conversationID = 'conversationID'
+          messageID = 'messageID';
+        }
+
+        // Without any params
+        Dispatcher.dispatch({
+          type: ActionTypes.ROUTE_CHANGE,
+          value: { action },
+        });
+        let result = `action=${action}&accountID=null&mailboxID=null`;
+        if (undefined !== conversationID) result += `&conversationID=null`;
+        if (undefined !== messageID) result += `&messageID=null`;
+        assert.equal(RouterStore.getURI(), result);
+
+        // Without mailboxID
+        Dispatcher.dispatch({
+          type: ActionTypes.ROUTE_CHANGE,
+          value: { action, accountID },
+        });
+        result = `action=${action}&accountID=${accountID}&mailboxID=null`
+        if (undefined !== conversationID) result += `&conversationID=null`;
+        if (undefined !== messageID) result += `&messageID=null`;
+        assert.equal(RouterStore.getURI(), result);
+
+        // With all params
+        Dispatcher.dispatch({
+          type: ActionTypes.ROUTE_CHANGE,
+          value: { action, accountID, mailboxID, conversationID, messageID },
+        });
+        result = `action=${action}&accountID=${accountID}&mailboxID=${mailboxID}`
+        if (undefined !== conversationID) result += `&conversationID=${conversationID}`;
+        if (undefined !== messageID) result += `&messageID=${messageID}`;
+        assert.equal(RouterStore.getURI(), result);
+
+        // With one filter
+        let filter = {'plop': 'one value'}
+        Dispatcher.dispatch({
+          type: ActionTypes.ROUTE_CHANGE,
+          value: { action, accountID, mailboxID, conversationID, messageID, filter },
+        });
+        result = `action=${action}&accountID=${accountID}&mailboxID=${mailboxID}`
+        if (undefined !== conversationID) result += `&conversationID=${conversationID}`;
+        if (undefined !== messageID) result += `&messageID=${messageID}`;
+        result += `&query=${toQueryParameters(filter)}`
+        assert.equal(RouterStore.getURI(), result);
+
+        // With several filters
+        filter = {'plop': ['several', 'values', 'with special chars']};
+        Dispatcher.dispatch({
+          type: ActionTypes.ROUTE_CHANGE,
+          value: { action, accountID, mailboxID, conversationID, messageID, filter },
+        });
+        result = `action=${action}&accountID=${accountID}&mailboxID=${mailboxID}`
+        if (undefined !== conversationID) result += `&conversationID=${conversationID}`;
+        if (undefined !== messageID) result += `&messageID=${messageID}`;
+        result += `&query=${toQueryParameters(filter)}`
+        assert.equal(RouterStore.getURI(), result);
+      }
     });
 
     it.skip('getMessagesPerPage', () => {
@@ -1124,6 +1263,7 @@ describe('RouterStore', () => {
 
   });
 
+
   function createAccountFixtures() {
     // Add 3 accounts to test
     // several usecases
@@ -1162,5 +1302,18 @@ describe('RouterStore', () => {
     Dispatcher.dispatch({
       type: ActionTypes.RESET_ACCOUNT_REQUEST,
     });
+  }
+
+  function toQueryParameters(data) {
+    if (data) {
+      let key = encodeURI(_.keys(data)[0]);
+
+      // Be carefull of Array values
+      let value = _.values(data)[0];
+      if (_.isArray(value)) value = value.join('&');
+
+      return `?${key}=${encodeURI(value)}`;
+    }
+    return '';
   }
 });

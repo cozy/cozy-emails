@@ -132,10 +132,8 @@ class RouterStore extends Store
 
     _getURIQueryParams = (params={}) ->
         _filter = _.clone _defaultFilter
-
         {filter, resetFilter, isServer} = params
         _.extend _filter, _currentFilter, filter unless resetFilter
-
 
         query = _.compact _.map _filter, (value, key) ->
             if value? and _defaultFilter[key] isnt value
@@ -477,19 +475,44 @@ class RouterStore extends Store
         # sometime there are several INBOX with different id
         # but only one is references as real INBOX
         # Get reference INBOX_ID to keep _nextURL works
-        # sith this onther INBOX
+        # with this 2nd INBOX
         if AccountStore.isInbox _accountID, _mailboxID
-            mailboxID = AccountStore.getInbox(_accountID).get 'id'
+            mailboxID = AccountStore.getInbox(_accountID)?.get 'id'
         else
             mailboxID = _mailboxID
 
-        # Get queryString of URI params
-        query = _getURIQueryParams {filter: _currentFilter}
+        params = {
+            action: _action,
+        };
 
-        if mailboxID?
-            _URI = "#{mailboxID}#{query}"
-        else
-            _URI = _action
+        if _action in _.values(MessageActions)
+            Object.assign params, {
+                accountID: _accountID,
+                mailboxID: _mailboxID,
+            }
+
+            unless MessageActions.SHOW_ALL is _action
+                Object.assign params, {
+                    conversationID: _conversationID,
+                    messageID: _messageID,
+                }
+
+            # Query are only for Messages
+            if (query = _getURIQueryParams { filter: _currentFilter })
+                Object.assign params, { query }
+
+        else if AccountActions.EDIT is _action
+            Object.assign params, {
+                accountID: _accountID,
+            }
+
+        # Do not add empty query
+        params = _.flatten _.transform params, (result, value, key) =>
+            return if 'query' is key and _.isEmpty(value)
+            result.push key + '=' + value
+        , []
+
+        _URI = _.flatten(params).join '&'
 
 
     ###

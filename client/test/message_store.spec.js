@@ -296,7 +296,6 @@ describe('Message Store', () => {
         // Change MailboxID
         let mailboxID = getMailboxID()
         updateMessage(mailboxID, new Date());
-        console.log(mailboxID, selectedValue, previousValue)
         assert.notEqual(selectedValue, previousValue);
         assert.equal(selectedValue, mailboxID);
 
