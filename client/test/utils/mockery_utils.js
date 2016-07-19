@@ -6,6 +6,7 @@ module.exports = {
 
   // Register test dispatcher as a replacement of the official dispatcher.
   initDispatcher: (dispatcher) => {
+    global.__DEV__ = true;
     mockery.registerMock('../dispatcher/dispatcher', dispatcher);
     mockery.registerMock(
       '../libs/flux/dispatcher/dispatcher', dispatcher);
@@ -21,6 +22,7 @@ module.exports = {
     mockery.registerMock('../stores/layout_store', {});
     mockery.registerMock('../stores/contact_store', {});
     mockery.registerMock('../stores/requests_store', {});
+    mockery.registerMock('../stores/settings_store', {});
   },
 
 
@@ -36,11 +38,15 @@ module.exports = {
       'superagent-throttle',
       'node-event-emitter',
       'immutable',
+      'redux',
+      'jquery',
+      'moment',
       'lodash',
       'underscore',
       '../constants/app_constants',
       '../libs/flux/store/store',
       '../libs/xhr',
+      '../libs/realtime',
       '../libs/accounts',
       '../libs/notification',
       '../invariant',

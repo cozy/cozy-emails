@@ -14,8 +14,8 @@ AppDispatcher = require './libs/flux/dispatcher/dispatcher'
 
 document.addEventListener 'DOMContentLoaded', ->
 
-    window.__DEV__ = window.location.hostname is 'localhost'
-    console.log "__DEV__", __DEV__
+    __DEV__ = window.location.hostname is 'localhost'
+    window.__DEV__ = __DEV__
 
     # External notifications
     Reporting.initialize()
@@ -26,8 +26,6 @@ document.addEventListener 'DOMContentLoaded', ->
     catch err
         console.error err
         Reporting.report(err)
-
-
 
     # Routing management
     new Router()

@@ -1,17 +1,4 @@
-const TestDispatcher = function TestDispatcher() {
-  this._callbacks = [];
-};
+const appDispatcher = require('../../app/libs/flux/dispatcher/dispatcher')
+const Dispatcher = appDispatcher.constructor
 
-TestDispatcher.prototype.register = function register(callback) {
-  this._callbacks.push(callback);
-};
-
-TestDispatcher.prototype.dispatch = function dispatch(payload) {
-  this._callbacks.forEach((callback) => {
-    callback.call(this, payload);
-  });
-};
-
-TestDispatcher.prototype.waitFor = function waitFor() {};
-
-module.exports = TestDispatcher;
+module.exports = Dispatcher;

@@ -90,7 +90,7 @@ class Dispatcher
         @param {object} payload
     ###
     dispatch: (payload) ->
-        console.debug "DIS", payload.type, payload.value
+        console.debug? "DIS", payload.type, payload.value
         message = 'Dispatch.dispatch(...): Cannot dispatch in the middle ' + \
                   'of a dispatch.'
         invariant(

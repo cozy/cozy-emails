@@ -64,6 +64,7 @@ describe('Message Store', () => {
     Dispatcher = new SpecDispatcher();
     mockeryUtils.initDispatcher(Dispatcher);
     mockeryUtils.initForStores([path]);
+    // eslint-disable-next-line global-require
     MessageStore = require(path);
   });
 
