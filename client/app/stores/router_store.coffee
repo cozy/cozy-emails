@@ -66,7 +66,8 @@ class RouterStore extends Store
         _modal
 
 
-    getURL: (params={}) ->
+    getURL: (options={}) ->
+        params = _.cloneDeep options
         action = _getRouteAction params
 
         isMessage = !!params.messageID or _.includes action, 'message'
@@ -103,7 +104,8 @@ class RouterStore extends Store
     getCurrentURL: (options={}) ->
         return unless (action = @getAction() or options.action)
 
-        params = _.extend {isServer: true}, options
+        params = _.cloneDeep options
+        params.isServer = true
         params.action ?= @getAction()
         params.mailboxID ?= @getMailboxID()
         params.messageID ?= @getMessageID()
@@ -168,7 +170,7 @@ class RouterStore extends Store
         _action is SearchActions.SHOW_ALL
 
 
-    _setCurrentAccount = ({accountID, mailboxID, tab=TAB}) ->
+    _setCurrentAccount = ({accountID=null, mailboxID=null, tab=TAB}) ->
         _accountID = accountID
         _mailboxID = mailboxID
         _tab = if _action is AccountActions.EDIT then tab else null

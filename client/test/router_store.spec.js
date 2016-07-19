@@ -909,7 +909,7 @@ describe('RouterStore', () => {
       });
 
 
-      it('Should action stored', () => {
+      it('Should get saved data', () => {
         // No actions saved
         let url = RouterStore.getCurrentURL();
         assert.equal(spy.callCount, 0);
@@ -928,7 +928,7 @@ describe('RouterStore', () => {
         assert.equal(spy.callCount, 1);
       });
 
-      it('Should have action params', () => {
+      it('Shouldnt be called', () => {
         let url = RouterStore.getCurrentURL({ messageID: 'plop' });
         assert.equal(spy.callCount, 0);
 
@@ -936,25 +936,18 @@ describe('RouterStore', () => {
         assert.equal(spy.callCount, 1);
       });
 
-      it('Should get validated params', () => {
-        let url = RouterStore.getCurrentURL({ action });
-
+      it('Should send validated params', () => {
+        const url = RouterStore.getCurrentURL({ action });
         const params = {
           isServer: true,
           action,
           mailboxID: null,
-          accountID: null,
           conversationID: null,
           messageID: null,
         }
-        console.log(spy.getCall(0).args)
+        assert.equal(spy.callCount, 1);
+        assert.deepEqual(spy.getCall(0).args, [params]);
       });
-      // TODO: vérifier les params passés en args de getURL
-      // params = _.extend {isServer: true}, options
-      // params.action ?= @getAction()
-      // params.mailboxID ?= @getMailboxID()
-      // params.messageID ?= @getMessageID()
-      // params.conversationID ?= @getConversationID()
 
     });
 
