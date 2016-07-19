@@ -53,6 +53,7 @@ module.exports = Menu = React.createClass
                                     className: 'account-details',
                                         span {}, @props?.search
                 @props.accounts.map @renderMailBoxes
+                .toArray()
 
             nav className: 'submenu',
                 a
@@ -156,6 +157,7 @@ module.exports = Menu = React.createClass
                             unread:             mailbox.get 'nbUnread'
                             recent:             mailbox.get 'nbRecent'
                             icon:               FileGetter.getMailboxIcon {account, mailboxID}
+                    .toArray()
 
                     # Unread Mailbox
                     @renderMailboxesFlags
@@ -200,3 +202,4 @@ module.exports = Menu = React.createClass
                             unread:             mailbox.get 'nbUnread'
                             recent:             mailbox.get 'nbRecent'
                             icon:               FileGetter.getMailboxIcon {account, mailboxID}
+                    .toArray()
