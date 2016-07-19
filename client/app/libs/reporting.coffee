@@ -45,6 +45,7 @@ module.exports.initialize = ->
     window.onerror = (args...) ->
         error = args[args.length - 1]
         _sendReport.call null, 'error', error
+        console.error error
         # prevent native runtime error
         return __DEV__
 
