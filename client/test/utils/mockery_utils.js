@@ -1,5 +1,6 @@
 const mockery = require('mockery');
 const superagent = require('./specs_superagent');
+const redux = require('redux');
 
 // Bunch of functions to make tests less verbosed.
 module.exports = {
@@ -23,6 +24,10 @@ module.exports = {
     mockery.registerMock('../stores/contact_store', {});
     mockery.registerMock('../stores/requests_store', {});
     mockery.registerMock('../stores/settings_store', {});
+
+    // this feels hacky, but only wait for
+    // mockery to not bother about all redux dependencies:
+    mockery.registerMock('redux', redux);
   },
 
 
@@ -35,10 +40,18 @@ module.exports = {
     });
 
     mockery.registerAllowables([
+      '../getters/message',
+
+      //   reducers
+      '../reducers/_store',
+      './root',
+      './message',
+      './selection',
       'superagent-throttle',
       'node-event-emitter',
       'immutable',
       'redux',
+      'react-redux',
       'jquery',
       'moment',
       'lodash',

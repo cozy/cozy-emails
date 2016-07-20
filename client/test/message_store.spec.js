@@ -60,12 +60,11 @@ describe('Message Store', () => {
     const values = _.groupBy(messages, 'conversationID');
     conversationLength = _.mapValues(values, (value) => value.length);
 
-    const path = '../app/stores/message_store';
     Dispatcher = new SpecDispatcher();
     mockeryUtils.initDispatcher(Dispatcher);
-    mockeryUtils.initForStores([path]);
+    mockeryUtils.initForStores();
     // eslint-disable-next-line global-require
-    MessageStore = require(path);
+    MessageStore = require('../app/getters/message');
   });
 
   after(() => {
