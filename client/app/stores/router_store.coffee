@@ -143,7 +143,7 @@ class RouterStore extends Store
             _setNextURL {pageAfter}
 
             # Save history cursor
-            lastPage = {
+            _lastPage[_URI] = {
                 page: _getPage()
                 start: pageAfter
                 isComplete: _getNextURL() is undefined
