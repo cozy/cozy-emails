@@ -554,8 +554,7 @@ describe('RouterStore', () => {
       });
 
       it('Should return `message.deleted`', () => {
-        const input = MessageFixtures.createTrash({ account });
-
+        let input = MessageFixtures.createTrash({ account });
         Dispatcher.dispatch({
           type: ActionTypes.RECEIVE_RAW_MESSAGE,
           value: input,
@@ -564,9 +563,14 @@ describe('RouterStore', () => {
         assert.notEqual(message, undefined);
         assert.isTrue(RouterStore.isDeleted(message));
 
-        message = MessageStore.getAll().find((message) => {
-          return message.get('mailboxIDs')[account.trashMailbox] === undefined;
+        // Create a message that cant belongs to trashMailbox
+        input = MessageFixtures.createMessage({ account });
+        delete input.mailboxIDs[account.trashMailbox]
+        Dispatcher.dispatch({
+          type: ActionTypes.RECEIVE_RAW_MESSAGE,
+          value: input,
         });
+        message = MessageStore.getByID(input.id);
         assert.notEqual(message, undefined);
         assert.isFalse(RouterStore.isDeleted(message));
       });
