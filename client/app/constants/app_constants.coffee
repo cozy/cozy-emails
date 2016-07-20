@@ -149,8 +149,6 @@ module.exports =
         'REPLY_ALL'     : 'message.reply.all'
         'FORWARD'       : 'message.forward'
         'CREATE'        : 'message.new'
-        'GROUP_NEXT'    : 'conversation.next'
-        'PAGE_NEXT'     : 'page.next'
 
     SearchActions:
         'SHOW_ALL'      : 'search'

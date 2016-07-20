@@ -19,8 +19,8 @@ const MessageFilter = Constants.MessageFilter;
 const MessageFlags = Constants.MessageFlags;
 
 const getUID = require('./utils/guid').getUID;
-const AccountFixtures = require('./fixtures/account')
-const MessageFixtures = require('./fixtures/message')
+const AccountFixtures = require('./fixtures/account');
+const MessageFixtures = require('./fixtures/message');
 
 
 describe('RouterStore', () => {
@@ -1094,15 +1094,116 @@ describe('RouterStore', () => {
       }
     });
 
-    it.skip('getMessagesPerPage', () => {
+  });
+
+
+  describe('Pagination', () => {
+
+    beforeEach(() => {
+      createAccountFixtures()
+    });
+
+    afterEach(() => {
+      resetAccountFixtures()
+    });
+
+
+    describe('getMessagesPerPage', () => {
+
+      it('Should be `null`', () => {
+        assert.equal(RouterStore.getMessagesPerPage(), null);
+      });
+
+      it('Should be defaultValue', () => {
+        // 1rst test
+        Dispatcher.dispatch({
+          type: ActionTypes.ROUTE_CHANGE,
+          value: { action: MessageActions.SHOW },
+        });
+        assert.equal(RouterStore.getMessagesPerPage(), UtilConstants.MSGBYPAGE);
+
+        // Reset
+        Dispatcher.dispatch({
+          type: ActionTypes.ROUTE_CHANGE,
+          value: { action: MessageActions.EDIT },
+        });
+        assert.equal(RouterStore.getMessagesPerPage(), null);
+
+        // 2nd test
+        Dispatcher.dispatch({
+          type: ActionTypes.ROUTE_CHANGE,
+          value: { action: MessageActions.SHOW_ALL },
+        });
+        assert.equal(RouterStore.getMessagesPerPage(), UtilConstants.MSGBYPAGE);
+      });
+
+      it('Should be updated', () => {
+        let messagesPerPage = 2;
+        Dispatcher.dispatch({
+          type: ActionTypes.ROUTE_CHANGE,
+          value: { action: MessageActions.SHOW, messagesPerPage },
+        });
+        assert.equal(RouterStore.getMessagesPerPage(), messagesPerPage);
+
+        messagesPerPage = 10;
+        Dispatcher.dispatch({
+          type: ActionTypes.ROUTE_CHANGE,
+          value: { action: MessageActions.SHOW_ALL, messagesPerPage },
+        });
+        assert.equal(RouterStore.getMessagesPerPage(), messagesPerPage);
+      });
+
+      it('Shouldnt be updated', () => {
+        const messagesPerPage = 10;
+        Dispatcher.dispatch({
+          type: ActionTypes.ROUTE_CHANGE,
+          value: { action: AccountActions.CREATE, messagesPerPage },
+        });
+        assert.equal(RouterStore.getMessagesPerPage(), null);
+
+        Dispatcher.dispatch({
+          type: ActionTypes.ROUTE_CHANGE,
+          value: { action: AccountActions.EDIT, messagesPerPage },
+        });
+        assert.equal(RouterStore.getMessagesPerPage(), null);
+
+        Dispatcher.dispatch({
+          type: ActionTypes.ROUTE_CHANGE,
+          value: { action: MessageActions.CREATE, messagesPerPage },
+        });
+        assert.equal(RouterStore.getMessagesPerPage(), null);
+
+        Dispatcher.dispatch({
+          type: ActionTypes.ROUTE_CHANGE,
+          value: { action: MessageActions.EDIT, messagesPerPage },
+        });
+        assert.equal(RouterStore.getMessagesPerPage(), null);
+
+        Dispatcher.dispatch({
+          type: ActionTypes.ROUTE_CHANGE,
+          value: { action: MessageActions.REPLY, messagesPerPage },
+        });
+        assert.equal(RouterStore.getMessagesPerPage(), null);
+
+        Dispatcher.dispatch({
+          type: ActionTypes.ROUTE_CHANGE,
+          value: { action: MessageActions.REPLY_ALL, messagesPerPage },
+        });
+        assert.equal(RouterStore.getMessagesPerPage(), null);
+
+        Dispatcher.dispatch({
+          type: ActionTypes.ROUTE_CHANGE,
+          value: { action: MessageActions.FORWARD, messagesPerPage },
+        });
+        assert.equal(RouterStore.getMessagesPerPage(), null);
+      });
+    });
+
+    it.skip('getLastPage', () => {
 
     });
 
     it.skip('hasNextPage', () => {
-
-    });
-
-    it.skip('getLastPage', () => {
 
     });
 

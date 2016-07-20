@@ -29,6 +29,8 @@ class RouterStore extends Store
     _URI = null
     _lastPage = {}
 
+    _messagesPerPage = null;
+
     _modal = null
 
     _currentFilter = _defaultFilter =
@@ -325,13 +327,21 @@ class RouterStore extends Store
 
 
     _setCurrentAction = (payload={}) ->
-        {action, accountID, mailboxID, messageID, conversationID} = payload
+        {action, accountID, mailboxID, messagesPerPage} = payload
+        {messageID, conversationID} = payload
+
         if AccountStore.getAll()?.size
             if mailboxID
                 if messageID and conversationID
                     action = MessageActions.SHOW
                 else if accountID and action isnt AccountActions.EDIT
                     action = MessageActions.SHOW_ALL
+
+        if action in [MessageActions.SHOW, MessageActions.SHOW_ALL]
+            _messagesPerPage = messagesPerPage or MSGBYPAGE
+        else
+            _messagesPerPage = null
+
         _action = action or AccountActions.CREATE
 
 
@@ -421,7 +431,7 @@ class RouterStore extends Store
         messageID = @getMessageID()
         if messageID and not MessageStore.getByID(messageID)?.size
             return @hasNextPage()
-        (_messagesLength + 1) >= MSGBYPAGE
+        (_messagesLength + 1) >= _messagesPerPage
 
 
     filterByFlags: (message) =>
@@ -547,7 +557,7 @@ class RouterStore extends Store
 
 
     getMessagesPerPage: ->
-        MSGBYPAGE
+        _messagesPerPage
 
 
     _updateURL = ->
