@@ -504,8 +504,8 @@ class RouterStore extends Store
             # without accounts
             _setCurrentAction payload
 
-            mailboxID ?= AccountStore.getDefault().get 'inboxMailbox'
-            accountID ?= AccountStore.getByMailbox(mailboxID).get 'id'
+            mailboxID ?= AccountStore.getDefault()?.get 'inboxMailbox'
+            accountID ?= AccountStore.getByMailbox(mailboxID)?.get 'id'
             _setCurrentAccount {accountID, mailboxID, tab}
 
             # From MessageStore
