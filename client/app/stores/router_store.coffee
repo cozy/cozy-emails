@@ -47,6 +47,13 @@ class RouterStore extends Store
     _messagesLength = 0
     _nearestMessage = null
 
+
+
+    # Paginate Messages.list
+    _pages = {}
+    _nextURL = {}
+    _currentRequest = null
+
     _timerRouteChange = null
 
 
@@ -111,6 +118,83 @@ class RouterStore extends Store
         params.messageID ?= @getMessageID()
         params.conversationID ?= @getConversationID()
         return @getURL params
+
+
+
+    getNextURL: ->
+        _getNextURL()
+
+
+    _setLastPage = (messages) ->
+        # Save messagesLength per page
+        # to get the correct pageAfter param
+        # for getNext handles
+        pageAfter = _.last(messages)?.date
+
+        # Sometimes MessageList content
+        # has more reslts than request has
+        oldLastPage = _lastPage[_URI]
+        if oldLastPage?.start? and oldLastPage.start < pageAfter
+            pageAfter = oldLastPage.start
+            lastPage = oldLastPage
+
+        else
+            # Prepare next load
+            _setNextURL {pageAfter}
+
+            # Save history cursor
+            lastPage = {
+                page: _getPage()
+                start: pageAfter
+                isComplete: _getNextURL() is undefined
+            }
+
+
+    _getNextURL = () ->
+        key = _getNextURI()
+        if (_nextURL[key] isnt _currentRequest)
+            return _nextURL[key]
+
+
+    _getPage = ->
+        _pages[_URI] ?= -1
+        _pages[_URI]
+
+
+    _addPage = ->
+        _pages[_URI] ?= -1
+        ++_pages[_URI]
+
+
+    _getNextURI = ->
+        "#{_URI}-#{_getPage()}"
+
+
+    _getPreviousURI = ->
+        if (page = _getPage()) > 0
+            "#{_URI}-#{--page}"
+
+
+    _getPreviousURL = ->
+        if (key = _getPreviousURI())?
+            _nextURL[key]
+
+
+    # Get URL from last fetch result
+    # not from the list that is not reliable
+    _setNextURL = ({pageAfter}) ->
+        _addPage()
+        key = _getNextURI()
+
+        # Do not overwrite result
+        # that has no reasons to changes
+        if _getNextURL() is undefined
+            action = MessageActions.SHOW_ALL
+            filter = {pageAfter}
+
+            currentURL = _self.getCurrentURL {filter, action}
+            if _getPreviousURL() isnt currentURL
+                _nextURL[key] = currentURL
 
 
     _getRouteAction = (params) ->
@@ -623,15 +707,20 @@ class RouterStore extends Store
             @emit 'change'
 
 
-        handle ActionTypes.MESSAGE_FETCH_SUCCESS, ({result, conversationID, lastPage}) ->
+        handle ActionTypes.MESSAGE_FETCH_REQUEST, ({url}) ->
+            _currentRequest = url;
+            @emit 'change'
+
+
+        handle ActionTypes.MESSAGE_FETCH_SUCCESS, ({result, conversationID}) ->
             # Save last message references
-            _lastPage[_URI] = lastPage if lastPage?
+            _setLastPage result.messages if result?.messages
 
             # If messageID doesnt belong to conversation
             # message must have been deleted
             # then get default message from this conversation
             if conversationID
-                inner = _.find result.messages, (msg) -> msg.id is _messageID
+                inner = _.find result?.messages, (msg) -> msg.id is _messageID
                 unless inner
                     messageID = @getMessageID conversationID
                     _setCurrentMessage {conversationID, messageID}

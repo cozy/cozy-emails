@@ -12,14 +12,7 @@ XHRUtils = require '../libs/xhr'
 
 {ActionTypes,
 MessageActions,
-FlagsConstants} = require '../constants/app_constants'
-
-# TODO: move this into RouterStore
-# or create a module paginate
-# to handle this into RouterStore
-_pages = {}
-_nextURL = {}
-_currentRequest = null
+SearchActions} = require '../constants/app_constants'
 
 
 RouterActionCreator =
@@ -51,8 +44,6 @@ RouterActionCreator =
 
         url ?= RouterStore.getCurrentURL {action, mailboxID, filter}
 
-        _currentRequest = url
-
         # Always load messagesList
         action = MessageActions.SHOW_ALL
         timestamp = (new Date()).valueOf()
@@ -62,33 +53,10 @@ RouterActionCreator =
             value: {url, timestamp}
 
         XHRUtils.fetchMessagesByFolder url, (error, result={}) =>
-            # Save messagesLength per page
-            # to get the correct pageAfter param
-            # for getNext handles
-            pageAfter = _.last(result.messages)?.date
-
-            # Sometimes MessageList content
-            # has more reslts than request has
-            oldLastPage = RouterStore.getLastPage()
-            if oldLastPage?.start? and oldLastPage.start < pageAfter
-                pageAfter = oldLastPage.start
-                lastPage = oldLastPage
-
-            unless lastPage?
-                # Prepare next load
-                _setNextURL {pageAfter}
-
-                lastPage = {
-                    page: _getPage()
-                    start: pageAfter
-                    isComplete: _getNextURL() is undefined
-                }
-
-
             if error?
                 AppDispatcher.dispatch
                     type: ActionTypes.MESSAGE_FETCH_FAILURE
-                    value: {error, url, timestamp, lastPage}
+                    value: {error, url, timestamp}
             else
                 # Update Realtime
                 lastMessage = _.last result?.messages
@@ -98,7 +66,7 @@ RouterActionCreator =
 
                 AppDispatcher.dispatch
                     type: ActionTypes.MESSAGE_FETCH_SUCCESS
-                    value: {result, url, timestamp, lastPage}
+                    value: {result, url, timestamp}
 
                 # Fetch missing messages
                 # otherwhise if message doesnt exist anymore
@@ -114,7 +82,7 @@ RouterActionCreator =
 
 
     gotoNextPage: ->
-        if (url = _getNextURL())?
+        if (url = RouterStore.getNextURL())?
             @getCurrentPage {url}
 
 
@@ -268,56 +236,5 @@ RouterActionCreator =
         @navigate url: RouterStore.getCurrentURL {filter, isServer: false}
 
 
-
-_getPage = ->
-    key = RouterStore.getURI()
-    _pages[key] ?= -1
-    _pages[key]
-
-
-_addPage = ->
-    key = RouterStore.getURI()
-    _pages[key] ?= -1
-    ++_pages[key]
-
-
-_getNextURI = ->
-    key = RouterStore.getURI()
-    page = _getPage()
-    "#{key}-#{page}"
-
-
-_getNextURL = ->
-    key = _getNextURI()
-    if (_nextURL[key] isnt _currentRequest)
-        return _nextURL[key]
-
-
-_getPreviousURI = ->
-    if (page = _getPage()) > 0
-        key = RouterStore.getURI()
-        "#{key}-#{--page}"
-
-
-_getPreviousURL = ->
-    if (key = _getPreviousURI())?
-        return _nextURL[key]
-
-
-# Get URL from last fetch result
-# not from the list that is not reliable
-_setNextURL = ({pageAfter}) ->
-    _addPage()
-    key = _getNextURI()
-
-    # Do not overwrite result
-    # that has no reasons to changes
-    if _getNextURL() is undefined
-        action = MessageActions.SHOW_ALL
-        filter = {pageAfter}
-
-        currentURL = RouterStore.getCurrentURL {filter, action}
-        if _getPreviousURL() isnt currentURL
-            _nextURL[key] = currentURL
 
 module.exports = RouterActionCreator
