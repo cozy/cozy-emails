@@ -1,19 +1,22 @@
 
 _ = require 'lodash'
 
-ContactStore = require '../stores/contact_store'
+reduxStore = require '../reducers/_store'
 colorhash = require '../libs/colorhash'
+
+_getContacts = ->
+    reduxStore.getState().contact.contacts
 
 module.exports =
 
     getAvatar: (contact = {}) ->
         {address} = contact
-        ContactStore.getAvatar address
+        _getContacts().get(address)?.get 'avatar'
 
 
     getByAddress: (contact = {}) ->
         {address} = contact
-        ContactStore.getByAddress address
+        _getContacts().get address
 
 
     # From a text, build an `address` object (name and address).
@@ -67,7 +70,7 @@ module.exports =
 
     getAll: (message) ->
         unless message
-            return ContactStore.getResults()
+            return reduxStore.getState().contact.results
 
         _.zipObject (keys = ['from', 'to' , 'cc']), _.map keys, (key) =>
             _.map (contacts = message.get key), (value) =>
