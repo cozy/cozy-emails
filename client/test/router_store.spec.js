@@ -1296,10 +1296,6 @@ describe('RouterStore', () => {
       assert.equal(RouterStore.getAction(), AccountActions.CREATE);
     });
 
-    // TODO: should be removed soon
-    // it.skip('ADD_ACCOUNT_SUCCESS', () => {
-    // });
-
     it.skip('MESSAGE_FETCH_SUCCESS', () => {
       /*
         1. should update URL:
