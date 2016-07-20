@@ -105,7 +105,7 @@ class RouterStore extends Store
         return unless (action = @getAction() or options.action)
 
         params = _.cloneDeep options
-        params.isServer = true
+        params.isServer ?= true
         params.action ?= @getAction()
         params.mailboxID ?= @getMailboxID()
         params.messageID ?= @getMessageID()
@@ -536,6 +536,7 @@ class RouterStore extends Store
             # We cant display any informations
             # without accounts
             _setCurrentAction payload
+
 
             # get Account from mailbox
             accountID ?= AccountStore.getByMailbox(mailboxID)?.get 'id' if mailboxID
