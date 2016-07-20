@@ -427,12 +427,13 @@ class RouterStore extends Store
     filterByFlags: (message) =>
         if message and message not instanceof Immutable.Map
             message = Immutable.Map message
+
         if @isFlagged()
-            return MessageStore.isFlagged message
+            return @isFlagged message
         if @isAttached()
-            return MessageStore.isAttached message
+            return @isAttached message
         if @isUnread()
-            return MessageStore.isUnread message
+            return @isUnread message
         return true
 
 
@@ -461,6 +462,7 @@ class RouterStore extends Store
                     mailboxIDs[inboxID] = inboxTotal
                     message.set 'mailboxIDs', mailboxIDs
                     return true
+
             # Display only last Message of conversation
             path = [message.get('mailboxID'), message.get('conversationID')].join '/'
             conversations[path] = true unless (exist = conversations[path])
