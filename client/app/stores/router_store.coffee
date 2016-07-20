@@ -15,6 +15,7 @@ MessageFlags
 SearchActions} = require '../constants/app_constants'
 
 {MSGBYPAGE} = require '../../../server/utils/constants'
+TAB = 'account'
 
 
 class RouterStore extends Store
@@ -32,14 +33,10 @@ class RouterStore extends Store
 
     _currentFilter = _defaultFilter =
         sort: '-date'
-
         flags: null
-
         value: null
         before: null
         after: null
-        pageAfter: null
-
 
     _accountID = null
     _mailboxID = null
@@ -51,15 +48,14 @@ class RouterStore extends Store
     _nearestMessage = null
 
     _timerRouteChange = null
-    _timer = {}
 
 
     getRouter: ->
-        return _router
+        _router
 
 
     getAction: ->
-        return _action
+        _action
 
 
     getFilter: ->
@@ -70,20 +66,23 @@ class RouterStore extends Store
         _modal
 
 
-    getURL: (params={}) ->
+    getURL: (options={}) ->
+        params = _.cloneDeep options
         action = _getRouteAction params
 
         isMessage = !!params.messageID or _.includes action, 'message'
-        if isMessage and not params.mailboxID
-            params.mailboxID = @getMailboxID()
-
         isMailbox = _.includes action, 'mailbox'
-        if isMailbox and not params.mailboxID
-            params.mailboxID = @getMailboxID()
+        if (isMessage or isMailbox) and not params.mailboxID
+            unless (params.mailboxID = @getMailboxID())
+                account = @getDefaultAccount()
+                params.accountID = account?.get 'id'
+                params.mailboxID = account?.get 'inboxMailbox'
 
         isAccount = _.includes action, 'account'
         if isAccount and not params.accountID
-            params.accountID = @getAccountID()
+            unless (params.accountID = @getAccountID())
+                params.accountID = @getDefaultAccount()?.get 'id'
+
         if isAccount and not params.tab
             params.tab = 'account'
 
@@ -105,7 +104,8 @@ class RouterStore extends Store
     getCurrentURL: (options={}) ->
         return unless (action = @getAction() or options.action)
 
-        params = _.extend {isServer: true}, options
+        params = _.cloneDeep options
+        params.isServer ?= true
         params.action ?= @getAction()
         params.mailboxID ?= @getMailboxID()
         params.messageID ?= @getMessageID()
@@ -115,8 +115,12 @@ class RouterStore extends Store
 
     _getRouteAction = (params) ->
         unless (action = params.action)
-            return MessageActions.SHOW if params.messageID
-            return MessageActions.SHOW_ALL
+            if params.messageID
+                action = MessageActions.SHOW
+            else if AccountStore.getAll()?.size
+                action = MessageActions.SHOW_ALL
+            else
+                action = AccountActions.CREATE
         action
 
     _getRoute = (action) ->
@@ -128,19 +132,18 @@ class RouterStore extends Store
 
     _getURIQueryParams = (params={}) ->
         _filter = _.clone _defaultFilter
-
         {filter, resetFilter, isServer} = params
         _.extend _filter, _currentFilter, filter unless resetFilter
-
 
         query = _.compact _.map _filter, (value, key) ->
             if value? and _defaultFilter[key] isnt value
                 # Server Side request:
                 # Flags query doesnt exist
                 key = 'flag' if isServer and key is 'flags'
-                return key + '=' + encodeURIComponent(value)
+                value = value.join '&' if _.isArray value
+                return key + '=' + value
 
-        if query.length then "?#{query.join '&'}" else ""
+        if query.length then '?' + encodeURI query.join '&' else ''
 
 
     _setFilter = (query=_defaultFilter) ->
@@ -165,14 +168,7 @@ class RouterStore extends Store
         _action is SearchActions.SHOW_ALL
 
 
-    # Useless for MessageStore
-    # to clean messages
-    isResetFilter: (filter) ->
-        filter = @getFilter() unless filter
-        filter.type in ['from', 'dest']
-
-
-    _setCurrentAccount = ({accountID, mailboxID, tab="account"}) ->
+    _setCurrentAccount = ({accountID=null, mailboxID=null, tab=TAB}) ->
         _accountID = accountID
         _mailboxID = mailboxID
         _tab = if _action is AccountActions.EDIT then tab else null
@@ -223,6 +219,11 @@ class RouterStore extends Store
         AccountStore.getAllMailboxes accountID
 
 
+
+    getDefaultTab: ->
+        TAB
+
+
     getSelectedTab: ->
         _tab
 
@@ -271,36 +272,45 @@ class RouterStore extends Store
 
     isUnread: (message) ->
         flags = _getFlags message
-        MessageStore.isUnread {flags, message}
+        # test flags but also mailboxID
+        unless (result = MessageStore.isUnread {flags, message})
+            result = @getMailboxID() is @getAccount()?.get('unreadMailbox')
+        result
 
 
     isFlagged: (message) ->
         flags = _getFlags message
-        MessageStore.isFlagged {flags, message}
+        # test flags but also mailboxID
+        unless (result = MessageStore.isFlagged {flags, message})
+            result = @getMailboxID() is @getAccount()?.get('flaggedMailbox')
+        result
 
 
     isAttached: (message) ->
         flags = _getFlags message
-        MessageStore.isFlagged {flags, message}
+        MessageStore.isAttached {flags, message}
 
 
     isDeleted: (message) ->
-        # Message is in trashbox
-        trashID = @getAccount()?.get 'trashMailbox'
-        mailboxIDs = _.keys message?.get 'mailboxIDs'
-        if (trashID in mailboxIDs)
-            return true
 
-        # Message is not totally removed
-        deletedLabel = 'Deleted Messages'.toLowerCase()
-        label = @getMailbox()?.get('label')?.toLowerCase()
-        label is deletedLabel
+        # Message is in trashbox
+        if message?
+            account = AccountStore.getByID message.get('accountID')
+            trashboxID = account?.get 'trashMailbox'
+            return message.get('mailboxIDs')[trashboxID]?
+
+        # Mailbox selected is trashbox
+        trashboxID = @getAccount()?.get 'trashMailbox'
+        trashboxID? and trashboxID is @getMailboxID()
 
 
     isDraft: (message) ->
-        draftID = @getAccount()?.get 'draftMailbox'
-        mailboxIDs = _.keys message?.get 'mailboxIDs'
-        draftID in mailboxIDs
+        if message?
+            flags = _getFlags message
+            MessageStore.isDraft {flags, message}
+        else
+            draftID = @getAccount()?.get 'draftMailbox'
+            draftID? and draftID is @getMailboxID()
 
 
     getMailboxTotal: ->
@@ -330,17 +340,15 @@ class RouterStore extends Store
         (_messagesLength + 1) >= MSGBYPAGE
 
 
-    # We dont filter for type from and dest because it is
-    # complicated by collation and name vs address.
-    filterFlags: (message) =>
+    filterByFlags: (message) =>
         if message and message not instanceof Immutable.Map
             message = Immutable.Map message
         if @isFlagged()
-            return @isFlagged message
+            return MessageStore.isFlagged message
         if @isAttached()
-            return @isAttached message
+            return MessageStore.isAttached message
         if @isUnread()
-            return @isUnread message
+            return MessageStore.isUnread message
         return true
 
 
@@ -374,7 +382,7 @@ class RouterStore extends Store
             conversations[path] = true unless (exist = conversations[path])
 
             # Should have the same flags
-            hasSameFlag = @filterFlags message
+            hasSameFlag = @filterByFlags message
 
             # Message should be in mailbox
             inMailbox = mailboxID of message.get 'mailboxIDs'
@@ -423,7 +431,7 @@ class RouterStore extends Store
         # Filter messages
         mailboxID ?= @getMailboxID()
         messages = MessageStore.getConversation conversationID, mailboxID
-        _.filter messages, @filterFlags
+        _.filter messages, @filterByFlags
 
 
     _getConversationIndex = (messages) ->
@@ -467,19 +475,44 @@ class RouterStore extends Store
         # sometime there are several INBOX with different id
         # but only one is references as real INBOX
         # Get reference INBOX_ID to keep _nextURL works
-        # sith this onther INBOX
+        # with this 2nd INBOX
         if AccountStore.isInbox _accountID, _mailboxID
-            mailboxID = AccountStore.getInbox(_accountID).get 'id'
+            mailboxID = AccountStore.getInbox(_accountID)?.get 'id'
         else
             mailboxID = _mailboxID
 
-        # Get queryString of URI params
-        query = _getURIQueryParams {filter: _currentFilter}
+        params = {
+            action: _action,
+        };
 
-        if mailboxID?
-            _URI = "#{mailboxID}#{query}"
-        else
-            _URI = _action
+        if _action in _.values(MessageActions)
+            Object.assign params, {
+                accountID: _accountID,
+                mailboxID: _mailboxID,
+            }
+
+            unless MessageActions.SHOW_ALL is _action
+                Object.assign params, {
+                    conversationID: _conversationID,
+                    messageID: _messageID,
+                }
+
+            # Query are only for Messages
+            if (query = _getURIQueryParams { filter: _currentFilter })
+                Object.assign params, { query }
+
+        else if AccountActions.EDIT is _action
+            Object.assign params, {
+                accountID: _accountID,
+            }
+
+        # Do not add empty query
+        params = _.flatten _.transform params, (result, value, key) =>
+            return if 'query' is key and _.isEmpty(value)
+            result.push key + '=' + value
+        , []
+
+        _URI = _.flatten(params).join '&'
 
 
     ###
@@ -504,8 +537,18 @@ class RouterStore extends Store
             # without accounts
             _setCurrentAction payload
 
-            mailboxID ?= AccountStore.getDefault().get 'inboxMailbox'
-            accountID ?= AccountStore.getByMailbox(mailboxID).get 'id'
+
+            # get Account from mailbox
+            accountID ?= AccountStore.getByMailbox(mailboxID)?.get 'id' if mailboxID
+
+            # Get default account
+            # and set accountID and mailboxID
+            if not accountID and not mailboxID
+                account = AccountStore.getDefault()
+                accountID = account?.get 'id'
+                mailboxID = account?.get 'inboxMailbox'
+
+            mailboxID ?= AccountStore.getByID(accountID)?.get 'inboxMailbox'
             _setCurrentAccount {accountID, mailboxID, tab}
 
             # From MessageStore
@@ -534,18 +577,45 @@ class RouterStore extends Store
 
         handle ActionTypes.ROUTES_INITIALIZE, (router) ->
             _router = router
+
+            _action = null
+            _URI = null
+            _lastPage = {}
+
+            _modal = null
+
+            _currentFilter = _defaultFilter =
+                sort: '-date'
+                flags: null
+                value: null
+                before: null
+                after: null
+
+            _accountID = null
+            _mailboxID = null
+            _tab = null
+
+            _conversationID = null
+            _messageID = null
+            _messagesLength = 0
+            _nearestMessage = null
+
+            clearTimeout _timerRouteChange if _timerRouteChange
+            _timerRouteChange = null
+
             @emit 'change'
 
 
         # Do not redirect to default account
         # if silent is true
-        handle ActionTypes.REMOVE_ACCOUNT_SUCCESS, ({accountID, silent})  ->
-            accountID = @getAccountID()
-            mailboxID = @getAccount(accountID)?.get 'inboxMailbox'
+        handle ActionTypes.REMOVE_ACCOUNT_SUCCESS, ({silent})  ->
+            account = @getDefaultAccount()
+            accountID = account?.get 'id'
+            mailboxID = account?.get 'inboxMailbox'
             _setCurrentAccount {accountID, mailboxID}
 
             unless silent
-                action = AccountActions[if mailboxID then 'EDIT' else 'CREATE']
+                action = AccountActions[if account then 'EDIT' else 'CREATE']
                 _setCurrentAction {action}
 
             _updateURL()

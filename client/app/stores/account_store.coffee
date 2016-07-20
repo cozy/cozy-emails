@@ -287,7 +287,7 @@ class AccountStore extends Store
 
     getAllMailboxes: (accountID) ->
         if accountID
-            _accounts?.get(accountID).get 'mailboxes'
+            _accounts?.get(accountID)?.get 'mailboxes'
 
 
     isInbox: (accountID, mailboxID, getChildren=false) ->

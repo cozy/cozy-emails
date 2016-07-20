@@ -219,7 +219,7 @@ RouterActionCreator =
                 # Apply filters to messages
                 # to upgrade conversationLength
                 # FIXME: should be moved server side
-                messages = _.filter messages, RouterStore.filterFlags
+                messages = _.filter messages, RouterStore.filterByFlags
 
                 # Update Realtime
                 lastMessage = _.last messages

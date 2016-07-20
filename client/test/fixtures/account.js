@@ -175,6 +175,7 @@ module.exports.createAccount = function Account() {
     supportRFC4551: true,
 
     inboxMailbox: inboxMailbox.id,
+    flaggedMailbox: flaggedMailbox.id,
     draftMailbox: draftMailbox.id,
     junkMailbox: junkMailbox.id,
     sentMailbox: sentMailbox.id,
