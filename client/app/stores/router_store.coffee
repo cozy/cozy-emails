@@ -153,9 +153,15 @@ class RouterStore extends Store
 
 
     _getNextURL = () ->
-        key = _getNextURI()
-        if (_nextURL[key] isnt _currentRequest)
-            return _nextURL[key]
+        url = _nextURL[_getNextURI()]
+        hasNextPage = _lastPage[_URI]?.isComplete
+        if (url isnt _currentRequest and not hasNextPage)
+            return url
+
+
+    _setCurrentRequest = (url) ->
+        key = _getPreviousURI()
+        _currentRequest = if url isnt _nextURL[key] then url else null;
 
 
     _getPage = ->
@@ -386,7 +392,6 @@ class RouterStore extends Store
 
 
     isDeleted: (message) ->
-
         # Message is in trashbox
         if message?
             account = AccountStore.getByID message.get('accountID')
@@ -720,7 +725,7 @@ class RouterStore extends Store
 
 
         handle ActionTypes.MESSAGE_FETCH_REQUEST, ({url}) ->
-            _currentRequest = url;
+            _setCurrentRequest url
             @emit 'change'
 
 

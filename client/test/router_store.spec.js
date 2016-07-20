@@ -1199,16 +1199,69 @@ describe('RouterStore', () => {
       });
     });
 
-    it.skip('getLastPage', () => {
 
-    });
+    describe('UseCases', () => {
+      let result;
+      let action;
+      let mailboxID;
+      let messagesPerPage;
 
-    it.skip('hasNextPage', () => {
+      it.skip('At first nothing should be stored', () => {
 
-    });
+      });
 
-    it.skip('isPageComplete', () => {
+      it('Goto last page should set `isComplete` falsy', () => {
+        // Update messagesPerPage
+        action = MessageActions.SHOW_ALL;
+        mailboxID = AccountStore.getDefault().get('inboxMailbox');
+        messagesPerPage = 3;
+        Dispatcher.dispatch({
+          type: ActionTypes.ROUTE_CHANGE,
+          value: { action, mailboxID },
+        });
 
+        // Save messages
+        const date = new Date()
+        let messages = [];
+        messages.push(MessageFixtures.createMessage({ account }));
+        messages.push(MessageFixtures.createMessage({ account }));
+        Dispatcher.dispatch({
+          type: ActionTypes.MESSAGE_FETCH_SUCCESS,
+          value: { result: { messages } },
+        });
+        result = { page: 0, start: date.toISOString(), isComplete: false };
+        assert.deepEqual(RouterStore.getLastPage(), result);
+        assert.isTrue(RouterStore.hasNextPage());
+        // TODO: add test for isPageComplete()
+
+        Dispatcher.dispatch({
+          type: ActionTypes.MESSAGE_FETCH_SUCCESS,
+          value: { result: { messages } },
+        });
+        result = { page: 1, start: date.toISOString(), isComplete: true };
+        assert.deepEqual(RouterStore.getLastPage(), result);
+        assert.isFalse(RouterStore.hasNextPage());
+        // TODO: add test for isPageComplete()
+
+        Dispatcher.dispatch({
+          type: ActionTypes.MESSAGE_FETCH_SUCCESS,
+          value: { result: { messages } },
+        });
+        result = { page: 2, start: date.toISOString(), isComplete: true };
+        assert.deepEqual(RouterStore.getLastPage(), result);
+        assert.isFalse(RouterStore.hasNextPage());
+        // TODO: add test for isPageComplete()
+      });
+
+      it.skip('Each pageRequest should be savec as uniq', () => {
+        // TODO: update URL with several mailboxID && flags or filters
+        // each pageValue should be saved for each request path
+      });
+
+
+      it.skip('Nothing should be stored with falsy `params`', () => {
+
+      });
     });
 
 
