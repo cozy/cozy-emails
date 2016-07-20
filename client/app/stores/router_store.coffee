@@ -347,7 +347,7 @@ class RouterStore extends Store
 
             # At first get unread Message
             # if not get last message
-            message = messages.find @isUnread
+            message = messages.find (message) => @isUnread message
             message ?= messages.shift()
             message?.get 'id'
         else
