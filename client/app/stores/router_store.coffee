@@ -27,7 +27,7 @@ class RouterStore extends Store
     _router = null
     _action = null
     _URI = null
-    _lastPage = {}
+    _requests = {}
 
     _messagesPerPage = null;
 
@@ -127,34 +127,38 @@ class RouterStore extends Store
         _getNextURL()
 
 
+    # Save messagesLength per page
+    # to get the correct pageAfter param
+    # for getNext handles
     _setLastPage = (messages) ->
-        # Save messagesLength per page
-        # to get the correct pageAfter param
-        # for getNext handles
+        # Sort messages by date
+        messages = messages.sort (msg1, msg2) ->
+            _sortValues msg1.date, msg2.date
+
+        # Get query of fetchRequest
+        # all messages should be older than pageAfter
         pageAfter = _.last(messages)?.date
 
-        # Sometimes MessageList content
-        # has more reslts than request has
-        oldLastPage = _lastPage[_URI]
-        if oldLastPage?.start? and oldLastPage.start < pageAfter
-            pageAfter = oldLastPage.start
-            lastPage = oldLastPage
+        # If messages fetched are older
+        # than the current request
+        # get older pageAfter of both
+        if (old = _requests[_URI])?.start? and old.start > pageAfter
+            pageAfter = old.start
 
-        else
-            # Prepare next load
-            _setNextURL {pageAfter}
+        # Prepare next fetch request
+        _setNextURL {pageAfter}
 
-            # Save history cursor
-            _lastPage[_URI] = {
-                page: _getPage()
-                start: pageAfter
-                isComplete: _getNextURL() is undefined
-            }
+        # Save request state
+        _requests[_URI] = {
+            page: _getPage()
+            start: pageAfter
+            isComplete: _getNextURL() is undefined
+        }
 
 
     _getNextURL = () ->
         url = _nextURL[_getNextURI()]
-        hasNextPage = _lastPage[_URI]?.isComplete
+        hasNextPage = _requests[_URI]?.isComplete
         if (url isnt _currentRequest and not hasNextPage)
             return url
 
@@ -246,14 +250,17 @@ class RouterStore extends Store
 
 
     _sortByDate = (order) ->
-        criteria = 'date'
         order = if order is '+' then -1 else 1
         return sortFunction = (message1, message2) ->
-            val1 = message1.get criteria
-            val2 = message2.get criteria
-            if val1 > val2 then return -1 * order
-            else if val1 < val2 then return 1 * order
-            else return 0
+            val1 = message1.get('date')
+            val2 = message2.get('date')
+            _sortValues val1, val2, order
+
+
+    _sortValues = (val1, val2, order=1) =>
+        if val1 > val2 then return -1 * order
+        else if val1 < val2 then return 1 * order
+        else return 0
 
 
     _isSearchAction = ->
@@ -423,20 +430,31 @@ class RouterStore extends Store
 
 
     hasNextPage: ->
-        not @getLastPage()?.isComplete
+        not @getLastFetch()?.isComplete
 
 
-    getLastPage: ->
-        _lastPage[_URI]
+    getLastFetch: ->
+        _requests[_URI]
 
 
+    # MessageList have a minLength
+    # if its size < minLength then return false
+    # otherwhise return true
     isPageComplete: ->
         # Do not infinite fetch
         # when message doesnt exist anymore
         messageID = @getMessageID()
         if messageID and not MessageStore.getByID(messageID)?.size
             return @hasNextPage()
-        (_messagesLength + 1) >= _messagesPerPage
+
+        # Do not get all messages
+        # be enought to "feel" the page
+        accountID = @getAccountID()
+        mailboxID = @getMailboxID()
+        nbTotal = AccountStore.getMailbox(accountID, mailboxID)?.get 'nbTotal'
+        maxMessage = if nbTotal < _messagesPerPage then --nbTotal else _messagesPerPage
+
+        _messagesLength >= maxMessage
 
 
     filterByFlags: (message) =>
@@ -681,7 +699,7 @@ class RouterStore extends Store
 
             _action = null
             _URI = null
-            _lastPage = {}
+            _requests = {}
 
             _modal = null
 
@@ -724,12 +742,9 @@ class RouterStore extends Store
             @emit 'change'
 
 
-        handle ActionTypes.MESSAGE_FETCH_REQUEST, ({url}) ->
+        handle ActionTypes.MESSAGE_FETCH_SUCCESS, ({result, conversationID, url}) ->
             _setCurrentRequest url
-            @emit 'change'
 
-
-        handle ActionTypes.MESSAGE_FETCH_SUCCESS, ({result, conversationID}) ->
             # Save last message references
             _setLastPage result.messages if result?.messages
 

@@ -20,11 +20,11 @@ module.exports.createMailbox = function Mailbox() {
     attribs: undefined,
     tree: undefined,
 
-    nbFlagged: 117,
-    nbSent: 0,
+    nbFlagged: 3,
+    nbSent: 2,
     nbRecent: 0,
-    nbTotal: 3351,
-    nbUnread: 164,
+    nbTotal: 35,
+    nbUnread: 4,
   }
 };
 

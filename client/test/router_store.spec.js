@@ -1204,57 +1204,75 @@ describe('RouterStore', () => {
     });
 
 
+    describe.skip('getMessagesList', () => {
+
+    });
+
+    describe.skip('filterByFlags', () => {
+      /*
+        1. ajouter un flag
+        2. tester un message de la même mailbox
+        3. tester un message d'une autre mailbox
+      */
+    });
+
+
     describe('UseCases', () => {
       let result;
       let action;
+      let accountID;
       let mailboxID;
       let messagesPerPage;
+      let startDate;
 
       it.skip('At first nothing should be stored', () => {
-
+        // TODO: vérifier que messageLength et mis à jour à
+        // chaque lancement de cette méthode
       });
 
       it('Goto last page should set `isComplete` falsy', () => {
+        // TODO
+        // 1. tester avec le nbMessage/page par défaut
+        // 2. tester en assignat un nombre plus petit
+
         // Update messagesPerPage
         action = MessageActions.SHOW_ALL;
+        accountID = AccountStore.getDefault().get('id');
         mailboxID = AccountStore.getDefault().get('inboxMailbox');
-        messagesPerPage = 3;
+        messagesPerPage = 1;
         Dispatcher.dispatch({
           type: ActionTypes.ROUTE_CHANGE,
           value: { action, mailboxID },
         });
 
-        // Save messages
-        const date = new Date()
-        let messages = [];
-        messages.push(MessageFixtures.createMessage({ account }));
-        messages.push(MessageFixtures.createMessage({ account }));
-        Dispatcher.dispatch({
-          type: ActionTypes.MESSAGE_FETCH_SUCCESS,
-          value: { result: { messages } },
-        });
-        result = { page: 0, start: date.toISOString(), isComplete: false };
-        assert.deepEqual(RouterStore.getLastPage(), result);
-        assert.isTrue(RouterStore.hasNextPage());
-        // TODO: add test for isPageComplete()
+        const messages = [];
+        let counter = 0;
+        while (counter < 35) {
+          const date = new Date(2014, 1, counter);
+          messages.push(MessageFixtures.createMessage({ account, date }));
+          ++counter;
+        }
 
-        Dispatcher.dispatch({
-          type: ActionTypes.MESSAGE_FETCH_SUCCESS,
-          value: { result: { messages } },
-        });
-        result = { page: 1, start: date.toISOString(), isComplete: true };
-        assert.deepEqual(RouterStore.getLastPage(), result);
-        assert.isFalse(RouterStore.hasNextPage());
-        // TODO: add test for isPageComplete()
+        let request = { page: 0, isComplete: false, hasNextPage: true, isComplete: false };
+        let isPageComplete = false;
+        testMoreMessages(messages.slice(0, 5), request, isPageComplete);
 
-        Dispatcher.dispatch({
-          type: ActionTypes.MESSAGE_FETCH_SUCCESS,
-          value: { result: { messages } },
-        });
-        result = { page: 2, start: date.toISOString(), isComplete: true };
-        assert.deepEqual(RouterStore.getLastPage(), result);
-        assert.isFalse(RouterStore.hasNextPage());
-        // TODO: add test for isPageComplete()
+        request.page = 1;
+        testMoreMessages(messages.slice(6, 15), request, isPageComplete);
+
+        request.page = 2;
+        isPageComplete = true;
+        testMoreMessages(messages.slice(16, 31), request, isPageComplete);
+
+        // If nextURL is twice the same
+        // then disable feature
+        request.page = 3;
+        testMoreMessages(messages.slice(32, 35), request, isPageComplete);
+
+        request.page = 4;
+        request.isComplete = true;
+        request.hasNextPage = false;
+        testMoreMessages(messages.slice(32, 35), request, isPageComplete);
       });
 
       it.skip('Each pageRequest should be savec as uniq', () => {
@@ -1266,20 +1284,37 @@ describe('RouterStore', () => {
       it.skip('Nothing should be stored with falsy `params`', () => {
 
       });
-    });
 
 
+      function testMoreMessages(messages, req, isPageComplete) {
+        const request = _.cloneDeep(req);
+        const hasNextPage = request.hasNextPage;
+        delete request.hasNextPage;
 
-    describe.skip('getMessagesList', () => {
+        messages = messages.sort((msg1, msg2) => {
+          if (msg1.date > msg2.date) return -1;
+          else if (msg1.date < msg2.date) return 1;
+          else return 0
+        })
+        request.start = _.last(messages).date;
+        Dispatcher.dispatch({
+          type: ActionTypes.MESSAGE_FETCH_REQUEST,
+          value: { url: RouterStore.getNextURL() },
+        });
+        Dispatcher.dispatch({
+          type: ActionTypes.MESSAGE_FETCH_SUCCESS,
+          value: { result: { messages } },
+        });
 
-    });
+        assert.equal(RouterStore.hasNextPage(), hasNextPage);
+        assert.deepEqual(RouterStore.getLastFetch(), request);
+        assert.equal(RouterStore.hasNextPage(), hasNextPage);
 
-    describe.skip('filterByFlags', () => {
-      /*
-        1. ajouter un flag
-        2. tester un message de la même mailbox
-        3. tester un message d'une autre mailbox
-      */
+        // Get filtered messages from all messages
+        RouterStore.getMessagesList()
+        // Test min-length
+        assert.equal(RouterStore.isPageComplete(), isPageComplete)
+      }
     });
 
     describe.skip('getNearestMessage', () => {
