@@ -82,8 +82,13 @@ RouterActionCreator =
 
 
     gotoNextPage: ->
-        if (url = RouterStore.getNextURL())?
+        if (url = RouterStore.getNextRequest())?
             @getCurrentPage {url}
+        else
+            URI = RouterStore.getURI()
+            AppDispatcher.dispatch
+                type: ActionTypes.MESSAGE_FETCH_FAILURE
+                value: { error: 'NEXT_PAGE_IS_NULL', URI }
 
 
     gotoCompose: (params={}) ->

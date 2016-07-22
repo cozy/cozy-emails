@@ -763,6 +763,12 @@ class RouterStore extends Store
             @emit 'change'
 
 
+        handle ActionTypes.MESSAGE_FETCH_FAILURE, ({ error, URI }) ->
+            if (error is 'NEXT_PAGE_IS_NULL')
+                _requests[URI].isComplete = true
+            @emit 'change'
+
+
         handle ActionTypes.DISPLAY_MODAL, (params) ->
             _modal = params
             @emit 'change'
