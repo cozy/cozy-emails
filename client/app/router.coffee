@@ -105,6 +105,11 @@ _dispatch = (payload, filter) ->
     {mailboxID, conversationID} = payload
     filter = _parseQuery filter if filter
 
+    payload.filter = filter
+    AppDispatcher.dispatch
+        type: ActionTypes.ROUTE_CHANGE
+        value: payload
+
     if mailboxID?
         # Always get freshest data as possible
         RouterActionCreator.refreshMailbox {mailboxID}
@@ -116,12 +121,6 @@ _dispatch = (payload, filter) ->
     # Get all messages from conversation
     if conversationID?
         RouterActionCreator.getConversation conversationID
-
-    payload.filter = filter
-    AppDispatcher.dispatch
-        type: ActionTypes.ROUTE_CHANGE
-        value: payload
-
 
 
 # Extract params from q queryString to an object that map `key` > `value`.

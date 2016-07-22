@@ -53,7 +53,7 @@ class RouterStore extends Store
 
     # Paginate Messages.list
     _pages = {}
-    _nextURL = {}
+    _requests = {}
     _currentRequest = null
 
     _timerRouteChange = null
@@ -123,8 +123,8 @@ class RouterStore extends Store
 
 
 
-    getNextURL: ->
-        _getNextURL()
+    getNextRequest: ->
+        _getNextRequest()
 
 
     # Save messagesLength per page
@@ -138,34 +138,32 @@ class RouterStore extends Store
         # Get query of fetchRequest
         # all messages should be older than pageAfter
         pageAfter = _.last(messages)?.date
+        currentValue = _requests[_URI]
 
         # If messages fetched are older
         # than the current request
-        # get older pageAfter of both
-        if (old = _requests[_URI])?.start? and old.start > pageAfter
-            pageAfter = old.start
+        if currentValue?.start? and currentValue.start < pageAfter
+            pageAfter = currentValue.start
 
         # Prepare next fetch request
-        _setNextURL {pageAfter}
+        _setNextRequest {pageAfter}
 
         # Save request state
+        counter = _self.getMailbox()?.get 'nbTotal'
         _requests[_URI] = {
-            page: _getPage()
-            start: pageAfter
-            isComplete: _getNextURL() is undefined
+            page: _getPage(),
+            start: pageAfter,
+            isComplete: counter is _messagesLength,
         }
 
 
-    _getNextURL = () ->
-        url = _nextURL[_getNextURI()]
-        hasNextPage = _requests[_URI]?.isComplete
-        if (url isnt _currentRequest and not hasNextPage)
-            return url
+    _getNextRequest = ->
+        _requests[_getNextURI()]
 
 
     _setCurrentRequest = (url) ->
         key = _getPreviousURI()
-        _currentRequest = if url isnt _nextURL[key] then url else null;
+        _currentRequest = if url isnt _requests[key] then url else null;
 
 
     _getPage = ->
@@ -189,24 +187,22 @@ class RouterStore extends Store
 
     _getPreviousURL = ->
         if (key = _getPreviousURI())?
-            _nextURL[key]
+            _requests[key]
 
 
     # Get URL from last fetch result
     # not from the list that is not reliable
-    _setNextURL = ({pageAfter}) ->
+    _setNextRequest = ({pageAfter}) ->
         _addPage()
-        key = _getNextURI()
 
         # Do not overwrite result
         # that has no reasons to changes
-        if _getNextURL() is undefined
+        if _getNextRequest() is undefined
             action = MessageActions.SHOW_ALL
             filter = {pageAfter}
-
             currentURL = _self.getCurrentURL {filter, action}
             if _getPreviousURL() isnt currentURL
-                _nextURL[key] = currentURL
+                _requests[_getNextURI()] = currentURL
 
 
     _getRouteAction = (params) ->
@@ -593,7 +589,7 @@ class RouterStore extends Store
         # Special Case ie. OVH mails
         # sometime there are several INBOX with different id
         # but only one is references as real INBOX
-        # Get reference INBOX_ID to keep _nextURL works
+        # Get reference INBOX_ID to keep _requests works
         # with this 2nd INBOX
         if AccountStore.isInbox _accountID, _mailboxID
             mailboxID = AccountStore.getInbox(_accountID)?.get 'id'
@@ -638,6 +634,12 @@ class RouterStore extends Store
         Defines here the action handlers.
     ###
     __bindHandlers: (handle) ->
+
+        handle ActionTypes.MESSAGE_RESET_REQUEST, ->
+            _messagesPerPage = null;
+            _requests = {}
+            @emit 'change'
+
 
         handle ActionTypes.ROUTE_CHANGE, (payload={}) ->
             # Ensure all stores that listen ROUTE_CHANGE have vanished

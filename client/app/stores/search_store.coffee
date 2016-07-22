@@ -30,7 +30,7 @@ class SearchStore extends Store
         _currentSearchPage = 0
         _currentSearchMore = false
 
-    _getNextURL = (value) ->
+    _getNextRequest = (value) ->
         url = "search?search=#{@getCurrentSearchKey()}"
         url += "&pageSize=#{NUMBER_BY_PAGE}"
         if _currentSearchPage
@@ -41,7 +41,7 @@ class SearchStore extends Store
         return url
 
     _fetchSearchResults = ->
-        url = _getNextURL _currentSearch
+        url = _getNextRequest _currentSearch
 
         AppDispatcher.dispatch
             type: ActionTypes.SEARCH_REQUEST

@@ -82,7 +82,20 @@ describe('RouterStore', () => {
   describe('Basics', () => {
 
     beforeEach(() => {
-      createAccountFixtures()
+      createAccountFixtures();
+
+      // Add messages
+      // that belongs to defaultAccount
+      const conversationID = `coucou-${getUID()}`;
+      const params = {conversationID, account};
+      const messages = [];
+      messages.push(MessageFixtures.createMessage(params));
+      messages.push(MessageFixtures.createMessage(params));
+      messages.push(MessageFixtures.createMessage(params));
+      Dispatcher.dispatch({
+        type: ActionTypes.RECEIVE_RAW_MESSAGES,
+        value: messages,
+      });
     });
 
     afterEach(() => {
@@ -1111,7 +1124,6 @@ describe('RouterStore', () => {
       resetAccountFixtures()
     });
 
-
     describe('getMessagesPerPage', () => {
 
       it('Should be `null`', () => {
@@ -1218,64 +1230,131 @@ describe('RouterStore', () => {
 
 
     describe('UseCases', () => {
-      let result;
-      let action;
-      let accountID;
-      let mailboxID;
-      let messagesPerPage;
-      let startDate;
 
       it.skip('At first nothing should be stored', () => {
         // TODO: vérifier que messageLength et mis à jour à
         // chaque lancement de cette méthode
       });
 
-      it('Goto last page should set `isComplete` falsy', () => {
-        // TODO
-        // 1. tester avec le nbMessage/page par défaut
-        // 2. tester en assignat un nombre plus petit
+      describe('Goto last page should set `isComplete` falsy', () => {
 
-        // Update messagesPerPage
-        action = MessageActions.SHOW_ALL;
-        accountID = AccountStore.getDefault().get('id');
-        mailboxID = AccountStore.getDefault().get('inboxMailbox');
-        messagesPerPage = 1;
-        Dispatcher.dispatch({
-          type: ActionTypes.ROUTE_CHANGE,
-          value: { action, mailboxID },
+        let result;
+        let action;
+        let accountID;
+        let mailboxID;
+        let messagesPerPage;
+        let messages;
+
+        beforeEach(() => {
+          Dispatcher.dispatch({
+            type: ActionTypes.MESSAGE_RESET_REQUEST,
+          });
+          action = MessageActions.SHOW_ALL;
+          accountID = AccountStore.getDefault().get('id');
+          mailboxID = AccountStore.getDefault().get('inboxMailbox');
+          messages = [];
+        })
+
+        afterEach(() => {
+          Dispatcher.dispatch({
+            type: ActionTypes.MESSAGE_RESET_REQUEST,
+          });
         });
 
-        const messages = [];
-        let counter = 0;
-        while (counter < 35) {
-          const date = new Date(2014, 1, counter);
-          messages.push(MessageFixtures.createMessage({ account, date }));
-          ++counter;
-        }
+        it('With default MSGBYPAGE', () => {
+          Dispatcher.dispatch({
+            type: ActionTypes.ROUTE_CHANGE,
+            value: { action, mailboxID },
+          });
 
-        let request = { page: 0, isComplete: false, hasNextPage: true, isComplete: false };
-        let isPageComplete = false;
-        testMoreMessages(messages.slice(0, 5), request, isPageComplete);
+          messages = createMessages(35);
 
-        request.page = 1;
-        testMoreMessages(messages.slice(6, 15), request, isPageComplete);
+          let request = {
+            page: 0,
+            isComplete: false,
+            hasNextPage: true,
+            isComplete: false,
+          };
+          let isPageComplete = false;
 
-        request.page = 2;
-        isPageComplete = true;
-        testMoreMessages(messages.slice(16, 31), request, isPageComplete);
+          testMoreMessages(messages.slice(0, 5), request, false);
 
-        // If nextURL is twice the same
-        // then disable feature
-        request.page = 3;
-        testMoreMessages(messages.slice(32, 35), request, isPageComplete);
+          request.page = 1;
+          testMoreMessages(messages.slice(5, 15), request, false);
 
-        request.page = 4;
-        request.isComplete = true;
-        request.hasNextPage = false;
-        testMoreMessages(messages.slice(32, 35), request, isPageComplete);
+          request.page = 2;
+          testMoreMessages(messages.slice(15, 30), request, true);
+
+          // If nextURL is twice the same
+          // then disable feature
+          request.page = 3;
+          testMoreMessages(messages.slice(30, 35), request, true);
+
+          request = RouterStore.getLastFetch()
+          request.page = 4;
+          request.isComplete = true;
+          request.hasNextPage = false;
+          testMoreMessages(messages.slice(10, 20), request, true);
+        });
+
+
+        it('With 5 MSGBYPAGE', () => {
+          const messagesPerPage = 5;
+          const nbTotal = 13;
+
+          // Change MaxSize of mailbox
+          // to fit to this test
+          let mailbox = AccountStore.getMailbox(accountID, mailboxID).toJS();
+          mailbox.nbTotal = nbTotal;
+          Dispatcher.dispatch({
+            type: ActionTypes.RECEIVE_MAILBOX_CREATE,
+            value: mailbox,
+          });
+
+          // Update messagesPerPage
+          // and select the right mailbox
+          Dispatcher.dispatch({
+            type: ActionTypes.ROUTE_CHANGE,
+            value: { action, mailboxID, messagesPerPage },
+          });
+
+          messages = createMessages(mailbox.nbTotal);
+
+          let request = {
+            page: 0,
+            isComplete: false,
+            hasNextPage: true,
+            isComplete: false,
+          };
+          testMoreMessages(messages.slice(0, 1), request, false);
+
+          request.page = 1;
+          testMoreMessages(messages.slice(1, 5), request, true);
+
+          request.page = 2;
+          testMoreMessages(messages.slice(2, 8), request, true);
+
+          request = RouterStore.getLastFetch()
+          request.page = 3
+          request.hasNextPage = true;
+          testMoreMessages(messages.slice(0, 3), request, true);
+
+          request.page = 4;
+          request.isComplete = false;
+          request.hasNextPage = true;
+          delete request.start;
+          testMoreMessages(messages.slice(8, 13), request, true);
+
+          request = RouterStore.getLastFetch()
+          request.page = 5;
+          request.isComplete = true;
+          request.hasNextPage = false;
+          testMoreMessages(messages.slice(0, 13), request, true);
+        });
+
       });
 
-      it.skip('Each pageRequest should be savec as uniq', () => {
+      it.skip('Each request should be saved with a uniq URI', () => {
         // TODO: update URL with several mailboxID && flags or filters
         // each pageValue should be saved for each request path
       });
@@ -1286,32 +1365,39 @@ describe('RouterStore', () => {
       });
 
 
+      function createMessages(max) {
+        const result = []
+        if (undefined === max) max = 1;
+        let counter = max;
+        while (counter > 0) {
+          const date = new Date(2014, 1, counter);
+          result.push(MessageFixtures.createMessage({ account, date }));
+          --counter;
+        }
+        return result;
+      }
+
+
       function testMoreMessages(messages, req, isPageComplete) {
         const request = _.cloneDeep(req);
         const hasNextPage = request.hasNextPage;
         delete request.hasNextPage;
 
-        messages = messages.sort((msg1, msg2) => {
-          if (msg1.date > msg2.date) return -1;
-          else if (msg1.date < msg2.date) return 1;
-          else return 0
-        })
-        request.start = _.last(messages).date;
-        Dispatcher.dispatch({
-          type: ActionTypes.MESSAGE_FETCH_REQUEST,
-          value: { url: RouterStore.getNextURL() },
-        });
+        if (undefined === request.start) {
+          request.start = _.last(messages).date;
+        }
+
         Dispatcher.dispatch({
           type: ActionTypes.MESSAGE_FETCH_SUCCESS,
-          value: { result: { messages } },
+          value: { result: { messages }, url: RouterStore.getNextRequest() },
         });
 
         assert.equal(RouterStore.hasNextPage(), hasNextPage);
         assert.deepEqual(RouterStore.getLastFetch(), request);
-        assert.equal(RouterStore.hasNextPage(), hasNextPage);
 
         // Get filtered messages from all messages
         RouterStore.getMessagesList()
+
         // Test min-length
         assert.equal(RouterStore.isPageComplete(), isPageComplete)
       }
@@ -1453,7 +1539,7 @@ describe('RouterStore', () => {
   });
 
 
-  function createAccountFixtures() {
+  function createAccountFixtures(msgLength) {
     // Add 3 accounts to test
     // several usecases
     account = AccountFixtures.createAccount();
@@ -1468,19 +1554,6 @@ describe('RouterStore', () => {
     Dispatcher.dispatch({
       type: ActionTypes.ADD_ACCOUNT_SUCCESS,
       value: { account: AccountFixtures.createAccount() },
-    });
-
-    // Add messages
-    // that belongs to defaultAccount
-    const conversationID = `coucou-${getUID()}`;
-    const params = {conversationID, account};
-    const messages = [];
-    messages.push(MessageFixtures.createMessage(params));
-    messages.push(MessageFixtures.createMessage(params));
-    messages.push(MessageFixtures.createMessage(params));
-    Dispatcher.dispatch({
-      type: ActionTypes.RECEIVE_RAW_MESSAGES,
-      value: messages,
     });
   }
 
