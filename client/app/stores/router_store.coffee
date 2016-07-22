@@ -27,7 +27,9 @@ class RouterStore extends Store
     _router = null
     _action = null
     _URI = null
-    _lastPage = {}
+    _requests = {}
+
+    _messagesPerPage = null;
 
     _modal = null
 
@@ -46,6 +48,13 @@ class RouterStore extends Store
     _messageID = null
     _messagesLength = 0
     _nearestMessage = null
+
+
+
+    # Paginate Messages.list
+    _pages = {}
+    _requests = {}
+    _currentRequest = null
 
     _timerRouteChange = null
 
@@ -113,6 +122,89 @@ class RouterStore extends Store
         return @getURL params
 
 
+
+    getNextRequest: ->
+        _getNextRequest()
+
+
+    # Save messagesLength per page
+    # to get the correct pageAfter param
+    # for getNext handles
+    _setLastPage = (messages) ->
+        # Sort messages by date
+        messages = messages.sort (msg1, msg2) ->
+            _sortValues msg1.date, msg2.date
+
+        # Get query of fetchRequest
+        # all messages should be older than pageAfter
+        pageAfter = _.last(messages)?.date
+        currentValue = _requests[_URI]
+
+        # If messages fetched are older
+        # than the current request
+        if currentValue?.start? and currentValue.start < pageAfter
+            pageAfter = currentValue.start
+
+        # Prepare next fetch request
+        _setNextRequest {pageAfter}
+
+        # Save request state
+        counter = _self.getMailbox()?.get 'nbTotal'
+        _requests[_URI] = {
+            page: _getPage(),
+            start: pageAfter,
+            isComplete: counter is _messagesLength,
+        }
+
+
+    _getNextRequest = ->
+        _requests[_getNextURI()]
+
+
+    _setCurrentRequest = (url) ->
+        key = _getPreviousURI()
+        _currentRequest = if url isnt _requests[key] then url else null;
+
+
+    _getPage = ->
+        _pages[_URI] ?= -1
+        _pages[_URI]
+
+
+    _addPage = ->
+        _pages[_URI] ?= -1
+        ++_pages[_URI]
+
+
+    _getNextURI = ->
+        "#{_URI}-#{_getPage()}"
+
+
+    _getPreviousURI = ->
+        if (page = _getPage()) > 0
+            "#{_URI}-#{--page}"
+
+
+    _getPreviousURL = ->
+        if (key = _getPreviousURI())?
+            _requests[key]
+
+
+    # Get URL from last fetch result
+    # not from the list that is not reliable
+    _setNextRequest = ({pageAfter}) ->
+        _addPage()
+
+        # Do not overwrite result
+        # that has no reasons to changes
+        if _getNextRequest() is undefined
+            action = MessageActions.SHOW_ALL
+            filter = {pageAfter}
+            currentURL = _self.getCurrentURL {filter, action}
+            if _getPreviousURL() isnt currentURL
+                _requests[_getNextURI()] = currentURL
+
+
     _getRouteAction = (params) ->
         unless (action = params.action)
             if params.messageID
@@ -154,14 +246,17 @@ class RouterStore extends Store
 
 
     _sortByDate = (order) ->
-        criteria = 'date'
         order = if order is '+' then -1 else 1
         return sortFunction = (message1, message2) ->
-            val1 = message1.get criteria
-            val2 = message2.get criteria
-            if val1 > val2 then return -1 * order
-            else if val1 < val2 then return 1 * order
-            else return 0
+            val1 = message1.get('date')
+            val2 = message2.get('date')
+            _sortValues val1, val2, order
+
+
+    _sortValues = (val1, val2, order=1) =>
+        if val1 > val2 then return -1 * order
+        else if val1 < val2 then return 1 * order
+        else return 0
 
 
     _isSearchAction = ->
@@ -241,13 +336,21 @@ class RouterStore extends Store
 
 
     _setCurrentAction = (payload={}) ->
-        {action, accountID, mailboxID, messageID, conversationID} = payload
+        {action, accountID, mailboxID, messagesPerPage} = payload
+        {messageID, conversationID} = payload
+
         if AccountStore.getAll()?.size
             if mailboxID
                 if messageID and conversationID
                     action = MessageActions.SHOW
                 else if accountID and action isnt AccountActions.EDIT
                     action = MessageActions.SHOW_ALL
+
+        if action in [MessageActions.SHOW, MessageActions.SHOW_ALL]
+            _messagesPerPage = messagesPerPage or MSGBYPAGE
+        else
+            _messagesPerPage = null
+
         _action = action or AccountActions.CREATE
 
 
@@ -263,7 +366,7 @@ class RouterStore extends Store
 
             # At first get unread Message
             # if not get last message
-            message = messages.find @isUnread
+            message = messages.find (message) => @isUnread message
             message ?= messages.shift()
             message?.get 'id'
         else
@@ -292,7 +395,6 @@ class RouterStore extends Store
 
 
     isDeleted: (message) ->
-
         # Message is in trashbox
         if message?
             account = AccountStore.getByID message.get('accountID')
@@ -324,31 +426,43 @@ class RouterStore extends Store
 
 
     hasNextPage: ->
-        not @getLastPage()?.isComplete
+        not @getLastFetch()?.isComplete
 
 
-    getLastPage: ->
-        _lastPage[_URI]
+    getLastFetch: ->
+        _requests[_URI]
 
 
+    # MessageList have a minLength
+    # if its size < minLength then return false
+    # otherwhise return true
     isPageComplete: ->
         # Do not infinite fetch
         # when message doesnt exist anymore
         messageID = @getMessageID()
         if messageID and not MessageStore.getByID(messageID)?.size
             return @hasNextPage()
-        (_messagesLength + 1) >= MSGBYPAGE
+
+        # Do not get all messages
+        # be enought to "feel" the page
+        accountID = @getAccountID()
+        mailboxID = @getMailboxID()
+        nbTotal = AccountStore.getMailbox(accountID, mailboxID)?.get 'nbTotal'
+        maxMessage = if nbTotal < _messagesPerPage then --nbTotal else _messagesPerPage
+
+        _messagesLength >= maxMessage
 
 
     filterByFlags: (message) =>
         if message and message not instanceof Immutable.Map
             message = Immutable.Map message
+
         if @isFlagged()
-            return MessageStore.isFlagged message
+            return @isFlagged message
         if @isAttached()
-            return MessageStore.isAttached message
+            return @isAttached message
         if @isUnread()
-            return MessageStore.isUnread message
+            return @isUnread message
         return true
 
 
@@ -377,6 +491,7 @@ class RouterStore extends Store
                     mailboxIDs[inboxID] = inboxTotal
                     message.set 'mailboxIDs', mailboxIDs
                     return true
+
             # Display only last Message of conversation
             path = [message.get('mailboxID'), message.get('conversationID')].join '/'
             conversations[path] = true unless (exist = conversations[path])
@@ -461,7 +576,7 @@ class RouterStore extends Store
 
 
     getMessagesPerPage: ->
-        MSGBYPAGE
+        _messagesPerPage
 
 
     _updateURL = ->
@@ -474,7 +589,7 @@ class RouterStore extends Store
         # Special Case ie. OVH mails
         # sometime there are several INBOX with different id
         # but only one is references as real INBOX
-        # Get reference INBOX_ID to keep _nextURL works
+        # Get reference INBOX_ID to keep _requests works
         # with this 2nd INBOX
         if AccountStore.isInbox _accountID, _mailboxID
             mailboxID = AccountStore.getInbox(_accountID)?.get 'id'
@@ -519,6 +634,12 @@ class RouterStore extends Store
         Defines here the action handlers.
     ###
     __bindHandlers: (handle) ->
+
+        handle ActionTypes.MESSAGE_RESET_REQUEST, ->
+            _messagesPerPage = null;
+            _requests = {}
+            @emit 'change'
+
 
         handle ActionTypes.ROUTE_CHANGE, (payload={}) ->
             # Ensure all stores that listen ROUTE_CHANGE have vanished
@@ -580,7 +701,7 @@ class RouterStore extends Store
 
             _action = null
             _URI = null
-            _lastPage = {}
+            _requests = {}
 
             _modal = null
 
@@ -623,20 +744,28 @@ class RouterStore extends Store
             @emit 'change'
 
 
-        handle ActionTypes.MESSAGE_FETCH_SUCCESS, ({result, conversationID, lastPage}) ->
+        handle ActionTypes.MESSAGE_FETCH_SUCCESS, ({result, conversationID, url}) ->
+            _setCurrentRequest url
+
             # Save last message references
-            _lastPage[_URI] = lastPage if lastPage?
+            _setLastPage result.messages if result?.messages
 
             # If messageID doesnt belong to conversation
             # message must have been deleted
             # then get default message from this conversation
             if conversationID
-                inner = _.find result.messages, (msg) -> msg.id is _messageID
+                inner = _.find result?.messages, (msg) -> msg.id is _messageID
                 unless inner
                     messageID = @getMessageID conversationID
                     _setCurrentMessage {conversationID, messageID}
                     _updateURL()
 
+            @emit 'change'
+
+
+        handle ActionTypes.MESSAGE_FETCH_FAILURE, ({ error, URI }) ->
+            if (error is 'NEXT_PAGE_IS_NULL')
+                _requests[URI].isComplete = true
             @emit 'change'
 
 
