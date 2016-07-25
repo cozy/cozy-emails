@@ -8,6 +8,9 @@ module.exports = {
   // Register test dispatcher as a replacement of the official dispatcher.
   initDispatcher: (dispatcher) => {
     global.__DEV__ = true;
+    // this feels hacky, but only wait for
+    // mockery to not bother about all redux dependencies:
+    mockery.registerMock('redux', redux);
     mockery.registerMock('../dispatcher/dispatcher', dispatcher);
     mockery.registerMock(
       '../libs/flux/dispatcher/dispatcher', dispatcher);
@@ -24,10 +27,6 @@ module.exports = {
     mockery.registerMock('../stores/contact_store', {});
     mockery.registerMock('../stores/requests_store', {});
     mockery.registerMock('../stores/settings_store', {});
-
-    // this feels hacky, but only wait for
-    // mockery to not bother about all redux dependencies:
-    mockery.registerMock('redux', redux);
   },
 
 
@@ -41,6 +40,7 @@ module.exports = {
 
     mockery.registerAllowables([
       '../getters/message',
+      '../app/getters/message',
 
       //   reducers
       '../reducers/_store',

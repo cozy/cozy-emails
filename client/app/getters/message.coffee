@@ -19,6 +19,7 @@ module.exports =
         @getByID(messageID)?.get('_displayImages') or false
 
 
+    # @TODO : when is this not an Immutable
     isUnread: ({flags=[], message}) ->
         if message and message not instanceof Immutable.Map
             message = Immutable.Map message
@@ -29,6 +30,7 @@ module.exports =
             MessageFilter.UNSEEN in flags
 
 
+    # @TODO : when is this not an Immutable
     isFlagged: ({flags=[], message}) ->
         if message and message not instanceof Immutable.Map
             message = Immutable.Map message
@@ -38,15 +40,23 @@ module.exports =
         else
             MessageFilter.FLAGGED in flags
 
-
+    # @TODO : when is this not an Immutable
     isAttached: ({flags=[], message}) ->
         if message and message not instanceof Immutable.Map
             message = Immutable.Map message
         if message?
-            !!message.get('attachments')?.length
+            attachments = message.get('attachments')
+            size = attachments?.size or attachments?.length
+            return size? and size > 0
         else
             MessageFilter.ATTACH in flags
 
+
+    isDraft: ({message}) ->
+        if message and message not instanceof Immutable.Map
+            message = Immutable.Map message
+        if message?
+            MessageFlags.DRAFT in (message.get('flags') or [])
 
     getConversation: (conversationID, mailboxID) ->
         @getAll().filter (message) ->

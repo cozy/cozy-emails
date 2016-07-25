@@ -3,7 +3,7 @@ Immutable = require 'immutable'
 
 {ActionTypes} = require '../constants/app_constants'
 
-backToJSObject = (x) -> x?.toJS()
+backToJSObject = (x) -> x?.toJS?() or x
 
 shouldUpdateMessage = (current, updates) ->
     value = current?.get 'updated'
