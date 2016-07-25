@@ -658,9 +658,9 @@ class RouterStore extends Store
             # without accounts
             _setCurrentAction payload
 
-
             # get Account from mailbox
-            accountID ?= AccountStore.getByMailbox(mailboxID)?.get 'id' if mailboxID
+            if mailboxID
+                accountID ?= AccountStore.getByMailbox(mailboxID)?.get 'id'
 
             # Get default account
             # and set accountID and mailboxID
