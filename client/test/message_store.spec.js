@@ -1,8 +1,9 @@
+/* eslint-env mocha */
+
 'use strict';
 
 const assert = require('chai').assert;
 const _ = require('lodash');
-const Map = require('immutable').Map;
 
 const mockeryUtils = require('./utils/mockery_utils');
 const SpecDispatcher = require('./utils/specs_dispatcher');
@@ -21,11 +22,11 @@ describe('Message Store', () => {
 
   const date = new Date();
 
-  const message = MessageFixtures.createMessage({date});
-  const messageUnread = MessageFixtures.createUnread({date});
-  const messageFlagged = MessageFixtures.createFlagged({date});
-  const messageDraft = MessageFixtures.createDraft({date});
-  const messageAttached = MessageFixtures.createAttached({date});
+  const message = MessageFixtures.createMessage({ date });
+  const messageUnread = MessageFixtures.createUnread({ date });
+  const messageFlagged = MessageFixtures.createFlagged({ date });
+  const messageDraft = MessageFixtures.createDraft({ date });
+  const messageAttached = MessageFixtures.createAttached({ date });
 
   let conversationLength = {};
   const messages = [];
@@ -34,7 +35,7 @@ describe('Message Store', () => {
   before(() => {
     // Add several messages
     // to create a conversation
-    let params = {date, conversationID, account};
+    const params = { date, conversationID, account };
     messages.push(MessageFixtures.createMessage(params));
     messages.push(MessageFixtures.createMessage(params));
     messages.push(MessageFixtures.createMessage(params));
@@ -43,10 +44,10 @@ describe('Message Store', () => {
     messages.push(MessageFixtures.createMessage(params));
 
     messages.push(message);
-    messages.push(MessageFixtures.createMessage({date}));
-    messages.push(MessageFixtures.createMessage({date}));
-    messages.push(MessageFixtures.createMessage({images: true, date}));
-    messages.push(MessageFixtures.createMessage({images: false, date}));
+    messages.push(MessageFixtures.createMessage({ date }));
+    messages.push(MessageFixtures.createMessage({ date }));
+    messages.push(MessageFixtures.createMessage({ images: true, date }));
+    messages.push(MessageFixtures.createMessage({ images: false, date }));
 
     // Add flagged messages
     messages.push(messageAttached);
@@ -56,15 +57,14 @@ describe('Message Store', () => {
 
     // Define conversationLength
     // from messages entries
-    let keys = messages.map((msg) => msg.conversationID);
-    let values = _.groupBy(messages, 'conversationID');
+    const values = _.groupBy(messages, 'conversationID');
     conversationLength = _.mapValues(values, (value) => value.length);
 
-    const path = '../app/stores/message_store';
     Dispatcher = new SpecDispatcher();
     mockeryUtils.initDispatcher(Dispatcher);
-    mockeryUtils.initForStores([path]);
-    MessageStore = require(path);
+    mockeryUtils.initForStores();
+    // eslint-disable-next-line global-require
+    MessageStore = require('../app/getters/message');
   });
 
   after(() => {
@@ -78,101 +78,98 @@ describe('Message Store', () => {
    */
 
 
-   describe('Methods', () => {
+  describe('Methods', () => {
+    beforeEach(() => {
+      const result = { messages, conversationLength };
+      Dispatcher.dispatch({
+        type: ActionTypes.MESSAGE_FETCH_SUCCESS,
+        value: { result },
+      });
+    });
 
-     beforeEach(() => {
-       const result = {messages, conversationLength}
-       Dispatcher.dispatch({
-         type: ActionTypes.MESSAGE_FETCH_SUCCESS,
-         value: {result},
-       });
-     });
-
-     afterEach(() => {
-       Dispatcher.dispatch({
-         type: ActionTypes.MESSAGE_RESET_REQUEST,
-       });
-     });
+    afterEach(() => {
+      Dispatcher.dispatch({
+        type: ActionTypes.MESSAGE_RESET_REQUEST,
+      });
+    });
 
 
-     it('getByID', () => {
-       testValues(MessageStore.getByID(message.id));
-     });
+    it('getByID', () => {
+      testValues(MessageStore.getByID(message.id));
+    });
 
-     it('getAll', () => {
-       messages.forEach((input) => {
-         testValues(MessageStore.getByID(input.id), input);
-       });
-     });
+    it('getAll', () => {
+      messages.forEach((input) => {
+        testValues(MessageStore.getByID(input.id), input);
+      });
+    });
 
-     it('isImagesDisplayed', () => {
-       messages.forEach((input) => {
-         const msg = MessageStore.getByID(input.id);
-         testValues(MessageStore.getByID(input.id), input);
-       });
-     });
+    it('isImagesDisplayed', () => {
+      messages.forEach((input) => {
+        testValues(MessageStore.getByID(input.id), input);
+      });
+    });
 
-     it('isUnread', () => {
-       let input = _.cloneDeep(messageUnread);
-       assert.isTrue(MessageStore.isUnread({message: input}));
+    it('isUnread', () => {
+      let input = _.cloneDeep(messageUnread);
+      assert.isTrue(MessageStore.isUnread({ message: input }));
 
-       input = _.cloneDeep(messageFlagged);
-       assert.isFalse(MessageStore.isUnread({message: input}));
+      input = _.cloneDeep(messageFlagged);
+      assert.isFalse(MessageStore.isUnread({ message: input }));
 
-       input = _.cloneDeep(message);
-       assert.isFalse(MessageStore.isUnread({message: input}));
-     });
+      input = _.cloneDeep(message);
+      assert.isFalse(MessageStore.isUnread({ message: input }));
+    });
 
-     it('isFlagged', () => {
-       let input = _.cloneDeep(messageFlagged);
-       assert.isTrue(MessageStore.isFlagged({message: input}));
+    it('isFlagged', () => {
+      let input = _.cloneDeep(messageFlagged);
+      assert.isTrue(MessageStore.isFlagged({ message: input }));
 
-       input = _.cloneDeep(messageAttached);
-       assert.isFalse(MessageStore.isFlagged({message: input}));
+      input = _.cloneDeep(messageAttached);
+      assert.isFalse(MessageStore.isFlagged({ message: input }));
 
-       input = _.cloneDeep(message);
-       assert.isFalse(MessageStore.isFlagged({message: input}));
-     });
+      input = _.cloneDeep(message);
+      assert.isFalse(MessageStore.isFlagged({ message: input }));
+    });
 
-     it('isAttached', () => {
-       let input = _.cloneDeep(messageAttached);
-       assert.isTrue(MessageStore.isAttached({message: input}));
+    it('isAttached', () => {
+      let input = _.cloneDeep(messageAttached);
+      assert.isTrue(MessageStore.isAttached({ message: input }));
 
-       input = _.cloneDeep(messageFlagged);
-       assert.isFalse(MessageStore.isAttached({message: input}));
+      input = _.cloneDeep(messageFlagged);
+      assert.isFalse(MessageStore.isAttached({ message: input }));
 
-       input = _.cloneDeep(message);
-       assert.isFalse(MessageStore.isAttached({message: input}));
-     });
+      input = _.cloneDeep(message);
+      assert.isFalse(MessageStore.isAttached({ message: input }));
+    });
 
-     it('getConversation', () => {
-       account.mailboxes.forEach((mailbox) => {
-         const output = MessageStore.getConversation(conversationID, mailbox.id);
-         output.forEach((msg) => {
+    it('getConversation', () => {
+      account.mailboxes.forEach((mailbox) => {
+        const output = MessageStore.getConversation(conversationID, mailbox.id);
+        output.forEach((msg) => {
            // All messages must have the same
            // conversationID && mailboxID
-           assert.equal(msg.get('conversationID'), conversationID);
-           assert.notEqual(msg.get('mailboxIDs')[mailbox.id], undefined);
-         });
+          assert.equal(msg.get('conversationID'), conversationID);
+          assert.notEqual(msg.get('mailboxIDs')[mailbox.id], undefined);
+        });
 
          // All messages should belongs to inbox otherwise
          // conversationLength must be smaller or equal
-         if (mailbox.id === account.inboxMailbox) {
-           assert.equal(output.length, conversationLength[conversationID]);
-         } else {
-           assert.isTrue(output.length <= conversationLength[conversationID]);
-         }
-       });
-     });
+        if (mailbox.id === account.inboxMailbox) {
+          assert.equal(output.length, conversationLength[conversationID]);
+        } else {
+          assert.isTrue(output.length <= conversationLength[conversationID]);
+        }
+      });
+    });
 
-     it('getConversationLength', () => {
-       testConversationLength(conversationID, account.inboxMailbox);
-     });
-   });
+    it('getConversationLength', () => {
+      testConversationLength(conversationID, account.inboxMailbox);
+    });
+  });
 
 
   describe('Actions', () => {
-
     beforeEach(() => {
 
     });
@@ -185,9 +182,8 @@ describe('Message Store', () => {
 
 
     describe('Should ADD message(s)', () => {
-
       it('MESSAGE_FETCH_SUCCESS', () => {
-        testMessagesAction('MESSAGE_FETCH_SUCCESS', {result: { messages }});
+        testMessagesAction('MESSAGE_FETCH_SUCCESS', { result: { messages } });
       });
 
       it('RECEIVE_RAW_MESSAGES', () => {
@@ -203,13 +199,12 @@ describe('Message Store', () => {
       });
 
       it('MESSAGE_SEND_SUCCESS', () => {
-        testMessageAction('MESSAGE_SEND_SUCCESS', {message});
+        testMessageAction('MESSAGE_SEND_SUCCESS', { message });
       });
     });
 
 
     describe('Should UPDATE message(s)', () => {
-
       beforeEach(() => {
         Dispatcher.dispatch({
           type: ActionTypes.RECEIVE_RAW_MESSAGES,
@@ -225,17 +220,17 @@ describe('Message Store', () => {
 
 
       it('MESSAGE_FLAGS_SUCCESS', () => {
-        let message0 = _.cloneDeep(message);
+        const message0 = _.cloneDeep(message);
         let output = MessageStore.getByID(message0.id);
         let defaultValue = message0.flags;
         assert.deepEqual(output.get('flags'), message0.flags);
 
-        const timestamp = (new Date()).valueOf()
+        const timestamp = (new Date()).valueOf();
 
         // Change values
         Object.assign(message0, {
           flags: [],
-          updated: timestamp
+          updated: timestamp,
         });
 
         // Dispatch change
@@ -252,7 +247,7 @@ describe('Message Store', () => {
         Object.assign(message0, {
           flags: defaultValue,
           updated: (new Date('2014-1-1')).valueOf(),
-        })
+        });
         Dispatcher.dispatch({
           type: ActionTypes.MESSAGE_FLAGS_SUCCESS,
           value: { updated: { messages: [message0] } },
@@ -266,22 +261,15 @@ describe('Message Store', () => {
         let selectedValue;
         let previousValue;
 
-        function _indexOf(obj, index) {
-          const mailboxID = _.keys(obj)[index];
-          const count = _.values(obj)[index];
-          return { mailboxID, count };
-        }
-
-        function getMailboxIDs () {
+        function getMailboxIDs() {
           return _.keys(MessageStore.getByID(message0.id).get('mailboxIDs'));
         }
 
-        function getMailboxID () {
-          return getMailboxIDs().find((id) => id != message0.mailboxID)
-          return _.omit(getMailboxIDs(), selectedValue)[0];
+        function getMailboxID() {
+          return getMailboxIDs().find((id) => id !== message0.mailboxID);
         }
 
-        function updateMessage (mailboxID, date) {
+        function updateMessage(mailboxID, date) {
           message0 = _.cloneDeep(message0);
           message0.mailboxID = mailboxID;
           message0.updated = (date).valueOf();
@@ -294,7 +282,7 @@ describe('Message Store', () => {
         }
 
         // Change MailboxID
-        let mailboxID = getMailboxID()
+        let mailboxID = getMailboxID();
         updateMessage(mailboxID, new Date());
         assert.notEqual(selectedValue, previousValue);
         assert.equal(selectedValue, mailboxID);
@@ -365,7 +353,6 @@ describe('Message Store', () => {
 
 
     describe('Should REMOVE message(s)', () => {
-
       beforeEach(() => {
         Dispatcher.dispatch({
           type: ActionTypes.RECEIVE_RAW_MESSAGES,
@@ -380,10 +367,10 @@ describe('Message Store', () => {
       });
 
       it('MAILBOX_EXPUNGE', () => {
-        let mailboxID = getMailboxID();
-        let countAfter = MessageStore.getAll().filter((msg) => {
-          return msg.get('mailboxIDs')[mailboxID] === undefined
-        }).size
+        const mailboxID = getMailboxID();
+        const countAfter = MessageStore.getAll().filter((msg) => (
+          msg.get('mailboxIDs')[mailboxID] === undefined
+        )).size;
 
         assert.isTrue(!!MessageStore.getByID(message.id));
 
@@ -392,10 +379,10 @@ describe('Message Store', () => {
           value: mailboxID,
         });
         assert.isUndefined(MessageStore.getByID(message.id));
-        assert.equal(MessageStore.getAll().size, countAfter)
+        assert.equal(MessageStore.getAll().size, countAfter);
 
         function getMailboxID(mailboxID) {
-          return _.keys(message.mailboxIDs).find((id) => id != mailboxID);
+          return _.keys(message.mailboxIDs).find((id) => id !== mailboxID);
         }
       });
 
@@ -403,16 +390,16 @@ describe('Message Store', () => {
         const accountID = message.accountID;
         let output = MessageStore.getByID(message.id);
 
-        let countAfter = MessageStore.getAll().filter((msg) => {
-          return msg.get('accountID') !== accountID
-        }).size
+        const countAfter = MessageStore.getAll().filter((msg) => (
+            msg.get('accountID') !== accountID
+        )).size;
         Dispatcher.dispatch({
           type: ActionTypes.REMOVE_ACCOUNT_SUCCESS,
           value: accountID,
         });
         output = MessageStore.getByID(message.id);
         assert.isUndefined(output);
-        assert.equal(MessageStore.getAll().size, countAfter)
+        assert.equal(MessageStore.getAll().size, countAfter);
       });
 
       it('MESSAGE_TRASH_SUCCESS', () => {
@@ -439,10 +426,8 @@ describe('Message Store', () => {
     });
   });
 
-
-
   function isDate(key) {
-    return -1 < ['date', 'updated', 'createdAt'].indexOf(key)
+    return ['date', 'updated', 'createdAt'].indexOf(key) > -1;
   }
 
   function testValues(output, input) {
@@ -471,7 +456,7 @@ describe('Message Store', () => {
     }
 
     _.each(output, (value, property) => {
-      if ('object' === typeof value) {
+      if (typeof(value) === 'object') {
         assert.deepEqual(value, input[property]);
       } else if (!isDate(property)) {
         assert.equal(value, input[property]);
@@ -479,7 +464,7 @@ describe('Message Store', () => {
     });
   }
 
-  function testConversationLength (id, mailboxID) {
+  function testConversationLength(id, mailboxID) {
     let length = MessageStore.getConversationLength(id);
     assert.equal(length, conversationLength[id]);
 

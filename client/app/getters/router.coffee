@@ -2,11 +2,8 @@
 AccountActions} = require '../constants/app_constants'
 
 _         = require 'lodash'
-Immutable = require 'immutable'
-moment    = require 'moment'
 
 AccountStore      = require '../stores/account_store'
-MessageStore      = require '../stores/message_store'
 NotificationStore = require '../stores/notification_store'
 RequestsStore     = require '../stores/requests_store'
 RouterStore       = require '../stores/router_store'
@@ -14,6 +11,7 @@ SearchStore       = require '../stores/search_store'
 
 FileGetter    = require '../getters/file'
 MessageGetter = require '../getters/message'
+MessageUtils  = require '../components/utils/format_message'
 
 
 module.exports =
@@ -95,7 +93,7 @@ module.exports =
 
     getReplyMessage: (messageID) ->
         isReply = @getAction() is MessageActions.EDIT
-        MessageStore.getByID messageID unless isReply
+        MessageGetter.getByID messageID unless isReply
 
 
     getFilter: ->
@@ -120,7 +118,7 @@ module.exports =
 
     getMessage: (messageID) ->
         messageID ?= RouterStore.getMessageID()
-        MessageStore.getByID messageID
+        MessageGetter.getByID messageID
 
 
     getConversationLength: (conversationID) ->
@@ -193,7 +191,7 @@ module.exports =
     # but should be in the future
     hasSettingsChanged: ->
         messageID = RouterStore.getMessageID()
-        MessageStore.isImagesDisplayed messageID
+        MessageGetter.isImagesDisplayed messageID
 
 
     getLastSync: ->
@@ -202,7 +200,7 @@ module.exports =
 
         # If current mailboxID is inbox
         # test Inbox instead of 1rst mailbox
-        if (isInbox = AccountStore.isInbox accountID, mailboxID)
+        if (AccountStore.isInbox accountID, mailboxID)
             # Gmail issue
             # Test \All tag insteadof \INBOX
             mailbox = AccountStore.getAllMailbox accountID
@@ -228,8 +226,6 @@ module.exports =
     isRefreshError: ->
         RequestsStore.isRefreshError()
 
-
-
     formatMessage: (message) ->
         _getResources = ->
             message?.get('attachments').groupBy (file) ->
@@ -237,7 +233,7 @@ module.exports =
                 attachementType = FileGetter.getAttachmentType contentType
                 if attachementType is 'image' then 'preview' else 'binary'
 
-        _.extend MessageGetter.formatContent(message), {
+        _.extend MessageUtils.formatContent(message), {
             resources   : _getResources()
             isDraft     : RouterStore.isDraft message
             isDeleted   : RouterStore.isDeleted message

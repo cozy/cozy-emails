@@ -31,4 +31,5 @@ module.exports.initialize = (dispatcher) ->
         'refresh.notify':   ActionTypes.RECEIVE_REFRESH_NOTIF
 
     for event, action of socket2Action
-        socket.on(event, (value) -> dispatcher {type: action, value: value})
+        socket.on(event, (value) ->
+            dispatcher.dispatch {type: action, value: value})

@@ -57,7 +57,7 @@
     "jade": "1.11.0",
     "jade2commonjs": "0.1.0",
     "lorem-ipsum": "1.0.1",
-    "mocha": "1.20.1",
+    "mocha": "2.5.3",
     "mockery": "1.4.1",
     "node-inspector": "0.12.5",
     "npm-run-all": "1.4.0",

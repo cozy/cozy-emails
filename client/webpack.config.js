@@ -1,3 +1,5 @@
+/* eslint indent: [2, 4] */
+
 var path = require('path');
 
 var webpack = require('webpack');
@@ -115,7 +117,8 @@ if (optimize) {
     plugins = plugins.concat([
         new BrowserSyncPlugin({
             proxy: 'http://localhost:' + (process.env.PORT || 9125) + '/',
-            open: false
+            open: false,
+            ws: true
         })
     ]);
 }

@@ -10,7 +10,7 @@ class SettingsStore extends Store
         Initialization.
         Defines private variables here.
     ###
-    _settings = Immutable.Map window.settings or {}
+    _settings = Immutable.Map window?.settings or {}
 
     ###
         Defines here the action handlers.
