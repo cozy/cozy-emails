@@ -2,7 +2,7 @@ React = require 'react'
 
 {span} = React.DOM
 
-MessageGetter = require '../getters/message'
+TooltipUtils = require './utils/participant_tooltip'
 SearchGetter = require '../getters/search'
 
 ContactActionCreator = require '../actions/contact_action_creator'
@@ -29,7 +29,7 @@ module.exports = React.createClass
 
     _initTooltip: ->
         if @props.tooltip and @refs.participant?
-            MessageGetter.tooltip @refs.participant, @props.address, @addAddress
+            TooltipUtils.tooltip @refs.participant, @props.address, @addAddress
 
     componentDidMount: ->
         @_initTooltip()

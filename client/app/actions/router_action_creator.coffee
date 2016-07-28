@@ -3,17 +3,13 @@ _ = require 'lodash'
 AppDispatcher   = require '../libs/flux/dispatcher/dispatcher'
 
 AccountStore  = require '../stores/account_store'
-MessageStore  = require '../stores/message_store'
 RouterStore   = require '../stores/router_store'
 
 Realtime = require '../libs/realtime'
 
 XHRUtils = require '../libs/xhr'
 
-{ActionTypes,
-MessageActions,
-SearchActions} = require '../constants/app_constants'
-
+{ActionTypes, MessageActions} = require '../constants/app_constants'
 
 RouterActionCreator =
     # Refresh Emails from Server

@@ -5,11 +5,11 @@ ReactDOM = require 'react-dom'
 RouterStore = require './stores/router_store'
 
 RouterActionCreator = require './actions/router_action_creator'
-NotificationActionCreator = require './actions/notification_action_creator'
 
 AppDispatcher = require './libs/flux/dispatcher/dispatcher'
 
-{ActionTypes, MessageActions, AccountActions, SearchActions} = require './constants/app_constants'
+{ActionTypes, MessageActions,
+AccountActions} = require './constants/app_constants'
 
 Polyglot = require 'node-polyglot'
 moment   = require 'moment'
