@@ -18,8 +18,7 @@ module.exports = (state = DEFAULT_STATE, action) ->
             return state unless action.value
 
             contact = action.value
-            contactsMutator = contactMapper.toMapMutator \
-                                contactMapper.toImmutables contact
+            contactsMutator = contactMapper.toMapMutator contact
 
             nextState =
                 contacts: state.contacts.withMutations(contactsMutator)

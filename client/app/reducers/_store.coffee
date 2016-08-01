@@ -5,8 +5,7 @@ dispatcher = require '../libs/flux/dispatcher/dispatcher'
 contactMapper = require '../libs/mappers/contact'
 
 initialContacts = Immutable.Map()
-    .withMutations( contactMapper
-        .toMapMutator(contactMapper.toImmutables(window?.contacts)))
+    .withMutations contactMapper.toMapMutator window?.contacts
 
 reduxStore = createStore rootReducer,
     contact:

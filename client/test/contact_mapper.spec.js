@@ -114,51 +114,14 @@ describe('ContactMapper', () => {
 
     });
 
-    describe('toImmutables', () => {
-
-      it('should return undefined when no contacts are given', () => {
-        // arrange
-        // act
-        let result = contactMapper.toImmutables();
-        // assert
-        assert.isUndefined(result);
-      });
-
-      it('should map contacts array to immutables array', () => {
-        // arrange
-        let rawContacts = [
-          fixtures.contact1,
-          fixtures.contact2,
-          fixtures.contact3
-        ];
-
-        // act
-        let result = contactMapper.toImmutables(rawContacts);
-
-        // assert
-        assert.equal(result.length, 3);
-
-        assert.isFunction(result[0].get);
-        assert.equal(result[0].get('id'), 'c1');
-
-        assert.isFunction(result[1].get);
-        assert.equal(result[1].get('id'), 'c2');
-
-        assert.isFunction(result[2].get);
-        assert.equal(result[2].get('id'), 'c3');
-        // We assume that toImmutable covers other inidividual assertions.
-      });
-
-    });
-
     describe('toMapMutator', () => {
 
       it('should return a function', () => {
         // arrange
         let contacts = [
-          contactMapper.toImmutable(fixtures.contact1),
-          contactMapper.toImmutable(fixtures.contact2),
-          contactMapper.toImmutable(fixtures.contact3)
+          fixtures.contact1,
+          fixtures.contact2,
+          fixtures.contact3
         ];
 
         // act
@@ -171,9 +134,9 @@ describe('ContactMapper', () => {
       it('should return expected mutator', () => {
         // arrange
         let contacts = [
-          contactMapper.toImmutable(fixtures.contact1),
-          contactMapper.toImmutable(fixtures.contact2),
-          contactMapper.toImmutable(fixtures.contact3)
+          fixtures.contact1,
+          fixtures.contact2,
+          fixtures.contact3
         ];
 
         let mutator = contactMapper.toMapMutator(contacts);

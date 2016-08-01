@@ -73,11 +73,7 @@ describe('ContactReducer', () => {
       let initialState = {
         contacts: Immutable
           .Map()
-          .withMutations(
-            contactMapper.toMapMutator(
-              contactMapper.toImmutables(initialContacts)
-            )
-          ),
+          .withMutations(contactMapper.toMapMutator(initialContacts)),
         results: Immutable.OrderedMap()
       };
 

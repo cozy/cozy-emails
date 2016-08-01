@@ -35,34 +35,28 @@ module.exports =
 
         rawContact
             .datapoints?.filter _byName 'email'
-            .forEach (datapoint) ->
-                if contact.has 'addresses'
-                    addresses = contact.get('addresses').push datapoint.value
-                else
-                    addresses = Immutable.List [datapoint.value]
+            .forEach (datapoint, index) ->
+                if index is 0
                     # first address found as default address
                     # We set a single address property to be legacy-compliant
                     contact = contact.set 'address', datapoint.value
 
-                contact = contact.set 'addresses', addresses
+                contact = contact.set('addresses',
+                    contact.get('addresses')?.add(datapoint.value) or
+                        Immutable.Set [datapoint.value])
 
         return contact
 
 
-    # Returns a list of Immutable contacts from a list of raw contacts
-    # rawContacts: an array of rawContacts
-    toImmutables: (rawContacts) ->
-        return unless rawContacts
-        rawContacts = [ rawContacts ] unless Array.isArray rawContacts
-        return rawContacts.map @toImmutable
-
-
     # Returns a mutator to be passed as parameter for Map#withMutations method
-    # contacts: array of Immutable contacts
-    toMapMutator: (contacts) ->
-        return (map) ->
-            return map unless contacts
-            contacts.forEach (contact) ->
+    # rawContacts: array of raw contacts
+    toMapMutator: (rawContacts) ->
+        return (map) =>
+            return map unless rawContacts
+            rawContacts = [ rawContacts ] unless Array.isArray rawContacts
+
+            rawContacts.forEach (rawContact) =>
+                contact = @toImmutable rawContact
                 return unless contact.has 'addresses'
                 contact.get('addresses').forEach (address) ->
                     # FIXME: here we switch back to a single 'address' field
