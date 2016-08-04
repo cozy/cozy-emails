@@ -10,7 +10,7 @@ const SpecDispatcher = require('./utils/specs_dispatcher');
 const ActionTypes = require('../app/constants/app_constants').ActionTypes;
 
 
-describe('RouterActionCreator', () => {
+describe.skip('RouterActionCreator', () => {
   let XHRUtils;
   let RouterActionCreator;
   let Dispatcher;

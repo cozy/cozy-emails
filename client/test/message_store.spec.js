@@ -110,7 +110,7 @@ describe('Message Store', () => {
       });
     });
 
-    it('isUnread', () => {
+    it.skip('isUnread', () => {
       let input = _.cloneDeep(messageUnread);
       assert.isTrue(MessageStore.isUnread({ message: input }));
 
@@ -121,7 +121,7 @@ describe('Message Store', () => {
       assert.isFalse(MessageStore.isUnread({ message: input }));
     });
 
-    it('isFlagged', () => {
+    it.skip('isFlagged', () => {
       let input = _.cloneDeep(messageFlagged);
       assert.isTrue(MessageStore.isFlagged({ message: input }));
 
@@ -132,7 +132,7 @@ describe('Message Store', () => {
       assert.isFalse(MessageStore.isFlagged({ message: input }));
     });
 
-    it('isAttached', () => {
+    it.skip('isAttached', () => {
       let input = _.cloneDeep(messageAttached);
       assert.isTrue(MessageStore.isAttached({ message: input }));
 

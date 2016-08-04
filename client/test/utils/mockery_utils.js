@@ -24,6 +24,8 @@ module.exports = {
     mockery.registerMock('../stores/account_store', {});
     mockery.registerMock('../stores/message_store', {});
     mockery.registerMock('../stores/layout_store', {});
+    mockery.registerMock('../stores/notification_store', {});
+    mockery.registerMock('../stores/search_store', {});
     mockery.registerMock('../stores/contact_store', {});
     mockery.registerMock('../stores/requests_store', {});
     mockery.registerMock('../stores/settings_store', {});
@@ -38,15 +40,43 @@ module.exports = {
       useCleanCache: true,
     });
 
+    mockery.registerMock('../stores/notification_store', {});
     mockery.registerAllowables([
-      '../getters/message',
       '../app/getters/message',
 
-      //   reducers
+      '../routes',
+
+      '../puregetters/router',
+      '../puregetters/messages',
+      '../puregetters/pagination',
+      '../puregetters/requests',
+      './messages',
+      './accounts',
+
+      '../getters/message',
+      '../getters/router',
+      '../getters/file',
+      '../models/message',
+      '../models/route',
+
+      '../stores/account_store',
+      '../stores/search_store',
+      '../stores/requests_store',
+    //   '../stores/notification_store',
+
+      // reducers can only be required from reducers/_store
       '../reducers/_store',
       './root',
       './message',
       './selection',
+      './route',
+      './modal',
+      './requests',
+      './layout',
+      './contact',
+      './refreshes',
+      './messagefetch',
+
       'superagent-throttle',
       'node-event-emitter',
       'immutable',
@@ -56,12 +86,17 @@ module.exports = {
       'moment',
       'lodash',
       'underscore',
+      './constants/app_constants',
       '../constants/app_constants',
       '../libs/flux/store/store',
       '../libs/xhr',
+      '../libs/mappers/contact',
+      '../libs/urikey',
       '../libs/realtime',
+      '../libs/attachment_types',
       '../libs/accounts',
       '../libs/notification',
+      '../../../server/utils/constants',
       '../invariant',
     ].concat(allowables));
   },

@@ -7,7 +7,7 @@ const SpecDispatcher = require('./utils/specs_dispatcher')
 const ActionTypes  = require('../app/constants/app_constants').ActionTypes
 
 
-describe("Requests Store", () => {
+describe.skip("Requests Store", () => {
   let requestsStore;
   let dispatcher;
 
