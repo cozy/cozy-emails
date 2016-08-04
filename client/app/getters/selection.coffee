@@ -5,7 +5,7 @@ RouterGetter = require './router'
 module.exports =
 
     isAllSelected: ->
-        reduxStore.getState().selection.allSelected
+        reduxStore.getState().get('selection').allSelected
 
     getSelection: ->
         messages = RouterGetter.getMessagesList()
@@ -16,4 +16,4 @@ module.exports =
             return messages?.toArray()
 
         else
-            return reduxStore.getState().selection.selected.toArray()
+            return reduxStore.getState().get('selection').selected.toArray()
