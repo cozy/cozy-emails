@@ -66,6 +66,9 @@ module.exports =
         'MESSAGE_FETCH_REQUEST'         : 'MESSAGE_FETCH_REQUEST'
         'MESSAGE_FETCH_SUCCESS'         : 'MESSAGE_FETCH_SUCCESS'
         'MESSAGE_FETCH_FAILURE'         : 'MESSAGE_FETCH_FAILURE'
+        'CONVERSATION_FETCH_REQUEST'    : 'CONVERSATION_FETCH_REQUEST'
+        'CONVERSATION_FETCH_SUCCESS'    : 'CONVERSATION_FETCH_SUCCESS'
+        'CONVERSATION_FETCH_FAILURE'    : 'CONVERSATION_FETCH_FAILURE'
 
 
         # Contacts
@@ -78,8 +81,9 @@ module.exports =
         'CONTACT_LOCAL_SEARCH'       : 'CONTACT_LOCAL_SEARCH'
 
         # Router
-        'ROUTES_INITIALIZE'     : 'ROUTES_INITIALIZE'
         'ROUTE_CHANGE'          : 'ROUTE_CHANGE'
+        'GO_TO_NEXT'            : 'GO_TO_NEXT'
+        'GO_TO_PREVIOUS'        : 'GO_TO_PREVIOUS'
 
         # Layout
         'DISPLAY_MODAL'             : 'DISPLAY_MODAL'
@@ -111,6 +115,8 @@ module.exports =
         'TOASTS_SHOW'               : 'TOASTS_SHOW'
         'TOASTS_HIDE'               : 'TOASTS_HIDE'
 
+        # Test
+        'RESET_FOR_TESTS'               : 'RESET_FOR_TESTS'
 
     Requests:
         'DISCOVER_ACCOUNT':     'DISCOVER_ACCOUNT'
