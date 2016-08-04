@@ -1,6 +1,6 @@
 AppDispatcher   = require '../libs/flux/dispatcher/dispatcher'
 
-{ActionTypes, FlagsConstants}   = require '../constants/app_constants'
+{ActionTypes}   = require '../constants/app_constants'
 XHRUtils        = require '../libs/xhr'
 
 MessageGetters  = require '../getters/message'
@@ -44,15 +44,6 @@ MessageActionCreator =
                 AppDispatcher.dispatch
                     type: ActionTypes.MESSAGE_SEND_SUCCESS
                     value: {action, message}
-
-
-    markAsRead: (target) ->
-        {messageID, accountID} = target
-
-        # Do not mark a message that is ever flagged
-        message = MessageGetters.getByID messageID
-        if message and MessageGetters.isUnread {message}
-            @mark {messageID, accountID}, FlagsConstants.SEEN
 
 
     mark: (target, flags) ->

@@ -3,7 +3,9 @@ _ = require 'lodash'
 AppDispatcher   = require '../libs/flux/dispatcher/dispatcher'
 
 AccountGetter  = require '../getters/account'
-RouterStore   = require '../stores/router_store'
+RouterGetter   = require '../getters/router'
+
+reduxStore = require '../reducers/_store'
 
 Realtime = require '../libs/realtime'
 
@@ -15,16 +17,15 @@ RouterActionCreator =
     # Refresh Emails from Server
     # This is a read data pattern
     # ActionCreator is a write data pattern
-    refreshMailbox: ({mailboxID, deep}) ->
-        return unless (mailboxID ?= RouterStore.getMailboxID())
-        deep ?= true
-        silent = true
+    refreshMailbox: ({mailboxID}) ->
+        throw new Error('expected mailboxID') unless mailboxID
 
         AppDispatcher.dispatch
             type: ActionTypes.REFRESH_REQUEST
-            value: {mailboxID, deep, silent}
+            value: {mailboxID, deep: true, silent: true}
 
-        XHRUtils.refreshMailbox mailboxID, {deep, silent}, (error, updated) ->
+        options = deep: true, silent: true
+        XHRUtils.refreshMailbox mailboxID, options, (error, updated) ->
             if error?
                 AppDispatcher.dispatch
                     type: ActionTypes.REFRESH_FAILURE
@@ -34,14 +35,31 @@ RouterActionCreator =
                     type: ActionTypes.REFRESH_SUCCESS
                     value: {mailboxID, updated}
 
+    # called by message-list when the user click on the button at bottom
+    loadMore: ->
+        state = reduxStore.getState()
+        url = RouterGetter.getFetchURL(state)
 
-    getCurrentPage: (params={}) ->
-        {url, action, mailboxID, filter} = params
+        if url and
+        RouterGetter.hasNextPage(state) and
+        not RouterGetter.isLoading(state)
+            @doFetchMessages url
 
-        url ?= RouterStore.getCurrentURL {action, mailboxID, filter}
+
+    # called by the router when the page is shown and above
+    getCurrentPage: ->
+        state = reduxStore.getState()
+        url = RouterGetter.getFetchURL(state)
+
+        if url and
+        RouterGetter.hasNextPage(state) and
+        not RouterGetter.isPageComplete(state) and
+        not RouterGetter.isLoading(state)
+            @doFetchMessages url
+
+    doFetchMessages: (url) ->
 
         # Always load messagesList
-        action = MessageActions.SHOW_ALL
         timestamp = (new Date()).valueOf()
 
         AppDispatcher.dispatch
@@ -71,27 +89,15 @@ RouterActionCreator =
                 # - try to select nearestMessage
                 # - if not select current MessageList
                 # - if no messageList go to default mailbox
-                isPageComplete = RouterStore.isPageComplete()
-                hasNextPage = RouterStore.hasNextPage()
-                if hasNextPage and not isPageComplete
-                    @gotoNextPage()
-
-
-    gotoNextPage: ->
-        if (url = RouterStore.getNextRequest())?
-            @getCurrentPage {url}
-        else
-            URI = RouterStore.getURI()
-            AppDispatcher.dispatch
-                type: ActionTypes.MESSAGE_FETCH_FAILURE
-                value: { error: 'NEXT_PAGE_IS_NULL', URI }
-
+                if RouterGetter.hasNextPage() and
+                not RouterGetter.isPageComplete()
+                    @getCurrentPage()
 
     gotoCompose: (params={}) ->
         {messageID, mailboxID} = params
 
         action = MessageActions.NEW
-        mailboxID ?= RouterStore.getMailboxID messageID
+        mailboxID ?= RouterGetter.getMailboxID messageID
 
         AppDispatcher.dispatch
             type: ActionTypes.ROUTE_CHANGE
@@ -107,16 +113,21 @@ RouterActionCreator =
         @getConversation conversationID
 
         # 2nd: redirect to conversation
-        messageID = RouterStore.getMessageID conversationID
+        # At first get unread Message
+        # if not get last message
+        messages = RouterGetter.getConversation conversationID
+        message = messages.find (message) -> message.isUnread()
+        message ?= messages.shift()
+        messageID = message?.get 'id'
         @gotoMessage {conversationID, messageID}
 
 
     gotoMessage: (message={}) ->
         {conversationID, messageID, mailboxID, filter} = message
 
-        messageID ?= RouterStore.getMessageID()
-        mailboxID ?= RouterStore.getMailboxID messageID
-        filter = filter or RouterStore.getFilter()
+        messageID ?= RouterGetter.getMessageID()
+        mailboxID ?= RouterGetter.getMailboxID messageID
+        filter = filter or RouterGetter.getFilter()
 
         unless messageID
             action = MessageActions.SHOW_ALL
@@ -131,26 +142,27 @@ RouterActionCreator =
 
 
     gotoPreviousConversation: ->
-        message = RouterStore.getNextConversation()
-        @gotoMessage message?.toJS()
-
+        AppDispatcher.dispatch
+            type: ActionTypes.GO_TO_PREVIOUS
+            value: null
 
     gotoNextConversation: ->
-        message = RouterStore.getNextConversation()
-        @gotoMessage message?.toJS()
+        AppDispatcher.dispatch
+            type: ActionTypes.GO_TO_NEXT
+            value: null
 
 
     closeConversation: (params={}) ->
         {mailboxID} = params
-        mailboxID ?= RouterStore.getMailboxID()
+        mailboxID ?= RouterGetter.getMailboxID()
         action = MessageActions.SHOW_ALL
-        filter = RouterStore.getFilter()
+        filter = RouterGetter.getFilter()
         AppDispatcher.dispatch
             type: ActionTypes.ROUTE_CHANGE
             value: {mailboxID, action, filter}
 
 
-    closeModal: (mailboxID = RouterStore.getMailboxID()) ->
+    closeModal: (mailboxID = RouterGetter.getMailboxID()) ->
         return unless mailboxID
 
         account = AccountGetter.getByMailbox mailboxID
@@ -172,23 +184,24 @@ RouterActionCreator =
 
 
     getConversation: (conversationID) ->
-        conversationID ?= RouterStore.getConversationID()
+        conversationID ?= RouterGetter.getConversationID()
         timestamp = (new Date()).toISOString()
 
         AppDispatcher.dispatch
-            type: ActionTypes.MESSAGE_FETCH_REQUEST
+            type: ActionTypes.CONVERSATION_FETCH_REQUEST
             value: {conversationID, timestamp}
 
         XHRUtils.fetchConversation {conversationID}, (error, messages) ->
             if error?
                 AppDispatcher.dispatch
-                    type: ActionTypes.MESSAGE_FETCH_FAILURE
+                    type: ActionTypes.CONVERSATION_FETCH_FAILURE
                     value: {error, conversationID, timestamp}
             else
                 # Apply filters to messages
                 # to upgrade conversationLength
                 # FIXME: should be moved server side
-                messages = _.filter messages, RouterStore.filterByFlags
+                filterFunction = RouterGetter.getFilterFunction
+                messages = _.filter messages, filterFunction
 
                 # Update Realtime
                 lastMessage = _.last messages
@@ -205,37 +218,7 @@ RouterActionCreator =
 
                 result = {messages, conversationLength}
                 AppDispatcher.dispatch
-                    type: ActionTypes.MESSAGE_FETCH_SUCCESS
+                    type: ActionTypes.CONVERSATION_FETCH_SUCCESS
                     value: {result, conversationID, timestamp}
-
-
-    addFilter: (params) ->
-        filter = {}
-        separator = ','
-        filters = RouterStore.getFilter()
-
-        for key, value of params
-            # Toggle filter value
-            # Add value if it doesnt exist
-            # Remove if from filters otherwhise
-            tmp = filters[key]
-            tmp = tmp.split separator if _.isString filters[key]
-            value = decodeURIComponent value
-
-            if 'flags' is key
-                tmp ?= []
-                if -1 < tmp.indexOf value
-                    tmp = _.without tmp, value
-                else
-                    tmp.push value
-                filter[key] = tmp?.join separator
-            else
-                filter[key] = value
-
-        # FIXME : use distacher instead
-        # then into routerStore, use navigate
-        @navigate url: RouterStore.getCurrentURL {filter, isServer: false}
-
-
 
 module.exports = RouterActionCreator

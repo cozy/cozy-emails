@@ -7,7 +7,7 @@ AppDispatcher = require '../libs/flux/dispatcher/dispatcher'
 XHRUtils      = require '../libs/xhr'
 
 AccountGetter = require '../getters/account'
-RouterStore  = require '../stores/router_store'
+
 
 ###
 FIXME: making sagas with default Flux lib is a little bit tricky. Currently,
@@ -160,7 +160,7 @@ module.exports = AccountActionCreator =
         AppDispatcher.dispatch
             type: ActionTypes.MAILBOX_UPDATE_REQUEST
             value: mailbox
-        XHRUtils.mailboxUpdate inputValues, (error, mailbox) ->
+        XHRUtils.mailboxUpdate mailbox, (error, mailbox) ->
             unless error?
                 AppDispatcher.dispatch
                     type: ActionTypes.MAILBOX_UPDATE_SUCCESS
@@ -171,11 +171,11 @@ module.exports = AccountActionCreator =
                     value: mailbox
 
 
-    mailboxDelete: (inputValues) ->
+    mailboxDelete: (account) ->
         AppDispatcher.dispatch
             type: ActionTypes.MAILBOX_DELETE_REQUEST
             value: account
-        XHRUtils.mailboxDelete inputValues, (error, account) ->
+        XHRUtils.mailboxDelete account, (error, account) ->
             if error?
                 AppDispatcher.dispatch
                     type: ActionTypes.MAILBOX_DELETE_FAILURE
@@ -195,7 +195,7 @@ module.exports = AccountActionCreator =
             type: ActionTypes.MAILBOX_EXPUNGE_REQUEST
             value: mailboxID
 
-        XHRUtils.mailboxExpunge options, (error, account) ->
+        XHRUtils.mailboxExpunge options, (error) ->
             if error
                 AppDispatcher.dispatch
                     type: ActionTypes.MAILBOX_EXPUNGE_FAILURE
