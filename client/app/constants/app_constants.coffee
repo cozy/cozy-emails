@@ -68,12 +68,6 @@ module.exports =
         'MESSAGE_FETCH_FAILURE'         : 'MESSAGE_FETCH_FAILURE'
 
 
-        # Search
-        'SEARCH_PARAMETER_CHANGED' : 'SEARCH_PARAMETER_CHANGED'
-        'SEARCH_REQUEST'           : 'SEARCH_REQUEST'
-        'SEARCH_SUCCESS'           : 'SEARCH_SUCCESS'
-        'SEARCH_FAILURE'           : 'SEARCH_FAILURE'
-
         # Contacts
         'SEARCH_CONTACT_REQUEST'    : 'SEARCH_CONTACT_REQUEST'
         'SEARCH_CONTACT_SUCCESS'    : 'SEARCH_CONTACT_SUCCESS'
@@ -149,9 +143,6 @@ module.exports =
         'REPLY_ALL'     : 'message.reply.all'
         'FORWARD'       : 'message.forward'
         'CREATE'        : 'message.new'
-
-    SearchActions:
-        'SHOW_ALL'      : 'search'
 
     OAuthDomains:
         'gmail.com':      'https://www.google.com/settings/security/lesssecureapps'

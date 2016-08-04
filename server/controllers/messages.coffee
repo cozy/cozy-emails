@@ -299,11 +299,6 @@ module.exports.batchMove = (req, res, next) ->
         res.send process.updatedMessages
 
 
-module.exports.search = (req, res, next) ->
-
-    return next new Error('search is disabled')
-
-
 # fetch from IMAP and send the raw rfc822 message
 module.exports.raw = (req, res, next) ->
 

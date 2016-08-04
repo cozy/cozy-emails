@@ -7,7 +7,6 @@ AccountStore      = require '../stores/account_store'
 NotificationStore = require '../stores/notification_store'
 RequestsStore     = require '../stores/requests_store'
 RouterStore       = require '../stores/router_store'
-SearchStore       = require '../stores/search_store'
 
 FileGetter    = require '../getters/file'
 MessageGetter = require '../getters/message'
@@ -98,10 +97,6 @@ module.exports =
 
     getFilter: ->
         RouterStore.getFilter()
-
-
-    getSearch: ->
-        SearchStore.getCurrentSearch()
 
 
     getSelectedTab: ->

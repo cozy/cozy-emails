@@ -17,17 +17,12 @@ moment   = require 'moment'
 # MessageList :
 # ?sort=asc&filters=&status=unseen&start=2016-02-27T23:00:00.000Z&end=2016-03-05T22:59:59.999Z
 
-# Search :
-# #account/3510d24990c596125ecc9e1fc800616a/mailbox/3510d24990c596125ecc9e1fc80064d3/search/?q=plop
-
 class Router extends Backbone.Router
 
     routes:
         'mailbox/:mailboxID(?:filter)':                             'messageList'
         'account/new':                                              'accountNew'
         'account/:accountID/settings/:tab':                         'accountEdit'
-        # 'search/?q=:search':                                      'search'
-        # 'mailbox/:mailboxID/search/?q=:search':                   'search'
         'mailbox/:mailboxID/new':                                   'messageNew'
         'mailbox/:mailboxID/:messageID/edit':                       'messageEdit'
         'mailbox/:mailboxID/:messageID/forward':                    'messageForward'
@@ -93,11 +88,6 @@ class Router extends Backbone.Router
 
     messageReplyAll: (mailboxID, messageID) ->
         _dispatch {action: MessageActions.REPLY_ALL, mailboxID, messageID}
-
-
-    # search: (accountID, mailboxID, value) ->
-    #     RouterActionCreator.setAction SearchActions.SHOW_ALL
-    #     console.log 'Search', accountID, mailboxID, value
 
 
 # Dispatch payload with extracted query if available

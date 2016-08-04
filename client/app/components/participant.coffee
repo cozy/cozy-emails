@@ -3,7 +3,6 @@ React = require 'react'
 {span} = React.DOM
 
 TooltipUtils = require './utils/participant_tooltip'
-SearchGetter = require '../getters/search'
 
 ContactActionCreator = require '../actions/contact_action_creator'
 
@@ -21,7 +20,7 @@ module.exports = React.createClass
                 title: @props.address.address
                 key: @props.key
 
-                SearchGetter.highlightSearch(@props.name)...
+                [@props.name]...
 
 
     addAddress: (address) ->

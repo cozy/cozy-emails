@@ -316,13 +316,6 @@ describe('Message Store', () => {
         assert.notEqual(selectedValue, mailboxID);
       });
 
-      // TODO: this feature is not fixed yet
-      // 1. fix the feature
-      // 2. add test
-      it.skip('SEARCH_SUCCESS', () => {
-        // ((message))
-      });
-
       it('SETTINGS_UPDATE_REQUEST', () => {
         let output = MessageStore.getByID(message.id);
         assert.equal(output.get('_displayImages'), !!message._displayImages);
