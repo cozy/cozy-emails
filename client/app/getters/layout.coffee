@@ -1,19 +1,19 @@
 
-LayoutStore = require '../stores/layout_store'
+reduxStore = require '../reducers/_store'
 
 module.exports =
 
 
     getPreviewSize: ->
-        LayoutStore.getPreviewSize()
+        reduxStore.getState().layout.previewSize
 
 
     isIntentAvailable: ->
-        LayoutStore.isIntentAvailable()
+        reduxStore.getState().layout.intentAvailable
 
 
     isToastHidden: ->
-        LayoutStore.isToastHidden()
+        reduxStore.getState().layout.hidden
 
 
     # Check if an element is inside visible viewport
