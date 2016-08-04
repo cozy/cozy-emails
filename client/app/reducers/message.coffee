@@ -9,6 +9,8 @@ shouldUpdateMessage = (current, updates) ->
     value = current?.get 'updated'
     (not value?) or (not updates.updated?) or (value < updates.updated)
 
+Message = require '../models/message'
+
 applyChangesOneMessage = (messages, updatedMsg) ->
 
     oldMessage = messages.get updatedMsg.id
@@ -19,7 +21,7 @@ applyChangesOneMessage = (messages, updatedMsg) ->
     attachments = attachments.map (file) -> Immutable.Map(file)
     attachments = Immutable.List(attachments)
 
-    toUpdate = new Immutable.Map({ # defaults
+    toUpdate = new Message({ # defaults
         date: now.toISOString()
         createdAt: updatedMsg.date
         flags: Immutable.List()
@@ -64,7 +66,8 @@ messagesReducer = (messages = Immutable.OrderedMap(), action) ->
         when ActionTypes.MESSAGE_RESET_REQUEST
             return Immutable.OrderedMap()
 
-        when ActionTypes.MESSAGE_FETCH_SUCCESS
+        when ActionTypes.MESSAGE_FETCH_SUCCESS, \
+             ActionTypes.CONVERSATION_FETCH_SUCCESS
             updateds = action.value.result.messages
             return updateds.reduce(applyChangesOneMessage, messages)
 
@@ -112,7 +115,7 @@ messagesReducer = (messages = Immutable.OrderedMap(), action) ->
             else
                 value = !!displayImages
 
-            updated = messages.get(messageID).set '_displayImages', value
+            updated = messages.get(messageID)?.set '_displayImages', value
             return messages.set(messageID, updated)
 
         else
@@ -142,7 +145,8 @@ module.exports = (state = {}, action) ->
     #
     #  - Most operations, like getting raw messages,
     #  don't update conversation length.
-    if action.type is ActionTypes.MESSAGE_FETCH_SUCCESS
+    if action.type in [ActionTypes.MESSAGE_FETCH_SUCCESS, \
+                       ActionTypes.CONVERSATION_FETCH_SUCCESS]
         changes = action.value.result.conversationLength
         newConvLengths = newConvLengths.merge(changes)
 
