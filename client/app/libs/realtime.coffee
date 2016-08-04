@@ -30,6 +30,9 @@ module.exports.initialize = (dispatcher) ->
         'mailbox.update':   ActionTypes.RECEIVE_MAILBOX_UPDATE
         'refresh.notify':   ActionTypes.RECEIVE_REFRESH_NOTIF
 
-    for event, action of socket2Action
-        socket.on(event, (value) ->
-            dispatcher.dispatch {type: action, value: value})
+    Object.keys(socket2Action).forEach (eventname) ->
+        socket.on eventname, (value) ->
+            console.log("REALTIME", eventname, value)
+            dispatcher.dispatch {type: socket2Action[eventname], value: value}
+
+    undefined
