@@ -175,11 +175,6 @@ class MessageStore extends Store
             @emit 'change'
 
 
-        handle ActionTypes.SEARCH_SUCCESS, ({result}) ->
-            _updateMessages result
-            @emit 'change'
-
-
         handle ActionTypes.SETTINGS_UPDATE_REQUEST, ({messageID, displayImages}) ->
             # Update settings into component,
             # but not definitly into settingsStore
