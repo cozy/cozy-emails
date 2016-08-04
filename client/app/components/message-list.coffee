@@ -2,8 +2,6 @@ React     = require 'react'
 
 {div, section, p, button, ul, strong} = React.DOM
 
-RouterActionCreator = require '../actions/router_action_creator'
-
 MessageItem         = React.createFactory require './message-list-item'
 
 {Spinner, Progress} = require('./basics/components').factories
@@ -11,25 +9,15 @@ MessageItem         = React.createFactory require './message-list-item'
 RouterGetter = require '../getters/router'
 LayoutGetter = require '../getters/layout'
 
-
-_scrollToActive = ->
-    return unless (el = @refs?['message-list-content'])?
-    activeElement = el.querySelector '[data-message-active="true"]'
-    if activeElement? and not LayoutGetter.isVisible activeElement
-        el.scrollTop = activeElement.offsetTop - activeElement.offsetHeight
-
-
-_loadMoreMessage = ->
-    RouterActionCreator.gotoNextPage()
-
-
 module.exports = React.createClass
     displayName: 'MessageList'
 
 
     componentDidMount: ->
-        _scrollToActive.call @
-
+        return unless (el = @refs?['message-list-content'])?
+        activeElement = el.querySelector '[data-message-active="true"]'
+        if activeElement? and not LayoutGetter.isVisible activeElement
+            el.scrollTop = activeElement.offsetTop - activeElement.offsetHeight
 
     render: ->
         # TODO: rediriger vers le message le plus proche
@@ -72,7 +60,7 @@ module.exports = React.createClass
                     if @props.hasNextPage
                         button
                             className: 'more-messages'
-                            onClick: _loadMoreMessage,
+                            onClick: @props.onLoadMore,
                             ref: 'nextPage',
                             t 'list next page'
                     else

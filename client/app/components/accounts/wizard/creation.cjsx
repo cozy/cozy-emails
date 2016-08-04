@@ -9,8 +9,6 @@ AccountsUtils = require '../../../libs/accounts'
 Form    = require '../../basics/form'
 Servers = require '../servers'
 
-RequestsStore = require '../../../stores/requests_store'
-
 RequestsGetter = require '../../../getters/requests'
 
 AccountActionCreator = require '../../../actions/account_action_creator'
@@ -26,11 +24,6 @@ redirectTimer = undefined
 module.exports = AccountWizardCreation = React.createClass
 
     displayName: 'AccountWizardCreation'
-
-    mixins: [
-        StoreWatchMixin [RequestsStore]
-    ]
-
 
     # Build state from RequestsStore through RequestsGetter
     getStateFromStores: ->

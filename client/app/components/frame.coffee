@@ -1,7 +1,7 @@
 React = require 'react'
 ReactDOM  = require 'react-dom'
 
-{iframe, div} = React.DOM
+{iframe} = React.DOM
 
 module.exports =  Frame = React.createClass
     displayName: 'Frame'
@@ -16,8 +16,23 @@ module.exports =  Frame = React.createClass
 
 
     componentDidMount: ->
+        @createContainer()
         @renderFrameContents()
 
+    createContainer: ->
+        doc = @getDocument()
+        @container = doc.createElement('div')
+        doc.body.appendChild @container
+
+    setContainerContent: ->
+        doc = @getDocument()
+        ReactDOM.render @props.children, @container
+
+        # Resize Iframe content
+        # with ist content size
+        el = ReactDOM.findDOMNode(@)
+        el.setAttribute 'width', doc.body.scrollWidth
+        el.setAttribute 'height', doc.body.scrollHeight
 
     getDocument: ->
         element = ReactDOM.findDOMNode @
@@ -54,7 +69,7 @@ module.exports =  Frame = React.createClass
 
             # Reference the readyStateChange handler to be able to remove it
             # afterward.
-            readyStateChangeHandler = () =>
+            readyStateChangeHandler = =>
                 if doc.readyState is 'complete'
                     @onDocumentReady(doc)
                     doc.removeEventListener 'readystatechange',
@@ -64,7 +79,7 @@ module.exports =  Frame = React.createClass
 
 
     componentDidUpdate: ->
-        @renderFrameContents()
+        @setContainerContent()
 
 
     componentWillUnmount: ->

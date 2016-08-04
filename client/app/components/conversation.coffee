@@ -2,15 +2,17 @@ _ = require 'underscore'
 React     = require 'react'
 ReactDOM  = require 'react-dom'
 
-{section, header, ul, li, span, i, p, h3, a, button} = React.DOM
+{section, header, p, h3, button} = React.DOM
 
 Message = React.createFactory require './message'
 
 RouterGetter = require '../getters/router'
 LayoutGetter = require '../getters/layout'
 
-RouterActionCreator = require '../actions/router_action_creator'
+FlagsConstants = require '../constants/app_constants'
 
+RouterActionCreator = require '../actions/router_action_creator'
+MessageUtils = require './utils/format_message'
 
 _scrollToActive = ->
     el = ReactDOM.findDOMNode @
@@ -56,7 +58,14 @@ module.exports = React.createClass
 
     componentWillUnmount: ->
         setTimeout =>
-            RouterActionCreator.markAsRead @props
+            message = @props.messages.find (msg) =>
+                msg.get('id') is @props.messageID
+
+            if message?.isUnread()
+                accountID = @props.accountID
+                messageID = message.get('id')
+                RouterActionCreator.mark {messageID, accountID},
+                    FlagsConstants.SEEN
         , 0
 
 
@@ -86,11 +95,17 @@ module.exports = React.createClass
                 ref: 'conversation-content',
                     @props.messages.map (message) =>
                         messageID = message.get 'id'
-                        Message _.extend RouterGetter.formatMessage(message),
+                        isDeleted = RouterGetter.isMessageDeleted(message)
+                        Message _.extend MessageUtils.formatContent(message),
                             ref             : "message-#{messageID}"
                             key             : "message-#{messageID}"
                             accountID       : @props.accountID
                             messageID       : @props.messageID
                             isActive        : @props.messageID is messageID
+                            isDraft         : message.isDraft()
+                            isDeleted       : isDeleted
+                            isFlagged       : message.isFlagged()
+                            isUnread        : message.isUnread()
                             isTrashbox      : RouterGetter.isTrashbox()
                             message         : message
+                            resources       : message.getResources()

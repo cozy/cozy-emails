@@ -15,10 +15,10 @@ Conversation          = React.createFactory require './conversation'
 AccountWizardCreation = React.createFactory require './accounts/wizard/creation'
 
 # React Mixins
-RouterStore          = require '../stores/router_store'
 SettingsStore        = require '../stores/settings_store'
-RequestsStore        = require '../stores/requests_store'
 StoreWatchMixin      = require '../mixins/store_watch_mixin'
+
+RouterActionCreator = require '../actions/router_action_creator'
 
 RouterGetter = require '../getters/router'
 LayoutGetter = require '../getters/layout'
@@ -86,6 +86,7 @@ Application = React.createClass
                                 hasNextPage         : @props.hasNextPage
                                 lastSync            : @props.lastSync
                                 isLoading           : @props.isLoading
+                                onLoadMore          : @props.onLoadMore
 
                         if @props.lastSync? and @props.messageID
                             Conversation
@@ -129,7 +130,7 @@ Application = React.createClass
 module.exports = React.createClass(
     displayName: 'StoreConnectedApplication'
     mixins: [
-        StoreWatchMixin [SettingsStore, RequestsStore, RouterStore]
+        StoreWatchMixin [SettingsStore]
     ]
     componentDidMount: ->
         store = require('../reducers/_store')
@@ -139,6 +140,7 @@ module.exports = React.createClass(
         @unsubscribe?()
 
     getStateFromStores: ->
+        # state
         action                  : RouterGetter.getAction()
         modal                   : RouterGetter.getModal()
         mailboxID               : RouterGetter.getMailboxID()
@@ -164,6 +166,9 @@ module.exports = React.createClass(
         nbFlagged               : RouterGetter.getFlaggedLength()
         conversation            : RouterGetter.getConversation()
         previewSize             : LayoutGetter.getPreviewSize()
+
+        # events handler
+        onLoadMore              : -> RouterActionCreator.loadMore()
 
     render: -> React.createElement Application, @state
 

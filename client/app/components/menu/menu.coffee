@@ -7,7 +7,7 @@ MenuMailboxItem = React.createFactory require './menu_mailbox_item'
 classNames = require 'classnames'
 
 LayoutActionCreator  = require '../../actions/layout_action_creator'
-{MessageFilter} = require '../../constants/app_constants'
+{MessageActions, MessageFilter} = require '../../constants/app_constants'
 
 RouterGetter = require '../../getters/router'
 ContactGetter = require '../../getters/contact'
@@ -60,6 +60,7 @@ module.exports = Menu = React.createClass
         {total, unread} = params
 
         mailboxURL = RouterGetter.getURL
+            action: MessageActions.SHOW_ALL
             mailboxID: mailboxID
             filter: {flags}
 
@@ -70,7 +71,7 @@ module.exports = Menu = React.createClass
             key:                "mailbox-item-#{slug}"
             depth:              0
             url:                mailboxURL
-            isActive:           RouterGetter.isCurrentURL mailboxURL
+            isActive:           RouterGetter.isActive mailboxID, flags
             displayErrors:      @displayErrors
             isMailboxLoading:   isMailboxLoading
             isRefreshError:     isRefreshError
@@ -125,10 +126,13 @@ module.exports = Menu = React.createClass
                     className: 'list-unstyled mailbox-list',
 
                     # Default Inbox Mailboxes
-                    props.inboxMailboxes?.valueSeq().map (mailbox, key) =>
+                    props.inboxMailboxes?.map (mailbox, key) =>
                         mailboxURL = RouterGetter.getURL
+                            action: MessageActions.SHOW_ALL
                             mailboxID: (mailboxID = mailbox.get 'id')
-                            resetFilter: true
+
+                        active = RouterGetter.isActive mailboxID
+                        icon = FileGetter.getMailboxIcon {account, mailboxID}
 
                         MenuMailboxItem
                             key:                'mailbox-item-' + key
@@ -136,7 +140,7 @@ module.exports = Menu = React.createClass
                             mailboxID:          mailboxID
                             label:              mailbox.get 'label'
                             depth:              mailbox.get('tree').length - 1
-                            isActive:           RouterGetter.isCurrentURL mailboxURL
+                            isActive:           active
                             displayErrors:      @displayErrors
                             isMailboxLoading:   props.isMailboxLoading
                             isRefreshError:     props.isRefreshError
@@ -144,7 +148,7 @@ module.exports = Menu = React.createClass
                             total:              mailbox.get 'nbTotal'
                             unread:             mailbox.get 'nbUnread'
                             recent:             mailbox.get 'nbRecent'
-                            icon:               FileGetter.getMailboxIcon {account, mailboxID}
+                            icon:               icon
                     .toArray()
 
                     # Unread Mailbox
@@ -170,10 +174,13 @@ module.exports = Menu = React.createClass
                         mailboxID:          account.get 'inboxMailbox'
 
                     # Other mailboxes
-                    props.otherMailboxes?.valueSeq().map (mailbox, key) =>
+                    props.otherMailboxes?.map (mailbox, key) =>
                         mailboxURL = RouterGetter.getURL
+                            action: MessageActions.SHOW_ALL
                             mailboxID: (mailboxID = mailbox.get 'id')
-                            resetFilter: true
+
+                        active = RouterGetter.isActive mailboxID
+                        icon = FileGetter.getMailboxIcon {account, mailboxID}
 
                         MenuMailboxItem
                             key:                'mailbox-item-' + key
@@ -181,7 +188,7 @@ module.exports = Menu = React.createClass
                             mailboxID:          mailboxID
                             label:              mailbox.get 'label'
                             depth:              mailbox.get('tree').length - 1
-                            isActive:           RouterGetter.isCurrentURL mailboxURL
+                            isActive:           active
                             displayErrors:      @displayErrors
                             isMailboxLoading:   props.isMailboxLoading
                             isRefreshError:     props.isRefreshError
@@ -189,5 +196,5 @@ module.exports = Menu = React.createClass
                             total:              mailbox.get 'nbTotal'
                             unread:             mailbox.get 'nbUnread'
                             recent:             mailbox.get 'nbRecent'
-                            icon:               FileGetter.getMailboxIcon {account, mailboxID}
+                            icon:               icon
                     .toArray()

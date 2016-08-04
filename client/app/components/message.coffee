@@ -7,7 +7,7 @@ ToolbarMessage = React.createFactory require './toolbar_message'
 MessageContent = React.createFactory require './message-content'
 AttachmentPreview = React.createFactory require './attachement_preview'
 
-MessageGetter = require '../getters/message'
+Format = require '../libs/format'
 ContactGetter = require '../getters/contact'
 FileGetter = require '../getters/file'
 
@@ -44,7 +44,7 @@ module.exports = React.createClass
                 message: @props.message
                 contacts: ContactGetter.getAll  @props.message
                 avatar: ContactGetter.getAvatar @props.message
-                createdAt: MessageGetter.getCreatedAt @props.message
+                createdAt: Format.getCreatedAt @props.message
                 isDraft: @props.isDraft
                 isDeleted: @props.isDeleted
                 isFlagged: @props.isFlagged

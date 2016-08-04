@@ -8,16 +8,19 @@ RouterActionCreator = require '../actions/router_action_creator'
 {Icon}       = require('./basics/components').factories
 Participants = React.createFactory require './participants'
 
-RouterGetter = require '../getters/router'
-MessageGetter = require '../getters/message'
+Format = require '../libs/format'
 ContactGetter = require '../getters/contact'
+
+Message = require '../models/message'
 
 module.exports = React.createClass
     displayName: 'MessagesItem'
 
+    propTypes:
+        message: React.PropTypes.instanceOf(Message).isRequired
+        isActive: React.PropTypes.bool.isRequired
+        login: React.PropTypes.string.isRequired
 
-    getDate: ->
-        MessageGetter.getCreatedAt @props.message
 
 
     getSubject: ->
@@ -50,15 +53,6 @@ module.exports = React.createClass
         from  = @props.message.get('from')[0]
         if from?.name then from?.name[0] else from?.address[0]
 
-
-    isUnread: ->
-        RouterGetter.isUnread @props.message
-
-
-    isFlagged: ->
-        RouterGetter.isFlagged @props.message
-
-
     render: ->
         {from, to, separator} = @getParticipants()
         backgroundColor = @getBackgroundColor()
@@ -66,9 +60,8 @@ module.exports = React.createClass
         li
             className:  classNames
                 message:    true
-                unseen:     (isUnread = @isUnread())
+                unseen:     @props.message.isUnread()
                 active:     @props.isActive
-            key:                    @props.key
             'data-message-active':  @props.isActive
             draggable:              false
             onClick:                @onMessageClick
@@ -80,11 +73,11 @@ module.exports = React.createClass
                 div className: 'markers-wrapper',
                     Icon
                         type: 'new-icon'
-                        className: 'hidden' unless isUnread
+                        className: 'hidden' unless @props.message.isUnread()
 
                     Icon
                         type: 'star'
-                        className: 'hidden' unless @isFlagged()
+                        className: 'hidden' unless @props.message.isFlagged()
 
                 div className: 'avatar-wrapper select-target',
                     if (avatar = @getAvatar())?
@@ -114,7 +107,7 @@ module.exports = React.createClass
                             @getSubject()
 
                         div className: 'date',
-                            @getDate()
+                            Format.getCreatedAt @props.message
 
                         div className: 'extras',
                             if @props.message.get('attachements')?.size
