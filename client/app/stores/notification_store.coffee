@@ -99,6 +99,10 @@ class NotificationStore extends Store
         else if target.messageIDs
             type = 'messages'
             smart_count = target.messageIDs.length
+        else if target.messages
+            smart_count = target.messages.length
+            type = if smart_count > 1 then 'messages' else 'message'
+            subject = target.messages[0].subject
         else
             throw new Error 'Wrong Usage : unrecognized target'
 
@@ -180,10 +184,10 @@ class NotificationStore extends Store
                 errors: [error]
                 autoclose: true
 
-        handle ActionTypes.MESSAGE_MOVE_SUCCESS, ({target}) ->
-            unless target.silent
+        handle ActionTypes.MESSAGE_MOVE_SUCCESS, ({updated, silent}) ->
+            unless silent
                 _showNotification
-                    message: _makeMessage target, 'move ok'
+                    message: _makeMessage updated, 'move ok'
                     autoclose: true
 
         handle ActionTypes.MESSAGE_MOVE_FAILURE, ({target, error}) ->
@@ -249,10 +253,11 @@ class NotificationStore extends Store
                 autoclose: true
 
 
-        handle ActionTypes.RECEIVE_REFRESH_NOTIF, ({message}) ->
-            _showNotification
-                message: "#{t 'notif new title'} #{message}"
-                autoclose: true
+        handle ActionTypes.RECEIVE_REFRESH_NOTIF, (value) ->
+            if value?.message
+                _showNotification
+                    message: "#{t 'notif new title'} #{value.message}"
+                    autoclose: true
 
 
 module.exports = new NotificationStore()
