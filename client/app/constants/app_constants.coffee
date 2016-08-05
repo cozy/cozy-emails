@@ -96,8 +96,7 @@ module.exports =
         'SETTINGS_UPDATE_FAILURE'   : 'SETTINGS_UPDATE_FAILURE'
 
         # Tasks
-        'RECEIVE_TASK_UPDATE'       : 'RECEIVE_TASK_UPDATE'
-        'RECEIVE_TASK_DELETE'       : 'RECEIVE_TASK_DELETE'
+        'CLICKED_TASK_OK'           : 'CLICKED_TASK_OK'
         'CLEAR_TOASTS'              : 'CLEAR_TOASTS'
 
         # Refreshes

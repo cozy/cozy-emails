@@ -7,7 +7,7 @@ NotificationActionCreator =
 
     taskDelete: (id) ->
         AppDispatcher.dispatch
-            type: ActionTypes.RECEIVE_TASK_DELETE
+            type: ActionTypes.CLICKED_TASK_OK
             value: id
 
 
