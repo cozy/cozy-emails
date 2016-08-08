@@ -32,12 +32,10 @@ describe('Settings Reducer', () => {
 
       it('should merge state with new values', () => {
         // arrange
-        let state = {
-          settings: Immutable.Map({
-            setting1: 'value1',
-            setting2: 'value2'
-          })
-        };
+        let state = Immutable.Map({
+          setting1: 'value1',
+          setting2: 'value2'
+        });
 
         let action = {
           type: 'SETTINGS_UPDATE_SUCCESS',
