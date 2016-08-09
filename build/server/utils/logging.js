@@ -5,7 +5,7 @@ util = require('util');
 
 COLORS = ['\x1B[32mDBUG\x1B[39m', '\x1B[34mINFO\x1B[39m', '\x1B[33mWARN\x1B[39m', '\x1B[31mEROR\x1B[39m'];
 
-LOG_LEVEL = 0;
+LOG_LEVEL = 1;
 
 lastLogs = new Array(15);
 
