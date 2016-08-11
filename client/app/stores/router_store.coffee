@@ -3,7 +3,7 @@ Immutable     = require 'immutable'
 Store         = require '../libs/flux/store/store'
 AppDispatcher = require '../libs/flux/dispatcher/dispatcher'
 
-AccountStore  = require '../stores/account_store'
+AccountGetter = require '../getters/account'
 RequestsStore = require '../stores/requests_store'
 
 MessageGetter  = require '../getters/message'
@@ -205,7 +205,7 @@ class RouterStore extends Store
         unless (action = params.action)
             if params.messageID
                 action = MessageActions.SHOW
-            else if AccountStore.getAll()?.size
+            else if AccountGetter.getAll()?.size
                 action = MessageActions.SHOW_ALL
             else
                 action = AccountActions.CREATE
@@ -276,18 +276,18 @@ class RouterStore extends Store
 
     getAccount: (accountID) ->
         accountID ?= _accountID
-        AccountStore.getByID accountID
+        AccountGetter.getByID accountID
 
 
     getAccountID: (mailboxID) ->
         if mailboxID
-            return AccountStore.getByMailbox('mailboxID')?.get 'id'
+            return AccountGetter.getByMailbox('mailboxID')?.get 'id'
         else
             return _accountID
 
 
     getDefaultAccount: ->
-        AccountStore.getAll().first()
+        AccountGetter.getAll().first()
 
 
     getMailboxID: (messageID) ->
@@ -303,12 +303,12 @@ class RouterStore extends Store
     getMailbox: (accountID, mailboxID) ->
         accountID ?= @getAccountID()
         mailboxID ?= @getMailboxID()
-        AccountStore.getMailbox accountID, mailboxID
+        AccountGetter.getMailbox accountID, mailboxID
 
 
     getAllMailboxes: (accountID) ->
         accountID ?= @getAccountID()
-        AccountStore.getAllMailboxes accountID
+        AccountGetter.getAllMailboxes accountID
 
 
 
@@ -336,7 +336,7 @@ class RouterStore extends Store
         {action, accountID, mailboxID, messagesPerPage} = payload
         {messageID, conversationID} = payload
 
-        if AccountStore.getAll()?.size
+        if AccountGetter.getAll()?.size
             if mailboxID
                 if messageID and conversationID
                     action = MessageActions.SHOW
@@ -390,7 +390,7 @@ class RouterStore extends Store
     isDeleted: (message) ->
         # Message is in trashbox
         if message?
-            account = AccountStore.getByID message.get('accountID')
+            account = AccountGetter.getByID message.get('accountID')
             trashboxID = account?.get 'trashMailbox'
             return message.get('mailboxIDs')[trashboxID]?
 
@@ -440,7 +440,7 @@ class RouterStore extends Store
         # be enought to "feel" the page
         accountID = @getAccountID()
         mailboxID = @getMailboxID()
-        nbTotal = AccountStore.getMailbox(accountID, mailboxID)?.get 'nbTotal'
+        nbTotal = AccountGetter.getMailbox(accountID, mailboxID)?.get 'nbTotal'
         maxMessage = if nbTotal < _messagesPerPage then --nbTotal else _messagesPerPage
 
         _messagesLength >= maxMessage
@@ -463,10 +463,10 @@ class RouterStore extends Store
         accountID ?= @getAccountID()
         mailboxID ?= @getMailboxID()
 
-        inbox = AccountStore.getInbox accountID
-        inboxID = (inbox = AccountStore.getInbox accountID)?.get 'id'
+        inbox = AccountGetter.getInbox accountID
+        inboxID = (inbox = AccountGetter.getInbox accountID)?.get 'id'
         inboxTotal = inbox?.get 'nbTotal'
-        isInbox = AccountStore.isInbox accountID, mailboxID
+        isInbox = AccountGetter.isInbox accountID, mailboxID
 
         {sort} = @getFilter()
         sortOrder = parseInt "#{sort.charAt(0)}1", 10
@@ -478,7 +478,7 @@ class RouterStore extends Store
             # FIXME: should be executed server side
             # add inboxID for its children
             _.keys(message.get 'mailboxIDs').forEach (id) ->
-                isInboxChild = AccountStore.isInbox accountID, id, true
+                isInboxChild = AccountGetter.isInbox accountID, id, true
                 if not isInbox and isInboxChild
                     mailboxIDs = message.get 'mailboxIDs'
                     mailboxIDs[inboxID] = inboxTotal
@@ -582,8 +582,8 @@ class RouterStore extends Store
         # but only one is references as real INBOX
         # Get reference INBOX_ID to keep _requests works
         # with this 2nd INBOX
-        if AccountStore.isInbox _accountID, _mailboxID
-            mailboxID = AccountStore.getInbox(_accountID)?.get 'id'
+        if AccountGetter.isInbox _accountID, _mailboxID
+            mailboxID = AccountGetter.getInbox(_accountID)?.get 'id'
         else
             mailboxID = _mailboxID
 
@@ -652,16 +652,16 @@ class RouterStore extends Store
 
             # get Account from mailbox
             if mailboxID
-                accountID ?= AccountStore.getByMailbox(mailboxID)?.get 'id'
+                accountID ?= AccountGetter.getByMailbox(mailboxID)?.get 'id'
 
             # Get default account
             # and set accountID and mailboxID
             if not accountID and not mailboxID
-                account = AccountStore.getDefault()
+                account = AccountGetter.getDefault()
                 accountID = account?.get 'id'
                 mailboxID = account?.get 'inboxMailbox'
 
-            mailboxID ?= AccountStore.getByID(accountID)?.get 'inboxMailbox'
+            mailboxID ?= AccountGetter.getByID(accountID)?.get 'inboxMailbox'
             _setCurrentAccount {accountID, mailboxID, tab}
 
             # From MessageGetter

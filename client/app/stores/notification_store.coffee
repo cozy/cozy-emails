@@ -1,7 +1,7 @@
 Immutable = require 'immutable'
 
 Store = require '../libs/flux/store/store'
-AccountStore = require '../stores/account_store'
+reduxStore = require '../reducers/_store'
 
 AppDispatcher = require '../libs/flux/dispatcher/dispatcher'
 
@@ -215,7 +215,7 @@ class NotificationStore extends Store
 
 
         handle ActionTypes.REFRESH_FAILURE, ({error}) ->
-            AppDispatcher.waitFor [AccountStore.dispatchToken]
+            AppDispatcher.waitFor [reduxStore.dispatchToken]
 
             if error.name is 'AccountConfigError'
                 message = t "config error #{error.field}"

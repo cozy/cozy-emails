@@ -2,7 +2,7 @@ _ = require 'lodash'
 
 AppDispatcher   = require '../libs/flux/dispatcher/dispatcher'
 
-AccountStore  = require '../stores/account_store'
+AccountGetter  = require '../getters/account'
 RouterStore   = require '../stores/router_store'
 
 Realtime = require '../libs/realtime'
@@ -153,7 +153,7 @@ RouterActionCreator =
     closeModal: (mailboxID = RouterStore.getMailboxID()) ->
         return unless mailboxID
 
-        account = AccountStore.getByMailbox mailboxID
+        account = AccountGetter.getByMailbox mailboxID
 
         # Load last messages
         @refreshMailbox {mailboxID}
