@@ -1,3 +1,4 @@
+Immutable = require 'immutable'
 {createStore} = require 'redux'
 Immutable = require 'immutable'
 _ = require 'lodash'
@@ -26,6 +27,8 @@ reduxStore = createStore rootReducer,
     contact:
         contacts: initialContacts
         results : Immutable.Map()
+    settings:
+        settings: Immutable.Map window?.settings
 
 reduxStoreDispatchID = dispatcher.register (action) ->
     reduxStore.dispatch(action)

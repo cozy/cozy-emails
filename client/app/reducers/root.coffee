@@ -4,7 +4,7 @@ messagesReducer = require './message'
 layoutReducer = require './layout'
 accountReducer = require './account'
 {combineReducers} = require 'redux'
-
+settingsReducer = require './settings'
 
 module.exports = combineReducers({
     selection: selectionReducer
@@ -12,4 +12,5 @@ module.exports = combineReducers({
     contact: contactReducer
     layout: layoutReducer
     account: accountReducer
+    settings: settingsReducer
 })
