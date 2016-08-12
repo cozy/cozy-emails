@@ -27,6 +27,13 @@ before_install:
 - travis_retry npm install forever coffee-script -g
 - travis_retry pip install --user transifex-client
 - travis_retry git clone git://github.com/cozy/cozy-data-system.git
+- git clone http://code.transifex.com/transifex-client
+- cd transifex-client
+- git checkout 0.12.1
+- sudo python setup.py install
+- cd $TRAVIS_BUILD_DIR
+- install -m0644 .transifexrc.tpl ~/.transifexrc
+- echo "password = $TX_PASSWD" >> ~/.transifexrc
 - cd cozy-data-system
 - travis_retry npm install
 - env NAME=data-system TOKEN=token forever start -o forever-ds.log build/server.js
