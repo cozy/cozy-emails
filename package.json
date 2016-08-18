@@ -5,7 +5,7 @@
     "node >= 0.10.0"
   ],
   "description": "Emails client for Cozycloud",
-  "license": "MIT",
+  "license": "AGPL-3.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/cozy/cozy-emails.git"
