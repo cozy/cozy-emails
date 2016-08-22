@@ -2,11 +2,9 @@ Backbone = require 'backbone'
 React    = require 'react'
 ReactDOM = require 'react-dom'
 
-RouterGetter = require './getters/router'
+RouterGetter = require './puregetters/router'
 
 RouterActionCreator = require './actions/router_action_creator'
-
-AppDispatcher = require './libs/flux/dispatcher/dispatcher'
 
 {ActionTypes} = require './constants/app_constants'
 
@@ -40,6 +38,7 @@ _parseQuery = (query) ->
             value or true
     return params
 
+routes.BACKBONE_ROUTES[''] = 'DEFAULT'
 
 class Router extends Backbone.Router
 
@@ -56,41 +55,45 @@ class Router extends Backbone.Router
         # Start Navigation
         Backbone.history.start()
 
-
-        AppDispatcher.register @onDispatch
+        reduxStore.subscribe @onDispatch
 
 
     defaultView: ->
-        mailboxID = RouterGetter.getDefaultAccount()?.get 'inboxMailbox'
+        console.log("DEFAULT CALLED")
+        mailboxID = RouterGetter.getDefaultAccount(reduxStore.getState())
+        ?.get 'inboxMailbox'
         url = if mailboxID then "mailbox/#{mailboxID}" else "account/new"
         @navigate url, trigger: true
 
     onRouteMatched: (name, paramsValues)->
-        [action, name, ..., paramsNames] = routes.ROUTE_BY_NAME[name]
+        # console.log "THERE", name, paramsValues
+        return @defaultView() if name is 'DEFAULT'
+        [action, name, ..., paramsNames] = routes.ROUTE_BY_ACTION[name]
         params = {action: action}
         params[name] = paramsValues[i] for name, i in paramsNames
         params.filter = _parseQuery(params.filter) if params.filter
 
-        AppDispatcher.dispatch
+        reduxStore.dispatch
             type: ActionTypes.ROUTE_CHANGE
             value: params
 
         if params.mailboxID?
             # Always get freshest data as possible
-            RouterActionCreator.refreshMailbox {mailboxID: params.mailboxID}
+            RouterActionCreator.refreshMailbox reduxStore.dispatch,
+                mailboxID: params.mailboxID
 
             # Get all messages to display messages list
-            RouterActionCreator.getCurrentPage()
+            RouterActionCreator.getCurrentPage reduxStore.dispatch
 
         # Get all messages from conversation
         if params.conversationID?
-            RouterActionCreator.getConversation params.conversationID
+            RouterActionCreator.getConversation reduxStore.dispatch,
+                params.conversationID
 
     onDispatch: =>
-        AppDispatcher.waitFor [reduxStore.dispatchToken]
         urlShouldBe = RouterGetter.getCurrentURL(reduxStore.getState())
         if location?.hash isnt urlShouldBe
-            @navigate urlShouldBe
+            @navigate urlShouldBe, trigger: false
 
 _displayApplication = ->
     Application = React.createFactory require './components/application'
