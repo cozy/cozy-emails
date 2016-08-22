@@ -1,26 +1,24 @@
-AppDispatcher   = require '../libs/flux/dispatcher/dispatcher'
-
 {ActionTypes}   = require '../constants/app_constants'
 XHRUtils        = require '../libs/xhr'
 
-MessageGetters  = require '../getters/message'
+MessageGetters  = require '../puregetters/message'
 
-MessageActionCreator =
+MessageActionCreator = (dispatch, state) ->
 
     receiveRawMessages: (messages) ->
-        AppDispatcher.dispatch
+        dispatch
             type: ActionTypes.RECEIVE_RAW_MESSAGES
             value: messages
 
 
     receiveRawMessage: (message) ->
-        AppDispatcher.dispatch
+        dispatch
             type: ActionTypes.RECEIVE_RAW_MESSAGE
             value: message
 
 
     displayImages: ({messageID, displayImages=true})->
-        AppDispatcher.dispatch
+        dispatch
             type: ActionTypes.SETTINGS_UPDATE_REQUEST
             value: {messageID, displayImages}
 
@@ -31,17 +29,17 @@ MessageActionCreator =
         unless message.composeInHTML
             message.html = message.text
 
-        AppDispatcher.dispatch
+        dispatch
             type: ActionTypes.MESSAGE_SEND_REQUEST
             value: message
 
         XHRUtils.messageSend message, (error, message) ->
             if error?
-                AppDispatcher.dispatch
+                dispatch
                     type: ActionTypes.MESSAGE_SEND_FAILURE
                     value: {error, action, message}
             else
-                AppDispatcher.dispatch
+                dispatch
                     type: ActionTypes.MESSAGE_SEND_SUCCESS
                     value: {action, message}
 
@@ -51,16 +49,16 @@ MessageActionCreator =
 
         # Do not mark a removed message
         {messageID} = target
-        if messageID and not (message = MessageGetters.getByID messageID)
+        if messageID and not (message = MessageGetters.getByID state, messageID)
             return
 
-        AppDispatcher.dispatch
+        dispatch
             type: ActionTypes.MESSAGE_FLAGS_REQUEST
             value: {target, flags, timestamp}
 
         XHRUtils.batchFlag {target, action: flags}, (error, updated) ->
             if error
-                AppDispatcher.dispatch
+                dispatch
                     type: ActionTypes.MESSAGE_FLAGS_FAILURE
                     value: {target, error, flags, timestamp}
             else
@@ -72,7 +70,7 @@ MessageActionCreator =
                 # FIXME: clent shouldnt add this information
                 # it shoul be done server side
                 updated = {messages: [message]}
-                AppDispatcher.dispatch
+                dispatch
                     type: ActionTypes.MESSAGE_FLAGS_SUCCESS
                     value: {target, updated, flags, timestamp}
 
@@ -90,19 +88,19 @@ MessageActionCreator =
         timestamp = Date.now()
         target = {messageID, accountID}
 
-        AppDispatcher.dispatch
+        dispatch
             type: ActionTypes.MESSAGE_TRASH_REQUEST
             value: {target}
 
         # send request
         XHRUtils.batchDelete target, (error, updated=[]) ->
             if error
-                AppDispatcher.dispatch
+                dispatch
                     type: ActionTypes.MESSAGE_TRASH_FAILURE
                     value: {target, error, updated}
             else
                 message.updated = timestamp for message in updated
-                AppDispatcher.dispatch
+                dispatch
                     type: ActionTypes.MESSAGE_TRASH_SUCCESS
                     value: {target, updated}
 

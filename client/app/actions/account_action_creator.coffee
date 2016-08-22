@@ -3,10 +3,9 @@
 _ = require 'underscore'
 
 AccountsUtils = require '../libs/accounts'
-AppDispatcher = require '../libs/flux/dispatcher/dispatcher'
 XHRUtils      = require '../libs/xhr'
 
-AccountGetter = require '../getters/account'
+AccountGetter = require '../puregetters/account'
 
 
 ###
@@ -20,21 +19,21 @@ FIXME: making sagas with default Flux lib is a little bit tricky. Currently,
        store framework (like Redux + Sagas).
 ###
 
-module.exports = AccountActionCreator =
+module.exports = AccountActionCreator = (dispatch, state) ->
 
     create: ({value}) ->
-        AppDispatcher.dispatch
+        dispatch
             type: ActionTypes.ADD_ACCOUNT_REQUEST
             value: {value}
 
         XHRUtils.createAccount value, (error, account) ->
             if error?
-                AppDispatcher.dispatch
+                dispatch
                     type: ActionTypes.ADD_ACCOUNT_FAILURE
                     value: {error}
 
             else if not account?
-                AppDispatcher.dispatch
+                dispatch
                     type: ActionTypes.ADD_ACCOUNT_FAILURE
                     value: {error: 'no account returned from create'}
 
@@ -45,43 +44,44 @@ module.exports = AccountActionCreator =
                                          account.draftMailbox? and \
                                          account.trashMailbox?
 
-                AppDispatcher.dispatch
+                dispatch
                     type: ActionTypes.ADD_ACCOUNT_SUCCESS
                     value: {account, areMailboxesConfigured}
 
 
     edit: ({value, accountID}) ->
-        newAccount = AccountGetter.getByID(accountID).mergeDeep value
+        newAccount = AccountGetter.getByID(state, accountID).mergeDeep value
 
-        AppDispatcher.dispatch
+        dispatch
             type: ActionTypes.EDIT_ACCOUNT_REQUEST
             value: {value, newAccount}
 
         XHRUtils.editAccount newAccount, (error, rawAccount) ->
             if error?
-                AppDispatcher.dispatch
+                dispatch
                     type: ActionTypes.EDIT_ACCOUNT_FAILURE
                     value: {error}
             else
-                AppDispatcher.dispatch
+                dispatch
                     type: ActionTypes.EDIT_ACCOUNT_SUCCESS
                     value: {rawAccount}
 
     check: ({value: account, accountID}) ->
         if accountID
-            account = AccountGetter.getByID(accountID).mergeDeep(account).toJS()
+            account = AccountGetter.getByID(state,accountID)
+            .mergeDeep(account).toJS()
 
         # Extract domain from login field, to compare w/ know OAuth-aware
         # domains
         [..., domain] = account.login.split '@'
 
-        AppDispatcher.dispatch
+        dispatch
             type: ActionTypes.CHECK_ACCOUNT_REQUEST
             value: {account}
 
         XHRUtils.checkAccount account, (error, res) ->
             if error?
-                AppDispatcher.dispatch
+                dispatch
                     type: ActionTypes.CHECK_ACCOUNT_FAILURE
                     value:
                         error: error
@@ -89,32 +89,32 @@ module.exports = AccountActionCreator =
 
             else
                 AccountActionCreator.create value: account
-                AppDispatcher.dispatch
+                dispatch
                     type: ActionTypes.CHECK_ACCOUNT_SUCCESS
                     value: {res}
 
     remove: (accountID) ->
-        AppDispatcher.dispatch
+        dispatch
             type: ActionTypes.REMOVE_ACCOUNT_REQUEST
             value: accountID
         XHRUtils.removeAccount accountID, (error) ->
             if error
-                AppDispatcher.dispatch
+                dispatch
                     type: ActionTypes.REMOVE_ACCOUNT_FAILURE
                     value: {accountID}
             else
-                AppDispatcher.dispatch
+                dispatch
                     type: ActionTypes.REMOVE_ACCOUNT_SUCCESS
                     value: {accountID}
 
     discover: (domain, config) ->
-        AppDispatcher.dispatch
+        dispatch
             type: ActionTypes.DISCOVER_ACCOUNT_REQUEST
             value: {domain}
 
         XHRUtils.accountDiscover domain, (error, provider) ->
             if error
-                AppDispatcher.dispatch
+                dispatch
                     type: ActionTypes.DISCOVER_ACCOUNT_FAILURE
                     value: {error, domain}
 
@@ -129,59 +129,60 @@ module.exports = AccountActionCreator =
 
                 AccountActionCreator.check value: config
 
-                AppDispatcher.dispatch
+                dispatch
                     type: ActionTypes.DISCOVER_ACCOUNT_SUCCESS
                     value: {domain, provider}
 
     # FIXME: move this elsewhere
     # Action is not a getter/setter!
     saveEditTab: (tab) ->
-        AppDispatcher.dispatch
+        dispatch
             type: ActionTypes.EDIT_ACCOUNT_TAB
             value: {tab}
 
 
     mailboxCreate: (mailbox) ->
-        AppDispatcher.dispatch
+        dispatch
             type: ActionTypes.MAILBOX_CREATE_REQUEST
             value: mailbox
         XHRUtils.mailboxCreate mailbox, (error, mailbox) ->
             unless error?
-                AppDispatcher.dispatch
+                dispatch
                     type: ActionTypes.MAILBOX_CREATE_SUCCESS
                     value: mailbox
             else
-                AppDispatcher.dispatch
+                dispatch
                     type: ActionTypes.MAILBOX_CREATE_FAILURE
                     value: mailbox
 
 
     mailboxUpdate: (mailbox) ->
-        AppDispatcher.dispatch
+        dispatch
             type: ActionTypes.MAILBOX_UPDATE_REQUEST
             value: mailbox
         XHRUtils.mailboxUpdate mailbox, (error, mailbox) ->
             unless error?
-                AppDispatcher.dispatch
+                dispatch
                     type: ActionTypes.MAILBOX_UPDATE_SUCCESS
                     value: mailbox
             else
-                AppDispatcher.dispatch
+                dispatch
                     type: ActionTypes.MAILBOX_UPDATE_FAILURE
                     value: mailbox
 
 
+
     mailboxDelete: (account) ->
-        AppDispatcher.dispatch
+        dispatch
             type: ActionTypes.MAILBOX_DELETE_REQUEST
             value: account
         XHRUtils.mailboxDelete account, (error, account) ->
             if error?
-                AppDispatcher.dispatch
+                dispatch
                     type: ActionTypes.MAILBOX_DELETE_FAILURE
                     value: account
             else
-                AppDispatcher.dispatch
+                dispatch
                     type: ActionTypes.MAILBOX_DELETE_SUCCESS
                     value: account
 
@@ -191,16 +192,16 @@ module.exports = AccountActionCreator =
 
         # delete message from local store to refresh display,
         # we'll fetch them again on error
-        AppDispatcher.dispatch
+        dispatch
             type: ActionTypes.MAILBOX_EXPUNGE_REQUEST
             value: mailboxID
 
         XHRUtils.mailboxExpunge options, (error) ->
             if error
-                AppDispatcher.dispatch
+                dispatch
                     type: ActionTypes.MAILBOX_EXPUNGE_FAILURE
                     value: {mailboxID, accountID, error}
             else
-                AppDispatcher.dispatch
+                dispatch
                     type: ActionTypes.MAILBOX_EXPUNGE_SUCCESS
                     value: {mailboxID, accountID}

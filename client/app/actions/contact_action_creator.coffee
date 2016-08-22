@@ -1,15 +1,7 @@
-AppDispatcher = require '../libs/flux/dispatcher/dispatcher'
 {ActionTypes} = require '../constants/app_constants'
-Activity = require '../libs/activity'
+XHRUtils = require '../libs/xhr'
 
-module.exports = ContactActionCreator =
-
-
-    searchContactLocal: (query) ->
-        AppDispatcher.dispatch
-            type: ActionTypes.CONTACT_LOCAL_SEARCH
-            value: query
-
+module.exports = ContactActionCreator = (dispatch) ->
 
     createContact: (contact) ->
         options =
@@ -18,18 +10,16 @@ module.exports = ContactActionCreator =
                 type: 'contact'
                 contact: contact
 
-        AppDispatcher.dispatch
+        dispatch
             type: ActionTypes.CREATE_CONTACT_REQUEST
             value: options
 
-        activity = new Activity options
-
-        activity.onsuccess = ->
-            AppDispatcher.dispatch
-                type: ActionTypes.CREATE_CONTACT_SUCCESS
-                value: contact
-
-        activity.onerror = (error) ->
-            AppDispatcher.dispatch
-                type: ActionTypes.CREATE_CONTACT_FAILURE
-                value: error
+        XHRUtils.activityCreate options, (error, res) ->
+            if error
+                dispatch
+                    type: ActionTypes.CREATE_CONTACT_FAILURE
+                    value: error
+            else
+                dispatch
+                    type: ActionTypes.CREATE_CONTACT_SUCCESS
+                    value: res
