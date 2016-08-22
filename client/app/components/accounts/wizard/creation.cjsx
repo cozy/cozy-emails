@@ -9,13 +9,16 @@ AccountsUtils = require '../../../libs/accounts'
 Form    = require '../../basics/form'
 Servers = require '../servers'
 
-RequestsGetter = require '../../../getters/requests'
+reduxStore = require '../../../reducers/_store'
+RequestsGetter = require '../../../puregetters/requests'
 
-AccountActionCreator = require '../../../actions/account_action_creator'
-RouterActionCreator = require '../../../actions/router_action_creator'
 
-StoreWatchMixin = require '../../../mixins/store_watch_mixin'
-
+# @TODO in this file
+#  - separate account props from commonent state
+#           (state.account instanceof Account)
+#  - make account state part of the redux store ?
+#  - state.mailboxID is poorly named
+#           (its used to determine if we are editing / done)
 
 # Top var for redirect timeout
 redirectTimer = undefined
@@ -25,22 +28,21 @@ module.exports = AccountWizardCreation = React.createClass
 
     displayName: 'AccountWizardCreation'
 
-    # Build state from RequestsStore through RequestsGetter
-    getStateFromStores: ->
-        account  = RequestsGetter.getAccountCreationSuccess()?.account
-        discover = RequestsGetter.getAccountCreationDiscover()
+    componentWillReceiveProps: () ->
+        appstate = reduxStore.getState()
+        account  = RequestsGetter.getAccountCreationSuccess(appstate)?.account
+        discover = RequestsGetter.getAccountCreationDiscover(appstate)
 
         state =
-            isBusy:         RequestsGetter.isAccountCreationBusy()
-            isDiscoverable: RequestsGetter.isAccountDiscoverable()
-            alert:          RequestsGetter.getAccountCreationAlert()
-            OAuth:          RequestsGetter.isAccountOAuth()
+            isBusy:         RequestsGetter.isAccountCreationBusy(appstate)
+            isDiscoverable: RequestsGetter.isAccountDiscoverable(appstate)
+            alert:          RequestsGetter.getAccountCreationAlert(appstate)
+            OAuth:          RequestsGetter.isAccountOAuth(appstate)
 
         state.mailboxID = account.inboxMailbox if account
         _.extend state, AccountsUtils.parseProviders discover if discover
 
-        return state
-
+        @setState(state);
 
     componentWillUpdate: (nextProps, nextState) ->
         # Only enable submit when a request isnt performed in background and
@@ -51,8 +53,8 @@ module.exports = AccountWizardCreation = React.createClass
 
         # Enable auto-redirect only on update after an ADD_ACCOUNT_SUCCESS
         redirectTimer = setTimeout ->
-            if RequestsGetter.getAccountCreationSuccess()
-                RouterActionCreator.closeModal nextState.mailboxID
+            if RequestsGetter.getAccountCreationSuccess(reduxStore.getState())
+                @props.doCloseModal nextState.mailboxID
         , 5000 if nextState.mailboxID
 
 
@@ -139,10 +141,9 @@ module.exports = AccountWizardCreation = React.createClass
 
         if @state.isDiscoverable and not(@state.imapServer or @state.smtpServer)
             [..., domain] = @state.login.split '@'
-            AccountActionCreator.discover domain,
-                AccountsUtils.sanitizeConfig @state
+            @props.doAccountDiscover domain, AccountsUtils.sanitizeConfig @state
         else
-            AccountActionCreator.check
+            @props.doAccountCheck
                 value: AccountsUtils.sanitizeConfig @state
 
 
@@ -174,7 +175,7 @@ module.exports = AccountWizardCreation = React.createClass
 
         # Redirect to mailboxID if available, will automatically fallback to
         # current mailbox if no mailboxID is given (cancel case)
-        RouterActionCreator.closeModal @state.mailboxID
+        @props.doCloseModal @state.mailboxID
 
 
     # Update state according to user inputs

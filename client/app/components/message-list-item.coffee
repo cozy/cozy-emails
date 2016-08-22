@@ -1,15 +1,14 @@
 React      = require 'react'
+Immutable      = require 'immutable'
 classNames = require 'classnames'
 
-{div, p, li, a, span, i, img} = React.DOM
-
-RouterActionCreator = require '../actions/router_action_creator'
+{div, p, li, a, span, i} = React.DOM
 
 {Icon}       = require('./basics/components').factories
 Participants = React.createFactory require './participants'
 
+Avatar = React.createFactory require './avatar'
 Format = require '../libs/format'
-ContactGetter = require '../getters/contact'
 
 Message = require '../models/message'
 
@@ -20,18 +19,13 @@ module.exports = React.createClass
         message: React.PropTypes.instanceOf(Message).isRequired
         isActive: React.PropTypes.bool.isRequired
         login: React.PropTypes.string.isRequired
-
-
+        contacts: React.PropTypes.instanceOf(Immutable.Map).isRequired
+        conversationLength: React.PropTypes.number.isRequired
 
     getSubject: ->
         subject = (@props.message.get('subject') or '').substr 0, 1024
         props = [subject]
         p null, props...
-
-
-    getAvatar: ->
-        ContactGetter.getAvatar @props.message
-
 
     getParticipants: ->
         from    = @props.message.get 'from'
@@ -42,21 +36,8 @@ module.exports = React.createClass
         separator = if to.length > 0 then ', ' else ' '
         {from, to, separator}
 
-
-    getBackgroundColor: ->
-        from  = @props.message.get('from')[0]
-        tag = "#{from?.name} <#{from?.address}>"
-        ContactGetter.getTagColor tag
-
-
-    getName: ->
-        from  = @props.message.get('from')[0]
-        if from?.name then from?.name[0] else from?.address[0]
-
     render: ->
         {from, to, separator} = @getParticipants()
-        backgroundColor = @getBackgroundColor()
-
         li
             className:  classNames
                 message:    true
@@ -80,13 +61,9 @@ module.exports = React.createClass
                         className: 'hidden' unless @props.message.isFlagged()
 
                 div className: 'avatar-wrapper select-target',
-                    if (avatar = @getAvatar())?
-                        img className: 'avatar', src: avatar
-                    else
-                        i
-                            className: 'avatar placeholder'
-                            style: {backgroundColor},
-                            @getName()
+                    Avatar
+                        participant: @props.message.get('from')[0]
+                        contacts: @props.contacts
 
                 div className: 'metas-wrapper',
                     div className: 'metas',
@@ -95,13 +72,17 @@ module.exports = React.createClass
                             p null,
                                 Participants
                                     participants: from
+                                    contacts: @props.contacts
                                     ref: 'from'
                                     tooltip: false
+                                    addContact: @props.addContact
                                 span null, separator
                                 Participants
                                     participants: to
+                                    contacts: @props.contacts
                                     ref: 'to'
                                     tooltip: false
+                                    addContact: @props.addContact
 
                         div className: 'subject ellipsable',
                             @getSubject()
@@ -112,11 +93,10 @@ module.exports = React.createClass
                         div className: 'extras',
                             if @props.message.get('attachements')?.size
                                 i className: 'attachments fa fa-paperclip'
-                            if @props.conversationLengths > 1
+                            if @props.conversationLength > 1
                                 span className: 'conversation-length',
-                                    @props.conversationLengths
-
+                                    @props.conversationLength
 
     onMessageClick: ->
         conversationID = @props.message.get 'conversationID'
-        RouterActionCreator.gotoConversation {conversationID}
+        @props.gotoConversation {conversationID}

@@ -1,5 +1,5 @@
 React = require 'react'
-{article, footer, ul, i, p, a} = React.DOM
+{article, footer, ul} = React.DOM
 classNames = require 'classnames'
 
 MessageHeader  = React.createFactory require './message_header'
@@ -8,8 +8,7 @@ MessageContent = React.createFactory require './message-content'
 AttachmentPreview = React.createFactory require './attachement_preview'
 
 Format = require '../libs/format'
-ContactGetter = require '../getters/contact'
-FileGetter = require '../getters/file'
+FileFormat = require './utils/format_files'
 
 module.exports = React.createClass
     displayName: 'Message'
@@ -21,8 +20,8 @@ module.exports = React.createClass
             ref: "attachmentPreview-#{index}"
             key: "messageAttachement-#{file.checksum}"
             file: file
-            fileSize: FileGetter.getFileSize file
-            icon: FileGetter.getAttachmentIcon file
+            fileSize: FileFormat.getFileSize file
+            icon: FileFormat.getAttachmentIcon file
             isPreview: isPreview
 
 
@@ -42,14 +41,15 @@ module.exports = React.createClass
                 ref: "message-#{@props.messageID}-header"
                 key: "message-#{@props.messageID}-header"
                 message: @props.message
-                contacts: ContactGetter.getAll  @props.message
-                avatar: ContactGetter.getAvatar @props.message
+                contacts: @props.contacts
                 createdAt: Format.getCreatedAt @props.message
                 isDraft: @props.isDraft
                 isDeleted: @props.isDeleted
                 isFlagged: @props.isFlagged
                 isUnread: @props.isUnread
-                active: @props.isActive,
+                active: @props.isActive
+                displayModal: @props.displayModal
+                doGotoMessage: @props.doGotoMessage
 
             if @props.isActive and not @props.isTrashbox
                 ToolbarMessage
@@ -58,6 +58,7 @@ module.exports = React.createClass
                     isFull      : true
                     accountID   : @props.accountID
                     messageID   : @props.messageID
+                    onDeleteClicked: @props.doDeleteMessage
 
             if @props.isActive
                 MessageContent
@@ -68,6 +69,7 @@ module.exports = React.createClass
                     text: @props.text
                     rich: @props.rich
                     imagesWarning: @props.imagesWarning
+                    doDisplayImages: @props.doDisplayImages
 
             if @props.isActive
                 footer

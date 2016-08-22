@@ -3,8 +3,6 @@ React = require 'react'
 
 frame  = React.createFactory require '../components/frame'
 
-MessageActionCreator = require '../actions/message_action_creator'
-
 module.exports = React.createClass
     displayName: 'MessageContent'
 
@@ -12,7 +10,7 @@ module.exports = React.createClass
     displayImages: ->
         displayImages = true
         messageID = @props.messageID
-        MessageActionCreator.displayImages {displayImages, messageID}
+        @props.doDisplayImages {displayImages, messageID}
 
 
     render: ->

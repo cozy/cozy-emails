@@ -1,12 +1,11 @@
-SettingsStore = require '../../stores/settings_store'
+SettingsStore = require '../../getters/settings'
 Immutable = require 'immutable'
 {MessageActions} = require '../../constants/app_constants'
-ContactGetter     = require '../../getters/contact'
+ContactFormat     = require './format_adress'
 QUOTE_STYLE = "margin-left: 0.8ex; padding-left: 1ex; "+
               "border-left: 3px solid #34A6FF;"
 
 _           = require 'underscore'
-jQuery      = require 'jquery'
 {markdown}  = require 'markdown'
 toMarkdown  = require 'to-markdown'
 moment      = require 'moment'
@@ -25,12 +24,12 @@ pre {background: transparent; border: 0}
 
 
 
-    # Build message to put in the email composer depending on the context
-    # (reply, reply to all, forward or simple message).
-    # It add appropriate headers to the message. It adds style tags when
-    # required too.
-    # It adds signature at the end of the zone where the user will type.
-module.exports.createBasicMessage = (props) ->
+# Build message to put in the email composer depending on the context
+# (reply, reply to all, forward or simple message).
+# It add appropriate headers to the message. It adds style tags when
+# required too.
+# It adds signature at the end of the zone where the user will type.
+exports.createBasicMessage = (props) ->
     props = _.clone props
 
     account =
@@ -66,7 +65,7 @@ module.exports.createBasicMessage = (props) ->
     signature = account.signature
     isSignature = !!!_.isEmpty signature
     dateHuman = moment(message.createdAt).format 'lll'
-    sender = ContactGetter.displayAddresses message.from
+    sender = ContactFormat.displayAddresses message.from
     options = {
         message
         inReplyTo
@@ -100,7 +99,7 @@ module.exports.createBasicMessage = (props) ->
 # * add a style header for proper display
 # * Add quote of the previous message at the beginning of the message
 # * adds a signature at the message end.
-setMessageAsReply: (options) ->
+exports.setMessageAsReply = (options) ->
     {
         message
         inReplyTo
@@ -133,90 +132,90 @@ setMessageAsReply: (options) ->
             <blockquote style="#{QUOTE_STYLE}">#{html}</blockquote>
             """
 
-    # Build message to display in composer in case of a reply to all message:
-    # * set subject automatically (Re: previous subject)
-    # * Set recipients based on all people set in the conversation.
-    # * add a style header for proper display
-    # * Add quote of the previous message at the beginning of the message
-    # * adds a signature at the message end.
-    setMessageAsReplyAll: (options) ->
-        {
-            message
-            inReplyTo
-            dateHuman
-            sender
-            text
-            html
-            signature
-            isSignature
-        } = options
+# Build message to display in composer in case of a reply to all message:
+# * set subject automatically (Re: previous subject)
+# * Set recipients based on all people set in the conversation.
+# * add a style header for proper display
+# * Add quote of the previous message at the beginning of the message
+# * adds a signature at the message end.
+exports.setMessageAsReplyAll = (options) ->
+    {
+        message
+        inReplyTo
+        dateHuman
+        sender
+        text
+        html
+        signature
+        isSignature
+    } = options
 
-        params = date: dateHuman, sender: sender
-        separator = t 'compose reply separator', params
-        message.to = _getReplyToAddress inReplyTo
-        # filter to don't have same address twice
-        toAddresses = message.to?.map (dest) -> return dest.address
+    params = date: dateHuman, sender: sender
+    separator = t 'compose reply separator', params
+    message.to = _getReplyToAddress inReplyTo
+    # filter to don't have same address twice
+    toAddresses = message.to?.map (dest) -> return dest.address
 
-        message.cc = [].concat(
-            inReplyTo?.get 'from'
-            inReplyTo?.get 'to'
-            inReplyTo?.get 'cc'
-        ).filter (dest) ->
-            return dest? and -1 is toAddresses.indexOf dest.address
-        message.bcc = []
+    message.cc = [].concat(
+        inReplyTo?.get 'from'
+        inReplyTo?.get 'to'
+        inReplyTo?.get 'cc'
+    ).filter (dest) ->
+        return dest? and -1 is toAddresses.indexOf dest.address
+    message.bcc = []
 
-        message.subject = _getReplySubject inReplyTo
-        message.text = separator + _generateReplyText(inReplyTo) + "\n"
-        message.html = """
-            #{COMPOSE_STYLE}
-            <p><br></p>
+    message.subject = _getReplySubject inReplyTo
+    message.text = separator + _generateReplyText(inReplyTo) + "\n"
+    message.html = """
+        #{COMPOSE_STYLE}
+        <p><br></p>
+    """
+
+    if isSignature
+        _addSignature message, signature
+
+    message.html += """
+        <p>#{separator}<span class="originalToggle"> … </span></p>
+        <blockquote style="#{QUOTE_STYLE}">#{html}</blockquote>
+        <p><br></p>
         """
 
-        if isSignature
-            _addSignature message, signature
 
-        message.html += """
-            <p>#{separator}<span class="originalToggle"> … </span></p>
-            <blockquote style="#{QUOTE_STYLE}">#{html}</blockquote>
-            <p><br></p>
-            """
+# Build message to display in composer in case of a message forwarding:
+# * set subject automatically (fwd: previous subject)
+# * add a style header for proper display
+# * Add forward information at the beginning of the message
+# We don't add signature here (see Thunderbird behavior)
+exports.setMessageAsForward = (options) ->
+    {
+        message
+        inReplyTo
+        dateHuman
+        sender
+        text
+        html
+        signature
+        isSignature
+    } = options
 
+    addresses = inReplyTo?.get('to')
+    .map (address) -> address.address
+    .join ', '
 
-    # Build message to display in composer in case of a message forwarding:
-    # * set subject automatically (fwd: previous subject)
-    # * add a style header for proper display
-    # * Add forward information at the beginning of the message
-    # We don't add signature here (see Thunderbird behavior)
-    setMessageAsForward: (options) ->
-        {
-            message
-            inReplyTo
-            dateHuman
-            sender
-            text
-            html
-            signature
-            isSignature
-        } = options
+    senderInfos = _getReplyToAddress inReplyTo
+    senderName = ""
 
-        addresses = inReplyTo?.get('to')
-        .map (address) -> address.address
-        .join ', '
+    senderAddress =
+    if senderInfos?.length
+        senderName = senderInfos[0].name
+        senderAddress = senderInfos[0].address
 
-        senderInfos = _getReplyToAddress inReplyTo
-        senderName = ""
+    if senderName?.length
+        fromField = "#{senderName} &lt;#{senderAddress}&gt;"
+    else
+        fromField = senderAddress
 
-        senderAddress =
-        if senderInfos?.length
-            senderName = senderInfos[0].name
-            senderAddress = senderInfos[0].address
-
-        if senderName?.length
-            fromField = "#{senderName} &lt;#{senderAddress}&gt;"
-        else
-            fromField = senderAddress
-
-        separator = """
+    separator = """
 
 ----- #{t 'compose forward header'} ------
 #{t 'compose forward subject'} #{inReplyTo.get 'subject'}
@@ -225,157 +224,55 @@ setMessageAsReply: (options) ->
 #{t 'compose forward to'} #{addresses}
 
 """
-        textSeparator = separator.replace('&lt;', '<').replace('&gt;', '>')
-        textSeparator = textSeparator.replace('<pre>', '').replace('</pre>', '')
-        htmlSeparator = separator.replace /(\n)+/g, '<br>'
+    textSeparator = separator.replace('&lt;', '<').replace('&gt;', '>')
+    textSeparator = textSeparator.replace('<pre>', '').replace('</pre>', '')
+    htmlSeparator = separator.replace /(\n)+/g, '<br>'
 
-        @setMessageAsDefault options
-        message.subject = """
-            #{t 'compose forward prefix'}#{inReplyTo.get 'subject'}
-            """
-        message.text = textSeparator + text
-        message.html = "#{COMPOSE_STYLE}"
+    @setMessageAsDefault options
+    message.subject = """
+        #{t 'compose forward prefix'}#{inReplyTo.get 'subject'}
+        """
+    message.text = textSeparator + text
+    message.html = "#{COMPOSE_STYLE}"
 
-        if isSignature
-            _addSignature message, signature
+    if isSignature
+        _addSignature message, signature
 
-        message.html += """
+    message.html += """
 
 <p>#{htmlSeparator}</p><p><br></p>#{html}
 """
-        message.attachments = inReplyTo.get 'attachments'
+    message.attachments = inReplyTo.get 'attachments'
 
-        return message
-
-
-
-    # Clear all fields of the message object.
-    # Add signature if given.
-    setMessageAsDefault: (options) ->
-        {
-            message
-            inReplyTo
-            dateHuman
-            sender
-            text
-            html
-            signature
-            isSignature
-        } = options
-
-        message.to = []
-        message.cc = []
-        message.bcc = []
-        message.subject = ''
-        message.text = ''
-        message.html = "#{COMPOSE_STYLE}\n<p><br></p>"
-
-        if isSignature
-            _addSignature message, signature
-
-        return message
+    return message
 
 
-    # To keep HTML markup light, create the contact tooltip dynamicaly
-    # on mouse over
-    # options:
-    #  - container  : tooltip container
-    #  - delay      : nb of miliseconds to wait before displaying tooltip
-    #  - showOnClick: set to true to display tooltip when clicking on element
-    tooltip: (node, address, onAdd, options) ->
-        options ?= {}
-        timeout = null
-        doAdd = (event) ->
-            event.preventDefault()
-            event.stopPropagation()
-            onAdd address
-        addTooltip = ->
-            if node.dataset.tooltip
-                return
-            node.dataset.tooltip = true
-            contact = ContactGetter.getByAddress address
-            avatar  = contact?.get 'avatar'
-            add   = ''
-            image = ''
-            if contact?
-                if avatar?
-                    image = "<img class='avatar' src=#{avatar}>"
-                else
-                    image = "<div class='no-avatar'>?</div>"
-                image = """
-                <div class="tooltip-avatar">
-                  <a href="/#apps/contacts/contact/#{contact.get 'id'}" target="blank">
-                    #{image}
-                  </a>
-                </div>
-                """
-            else
-                if onAdd?
-                    add = """
-                    <p class="tooltip-toolbar">
-                      <button class="btn btn-cozy btn-add" type="button">
-                      #{t 'contact button label'}
-                      </button>
-                    </p>
-                    """
-            template = """
-                <div class="tooltip" role="tooltip">
-                    <div class="tooltip-arrow"></div>
-                    <div class="tooltip-content">
-                        #{image}
-                        <div>
-                        #{address.name}
-                        #{if address.name then '<br>' else ''}
-                        &lt;#{address.address}&gt;
-                        </div>
-                        #{add}
-                    </div>
-                </div>'
-                """
-            options =
-                title: address.address
-                template: template
-                trigger: 'manual'
-                placement: 'auto top'
-                container: options.container or node.parentNode
-            jQuery(node).tooltip(options).tooltip('show')
-            tooltipNode = jQuery(node).data('bs.tooltip').tip()[0]
-            if parseInt(tooltipNode.style.left, 10) < 0
-                tooltipNode.style.left = 0
-            rect = tooltipNode.getBoundingClientRect()
-            mask = document.createElement 'div'
-            mask.classList.add 'tooltip-mask'
-            mask.style.top    = (rect.top - 8) + 'px'
-            mask.style.left   = (rect.left - 8) + 'px'
-            mask.style.height = (rect.height + 32) + 'px'
-            mask.style.width  = (rect.width  + 16) + 'px'
-            document.body.appendChild mask
-            mask.addEventListener 'mouseout', (e) ->
-                if not ( rect.left < e.pageX < rect.right) or
-                not ( rect.top  < e.pageY < rect.bottom)
-                    mask.parentNode.removeChild mask
-                    removeTooltip()
-            if onAdd?
-                addNode = tooltipNode.querySelector('.btn-add')
-                if addNode?
-                    addNode.addEventListener 'click', doAdd
-        removeTooltip = ->
-            addNode = node.querySelector('.btn-add')
-            if addNode?
-                addNode.removeEventListener 'click', doAdd
-            delete node.dataset.tooltip
-            jQuery(node).tooltip('destroy')
 
-        node.addEventListener 'mouseover', ->
-            timeout = setTimeout ->
-                addTooltip()
-            , options.delay or 1000
-        node.addEventListener 'mouseout', ->
-            clearTimeout timeout
-        if options.showOnClick
-            node.addEventListener 'click', (event) ->
-                event.stopPropagation()
-                addTooltip()
+# Clear all fields of the message object.
+# Add signature if given.
+exports.setMessageAsDefault = (options) ->
+    {
+        message
+        inReplyTo
+        dateHuman
+        sender
+        text
+        html
+        signature
+        isSignature
+    } = options
+
+    message.to = []
+    message.cc = []
+    message.bcc = []
+    message.subject = ''
+    message.text = ''
+    message.html = "#{COMPOSE_STYLE}\n<p><br></p>"
+
+    if isSignature
+        _addSignature message, signature
+
+    return message
 
 _cleanContent = (message) ->
     {html, text} = message
@@ -501,7 +398,7 @@ _toAbsolutePath = (elm, attribute, prefix='http://') ->
         elm.setAttribute attribute, prefix + value
 
 # coffeelint: disable=cyclomatic_complexity
-module.exports.formatContent = (message) ->
+exports.formatContent = (message) ->
     displayHTML = SettingsStore.get 'messageDisplayHTML'
 
     # display full headers

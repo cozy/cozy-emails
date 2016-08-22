@@ -1,4 +1,5 @@
 React     = require 'react'
+Immutable = require 'immutable'
 
 {div, section, p, button, ul, strong} = React.DOM
 
@@ -6,24 +7,35 @@ MessageItem         = React.createFactory require './message-list-item'
 
 {Spinner, Progress} = require('./basics/components').factories
 
-RouterGetter = require '../getters/router'
-LayoutGetter = require '../getters/layout'
+isVisible = require './utils/is_visible'
 
 module.exports = React.createClass
     displayName: 'MessageList'
+
+    propTypes:
+        conversationID: React.PropTypes.string
+        conversationsLengths: React.PropTypes.instanceOf(Immutable.Map)
+        mailboxID: React.PropTypes.string.isRequired
+        lastSync: React.PropTypes.string.isRequired
+        isLoading: React.PropTypes.bool.isRequired
+        messages: React.PropTypes.instanceOf(Immutable.Map)
+        emptyMessages: React.PropTypes.string.isRequired
+        hasNextPage: React.PropTypes.bool.isRequired
+        onLoadMore: React.PropTypes.func.isRequired
+        login: React.PropTypes.string.isRequired
+        contacts: React.PropTypes.instanceOf(Immutable.Map)
 
 
     componentDidMount: ->
         return unless (el = @refs?['message-list-content'])?
         activeElement = el.querySelector '[data-message-active="true"]'
-        if activeElement? and not LayoutGetter.isVisible activeElement
+        if activeElement? and not isVisible activeElement
             el.scrollTop = activeElement.offsetTop - activeElement.offsetHeight
 
     render: ->
         # TODO: rediriger vers le message le plus proche
         # lorsque le message n'est plus dans la boite
         # ie. message non lus
-        # console.log 'MESSAGE_LIST', @props.conversationID
         section
             'key'               : "messages-list-#{@props.mailboxID}"
             'ref'               : "messages-list"
@@ -70,13 +82,15 @@ module.exports = React.createClass
     renderItem: (message) ->
         messageID = message.get 'id'
         conversationID = message.get 'conversationID'
-        conversationLengths = RouterGetter.getConversationLength conversationID
+        conversationLength = @props.conversationsLengths.get conversationID
         isActive = @props.conversationID is conversationID
         MessageItem
             key                 : "messageItem-#{messageID}-#{isActive}"
             messageID           : messageID
             flags               : message.get 'flags'
             message             : message
-            conversationLengths : conversationLengths
+            conversationLength  : conversationLength
             isActive            : isActive
-            login               : RouterGetter.getLogin()
+            login               : @props.login
+            gotoConversation    : @props.gotoConversation
+            contacts            : @props.contacts

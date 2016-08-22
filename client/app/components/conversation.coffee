@@ -1,23 +1,21 @@
 _ = require 'underscore'
 React     = require 'react'
 ReactDOM  = require 'react-dom'
+Immutable = require 'immutable'
 
 {section, header, p, h3, button} = React.DOM
 
 Message = React.createFactory require './message'
 
-RouterGetter = require '../getters/router'
-LayoutGetter = require '../getters/layout'
-
 FlagsConstants = require '../constants/app_constants'
 
-RouterActionCreator = require '../actions/router_action_creator'
 MessageUtils = require './utils/format_message'
+isVisible = require './utils/is_visible'
 
 _scrollToActive = ->
     el = ReactDOM.findDOMNode @
     activeElement = el.querySelector '[data-message-active="true"]'
-    if activeElement? and not LayoutGetter.isVisible activeElement
+    if activeElement? and not isVisible activeElement
         minHeight = @refs?['conversation-header'].scrollHeight
         el.scrollTop = activeElement.offsetTop - minHeight
 
@@ -35,6 +33,18 @@ _freezeHeader = ->
 module.exports = React.createClass
     displayName: 'Conversation'
 
+    propTypes:
+        isConversationLoading: React.PropTypes.bool.isRequired
+        messages: React.PropTypes.instanceOf(Immutable.Map)
+        contacts: React.PropTypes.instanceOf(Immutable.Map)
+        messageID: React.PropTypes.string.isRequired
+        accountID: React.PropTypes.string.isRequired
+        subject: React.PropTypes.string.isRequired
+        trashboxID: React.PropTypes.string.isRequired
+        isTrashbox: React.PropTypes.bool.isRequired
+        doCloseConversation: React.PropTypes.func.isRequired
+        doMarkMessage: React.PropTypes.func.isRequired
+
     componentDidMount: ->
         unless @props.isConversationLoading
             _freezeHeader.call @
@@ -44,10 +54,8 @@ module.exports = React.createClass
     componentWillReceiveProps: (nextProps) ->
         # If this conversation was removed
         # redirect to messages list from mailbox
-        if nextProps.isConversationLoading and not nextProps.messages.length
-            setTimeout ->
-                RouterActionCreator.closeConversation()
-            , 0
+        if nextProps.isConversationLoading and not nextProps.messages.size
+            setTimeout @props.doCloseConversation, 0
 
 
     componentDidUpdate: ->
@@ -64,8 +72,7 @@ module.exports = React.createClass
             if message?.isUnread()
                 accountID = @props.accountID
                 messageID = message.get('id')
-                RouterActionCreator.mark {messageID, accountID},
-                    FlagsConstants.SEEN
+                @doMarkMessage {messageID, accountID}, FlagsConstants.SEEN
         , 0
 
 
@@ -88,24 +95,30 @@ module.exports = React.createClass
 
                 button
                     className: 'clickable btn btn-default fa fa-close'
-                    onClick: -> RouterActionCreator.closeConversation()
+                    onClick: @props.doCloseConversation
 
             section
                 key: "conversation-#{@props.messageID}-content"
                 ref: 'conversation-content',
                     @props.messages.map (message) =>
                         messageID = message.get 'id'
-                        isDeleted = RouterGetter.isMessageDeleted(message)
+                        isDeleted = message.inMailbox @props.trashboxID
                         Message _.extend MessageUtils.formatContent(message),
                             ref             : "message-#{messageID}"
                             key             : "message-#{messageID}"
                             accountID       : @props.accountID
                             messageID       : @props.messageID
+                            contacts        : @props.contacts
                             isActive        : @props.messageID is messageID
                             isDraft         : message.isDraft()
                             isDeleted       : isDeleted
                             isFlagged       : message.isFlagged()
                             isUnread        : message.isUnread()
-                            isTrashbox      : RouterGetter.isTrashbox()
+                            isTrashbox      : @props.isTrashbox
                             message         : message
                             resources       : message.getResources()
+                            displayModal    : @props.displayModal
+                            doDisplayImages : @props.doDisplayImages
+                            doDeleteMessage : @props.doDeleteMessage
+                            doGotoMessage   : @props.doGotoMessage
+                    .toArray()
