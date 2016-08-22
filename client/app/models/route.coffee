@@ -21,3 +21,4 @@ exports.Route = Immutable.Record
     conversationID: null
     messageID: null
     messagesFilter: new exports.Filter()
+    nearestMessage: null

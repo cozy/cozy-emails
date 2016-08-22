@@ -34,6 +34,7 @@ Message = Immutable.Record
     # FIELDS SPECIFIC TO CLIENT
     _displayImages: false
     updated: 0
+    isDeleted: false # computed field
 
     # OTHER FIELDS ON SERVER
     createdAt      : undefined
@@ -78,6 +79,5 @@ Message::getResources = ->
         contentType = file.get 'contentType'
         attachementType = getAttachmentType contentType
         if attachementType is 'image' then 'preview' else 'binary'
-
 
 module.exports = Message

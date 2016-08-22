@@ -1,10 +1,6 @@
 ### global t ###
 Immutable = require 'immutable'
 
-AccountStore = require '../stores/account_store'
-
-AppDispatcher = require '../libs/flux/dispatcher/dispatcher'
-
 {ActionTypes, AlertLevel} = require '../constants/app_constants'
 
 
@@ -16,6 +12,7 @@ AUTOCLOSETIMER = 2000
 ###
 
 Notification = Immutable.Record
+    id: undefined
     message: ""
     level: ActionTypes.INFO
     errors: []
@@ -37,7 +34,7 @@ notify = (state, level, message, options) ->
     ).merge options
 
     # @TODO this should be somewhere else
-    unless options.waitConfirmation
+    unless options?.waitConfirmation
         setTimeout ->
             require('./_store').dispatch
                 type: ActionTypes.CLICKED_TASK_OK
@@ -75,7 +72,7 @@ _makeMessage = (target, actionAndOK, errMsg)->
         smart_count: smart_count
 
 
-DEFAULT_STATE = Immutable.List()
+DEFAULT_STATE = Immutable.Map()
 
 module.exports = (state = DEFAULT_STATE, action) ->
 
@@ -107,10 +104,8 @@ module.exports = (state = DEFAULT_STATE, action) ->
             message = "#{t("mailbox update ko")} #{error.message or error}"
             return notify state, AlertLevel.ERROR, message
 
-
         when ActionTypes.MAILBOX_EXPUNGE_SUCCESS
             return notify state, AlertLevel.INFO, t("mailbox expunge ok")
-
 
         when ActionTypes.MAILBOX_EXPUNGE_FAILURE
             {error} = action.value
@@ -168,7 +163,8 @@ module.exports = (state = DEFAULT_STATE, action) ->
 
         when ActionTypes.REFRESH_FAILURE
             {error} = action.value
-            AppDispatcher.waitFor [AccountStore.dispatchToken]
+            # @FIXME there was a wait AccountStore here
+            # maybe we should merge these reducers
 
             if error.name is 'AccountConfigError'
                 message = t "config error #{error.field}"
@@ -193,3 +189,5 @@ module.exports = (state = DEFAULT_STATE, action) ->
             {message} = action.value
             message = "#{t 'notif new title'} #{message}"
             return notify state, AlertLevel.INFO, message
+
+    return state

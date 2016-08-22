@@ -42,14 +42,36 @@ class Mailbox extends cozydb.CozyModel
     # Returns {String} the account attribute to set or null
     guessUse: ->
         path = @path.toLowerCase()
-        if /sent/i.test path
+        if /inbox/i.test path
+            return 'inboxMailbox'
+        else if /sent/i.test path
             return 'sentMailbox'
         else if /draft/i.test path
             return 'draftMailbox'
         else if /flagged/i.test path
             return 'flaggedMailbox'
+        else if /important/i.test path
+            return 'flaggedMailbox'
         else if /trash/i.test path
             return 'trashMailbox'
+        else if /delete/i.test path
+            return 'trashMailbox'
+        else if /spam/i.test path
+            return 'junkMailbox'
+        else if /junk/i.test path
+            return 'junkMailbox'
+        else if /all/i.test path
+            return 'allMailbox'
+
+
+        'inboxMailbox'      : 'INBOX'
+        'unreadMailbox'     : 'DRAFT'
+        'flaggedMailbox'    : 'FLAGGED'
+        'draftMailbox'      : 'DRAFT'
+        'sentMailbox'       : 'SENT'
+        'trashMailbox'      : ['TRASH', 'DELETE']
+        'junkMailbox'       : ['SPAM', 'JUNK']
+        'allMailbox'        : 'ALL'
         # @TODO add more
 
 
@@ -60,32 +82,24 @@ class Mailbox extends cozydb.CozyModel
     #
     # Returns (callback) the updated account
     @scanBoxesForSpecialUse: (boxes) ->
-        useRFC6154 = false
-        boxAttributes = Object.keys Mailbox.RFC6154
-
+        guessed = {}
         changes = {initialized: true}
-
-        removeGuesses = ->
-            unless useRFC6154
-                useRFC6154 = true
-                for attribute in boxAttributes
-                    unless attribute is 'inboxMailbox'
-                        changes[attribute] = undefined
-
 
         for box in boxes
             type = box.RFC6154use()
             if type
-                removeGuesses() unless type is 'inboxMailbox'
                 log.debug 'found', type
                 changes[type] = box.id
 
             # do not attempt fuzzy match if the server uses RFC6154
-            else if not useRFC6154
+            else
                 type = box.guessUse()
                 if type
                     log.debug 'found', type, 'guess'
-                    changes[type] = box.id
+                    guessed[type] = box.id
+
+        # keep all guesses
+        changes[guessRole] ?= boxID for guessRole, boxID in guessed
 
         changes.favorites = Mailbox.pickFavorites boxes, changes
 
@@ -252,7 +266,6 @@ class Mailbox extends cozydb.CozyModel
     #
     # Returns (callback) at completion
     imap_expungeMails: (callback) ->
-        box = this
         @doASAPWithBox (imap, imapbox, cbRelease) ->
             imap.fetchBoxMessageUIDs (err, uids) ->
                 return cbRelease err if err
@@ -264,8 +277,7 @@ class Mailbox extends cozydb.CozyModel
                 ], cbRelease
         , (err) =>
             return callback err if err
-            removal = new MessagesRemovalByMailbox
-                mailboxID: @id
+            removal = new MessagesRemovalByMailbox mailboxID: @id
             removal.run callback
 
     # Public: whether this box messages should be ignored
@@ -289,11 +301,5 @@ module.exports = Mailbox
 require('./model-events').wrapModel Mailbox
 ramStore = require './store_account_and_boxes'
 log = require('../utils/logging')(prefix: 'models:mailbox')
-_ = require 'lodash'
 async = require 'async'
-mailutils = require '../utils/jwz_tools'
 MessagesRemovalByMailbox = require '../processes/message_remove_by_mailbox'
-{Break, NotFound} = require '../utils/errors'
-{FETCH_AT_ONCE} = require '../utils/constants'
-
-

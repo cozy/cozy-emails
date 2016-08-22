@@ -4,6 +4,7 @@ Immutable = require 'immutable'
 combineReducers = (reducers) ->
     keys = Object.keys(reducers)
     return (state, action) ->
+        console.log("DISPATCH", action.type, action.value)
 
         state = Immutable.Map() if action.type is ActionTypes.RESET_FOR_TESTS
 
@@ -17,15 +18,17 @@ combineReducers = (reducers) ->
 
 
 module.exports = combineReducers({
-    account:      require './account'
+    accounts:      require './account'
     modal:        require './modal'
     route:        require './route'
     requests:     require './requests'
     refreshes:    require './refreshes'
     messagefetch: require './messagefetch'
     selection:    require './selection'
+    notifications: require './notifications'
     messages:     require './message'
     contacts:     require './contact'
+    contactsearch: require './contactsearch'
     layout:       require './layout'
     settings:     require './settings'
 })

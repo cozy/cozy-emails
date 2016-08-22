@@ -48,6 +48,7 @@ module.exports = (state = DEFAULT_STATE, action, appstate) ->
             state = setOnRequest(state, URIKey, 'isLoading', false)
 
             pageAfter = result.messages.reduce(findOldest, null)?.date
+            console.log('NOW', URIKey, pageAfter)
             state = setOnRequest(state, URIKey, 'lastFetchOldest', pageAfter)
 
             if result.messages.length is 0

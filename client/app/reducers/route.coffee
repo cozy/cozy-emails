@@ -101,12 +101,28 @@ module.exports = (state = DEFAULT_STATE, action, appstate) ->
 
 
         when ActionTypes.REMOVE_ACCOUNT_SUCCESS
-            account = RouterGetter.getDefaultAccount(appstate)
+            deletedAccountID = action.value.accountID
+            currentAccountID = state.get('accountID')
 
-            state = state.merge
-                accountID: account?.get 'id'
-                mailboxID: account?.get 'inboxMailbox'
-                tab: DEFAULT_TAB
+            console.log('aaccount', deletedAccountID, currentAccountID);
+            if deletedAccountID is currentAccountID
+                nextAccount = RouterGetter.getAllAccounts(appstate)
+                .filter (account) -> account.get('id') isnt deletedAccountID
+                .first()
+
+                if nextAccount
+                    state = state.merge
+                        action: AccountActions.edit
+                        accountID: nextAccount?.get 'id'
+                        mailboxID: nextAccount?.get 'inboxMailbox'
+                        tab: DEFAULT_TAB
+
+                else
+                    state = state.merge
+                        action: AccountActions.create
+                        accountID: null
+                        mailboxID: null
+                        tab: DEFAULT_TAB
 
             return state
 
@@ -150,7 +166,9 @@ module.exports = (state = DEFAULT_STATE, action, appstate) ->
                     messageID: nearestMessage?.get('id')
                     conversationID: nearestMessage?.get('conversationID')
 
-                return state
+            # remove nearestMessage anyway
+            state = state.remove 'nearestMessage'
+            return state
 
 
         when ActionTypes.RECEIVE_MESSAGE_DELETE

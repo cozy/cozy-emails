@@ -3,9 +3,8 @@ Immutable = require 'immutable'
 Immutable = require 'immutable'
 
 rootReducer = require './root'
-dispatcher = require '../libs/flux/dispatcher/dispatcher'
 contactMapper = require '../libs/mappers/contact'
-accountMapper = require '../libs/mappers/account'
+Account = require '../models/account'
 
 initialContacts = Immutable.Map()
     .withMutations contactMapper.toMapMutator window?.contacts or []
@@ -15,22 +14,12 @@ initialAccounts = Immutable.Iterable window?.accounts or []
     # sets account ID as index
     .mapKeys (_, account) -> account.id
     # makes account object an immutable Map
-    .map (rawAccount) ->
-        accountMapper.formatAccount rawAccount
+    .map (rawAccount) -> Account.from rawAccount
     .toOrderedMap()
 
-reduxStore = createStore rootReducer, Immutable.Map
-    account: Immutable.Map
-        accounts: initialAccounts
-        mailboxOrder: 100
+module.exports = createStore rootReducer, Immutable.Map
+    accounts: initialAccounts
     contact:
         contacts: initialContacts
         results : Immutable.Map()
-    settings:
-        settings: Immutable.Map window?.settings
-
-reduxStoreDispatchID = dispatcher.register (action) ->
-    reduxStore.dispatch(action)
-
-module.exports = reduxStore
-module.exports.dispatchToken = reduxStoreDispatchID
+    settings: Immutable.Map window?.settings

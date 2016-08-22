@@ -135,9 +135,9 @@ extractMessagesIDs = (action) ->
     else if action.type is ActionTypes.RECEIVE_MESSAGE_DELETE
         return [action.value]
 
-module.exports = (state = {}, action) ->
-    newMessages = messagesReducer(state.messages, action)
-    newConvLengths = state.conversationLength or Immutable.Map()
+module.exports = (state = Immutable.Map(), action) ->
+    newMessages = messagesReducer(state.get('messages'), action)
+    newConvLengths = state.get('conversationsLengths') or Immutable.Map()
 
     # FIXME: server side data
     #  - The fact that the conversation length is calculated remotely,
@@ -156,11 +156,10 @@ module.exports = (state = {}, action) ->
         messageIDs = extractMessagesIDs(action)
         for messageID in messageIDs
             # Note: we use old state cause we want to get deleted messages too
-            conversationID = state.messages.get(messageID).get 'conversationID'
+            conversationID = state.getIn(['messages', messageID,
+                                                            'conversationID'])
             newConvLengths = decrementNoZero newConvLengths, conversationID
 
-    if newMessages isnt state.messages or
-    newConvLengths isnt state.conversationLength
-        return {messages: newMessages, conversationLength: newConvLengths}
-    else
-        return state
+    return state.merge
+        messages: newMessages,
+        conversationsLengths: newConvLengths
