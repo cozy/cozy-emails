@@ -175,6 +175,7 @@ module.exports =
         'FLAGGED'      : 'flagged'
         'UNSEEN'       : 'unseen'
 
+    # warning, order of these flags are important
     MailboxFlags:
         'INBOX'   :  '\\Inbox'
         'DRAFT'   :  '\\Drafts'
