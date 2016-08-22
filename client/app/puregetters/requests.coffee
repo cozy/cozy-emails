@@ -21,10 +21,11 @@ module.exports =
         @isLoading(state, Requests.REFRESH_MAILBOX)
 
     isIndexing: (state, accountID) ->
-        actions = [Requests.INDEX_MAILBOX, Requests.ADD_ACCOUNT]
-        @getRequests(state).find (request, name) =>
-            if name in actions and @isLoading state, name
-                return request.res?.accountID is accountID
+        return false
+        # actions = [Requests.INDEX_MAILBOX, Requests.ADD_ACCOUNT]
+        # @getRequests(state).find (request, name) =>
+        #     if name in actions and @isLoading state, name
+        #         return request.res?.accountID is accountID
 
     isConversationLoading: (state) ->
         @isLoading state, Requests.FETCH_CONVERSATION

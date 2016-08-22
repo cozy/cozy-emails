@@ -3,17 +3,20 @@ Routes       = require '../routes'
 Immutable = require 'immutable'
 
 Routes = require '../routes'
-{MessageActions} = require '../constants/app_constants'
+{MessageActions, AccountActions} = require '../constants/app_constants'
 MessageGetter = require './messages'
-AccountGetter = require './accounts'
+AccountGetter = require './account'
 MessageFetchGetter = require './messagefetch'
+MessageGetter = require './messages'
+RequestsGetter = require './requests'
 
 Message = require '../models/message'
 
 module.exports =
 
     getRouteObject:    (state) -> state.get('route')
-    getDefaultAccount: (state) -> AccountGetter.getAllAccounts(state).first()
+    getDefaultAccount: (state) ->
+        AccountGetter.getAllAccounts(state).first()
     getAction:         (state) -> @getRouteObject(state).get('action')
     getAccountID:      (state) -> @getRouteObject(state).get('accountID')
     getMailboxID:      (state) -> @getRouteObject(state).get('mailboxID')
@@ -46,7 +49,7 @@ module.exports =
         AccountGetter.getAccountByMailbox(state, mailboxID)
 
     getFlags: (state) ->
-        @getFilter(state).get('flags') or []
+        [].concat @getFilter(state).get('flags') or []
 
     isUnread: (state) ->
         MessageFilter.UNSEEN in @getFlags(state)  or
@@ -58,6 +61,22 @@ module.exports =
 
     isAttached: (state) ->
         MessageFilter.ATTACH in @getFlags(state)
+
+    isDeleted: (state) ->
+        @getMailboxID(state) is @getAccount(state)?.get('trashMailbox')
+
+    isDraft: (state) ->
+        @getMailboxID(state) is @getAccount(state)?.get 'draftMailbox'
+
+    isDeletedMessage: (state, message) ->
+        message.inMailbox(@getAccount(state)?.get('trashMailbox'))
+
+    getMailboxTotal: (state) ->
+        prop = if @isUnread(state) then 'nbUnread'
+        else if @isFlagged(state) then 'nbFlagged'
+        else 'nbTotal'
+        return @getMailbox(state)?.get(prop) or 0
+
 
     getURI: (state) ->
         @getRouteObject(state).get('URIKey')
@@ -91,7 +110,7 @@ module.exports =
         filterFunction = @getFilterFunction(state)
 
         existingConversations = Immutable.Set()
-        messages = state.get('messages').messages
+        messages = MessageGetter.getAll(state)
         messages = messages.filter (message) ->
 
             # Display only last Message of conversation
@@ -114,6 +133,15 @@ module.exports =
 
         return messages
 
+    getMessagesListWithIsDeleted: (state) ->
+        @getMessagesList(state).map (message) =>
+            message.set 'isDeleted', @isDeletedMessage(state, message)
+
+    getNextMessage: (state) ->
+
+
+    getPreviousMessage: (state) ->
+
     getNextConversation: (state) ->
         messages = @getMessagesList(state)
         ids = messages.keySeq().toArray()
@@ -133,21 +161,10 @@ module.exports =
     # If conversation is empty:
     # - go to next conversation
     # - otherwise go to previous conversation
-    getNearestMessage: (state, deleteActionTarget={}) ->
-        {messageID, conversationID, mailboxID} = deleteActionTarget
-        unless messageID
-            messageID = @getRouteObject(state).get('messageID')
-            conversationID = @getRouteObject(state).get('conversationID')
-            mailboxID = @getRouteObject(state).get('mailboxID')
-
-        conversation = @getConversation conversationID, mailboxID
-        message = @getNextConversation conversation
-        message ?= @getPreviousConversation conversation
-        return message if message?.size
-
-        message = @getNextConversation()
-        message ?= @getPreviousConversation()
-        message
+    getNearestMessage: (state) ->
+        message = @getNextConversation state
+        message ?= @getPreviousConversation state
+        return message
 
     getFilterFunction: (state) ->
         return (message) =>
@@ -198,7 +215,78 @@ module.exports =
         if pageAfter
             filter = filter.set('pageAfter', pageAfter)
 
+        # console.log('THERE', pageAfter, filter)
+
         return Routes.makeURL MessageActions.SHOW_ALL,
             mailboxID: @getMailboxID(state)
             filter: filter.toSimpleJS()
         , true
+
+    getMessage: (state) ->
+        MessageGetter.getByID(state, @getMessageID(state))
+
+    getSubject: (state) ->
+        @getMessage(state)?.get 'subject'
+
+    getLastSync: (state) ->
+        accountID = @getAccountID(state)
+        mailboxID = @getMailboxID(state)
+
+        return null unless accountID and mailboxID
+
+        # If current mailboxID is inbox
+        # test Inbox instead of 1rst mailbox
+        if (AccountGetter.isInbox state, accountID, mailboxID)
+            # Gmail issue
+            # Test \All tag insteadof \INBOX
+            mailbox = AccountGetter.getAllMailbox accountID
+            mailbox ?= AccountGetter.getInbox accountID
+
+        mailbox ?= @getMailbox(state)
+        mailbox?.get('lastSync')
+
+    getTrashBoxID: (state) ->
+        @getAccount(state)?.get('trashMailbox')
+
+    isTrashbox: (state, mailboxID) ->
+        accountID = @getAccountID(state)
+        mailboxID ?= @getMailboxID(state)
+        AccountGetter.isTrashbox state, accountID, mailboxID
+
+    isMailboxIndexing: (state) ->
+        accountID = @getAccountID state
+        RequestsGetter.isIndexing state, accountID
+
+    getEmptyMessage: (state) ->
+        if @isUnread(state)        then t 'no unseen message'
+        else if @isFlagged(state)  then t 'no flagged message'
+        else if @isAttached(state) then t 'no filter message'
+        else  t 'list empty'
+
+    getComposeURL: (state) ->
+        @getURL state, {action: MessageActions.CREATE}
+
+    getCreateAccountURL: (state) ->
+        @getURL state, {action: AccountActions.CREATE}
+
+    getUnreadLength: (state, accountID) ->
+        accountID ?= @getAccountID(state)
+        AccountGetter.getInbox(accountID)?.get 'nbUnread'
+
+    getFlaggedLength: (state, accountID) ->
+        accountID ?= @getAccountID(state)
+        AccountGetter.getInbox(accountID)?.get 'nbFlagged'
+
+    getToasts: (state) ->
+        state.get('notifications')
+
+    hasSettingsChanged: (state) ->
+        messageID = @getMessageID(state)
+        MessageGetter.isImagesDisplayed state, messageID
+
+    getConversationLength: (state, conversationID) ->
+        conversationID ?= @getConversationID(state)
+        MessageGetter.getConversationLength(state, conversationID) or 0
+
+    getLogin: (state) ->
+        @getAccount(state)?.get('login')

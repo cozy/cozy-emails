@@ -1,6 +1,6 @@
 module.exports =
 
-    getAll: (state) -> state.get('messages').messages
+    getAll: (state) -> state.get('messages').get('messages')
     getByID: (state, messageID) -> @getAll(state).get(messageID)
     isImagesDisplayed: (state, messageID) ->
         @getByID(state, messageID)?.get('_displayImages') or false
@@ -12,8 +12,10 @@ module.exports =
         .sort (msg1, msg2) ->
             if msg1.get('date') < msg2.get('date') then -1
             else 1
-        .toArray()
+        # .toArray()
 
     getConversationLength: (state, conversationID) ->
-        lengths = state.get('messages').conversationLength
-        lengths.get(conversationID) or null
+        @getConversationsLengths(state).get(conversationID) or null
+
+    getConversationsLengths: (state) ->
+        state.get('messages').get('conversationsLengths')
