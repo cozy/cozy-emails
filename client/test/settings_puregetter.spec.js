@@ -18,9 +18,9 @@ describe('Settings pure getter', () => {
           setting3: 'value3',
         };
 
-        let state = {
+        let state = Immutable.Map({
           settings: Immutable.Map(expectedSettings)
-        }
+        });
 
         // act
         let result = settingsPureGetter.get(state);
@@ -39,9 +39,9 @@ describe('Settings pure getter', () => {
           setting3: 'value3'
         };
 
-        let state = {
+        let state = Immutable.Map({
           settings: Immutable.Map(settings)
-        };
+        });
 
         // act
         let result = settingsPureGetter.get(state, 'setting2');

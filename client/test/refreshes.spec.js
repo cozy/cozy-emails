@@ -3,11 +3,17 @@
 'use strict';
 
 const ActionTypes = require('../app/constants/app_constants').ActionTypes;
-const Dispatcher = require('./utils/specs_dispatcher');
-const dispatcher = new Dispatcher();
 const fixtures = require('./fixtures/refreshes');
+const makeTestDispatcher = require('./utils/specs_dispatcher');
 
 describe('Refreshes', () => {
+  let dispatcher;
+
+  before(() => {
+    const tools = makeTestDispatcher();
+    dispatcher = tools.Dispatcher;
+  });
+
   it('distpatch RECEIVE_REFRESH_STATUS', () => {
     dispatcher.dispatch({
       type: ActionTypes.RECEIVE_REFRESH_STATUS,

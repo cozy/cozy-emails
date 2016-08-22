@@ -42,7 +42,7 @@ module.exports.createMessage = function createMessage(data) {
 
     // TODO: these tags should be tested
     // when compose feature will be implemented
-    // so as ../../app/getters/message.coffee
+    // so as ../../app/puregetters/message.coffee
     // that format messageStore for ReactComponent
     // to: [],
     // replyTo: [],

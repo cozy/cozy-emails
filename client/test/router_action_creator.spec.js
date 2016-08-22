@@ -4,9 +4,6 @@ const assert = require('chai').assert;
 const _ = require('lodash');
 const sinon = require('sinon');
 
-const mockeryUtils = require('./utils/mockery_utils');
-const SpecDispatcher = require('./utils/specs_dispatcher');
-
 const ActionTypes = require('../app/constants/app_constants').ActionTypes;
 
 

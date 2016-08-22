@@ -1,14 +1,13 @@
+/* eslint-env mocha */
+
 'use strict';
 
 const assert = require('chai').assert;
-const Immutable = require('immutable');
-const map = Immutable.Map;
+// const Immutable = require('immutable');
+// const map = Immutable.Map;
 const _ = require('lodash');
 
-const mockeryUtils = require('./utils/mockery_utils');
-const SpecDispatcher = require('./utils/specs_dispatcher');
 const SpecRouter = require('./utils/specs_router');
-const sinon = require('sinon');
 
 const UtilConstants = require('../../server/utils/constants');
 const Constants = require('../app/constants/app_constants');
@@ -23,8 +22,14 @@ const getUID = require('./utils/guid').getUID;
 const AccountFixtures = require('./fixtures/account');
 const MessageFixtures = require('./fixtures/message');
 
+const AccountGetter = require('../app/puregetters/account');
+const MessageGetter = require('../app/puregetters/messages');
+const RouterGetter = require('../app/puregetters/router');
+
+const makeTestDispatcher = require('./utils/specs_dispatcher');
+
 const DEFAULT_TAB = 'account';
-const reduxStore = require('../app/reducers/_store');
+// const reduxStore = require('../app/reducers/_store');
 
 
 describe('RouterStore', () => {
@@ -34,6 +39,7 @@ describe('RouterStore', () => {
   let Dispatcher;
   let account;
   let routes;
+  let accounts;
   const router = new SpecRouter();
 
   /*
@@ -44,58 +50,41 @@ describe('RouterStore', () => {
    */
 
   before(() => {
-    Dispatcher = new SpecDispatcher();
-    mockeryUtils.initDispatcher(Dispatcher);
-
-    mockeryUtils.initForStores([
-      '../stores/account_store',
-      '../app/stores/account_store',
-      '../stores/message_store',
-      '../app/stores/message_store',
-      '../stores/requests_store',
-      '../app/stores/router_store',
-      '../stores/search_store',
-      '../stores/notification_store',
-      '../app/getters/router',
-    //   '../../../server/utils/constants',
-    ]);
-    AccountStore = require('../app/stores/account_store');
-    MessageStore = require('../app/getters/message');
-    RouterStore = require('../app/getters/router');
+    global.t = (x) => x;
+    resetStore();
   });
 
 
   after(() => {
-    mockeryUtils.clean();
+      delete global.t;
   });
 
   beforeEach(() => {
-    Dispatcher.dispatch({type: ActionTypes.RESET_FOR_TESTS});
+    // Dispatcher.dispatch({ type: ActionTypes.RESET_FOR_TESTS });
 
     // Reverse relation value to simplify tests
     // ie. routes['messageList'] = url
     if (undefined === routes) {
-      const reversed = {}
+      const reversed = {};
       const routerRoutes = Router.prototype.routes;
       Object.keys(routerRoutes).forEach((key) => {
-        reversed[routerRoutes[key]] = key
+        reversed[routerRoutes[key]] = key;
       });
-      routes = reversed
+      routes = reversed;
     }
   });
 
 
   // Skipped after account redux migration
   // TODO: make the acount fixture as Immutable
-  describe.skip('Basics', () => {
-
+  describe('Basics', () => {
     beforeEach(() => {
-      createAccountFixtures();
+      resetStore();
 
       // Add messages
       // that belongs to defaultAccount
       const conversationID = `coucou-${getUID()}`;
-      const params = {conversationID, account};
+      const params = { conversationID, account };
       const messages = [];
       messages.push(MessageFixtures.createMessage(params));
       messages.push(MessageFixtures.createMessage(params));
@@ -105,11 +94,6 @@ describe('RouterStore', () => {
         value: messages,
       });
     });
-
-    afterEach(() => {
-      resetAccountFixtures()
-    });
-
 
     it.skip('getRouter', () => {
       const result = RouterStore.getRouter();
@@ -178,7 +162,7 @@ describe('RouterStore', () => {
         const input = AccountStore.getAll().toArray()[1];
         Dispatcher.dispatch({
           type: ActionTypes.ROUTE_CHANGE,
-          value: { accountID: input.get('id') }
+          value: { accountID: input.get('id') },
         });
         const output = RouterStore.getAccount(input.get('id'));
         assert.equal(output.get('id'), input.get('id'));
@@ -187,10 +171,10 @@ describe('RouterStore', () => {
 
     // Skipped after account redux migration
     // TODO: make the acount fixture as Immutable
-    it.skip('getDefaultAccount', () => {
+    it('getDefaultAccount', () => {
       const input = AccountStore.getAll().first();
       const output = RouterStore.getDefaultAccount();
-      assert.deepEqual(input.toJS(), output.toJS())
+      assert.deepEqual(input.toJS(), output.toJS());
     });
 
 
@@ -257,7 +241,7 @@ describe('RouterStore', () => {
         const input = AccountStore.getAll().toArray()[1];
         Dispatcher.dispatch({
           type: ActionTypes.ROUTE_CHANGE,
-          value: { mailboxID: input.get('inboxMailbox') }
+          value: { mailboxID: input.get('inboxMailbox') },
         });
         const output = RouterStore.getMailbox();
         assert.equal(output.get('id'), input.get('inboxMailbox'));
@@ -278,7 +262,7 @@ describe('RouterStore', () => {
         });
         const output = RouterStore.
         es();
-        assert.deepEqual(input.toJS(), output.toJS())
+        assert.deepEqual(input.toJS(), output.toJS());
       });
 
       it('Should return `Account` from `accountID`', () => {
@@ -302,7 +286,7 @@ describe('RouterStore', () => {
         messages = MessageStore.getAll().toArray();
         messageID = messages[2].get('id');
         conversationID = messages[2].get('conversationID');
-      })
+      });
 
       it('Should return `null`', () => {
         assert.equal(RouterStore.getMessageID(), null);
@@ -317,7 +301,7 @@ describe('RouterStore', () => {
         // MessageID always works with conversationID
         Dispatcher.dispatch({
           type: ActionTypes.ROUTE_CHANGE,
-          value: { messageID }
+          value: { messageID },
         });
         assert.equal(RouterStore.getMessageID(), null);
       });
@@ -325,7 +309,7 @@ describe('RouterStore', () => {
       it('Should be updated', () => {
         Dispatcher.dispatch({
           type: ActionTypes.ROUTE_CHANGE,
-          value: { messageID, conversationID }
+          value: { messageID, conversationID },
         });
         assert.equal(RouterStore.getMessageID(), messageID);
       });
@@ -340,7 +324,7 @@ describe('RouterStore', () => {
         messages = MessageStore.getAll().toArray();
         messageID = messages[1].get('id');
         conversationID = messages[1].get('conversationID');
-      })
+      });
 
       it.skip('Should return `null`', () => {
         assert.equal(RouterStore.getConversationID(), null);
@@ -354,7 +338,7 @@ describe('RouterStore', () => {
       it('Shouldnt be updated', () => {
         Dispatcher.dispatch({
           type: ActionTypes.ROUTE_CHANGE,
-          value: { conversationID }
+          value: { conversationID },
         });
         assert.equal(RouterStore.getConversationID(), null);
       });
@@ -362,7 +346,7 @@ describe('RouterStore', () => {
       it('Should be updated', () => {
         Dispatcher.dispatch({
           type: ActionTypes.ROUTE_CHANGE,
-          value: { messageID, conversationID }
+          value: { messageID, conversationID },
         });
         assert.equal(RouterStore.getConversationID(), conversationID);
       });
@@ -379,7 +363,7 @@ describe('RouterStore', () => {
       });
 
       it('Should return null', () => {
-        assert.equal(RouterStore.getAction(), null)
+        assert.equal(RouterStore.getAction(), null);
       });
 
       it('Should be updated', () => {
@@ -411,10 +395,10 @@ describe('RouterStore', () => {
       });
 
       it('Should be updated', () => {
-        const flags = MessageFilter.UNSEEN
+        const flags = MessageFilter.UNSEEN;
         Dispatcher.dispatch({
           type: ActionTypes.ROUTE_CHANGE,
-          value: { filter: {flags} }
+          value: { filter: { flags } },
         });
 
         // Filter.flags should have change
@@ -429,7 +413,7 @@ describe('RouterStore', () => {
       it('Should be reset', () => {
         Dispatcher.dispatch({
           type: ActionTypes.ROUTE_CHANGE,
-          value: { filter: null }
+          value: { filter: null },
         });
         assert.deepEqual(RouterStore.getFilter(), defaultValue);
       });
@@ -442,14 +426,14 @@ describe('RouterStore', () => {
         // Add Unseen filter into URI
         Dispatcher.dispatch({
           type: ActionTypes.ROUTE_CHANGE,
-          value: { filter: { flags: MessageFilter.UNSEEN } }
+          value: { filter: { flags: MessageFilter.UNSEEN } },
         });
         assert.isTrue(RouterStore.isUnread());
 
         // Add Flagged filter into URI
         Dispatcher.dispatch({
           type: ActionTypes.ROUTE_CHANGE,
-          value: { filter: { flags: MessageFilter.FLAGGED } }
+          value: { filter: { flags: MessageFilter.FLAGGED } },
         });
         assert.isFalse(RouterStore.isUnread());
       });
@@ -462,20 +446,19 @@ describe('RouterStore', () => {
         });
 
         // Test unread message
-        let message = MessageStore.getAll().find((message) => {
-         return !message.get('flags').length;
-        });
+        let message = MessageStore.getAll().find((message) =>
+          !message.get('flags').length
+        );
         assert.notEqual(message, undefined);
         assert.isTrue(message.isUnread());
 
         // Test on read message
-        message = MessageStore.getAll().find((message) => {
-         return message.get('flags').length;
-        });
+        message = MessageStore.getAll().find((message) =>
+          message.get('flags').length
+        );
         assert.notEqual(message, undefined);
         assert.isFalse(message.isUnread());
       });
-
     });
 
 
@@ -485,16 +468,16 @@ describe('RouterStore', () => {
 
         Dispatcher.dispatch({
           type: ActionTypes.ROUTE_CHANGE,
-          value: { filter: { flags: MessageFilter.FLAGGED } }
+          value: { filter: { flags: MessageFilter.FLAGGED } },
         });
         assert.isTrue(RouterStore.isFlagged());
 
         Dispatcher.dispatch({
           type: ActionTypes.ROUTE_CHANGE,
-          value: { filter: { flags: MessageFilter.ATTACH } }
+          value: { filter: { flags: MessageFilter.ATTACH } },
         });
-        let message = MessageStore.getAll().find((message) => {
-         return message.get('flags').length;
+        const message = MessageStore.getAll().find((message) => {
+          return message.get('flags').length;
         });
         assert.notEqual(message, undefined);
         assert.isFalse(RouterStore.isFlagged());
@@ -508,15 +491,15 @@ describe('RouterStore', () => {
         });
 
         // Test flagged message
-        let message = MessageStore.getAll().find((message) => {
-          return -1 < message.get('flags').indexOf(MessageFlags.FLAGGED)
-        });
+        let message = MessageStore.getAll().find((message) =>
+          message.get('flags').indexOf(MessageFlags.FLAGGED) !== -1
+        );
         assert.notEqual(message, undefined);
         assert.isTrue(message.isFlagged());
 
         // Test on un-flagged message
         message = MessageStore.getAll().find((message) => {
-          return -1 === message.get('flags').indexOf(MessageFlags.FLAGGED)
+          return -1 === message.get('flags').indexOf(MessageFlags.FLAGGED);
         });
         assert.notEqual(message, undefined);
         assert.isFalse(message.isFlagged());
@@ -530,13 +513,13 @@ describe('RouterStore', () => {
 
         Dispatcher.dispatch({
           type: ActionTypes.ROUTE_CHANGE,
-          value: { filter: { flags: MessageFilter.ATTACH } }
+          value: { filter: { flags: MessageFilter.ATTACH } },
         });
         assert.isTrue(RouterStore.isAttached());
 
         Dispatcher.dispatch({
           type: ActionTypes.ROUTE_CHANGE,
-          value: { filter: { flags: MessageFilter.UNREAD } }
+          value: { filter: { flags: MessageFilter.UNREAD } },
         });
         assert.isFalse(RouterStore.isAttached());
       });
@@ -546,15 +529,15 @@ describe('RouterStore', () => {
           type: ActionTypes.RECEIVE_RAW_MESSAGE,
           value: MessageFixtures.createAttached({ account }),
         });
-        let message = MessageStore.getAll().find((message) => {
-          return message.get('attachments').size
-        });
+        let message = MessageStore.getAll().find((message) =>
+          message.get('attachments').size
+        );
         assert.notEqual(message, undefined);
         assert.isTrue(message.isAttached());
 
-        message = MessageStore.getAll().find((message) => {
-          return -1 === message.get('flags').indexOf(MessageFlags.ATTACH)
-        });
+        message = MessageStore.getAll().find((message) =>
+          message.get('flags').indexOf(MessageFlags.ATTACH) === -1
+        );
         assert.notEqual(message, undefined);
         assert.isFalse(message.isAttached());
       });
@@ -565,13 +548,13 @@ describe('RouterStore', () => {
       it('Should return `mailbox.deleted`', () => {
         Dispatcher.dispatch({
           type: ActionTypes.ROUTE_CHANGE,
-          value: { mailboxID: account.inboxMailbox }
+          value: { mailboxID: account.inboxMailbox },
         });
         assert.isFalse(RouterStore.isDeleted());
 
         Dispatcher.dispatch({
           type: ActionTypes.ROUTE_CHANGE,
-          value: { mailboxID: account.trashMailbox }
+          value: { mailboxID: account.trashMailbox },
         });
         assert.isTrue(RouterStore.isDeleted());
       });
@@ -584,18 +567,18 @@ describe('RouterStore', () => {
         });
         let message = MessageStore.getByID(input.id);
         assert.notEqual(message, undefined);
-        assert.isTrue(RouterStore.isMessageDeleted(message));
+        assert.isTrue(RouterStore.isDeletedMessage(message));
 
         // Create a message that cant belongs to trashMailbox
         input = MessageFixtures.createMessage({ account });
-        delete input.mailboxIDs[account.trashMailbox]
+        delete input.mailboxIDs[account.trashMailbox];
         Dispatcher.dispatch({
           type: ActionTypes.RECEIVE_RAW_MESSAGE,
           value: input,
         });
         message = MessageStore.getByID(input.id);
         assert.notEqual(message, undefined);
-        assert.isFalse(RouterStore.isMessageDeleted(message));
+        assert.isFalse(RouterStore.isDeletedMessage(message));
       });
     });
 
@@ -604,7 +587,7 @@ describe('RouterStore', () => {
       it('Should return `false`', () => {
         Dispatcher.dispatch({
           type: ActionTypes.ROUTE_CHANGE,
-          value: { mailboxID: account.inboxMailbox }
+          value: { mailboxID: account.inboxMailbox },
         });
         assert.isFalse(RouterStore.isDraft());
       });
@@ -623,9 +606,9 @@ describe('RouterStore', () => {
         assert.notEqual(message, undefined);
         assert.isTrue(message.isDraft());
 
-        message = MessageStore.getAll().find((message) => {
-          return -1 === message.get('flags').indexOf(MessageFlags.DRAFT);
-        });
+        message = MessageStore.getAll().find((message) =>
+          message.get('flags').indexOf(MessageFlags.DRAFT) === -1
+        );
         assert.notEqual(message, undefined);
         assert.isFalse(message.isDraft());
       });
@@ -633,7 +616,7 @@ describe('RouterStore', () => {
       it('Should return `mailbox.isDraft`', () => {
         Dispatcher.dispatch({
           type: ActionTypes.ROUTE_CHANGE,
-          value: { mailboxID: account.draftMailbox }
+          value: { mailboxID: account.draftMailbox },
         });
         assert.isTrue(RouterStore.isDraft());
       });
@@ -648,7 +631,7 @@ describe('RouterStore', () => {
       it('Should return `inboxMailbox.nbTotal`', () => {
         Dispatcher.dispatch({
           type: ActionTypes.ROUTE_CHANGE,
-          value: { mailboxID: account.inboxMailbox }
+          value: { mailboxID: account.inboxMailbox },
         });
 
         const mailbox = RouterStore.getMailbox();
@@ -659,7 +642,7 @@ describe('RouterStore', () => {
       it('Should return `flaggedMailbox.nbTotal`', () => {
         Dispatcher.dispatch({
           type: ActionTypes.ROUTE_CHANGE,
-          value: { mailboxID: account.flaggedMailbox }
+          value: { mailboxID: account.flaggedMailbox },
         });
         const inbox = getInbox();
         const mailbox = RouterStore.getMailbox();
@@ -671,7 +654,7 @@ describe('RouterStore', () => {
       it('Should return `unreadMailbox.nbTotal`', () => {
         Dispatcher.dispatch({
           type: ActionTypes.ROUTE_CHANGE,
-          value: { mailboxID: account.unreadMailbox }
+          value: { mailboxID: account.unreadMailbox },
         });
         const inbox = getInbox();
         const mailbox = RouterStore.getMailbox();
@@ -682,9 +665,8 @@ describe('RouterStore', () => {
 
       function getInbox() {
         const account = RouterStore.getAccount();
-        const accountID = account.get('id');
         const mailboxID = account.get('inboxMailbox');
-        return AccountStore.getMailbox(accountID, mailboxID);
+        return AccountStore.getMailbox(mailboxID);
       }
     });
 
@@ -698,13 +680,13 @@ describe('RouterStore', () => {
       it('Shouldnt be stored (err)', () => {
         Dispatcher.dispatch({
           type: ActionTypes.ROUTE_CHANGE,
-          value: { action: AccountActions.CREATE }
+          value: { action: AccountActions.CREATE },
         });
         assert.equal(RouterStore.getSelectedTab(), null);
 
         Dispatcher.dispatch({
           type: ActionTypes.ROUTE_CHANGE,
-          value: { action: AccountActions.CREATE, tab: 'plip' }
+          value: { action: AccountActions.CREATE, tab: 'plip' },
         });
         assert.equal(RouterStore.getSelectedTab(), null);
       });
@@ -712,7 +694,7 @@ describe('RouterStore', () => {
       it('Should return (default) `value`', () => {
         Dispatcher.dispatch({
           type: ActionTypes.ROUTE_CHANGE,
-          value: { action: AccountActions.EDIT }
+          value: { action: AccountActions.EDIT },
         });
         assert.equal(RouterStore.getSelectedTab(), 'account');
         assert.equal(RouterStore.getSelectedTab(), DEFAULT_TAB);
@@ -721,7 +703,7 @@ describe('RouterStore', () => {
       it('Should save dispatched `value`', () => {
         Dispatcher.dispatch({
           type: ActionTypes.ROUTE_CHANGE,
-          value: { action: AccountActions.EDIT, tab: 'plip' }
+          value: { action: AccountActions.EDIT, tab: 'plip' },
         });
         assert.equal(RouterStore.getSelectedTab(), 'plip');
       });
@@ -729,7 +711,7 @@ describe('RouterStore', () => {
       it('Should reset `value` when `action` changes', () => {
         Dispatcher.dispatch({
           type: ActionTypes.ROUTE_CHANGE,
-          value: { action: MessageActions.SHOW_ALL }
+          value: { action: MessageActions.SHOW_ALL },
         });
         assert.equal(RouterStore.getSelectedTab(), null);
       });
@@ -741,15 +723,16 @@ describe('RouterStore', () => {
 
     describe('getURL', () => {
 
-      afterEach(() => {
-        resetAccountFixtures()
+      before(() => {
+        resetStore();
+        Dispatcher.dispatch({ type: 'FORCE STORES TO GET INITIAL STATE' });
       });
 
       // Skipped after account redux migration
       // TODO: make the acount fixture as Immutable
-      describe.skip('defaultView', () => {
+      describe('defaultView', () => {
         it.skip('Should goto `AccountNew` (no account found)', () => {
-          let url = RouterStore.getURL().replace('#', '');
+          let url = RouterStore.getURL({}).replace('#', '');
           assert.equal(url, routes['accountNew']);
           assert.equal(url, RouterStore.getURL({ isServer: true }));
         });
@@ -761,60 +744,60 @@ describe('RouterStore', () => {
 
       // Skipped after account redux migration
       // TODO: make the acount fixture as Immutable
-      describe.skip('messagesList', () => {
+      describe('messagesList', () => {
         it('Shouldnt handle filters', () => {
           testMessagesList();
         });
 
         it('Should handle filter', () => {
-          const filter = {'plop': 'one value'};
-          testMessagesList({filter});
+          const filter = { 'plop': 'one value' };
+          testMessagesList({ filter });
         });
 
         it('Should handle all filters', () => {
-          const filter = {'plop': ['several', 'values', 'with special chars']};
-          testMessagesList({filter});
+          const filter = { 'plop': ['several', 'values', 'with special chars'] };
+          testMessagesList({ filter });
         });
       });
 
       it('accountNew', () => {
         const action = AccountActions.CREATE;
-        testAccountURI({action}, 'accountNew');
+        testAccountURI({ action }, 'accountNew');
       });
 
       it('accountEdit', () => {
         const action = AccountActions.EDIT;
-        testAccountURI({action}, 'accountEdit');
+        testAccountURI({ action }, 'accountEdit');
       });
 
       it('messageNew', () => {
         const action = MessageActions.CREATE;
-        testMessage({action}, 'messageNew');
+        testMessage({ action }, 'messageNew');
       });
 
       it('messageEdit', () => {
         const action = MessageActions.EDIT;
-        testMessage({action}, 'messageEdit');
+        testMessage({ action }, 'messageEdit');
       });
 
       it('messageForward', () => {
         const action = MessageActions.FORWARD;
-        testMessage({action}, 'messageForward');
+        testMessage({ action }, 'messageForward');
       });
 
       it('messageReply', () => {
         const action = MessageActions.REPLY;
-        testMessage({action}, 'messageReply');
+        testMessage({ action }, 'messageReply');
       });
 
       it('messageReplyAll', () => {
         const action = MessageActions.REPLY_ALL;
-        testMessage({action}, 'messageReplyAll');
+        testMessage({ action }, 'messageReplyAll');
       });
 
       it('messageShow', () => {
         const action = MessageActions.SHOW;
-        testMessage({action}, 'messageShow');
+        testMessage({ action }, 'messageShow');
       });
 
 
@@ -876,14 +859,10 @@ describe('RouterStore', () => {
       }
 
       function testMessagesList(data) {
-        Dispatcher.dispatch({
-          type: ActionTypes.ADD_ACCOUNT_SUCCESS,
-          value: { account: AccountFixtures.createAccount() },
-        });
 
         const params = Object.assign({
           action: MessageActions.SHOW_ALL,
-          mailboxID: RouterStore.getDefaultAccount().get('inboxMailbox')
+          mailboxID: RouterStore.getDefaultAccount().get('inboxMailbox'),
         }, data);
 
         let url = RouterStore.getURL(params).replace('#', '');
@@ -912,47 +891,43 @@ describe('RouterStore', () => {
 
     describe.skip('getURI', () => {
 
-      afterEach(() => {
-        resetAccountFixtures()
-      });
-
       it.skip('defaultView', () => {
         assert.isNull(RouterStore.getURI());
       });
 
       it('messagesList', () => {
         const action = MessageActions.SHOW_ALL;
-        testMessageURI(action)
+        testMessageURI(action);
       });
 
       it.skip('messageNew', () => {
         const action = MessageActions.CREATE;
-        testMessageURI(action)
+        testMessageURI(action);
       });
 
       it.skip('messageEdit', () => {
         const action = MessageActions.EDIT;
-        testMessageURI(action)
+        testMessageURI(action);
       });
 
       it.skip('messageForward', () => {
         const action = MessageActions.FORWARD;
-        testMessageURI(action)
+        testMessageURI(action);
       });
 
       it.skip('messageReply', () => {
         const action = MessageActions.REPLY;
-        testMessageURI(action)
+        testMessageURI(action);
       });
 
       it.skip('messageReplyAll', () => {
         const action = MessageActions.REPLY_ALL;
-        testMessageURI(action)
+        testMessageURI(action);
       });
 
       it.skip('messageShow', () => {
         const action = MessageActions.SHOW;
-        testMessageURI(action)
+        testMessageURI(action);
       });
 
       it.skip('accountNew', () => {
@@ -979,8 +954,8 @@ describe('RouterStore', () => {
           type: ActionTypes.ROUTE_CHANGE,
           value: { action },
         });
-        result = `action=${action}`
-        if (undefined !== accountID) result += `&accountID=null`;
+        result = `action=${action}`;
+        if (undefined !== accountID) result += '&accountID=null';
         assert.equal(RouterStore.getURI(), result);
 
         // With accountID
@@ -988,18 +963,18 @@ describe('RouterStore', () => {
           type: ActionTypes.ROUTE_CHANGE,
           value: { action, accountID, mailboxID: 'PLOP' },
         });
-        result = `action=${action}`
+        result = `action=${action}`;
         if (undefined !== accountID) result += `&accountID=${accountID}`;
         assert.equal(RouterStore.getURI(), result);
 
         // With one filter
-        let filter = {'plop': 'one value'}
+        let filter = { 'plop': 'one value' };
         Dispatcher.dispatch({
           type: ActionTypes.ROUTE_CHANGE,
           value: { action, filter },
         });
-        result = `action=${action}`
-        if (undefined !== accountID) result += `&accountID=null`;
+        result = `action=${action}`;
+        if (undefined !== accountID) result += '&accountID=null';
         assert.equal(RouterStore.getURI(), result);
       }
 
@@ -1011,7 +986,7 @@ describe('RouterStore', () => {
         let messageID;
 
         if (MessageActions.SHOW_ALL !== action) {
-          conversationID = 'conversationID'
+          conversationID = 'conversationID';
           messageID = 'messageID';
         }
 
@@ -1021,8 +996,8 @@ describe('RouterStore', () => {
           value: { action },
         });
         let result = `action=${action}&accountID=null&mailboxID=null`;
-        if (undefined !== conversationID) result += `&conversationID=null`;
-        if (undefined !== messageID) result += `&messageID=null`;
+        if (undefined !== conversationID) result += '&conversationID=null';
+        if (undefined !== messageID) result += '&messageID=null';
         assert.equal(RouterStore.getURI(), result);
 
         // Without mailboxID
@@ -1030,9 +1005,9 @@ describe('RouterStore', () => {
           type: ActionTypes.ROUTE_CHANGE,
           value: { action, accountID },
         });
-        result = `action=${action}&accountID=${accountID}&mailboxID=null`
-        if (undefined !== conversationID) result += `&conversationID=null`;
-        if (undefined !== messageID) result += `&messageID=null`;
+        result = `action=${action}&accountID=${accountID}&mailboxID=null`;
+        if (undefined !== conversationID) result += '&conversationID=null';
+        if (undefined !== messageID) result += '&messageID=null';
         assert.equal(RouterStore.getURI(), result);
 
         // With all params
@@ -1040,61 +1015,53 @@ describe('RouterStore', () => {
           type: ActionTypes.ROUTE_CHANGE,
           value: { action, accountID, mailboxID, conversationID, messageID },
         });
-        result = `action=${action}&accountID=${accountID}&mailboxID=${mailboxID}`
+        result = `action=${action}&accountID=${accountID}&mailboxID=${mailboxID}`;
         if (undefined !== conversationID) result += `&conversationID=${conversationID}`;
         if (undefined !== messageID) result += `&messageID=${messageID}`;
         assert.equal(RouterStore.getURI(), result);
 
         // With one filter
-        let filter = {'plop': 'one value'}
+        let filter = { 'plop': 'one value' };
         Dispatcher.dispatch({
           type: ActionTypes.ROUTE_CHANGE,
           value: { action, accountID, mailboxID, conversationID, messageID, filter },
         });
-        result = `action=${action}&accountID=${accountID}&mailboxID=${mailboxID}`
+        result = `action=${action}&accountID=${accountID}&mailboxID=${mailboxID}`;
         if (undefined !== conversationID) result += `&conversationID=${conversationID}`;
         if (undefined !== messageID) result += `&messageID=${messageID}`;
-        result += `&query=${toQueryParameters(filter)}`
+        result += `&query=${toQueryParameters(filter)}`;
         assert.equal(RouterStore.getURI(), result);
 
         // With several filters
-        filter = {'plop': ['several', 'values', 'with special chars']};
+        filter = { plop: ['several', 'values', 'with special chars'] };
         Dispatcher.dispatch({
           type: ActionTypes.ROUTE_CHANGE,
           value: { action, accountID, mailboxID, conversationID, messageID, filter },
         });
-        result = `action=${action}&accountID=${accountID}&mailboxID=${mailboxID}`
+        result = `action=${action}&accountID=${accountID}&mailboxID=${mailboxID}`;
         if (undefined !== conversationID) result += `&conversationID=${conversationID}`;
         if (undefined !== messageID) result += `&messageID=${messageID}`;
-        result += `&query=${toQueryParameters(filter)}`
+        result += `&query=${toQueryParameters(filter)}`;
         assert.equal(RouterStore.getURI(), result);
       }
     });
-
   });
 
 
   describe('Pagination', () => {
-
     beforeEach(() => {
-      createAccountFixtures()
+      resetStore();
     });
-
-    afterEach(() => {
-      resetAccountFixtures()
-    });
-
     // Skipped after account redux migration
     // TODO: make the acount fixture as Immutable
-    describe.skip('getMessagesPerPage', () => {
-
+    describe('getMessagesPerPage', () => {
       it.skip('Should be `null`', () => {
         assert.equal(RouterStore.getMessagesPerPage(), null);
       });
 
       // Skipped after account redux migration
       // TODO: make the acount fixture as Immutable
-      it.skip('Should be defaultValue', () => {
+      it('Should be defaultValue', () => {
         // 1rst test
         Dispatcher.dispatch({
           type: ActionTypes.ROUTE_CHANGE,
@@ -1194,7 +1161,6 @@ describe('RouterStore', () => {
 
 
     describe('UseCases', () => {
-
       it.skip('At first nothing should be stored', () => {
         // TODO: vérifier que messageLength et mis à jour à
         // chaque lancement de cette méthode
@@ -1202,13 +1168,10 @@ describe('RouterStore', () => {
 
       // Skipped after account redux migration
       // TODO: make the acount fixture as Immutable
-      describe.skip('Goto last page should set `isComplete` falsy', () => {
-
-        let result;
+      describe('Goto last page should set `isComplete` falsy', () => {
         let action;
         let accountID;
         let mailboxID;
-        let messagesPerPage;
         let messages;
 
         beforeEach(() => {
@@ -1219,7 +1182,7 @@ describe('RouterStore', () => {
           accountID = AccountStore.getDefault().get('id');
           mailboxID = AccountStore.getDefault().get('inboxMailbox');
           messages = [];
-        })
+        });
 
         afterEach(() => {
           Dispatcher.dispatch({
@@ -1227,7 +1190,7 @@ describe('RouterStore', () => {
           });
         });
 
-        it('With default MSGBYPAGE', () => {
+        it.skip('With default MSGBYPAGE', () => {
           Dispatcher.dispatch({
             type: ActionTypes.ROUTE_CHANGE,
             value: { action, mailboxID },
@@ -1240,7 +1203,6 @@ describe('RouterStore', () => {
             isComplete: false,
             hasNextPage: true,
           };
-          let isPageComplete = false;
 
           testMoreMessages(messages.slice(0, 5), request, false);
 
@@ -1255,7 +1217,7 @@ describe('RouterStore', () => {
           request.page = 3;
           testMoreMessages(messages.slice(30, 35), request, true);
 
-          request = RouterStore.getLastFetch()
+          request = RouterStore.getLastFetch();
           request.page = 4;
           request.isComplete = true;
           request.hasNextPage = false;
@@ -1269,7 +1231,7 @@ describe('RouterStore', () => {
 
           // Change MaxSize of mailbox
           // to fit to this test
-          let mailbox = AccountStore.getMailbox(accountID, mailboxID).toJS();
+          const mailbox = AccountStore.getMailbox(accountID, mailboxID).toJS();
           mailbox.nbTotal = nbTotal;
           Dispatcher.dispatch({
             type: ActionTypes.RECEIVE_MAILBOX_CREATE,
@@ -1289,7 +1251,6 @@ describe('RouterStore', () => {
             page: 0,
             isComplete: false,
             hasNextPage: true,
-            isComplete: false,
           };
           testMoreMessages(messages.slice(0, 1), request, false);
 
@@ -1299,8 +1260,8 @@ describe('RouterStore', () => {
           request.page = 2;
           testMoreMessages(messages.slice(2, 8), request, true);
 
-          request = RouterStore.getLastFetch()
-          request.page = 3
+          request = RouterStore.getLastFetch();
+          request.page = 3;
           request.hasNextPage = true;
           testMoreMessages(messages.slice(0, 3), request, true);
 
@@ -1310,13 +1271,12 @@ describe('RouterStore', () => {
           delete request.start;
           testMoreMessages(messages.slice(8, 13), request, true);
 
-          request = RouterStore.getLastFetch()
+          request = RouterStore.getLastFetch();
           request.page = 5;
           request.isComplete = true;
           request.hasNextPage = false;
           testMoreMessages(messages.slice(0, 13), request, true);
         });
-
       });
 
       it.skip('Each request should be saved with a uniq URI', () => {
@@ -1331,7 +1291,7 @@ describe('RouterStore', () => {
 
 
       function createMessages(max) {
-        const result = []
+        const result = [];
         if (undefined === max) max = 1;
         let counter = max;
         while (counter > 0) {
@@ -1361,10 +1321,10 @@ describe('RouterStore', () => {
         assert.deepEqual(RouterStore.getLastFetch(), request);
 
         // Get filtered messages from all messages
-        RouterStore.getMessagesList()
+        RouterStore.getMessagesList();
 
         // Test min-length
-        assert.equal(RouterStore.isPageComplete(), isPageComplete)
+        assert.equal(RouterStore.isPageComplete(), isPageComplete);
       }
     });
 
@@ -1390,16 +1350,10 @@ describe('RouterStore', () => {
   });
 
 
-  describe.skip('Actions', () => {
-
+  describe('Actions', () => {
     beforeEach(() => {
-      createAccountFixtures()
+      resetStore();
     });
-
-    afterEach(() => {
-      resetAccountFixtures()
-    });
-
     // testé dans tous les tests précédents
     // cf getCOnversationID, getMessageID, getAccountID etc.
     // it.skip('ROUTE_CHANGE', () => {
@@ -1412,23 +1366,42 @@ describe('RouterStore', () => {
     // });
 
     it('REMOVE_ACCOUNT_SUCCESS', () => {
-      const accounts = AccountStore.getAll();
+      accounts = AccountStore.getAll();
       const accountIDs = _.keys(accounts.toJS());
+      const firstAccount = accountIDs.shift();
+
+      // while we are editing the account
+      Dispatcher.dispatch({
+        type: ActionTypes.ROUTE_CHANGE,
+        value: {
+          action: AccountActions.EDIT,
+          accountID: firstAccount },
+      });
+
+      console.log(RouterStore.getRouteObject())
 
       // No changes
       Dispatcher.dispatch({
         type: ActionTypes.REMOVE_ACCOUNT_SUCCESS,
-        value: { accountID: accountIDs.shift(), silent: true },
+        value: { accountID: firstAccount, silent: true },
       });
-      assert.equal(RouterStore.getAction(), null);
+
+      console.log(RouterStore.getRouteObject())
+
+      // ROMAINEDIT : action is never null
+      assert.equal(RouterStore.getAction(), AccountActions.EDIT);
+      assert.notEqual(RouterStore.getAccountID(), firstAccount);
+
 
       // If an account is found,
-      // then cedit default account
+      // then edit default account
       Dispatcher.dispatch({
         type: ActionTypes.REMOVE_ACCOUNT_SUCCESS,
         value: { accountID: accountIDs.shift() },
       });
       assert.equal(RouterStore.getAction(), AccountActions.EDIT);
+
+      console.log(RouterStore.getRouteObject())
 
       // If no account found,
       // then create a new account
@@ -1500,40 +1473,28 @@ describe('RouterStore', () => {
     it.skip('SETTINGS_UPDATE_REQUEST', () => {
       //  Should test RouterStore.emit.change is emitted
     });
-
   });
 
 
-  function createAccountFixtures(msgLength) {
-    // Add 3 accounts to test
-    // several usecases
-    account = AccountFixtures.createAccount();
-    Dispatcher.dispatch({
-      type: ActionTypes.ADD_ACCOUNT_SUCCESS,
-      value: { account },
-    });
-    Dispatcher.dispatch({
-      type: ActionTypes.ADD_ACCOUNT_SUCCESS,
-      value: { account: AccountFixtures.createAccount() },
-    });
-    Dispatcher.dispatch({
-      type: ActionTypes.ADD_ACCOUNT_SUCCESS,
-      value: { account: AccountFixtures.createAccount() },
-    });
+  function resetStore() {
+    accounts = [
+      AccountFixtures.createAccount(),
+      AccountFixtures.createAccount(),
+      AccountFixtures.createAccount(),
+    ];
+    account = accounts[0];
+    global.window = { accounts };
+    const tools = makeTestDispatcher();
+    Dispatcher = tools.Dispatcher;
+    MessageStore = tools.makeStateFullGetter(MessageGetter);
+    AccountStore = tools.makeStateFullGetter(AccountGetter);
+    RouterStore = tools.makeStateFullGetter(RouterGetter);
   }
 
-  function resetAccountFixtures() {
-    Dispatcher.dispatch({
-      type: ActionTypes.MESSAGE_RESET_REQUEST,
-    });
-    Dispatcher.dispatch({
-      type: ActionTypes.RESET_ACCOUNT_REQUEST,
-    });
-  }
 
   function toQueryParameters(data) {
     if (data) {
-      let key = encodeURI(_.keys(data)[0]);
+      const key = encodeURI(_.keys(data)[0]);
 
       // Be carefull of Array values
       let value = _.values(data)[0];
