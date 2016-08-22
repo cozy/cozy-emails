@@ -45,26 +45,26 @@ module.exports = (state=DEFAULT_STATE, action) ->
             return state.set(account.get('id'), action.value)
 
         when ActionTypes.REMOVE_ACCOUNT_SUCCESS
-            nextstate = state.deleteIn ['accounts', action.value]
+            return state.delete action.value.accountID
 
         when ActionTypes.MAILBOX_CREATE_SUCCESS
-            nextstate = _updateMailbox state, action.value
+            return _updateMailbox state, action.value
 
         when ActionTypes.RECEIVE_MAILBOX_CREATE
-            nextstate = _updateMailbox state, action.value
+            return _updateMailbox state, action.value
 
         when ActionTypes.MAILBOX_UPDATE_SUCCESS
-            nextstate = _updateMailbox state, action.value
+            return _updateMailbox state, action.value
 
         when ActionTypes.RECEIVE_MAILBOX_UPDATE
-            nextstate = _updateMailbox state, action.value
+            return _updateMailbox state, action.value
 
         when ActionTypes.MAILBOX_EXPUNGE
             # TODO: should update account counter
             # if a mailbox came empty
             # - mailbox.nbTotal should be equal to 0
             # - account.nbTotal shoudl also be updated: missing args to do this
-            nextstate = state
+            return state
 
 
-    return nextstate or state
+    return state

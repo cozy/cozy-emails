@@ -25,6 +25,7 @@ module.exports =
     getSelectedTab:    (state) -> @getRouteObject(state).get('tab')
     getFilter:         (state) -> @getRouteObject(state).get('messagesFilter')
     getModal:          (state) -> state.get('modal')
+    getModalParams:    (state) -> state.get('modal') # alias for tests
 
     getAccounts: (state) -> AccountGetter.getAllAccounts(state)
     getAllAccounts: (state) -> AccountGetter.getAllAccounts(state)

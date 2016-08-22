@@ -1,7 +1,9 @@
-{MessageActions, AccountActions} = require './constants/app_constants'
+{MessageActions, AccountActions,
+DefaultActions} = require './constants/app_constants'
 _ = require 'lodash'
 
 exports.BACKBONE_ROUTES =
+    '': DefaultActions.DEFAULT
     'mailbox/:mailboxID(?:filter)': MessageActions.SHOW_ALL
     'account/new': AccountActions.CREATE
     'account/:accountID/settings/:tab': AccountActions.EDIT

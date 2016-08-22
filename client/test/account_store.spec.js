@@ -396,8 +396,26 @@ describe('AccountStore', () => {
 
 
     describe('Should REMOVE account(s)', () => {
-      it.skip('REMOVE_ACCOUNT_SUCCESS', () => {
-        // FIXME Nothing is done here in the store code.
+      beforeEach(() => {
+        Dispatcher.dispatch({
+          type: ActionTypes.ADD_ACCOUNT_SUCCESS,
+          value: { account },
+        });
+      });
+      it('REMOVE_ACCOUNT_SUCCESS', () => {
+        const sizebefore = AccountStore.getAll().size;
+        const first = AccountStore.getAll().first();
+        const mailbox = first.get('mailboxes').first();
+
+        Dispatcher.dispatch({
+          type: ActionTypes.REMOVE_ACCOUNT_SUCCESS,
+          value: { accountID: first.get('id') },
+        });
+
+        assert.equal(AccountStore.getAll().size, sizebefore - 1);
+        assert.equal(AccountStore.getAll().find((account) =>
+            account.get('id') === first.get('id')), undefined);
+        assert.equal(AccountStore.getMailbox(mailbox.get('id')), undefined);
       });
     });
   });

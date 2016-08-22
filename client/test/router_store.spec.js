@@ -11,7 +11,6 @@ const SpecRouter = require('./utils/specs_router');
 
 const UtilConstants = require('../../server/utils/constants');
 const Constants = require('../app/constants/app_constants');
-const Router = require('../app/router');
 const ActionTypes = Constants.ActionTypes;
 const AccountActions = Constants.AccountActions;
 const MessageActions = Constants.MessageActions;
@@ -28,10 +27,10 @@ const RouterGetter = require('../app/puregetters/router');
 
 const makeTestDispatcher = require('./utils/specs_dispatcher');
 
+const BackboneRoutes = require('../app/routes').BACKBONE_ROUTES;
+
 const DEFAULT_TAB = 'account';
 // const reduxStore = require('../app/reducers/_store');
-
-
 describe('RouterStore', () => {
   let RouterStore;
   let AccountStore;
@@ -66,9 +65,25 @@ describe('RouterStore', () => {
     // ie. routes['messageList'] = url
     if (undefined === routes) {
       const reversed = {};
-      const routerRoutes = Router.prototype.routes;
-      Object.keys(routerRoutes).forEach((key) => {
-        reversed[routerRoutes[key]] = key;
+
+      // @TODO : remove this hack
+      const mappingOldNames = {
+        'account.new': 'accountNew',
+        'account.edit': 'accountEdit',
+        'message.new': 'messageNew',
+        'message.edit': 'messageEdit',
+        'message.forward': 'messageForward',
+        'message.reply': 'messageReply',
+        'message.reply.all': 'messageReplyAll',
+        'message.show': 'messageShow',
+        'message.list': 'messageList',
+      };
+
+      Object.keys(BackboneRoutes).forEach((key) => {
+        const urlstring = key;
+        const newname = BackboneRoutes[key];
+        const oldname = mappingOldNames[newname];
+        reversed[oldname] = urlstring;
       });
       routes = reversed;
     }
@@ -725,12 +740,11 @@ describe('RouterStore', () => {
 
       before(() => {
         resetStore();
-        Dispatcher.dispatch({ type: 'FORCE STORES TO GET INITIAL STATE' });
+        // Dispatcher.dispatch({ type: 'FORCE STORES TO GET INITIAL STATE' });
       });
 
-      // Skipped after account redux migration
-      // TODO: make the acount fixture as Immutable
       describe('defaultView', () => {
+        //ROMAINEDIT : this is not handled at the getter level
         it.skip('Should goto `AccountNew` (no account found)', () => {
           let url = RouterStore.getURL({}).replace('#', '');
           assert.equal(url, routes['accountNew']);
@@ -1369,16 +1383,16 @@ describe('RouterStore', () => {
       accounts = AccountStore.getAll();
       const accountIDs = _.keys(accounts.toJS());
       const firstAccount = accountIDs.shift();
+      const secondAccount = accountIDs.shift();
+      const thirdAccount = accountIDs.shift();
 
-      // while we are editing the account
+      // while we are editing the second account
       Dispatcher.dispatch({
         type: ActionTypes.ROUTE_CHANGE,
         value: {
           action: AccountActions.EDIT,
-          accountID: firstAccount },
+          accountID: secondAccount },
       });
-
-      console.log(RouterStore.getRouteObject())
 
       // No changes
       Dispatcher.dispatch({
@@ -1386,28 +1400,24 @@ describe('RouterStore', () => {
         value: { accountID: firstAccount, silent: true },
       });
 
-      console.log(RouterStore.getRouteObject())
-
       // ROMAINEDIT : action is never null
       assert.equal(RouterStore.getAction(), AccountActions.EDIT);
-      assert.notEqual(RouterStore.getAccountID(), firstAccount);
-
+      assert.equal(RouterStore.getAccountID(), secondAccount);
 
       // If an account is found,
       // then edit default account
       Dispatcher.dispatch({
         type: ActionTypes.REMOVE_ACCOUNT_SUCCESS,
-        value: { accountID: accountIDs.shift() },
+        value: { accountID: secondAccount },
       });
       assert.equal(RouterStore.getAction(), AccountActions.EDIT);
-
-      console.log(RouterStore.getRouteObject())
+      assert.equal(RouterStore.getAccountID(), thirdAccount);
 
       // If no account found,
       // then create a new account
       Dispatcher.dispatch({
         type: ActionTypes.REMOVE_ACCOUNT_SUCCESS,
-        value: { accountID: accountIDs.shift() },
+        value: { accountID: thirdAccount },
       });
       assert.equal(RouterStore.getAction(), AccountActions.CREATE);
     });

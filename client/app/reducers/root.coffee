@@ -4,7 +4,7 @@ Immutable = require 'immutable'
 combineReducers = (reducers) ->
     keys = Object.keys(reducers)
     return (state, action) ->
-        console.log("DISPATCH", action.type, action.value)
+        # console.log("DISPATCH", action.type, action.value)
 
         state = Immutable.Map() if action.type is ActionTypes.RESET_FOR_TESTS
 

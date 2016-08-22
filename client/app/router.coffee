@@ -38,8 +38,6 @@ _parseQuery = (query) ->
             value or true
     return params
 
-routes.BACKBONE_ROUTES[''] = 'DEFAULT'
-
 class Router extends Backbone.Router
 
     routes: routes.BACKBONE_ROUTES
@@ -56,14 +54,6 @@ class Router extends Backbone.Router
         Backbone.history.start()
 
         reduxStore.subscribe @onDispatch
-
-
-    defaultView: ->
-        console.log("DEFAULT CALLED")
-        mailboxID = RouterGetter.getDefaultAccount(reduxStore.getState())
-        ?.get 'inboxMailbox'
-        url = if mailboxID then "mailbox/#{mailboxID}" else "account/new"
-        @navigate url, trigger: true
 
     onRouteMatched: (name, paramsValues)->
         # console.log "THERE", name, paramsValues
