@@ -87,15 +87,17 @@ RouterActionCreator =
                 # - try to select nearestMessage
                 # - if not select current MessageList
                 # - if no messageList go to default mailbox
-                if RouterGetter.hasNextPage() and
-                not RouterGetter.isPageComplete()
+                state = reduxStore.getState()
+                if RouterGetter.hasNextPage(state) and
+                not RouterGetter.isPageComplete(state)
                     @getCurrentPage dispatch
 
     gotoCompose: (dispatch, params={}) ->
         {messageID, mailboxID} = params
 
         action = MessageActions.NEW
-        mailboxID ?= RouterGetter.getMailboxID messageID
+        state = reduxStore.getState()
+        mailboxID ?= RouterGetter.getMailboxID state, messageID
 
         dispatch
             type: ActionTypes.ROUTE_CHANGE
@@ -113,7 +115,8 @@ RouterActionCreator =
         # 2nd: redirect to conversation
         # At first get unread Message
         # if not get last message
-        messages = RouterGetter.getConversation conversationID
+        state = reduxStore.getState()
+        messages = RouterGetter.getConversation state, conversationID
         message = messages.find((message) -> message.isUnread()) or
         messages.first()
         messageID = message?.get 'id'
@@ -123,9 +126,10 @@ RouterActionCreator =
     gotoMessage: (dispatch, message={}) ->
         {conversationID, messageID, mailboxID, filter} = message
 
-        messageID ?= RouterGetter.getMessageID()
-        mailboxID ?= RouterGetter.getMailboxID messageID
-        filter = filter or RouterGetter.getFilter()
+        state = reduxStore.getState()
+        messageID ?= RouterGetter.getMessageID(state)
+        mailboxID ?= RouterGetter.getMailboxID state, messageID
+        filter = filter or RouterGetter.getFilter(state)
 
         unless messageID
             action = MessageActions.SHOW_ALL
@@ -152,18 +156,23 @@ RouterActionCreator =
 
     closeConversation: (dispatch, params={}) ->
         {mailboxID} = params
-        mailboxID ?= RouterGetter.getMailboxID()
+        state = reduxStore.getState(state)
+        mailboxID ?= RouterGetter.getMailboxID(state)
         action = MessageActions.SHOW_ALL
-        filter = RouterGetter.getFilter()
+        filter = RouterGetter.getFilter(state)
         dispatch
             type: ActionTypes.ROUTE_CHANGE
             value: {mailboxID, action, filter}
 
 
-    closeModal: (dispatch, mailboxID = RouterGetter.getMailboxID()) ->
+    closeModal: (dispatch, mailboxID) ->
+
+        state = reduxStore.getState(state)
+        mailboxID ?= RouterGetter.getMailboxID(state)
         return unless mailboxID
 
-        account = AccountGetter.getByMailbox reduxStore.getState(), mailboxID
+        state = reduxStore.getState()
+        account = AccountGetter.getByMailbox state, mailboxID
 
         # Load last messages
         @refreshMailbox dispatch, {mailboxID}
@@ -182,7 +191,8 @@ RouterActionCreator =
 
 
     getConversation: (dispatch, conversationID) ->
-        conversationID ?= RouterGetter.getConversationID()
+        state = reduxStore.getState()
+        conversationID ?= RouterGetter.getConversationID(state)
         timestamp = (new Date()).toISOString()
 
         dispatch
@@ -198,7 +208,8 @@ RouterActionCreator =
                 # Apply filters to messages
                 # to upgrade conversationLength
                 # FIXME: should be moved server side
-                filterFunction = RouterGetter.getFilterFunction
+                state = reduxStore.getState()
+                filterFunction = RouterGetter.getFilterFunction state
                 messages = _.filter messages, filterFunction
 
                 # Update Realtime

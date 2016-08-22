@@ -26,8 +26,8 @@ module.exports =
     getFilter:         (state) -> @getRouteObject(state).get('messagesFilter')
     getModal:          (state) -> state.get('modal')
 
-    getAllAccounts:        (state) ->
-        AccountGetter.getAllAccounts(state)
+    getAccounts: (state) -> AccountGetter.getAllAccounts(state)
+    getAllAccounts: (state) -> AccountGetter.getAllAccounts(state)
 
     getAccount:        (state) ->
         accountID = @getAccountID(state)
@@ -137,10 +137,8 @@ module.exports =
         @getMessagesList(state).map (message) =>
             message.set 'isDeleted', @isDeletedMessage(state, message)
 
-    getNextMessage: (state) ->
-
-
-    getPreviousMessage: (state) ->
+    # getNextMessage: ->
+    # getPreviousMessage: ->
 
     getNextConversation: (state) ->
         messages = @getMessagesList(state)
@@ -239,8 +237,8 @@ module.exports =
         if (AccountGetter.isInbox state, accountID, mailboxID)
             # Gmail issue
             # Test \All tag insteadof \INBOX
-            mailbox = AccountGetter.getAllMailbox accountID
-            mailbox ?= AccountGetter.getInbox accountID
+            mailbox = AccountGetter.getAllMailbox state, accountID
+            mailbox ?= AccountGetter.getInbox state, accountID
 
         mailbox ?= @getMailbox(state)
         mailbox?.get('lastSync')
@@ -271,11 +269,11 @@ module.exports =
 
     getUnreadLength: (state, accountID) ->
         accountID ?= @getAccountID(state)
-        AccountGetter.getInbox(accountID)?.get 'nbUnread'
+        AccountGetter.getInbox(state, accountID)?.get 'nbUnread'
 
     getFlaggedLength: (state, accountID) ->
         accountID ?= @getAccountID(state)
-        AccountGetter.getInbox(accountID)?.get 'nbFlagged'
+        AccountGetter.getInbox(state, accountID)?.get 'nbFlagged'
 
     getToasts: (state) ->
         state.get('notifications')
@@ -290,3 +288,8 @@ module.exports =
 
     getLogin: (state) ->
         @getAccount(state)?.get('login')
+
+    # not used
+    getReplyMessage: (state, messageID) ->
+        isReply = @getAction(state) is MessageActions.EDIT
+        MessageGetter.getByID state, messageID unless isReply
