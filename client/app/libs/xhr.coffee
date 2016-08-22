@@ -10,6 +10,7 @@ throttle = new Throttle
     ratePer:    5000
     concurrent: 5
 
+GOOGLEIMAPSERVERS = ['imap.googlemail.com', 'imap.google.com']
 
 discovery2Fields = (provider) ->
     infos = {}
@@ -80,7 +81,7 @@ discovery2Fields = (provider) ->
                 infos.smtpSSL = false
                 infos.smtpTLS = false
 
-    infos.isGmail = infos.imapServer is 'imap.googlemail.com'
+    infos.isGmail = infos.imapServer in GOOGLEIMAPSERVERS
 
     return infos
 

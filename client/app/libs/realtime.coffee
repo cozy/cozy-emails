@@ -1,7 +1,7 @@
 ioclient = require 'socket.io-client'
 {ActionTypes} = require '../constants/app_constants'
 
-module.exports.initialize = (dispatcher) ->
+module.exports.initialize = (dispatch) ->
     socket = ioclient.connect window.location.origin,
         path: "#{window.location.pathname}socket.io"
         reconnectionDelayMax: 60000
@@ -33,6 +33,6 @@ module.exports.initialize = (dispatcher) ->
     Object.keys(socket2Action).forEach (eventname) ->
         socket.on eventname, (value) ->
             console.log("REALTIME", eventname, value)
-            dispatcher.dispatch {type: socket2Action[eventname], value: value}
+            dispatch {type: socket2Action[eventname], value: value}
 
     undefined
