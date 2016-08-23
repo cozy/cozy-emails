@@ -1,7 +1,11 @@
 'use strict';
 
 
-let seed = 0;
+let seed = process.env.PSEUDORANDOMSEED === undefined ? Math.random() :
+    parseInt(process.env.PSEUDORANDOMSEED, 10);
+
+// eslint-disable-next-line no-console
+console.log('SEED is', seed);
 
 function pseudoRandom() {
   const x = Math.sin(seed++) * 10000;

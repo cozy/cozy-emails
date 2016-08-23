@@ -1,5 +1,6 @@
 'use strict';
 
+const random = require('../utils/pseudorandom');
 const getUID = require('../utils/guid').getUID;
 const getName = require('../utils/guid').getName;
 
@@ -8,6 +9,7 @@ const MailboxFlags = Constants.MailboxFlags;
 const FlagsConstants = Constants.FlagsConstants;
 
 const inboxLabel = 'Boite principale';
+
 
 module.exports.createMailbox = function Mailbox() {
   return {
@@ -166,7 +168,7 @@ module.exports.createAccount = function Account(options) {
 
   if (randomizeAdditionalMailboxes) {
     // Add mailbox created by user
-    let counter = Math.round(Math.random() * 6);
+    let counter = Math.round(random() * 6);
     while (counter > 0) {
       mailboxes.push(module.exports.createMailbox());
       --counter;

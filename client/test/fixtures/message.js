@@ -5,6 +5,7 @@ const Immutable = require('immutable');
 
 const MessageFlags = require('../../app/constants/app_constants').MessageFlags;
 
+const random = require('../utils/pseudorandom');
 const getUID = require('../utils/guid').getUID;
 const getName = require('../utils/guid').getName;
 
@@ -109,8 +110,8 @@ module.exports.createAttached = function AttachedMessage(data) {
 
 
 function createMailboxIDs (account) {
-  const max = Math.round(Math.random() * account.mailboxes.length);
-  const min = Math.round(Math.random() * max);
+  const max = Math.round(random() * account.mailboxes.length);
+  const min = Math.round(random() * max);
   const mailboxes = account.mailboxes.slice(min, max + 1);
 
   // Create MailboxIDs
