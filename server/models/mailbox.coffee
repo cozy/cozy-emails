@@ -63,18 +63,6 @@ class Mailbox extends cozydb.CozyModel
         else if /all/i.test path
             return 'allMailbox'
 
-
-        'inboxMailbox'      : 'INBOX'
-        'unreadMailbox'     : 'DRAFT'
-        'flaggedMailbox'    : 'FLAGGED'
-        'draftMailbox'      : 'DRAFT'
-        'sentMailbox'       : 'SENT'
-        'trashMailbox'      : ['TRASH', 'DELETE']
-        'junkMailbox'       : ['SPAM', 'JUNK']
-        'allMailbox'        : 'ALL'
-        # @TODO add more
-
-
     # Public: set an account xxxMailbox attributes & favorites
     # from a list of mailbox
     #
