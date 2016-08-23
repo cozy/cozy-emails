@@ -26,7 +26,11 @@ module.exports =
         @getAllAccounts(state).find (account) ->
             # TODO There are some cases where account.get is not a function
             # this must be investigated
-            return account.get?('mailboxes').get(mailboxID)
+            unless account.get
+                throw new Error("Wrong State, account.get undefined\n" +
+                                    state.toString())
+
+            account.get('mailboxes')?.get(mailboxID)
 
 
     # Legacy AccountStore mapping

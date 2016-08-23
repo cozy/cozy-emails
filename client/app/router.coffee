@@ -56,7 +56,6 @@ class Router extends Backbone.Router
         reduxStore.subscribe @onDispatch
 
     onRouteMatched: (name, paramsValues)->
-        # console.log "THERE", name, paramsValues
         return @defaultView() if name is 'DEFAULT'
         [action, name, ..., paramsNames] = routes.ROUTE_BY_ACTION[name]
         params = {action: action}

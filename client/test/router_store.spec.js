@@ -90,8 +90,6 @@ describe('RouterStore', () => {
   });
 
 
-  // Skipped after account redux migration
-  // TODO: make the acount fixture as Immutable
   describe('Basics', () => {
     beforeEach(() => {
       resetStore();
@@ -184,8 +182,6 @@ describe('RouterStore', () => {
       });
     });
 
-    // Skipped after account redux migration
-    // TODO: make the acount fixture as Immutable
     it('getDefaultAccount', () => {
       const input = AccountStore.getAll().first();
       const output = RouterStore.getDefaultAccount();
@@ -756,8 +752,6 @@ describe('RouterStore', () => {
         });
       });
 
-      // Skipped after account redux migration
-      // TODO: make the acount fixture as Immutable
       describe('messagesList', () => {
         it('Shouldnt handle filters', () => {
           testMessagesList();
@@ -1066,15 +1060,12 @@ describe('RouterStore', () => {
     beforeEach(() => {
       resetStore();
     });
-    // Skipped after account redux migration
-    // TODO: make the acount fixture as Immutable
     describe('getMessagesPerPage', () => {
+      // ROMAINEDIT : this should always default to default value
       it.skip('Should be `null`', () => {
         assert.equal(RouterStore.getMessagesPerPage(), null);
       });
 
-      // Skipped after account redux migration
-      // TODO: make the acount fixture as Immutable
       it('Should be defaultValue', () => {
         // 1rst test
         Dispatcher.dispatch({
@@ -1180,8 +1171,6 @@ describe('RouterStore', () => {
         // chaque lancement de cette méthode
       });
 
-      // Skipped after account redux migration
-      // TODO: make the acount fixture as Immutable
       describe('Goto last page should set `isComplete` falsy', () => {
         let action;
         let accountID;
