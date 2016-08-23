@@ -114,9 +114,6 @@ module.exports =
         'TOASTS_SHOW'               : 'TOASTS_SHOW'
         'TOASTS_HIDE'               : 'TOASTS_HIDE'
 
-        # Test
-        'RESET_FOR_TESTS'               : 'RESET_FOR_TESTS'
-
     Requests:
         'DISCOVER_ACCOUNT':     'DISCOVER_ACCOUNT'
         'CHECK_ACCOUNT':        'CHECK_ACCOUNT'

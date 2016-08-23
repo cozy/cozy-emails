@@ -1,13 +1,7 @@
-Immutable = require 'immutable'
-{ActionTypes} = require '../constants/app_constants'
-
 combineReducers = (reducers) ->
     keys = Object.keys(reducers)
     return (state, action) ->
         # console.log("DISPATCH", action.type, action.value)
-
-        state = Immutable.Map() if action.type is ActionTypes.RESET_FOR_TESTS
-
         return state.withMutations (mutableState) ->
             for name in keys
                 stateSlice = state.get(name)

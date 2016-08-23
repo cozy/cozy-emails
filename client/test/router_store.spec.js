@@ -59,8 +59,6 @@ describe('RouterStore', () => {
   });
 
   beforeEach(() => {
-    // Dispatcher.dispatch({ type: ActionTypes.RESET_FOR_TESTS });
-
     // Reverse relation value to simplify tests
     // ie. routes['messageList'] = url
     if (undefined === routes) {
