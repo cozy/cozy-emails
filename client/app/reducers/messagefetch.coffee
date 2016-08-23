@@ -12,7 +12,6 @@ DEFAULT_STATE = Immutable.Map
     messagesPerPage: MSGBYPAGE
     requests: Immutable.Map()
 
-
 findOldest = (msg1, msg2) ->
     return msg2 unless msg1
     if msg1.date > msg2.date then msg1 else msg2

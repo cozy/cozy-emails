@@ -27,7 +27,7 @@ module.exports = Menu = React.createClass
             'aria-expanded': true,
 
             nav className: 'mainmenu',
-                @props.accounts.map (account) ->
+                @props.accounts.map (account) =>
                     MenuAccountItem
                         key: "menu-account-item-#{account.get('id')}"
                         account: account

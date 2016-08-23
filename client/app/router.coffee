@@ -85,8 +85,9 @@ class Router extends Backbone.Router
             @navigate urlShouldBe, trigger: false
 
 _displayApplication = ->
-    Application = React.createFactory require './components/application'
-    ReactDOM.render Application(), document.querySelector '[role=application]'
+    Application = require './components/application'
+    app = React.createElement Application, store: reduxStore
+    ReactDOM.render app, document.querySelector '[role=application]'
 
 # update locate (without saving it into settings)
 _setLocale = (lang) ->

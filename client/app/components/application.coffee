@@ -77,8 +77,8 @@ bindStore = connect(
         hasSettingsChanged      : RouterGetter.hasSettingsChanged(state)
         conversationsLengths    : MessageGetter.getConversationsLengths(state)
         isConversationLoading   : RequestsGetter.isConversationLoading(state)
-        isMailboxLoading: RequestsGetter.isMailboxLoading(state)
-        isRefreshError: RequestsGetter.isRefreshError(state)
+        isMailboxLoading   : RouterGetter.isMailboxLoading(state)
+        isRefreshError     : RequestsGetter.isRefreshError(state)
 
     # MapDispatchToProps
     (dispatch) ->
@@ -115,5 +115,5 @@ module.exports = React.createClass
     displayName: 'Application'
 
     render: ->
-        React.createElement Provider, {store},
+        React.createElement Provider, store: @props.store,
             React.createElement Layout

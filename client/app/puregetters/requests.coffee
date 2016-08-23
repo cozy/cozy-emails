@@ -14,7 +14,8 @@ module.exports =
         state.get('refreshes')
 
     isRefreshError: (state) ->
-        @getRefreshes(state).get('errors')?.length
+        length = @getRefreshes(state).get('errors')?.length
+        return length isnt undefined and length > 0
 
     isRefreshing: (state)->
         @getRefreshes(state).size isnt 0 or

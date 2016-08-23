@@ -82,7 +82,8 @@ module.exports = React.createClass
     renderItem: (message) ->
         messageID = message.get 'id'
         conversationID = message.get 'conversationID'
-        conversationLength = @props.conversationsLengths.get conversationID
+        conversationLength = @props.conversationsLengths
+                            .get(conversationID) or 1
         isActive = @props.conversationID is conversationID
         MessageItem
             key                 : "messageItem-#{messageID}-#{isActive}"

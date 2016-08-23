@@ -18,9 +18,8 @@ module.exports =  React.createClass
     render: ->
         span className: 'address-list',
             for address, index in @props.participants
-                span null,
+                span key: "participants-#{address}",
                     Participant
-                        key: "participants-#{address}"
                         address : address
                         contacts: @props.contacts
                         tooltip : @props.tooltip

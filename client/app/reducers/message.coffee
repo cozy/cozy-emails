@@ -145,10 +145,24 @@ module.exports = (state = Immutable.Map(), action) ->
     #
     #  - Most operations, like getting raw messages,
     #  don't update conversation length.
-    if action.type in [ActionTypes.MESSAGE_FETCH_SUCCESS, \
-                       ActionTypes.CONVERSATION_FETCH_SUCCESS]
+    if action.type is ActionTypes.MESSAGE_FETCH_SUCCESS
         changes = action.value.result.conversationLength
         newConvLengths = newConvLengths.merge(changes)
+
+    if action.type is ActionTypes.CONVERSATION_FETCH_SUCCESS
+        # Apply filters to messages
+        # to upgrade conversationLength
+        # FIXME: should be moved server side
+        convID = action.value.result.messages[0].conversationID
+        convLength = action.value.result.messages
+        .filter (msg) -> newMessages.get(msg.id)
+        .length
+
+        # FIXME: why do we apply filter before adding to store
+        # filterFunction = RouterGetter.getFilterFunction appstate
+        # messages = _.filter messages, filterFunction
+        newConvLengths = newConvLengths.set convID, convLength
+
 
     if action.type in [ActionTypes.MESSAGE_TRASH_SUCCESS, \
                        ActionTypes.RECEIVE_MESSAGE_DELETE]

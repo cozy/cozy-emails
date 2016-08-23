@@ -78,9 +78,12 @@ module.exports =
         else 'nbTotal'
         return @getMailbox(state)?.get(prop) or 0
 
-
     getURI: (state) ->
         @getRouteObject(state).get('URIKey')
+
+    isMailboxLoading: (state) ->
+        req = MessageFetchGetter.getRequestStatus(state, @getURI(state))
+        return req.isLoading or false
 
     getCurrentURL: (state) ->
         @getURL(state, @getRouteObject(state).toJS())

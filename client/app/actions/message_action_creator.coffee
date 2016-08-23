@@ -1,7 +1,7 @@
 {ActionTypes}   = require '../constants/app_constants'
 XHRUtils        = require '../libs/xhr'
 
-MessageGetters  = require '../puregetters/message'
+MessageGetters  = require '../puregetters/messages'
 
 MessageActionCreator = (dispatch, state) ->
 

@@ -205,27 +205,13 @@ RouterActionCreator =
                     type: ActionTypes.CONVERSATION_FETCH_FAILURE
                     value: {error, conversationID, timestamp}
             else
-                # Apply filters to messages
-                # to upgrade conversationLength
-                # FIXME: should be moved server side
-                state = reduxStore.getState()
-                filterFunction = RouterGetter.getFilterFunction state
-                messages = _.filter messages, filterFunction
-
                 # Update Realtime
                 lastMessage = _.last messages
                 mailboxID = lastMessage?.mailboxID
                 before = lastMessage?.date or timestamp
                 Realtime.setServerScope {mailboxID, before}
 
-                # Update _conversationLength value
-                # that is only displayed by the server
-                # with method fetchMessagesByFolder
-                # FIXME: should be sent by server
-                conversationLength = {}
-                conversationLength[conversationID] = messages.length
-
-                result = {messages, conversationLength}
+                result = {messages}
                 dispatch
                     type: ActionTypes.CONVERSATION_FETCH_SUCCESS
                     value: {result, conversationID, timestamp}

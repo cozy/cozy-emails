@@ -1,5 +1,4 @@
 React      = require 'react'
-Immutable = require 'immutable'
 
 {div, ul, span, a, i} = React.DOM
 
@@ -10,6 +9,7 @@ classNames = require 'classnames'
 {Icons, MessageActions, MessageFilter} = require '../../constants/app_constants'
 
 colorhash = require '../../libs/colorhash'
+Account = require '../../models/account'
 
 Routes = require '../../routes'
 
@@ -19,7 +19,7 @@ module.exports = MenuAccountItem = React.createClass
     propTypes:
         mailboxID : React.PropTypes.string
         flags : React.PropTypes.string
-        account : React.PropTypes.instanceOf(Immutable.Map)
+        account : React.PropTypes.instanceOf(Account)
         accountID : React.PropTypes.string # current
         nbUnread : React.PropTypes.number
         nbFlagged : React.PropTypes.number
