@@ -1,18 +1,14 @@
-SettingsStore = require('../../getters/settings')
-reduxStore = require('../../reducers/_store')
-Immutable = require 'immutable'
-{MessageActions} = require '../../constants/app_constants'
-ContactFormat     = require './format_adress'
-QUOTE_STYLE = "margin-left: 0.8ex; padding-left: 1ex; "+
-              "border-left: 3px solid #34A6FF;"
+# THIS FILE ISNT USED ANYWHERE
 
 _           = require 'underscore'
-{markdown}  = require 'markdown'
-toMarkdown  = require 'to-markdown'
 moment      = require 'moment'
-
-t = window.t
-# coffeelint: disable=max_line_length
+Immutable = require 'immutable'
+{MessageActions} = require '../../constants/app_constants'
+ContactFormat     = require '../../libs/format_adress'
+QUOTE_STYLE = "margin-left: 0.8ex; padding-left: 1ex; "+
+              "border-left: 3px solid #34A6FF;"
+toMarkdown  = require 'to-markdown'
+{cleanHTML} = require './format_message'
 
 # Style is required to clean pre and p styling in compose editor.
 # It is removed by the visulasation iframe that's why we need to put
@@ -22,6 +18,67 @@ COMPOSE_STYLE = """
 pre {background: transparent; border: 0}
 </style>
 """
+
+# Add signature at the end of the message
+_addSignature = (message, signature) ->
+    message.text += "\n\n-- \n#{signature}"
+    signatureHtml = signature.replace /\n/g, '<br>'
+    message.html += """
+    <p><br></p><p id="signature">-- \n<br>#{signatureHtml}</p>
+    <p><br></p>
+        """
+
+
+# Extract a reply address from a `message` object.
+_getReplyToAddress = (message) ->
+    reply = message?.get 'replyTo'
+    from = message?.get 'from'
+    if (reply? and reply.length isnt 0)
+        return reply
+    else
+        return from
+
+# Add a reply prefix to the current subject.
+# Do not add it again if it's already there.
+_getReplySubject = (message) ->
+    subject =  message?.get('subject') or ''
+    prefix = t 'compose reply prefix'
+    if subject.indexOf(prefix) isnt 0
+        subject = "#{prefix}#{subject}"
+    subject
+
+
+# Generate reply text by adding `>`
+# before each line of the given text.
+_generateReplyText = (message) ->
+    text = message?.get('text') or ''
+    result = _.map text.split('\n'), (line) -> "> #{line}"
+    result.join "\n"
+
+# Remove from given string:
+# * html tags
+# * extra spaces between reply markers and text
+# * empty reply lines
+_cleanReplyText = (html) ->
+
+    # Convert HTML to markdown
+    try
+        result = html.replace /<(style>)[^\1]*\1/gim, ''
+        result = toMarkdown result
+    catch
+        if html?
+            result = html.replace /<(style>)[^\1]*\1/gim, ''
+            result = html.replace /<[^>]*>/gi, ''
+
+    # convert HTML entities
+    tmp = document.createElement 'div'
+    tmp.innerHTML = result
+    result = tmp.textContent
+
+    # Make citation more human readable.
+    result = result.replace />[ \t]+/ig, '> '
+    result = result.replace /(> \n)+/g, '> \n'
+    result
 
 
 
@@ -106,7 +163,7 @@ exports.setMessageAsReply = (options) ->
         inReplyTo
         dateHuman
         sender
-        text
+        # text
         html
         signature
         isSignature
@@ -145,7 +202,7 @@ exports.setMessageAsReplyAll = (options) ->
         inReplyTo
         dateHuman
         sender
-        text
+        # text
         html
         signature
         isSignature
@@ -192,7 +249,7 @@ exports.setMessageAsForward = (options) ->
         message
         inReplyTo
         dateHuman
-        sender
+        # sender
         text
         html
         signature
@@ -254,11 +311,11 @@ exports.setMessageAsForward = (options) ->
 exports.setMessageAsDefault = (options) ->
     {
         message
-        inReplyTo
-        dateHuman
-        sender
-        text
-        html
+        # inReplyTo
+        # dateHuman
+        # sender
+        # text
+        # html
         signature
         isSignature
     } = options
@@ -281,182 +338,7 @@ _cleanContent = (message) ->
     text = toMarkdown html or ''
     text = _cleanReplyText text or ''
 
-    html = _cleanHTML {html}
+    html = cleanHTML {html}
     # html = _wrapReplyHtml html
 
     return {html, text}
-
-
-# set source of attached images
-_cleanHTML = (props={}) ->
-    {html, displayImages} = props
-    imagesWarning = false
-    displayImages ?= SettingsStore.get reduxStore.getState(), 'messageDisplayImages'
-
-    # Add HTML to a document
-    parser = new DOMParser()
-    unless (doc = parser.parseFromString html, "text/html")
-        doc = document.implementation.createHTMLDocument("")
-        doc.documentElement.innerHTML = """<html><head>
-               <link rel="stylesheet" href="./fonts/fonts.css" />
-               <link rel="stylesheet" href="./mail_stylesheet.css" />
-               <style>body { visibility: hidden; }</style>
-           </head><body>#{html}</body></html>"""
-
-    unless doc
-        console.error "Unable to parse HTML content of message"
-        html = null
-    else
-        unless displayImages
-            imagesWarning = doc.querySelectorAll('IMG[src]').length isnt 0
-
-        # Format links:
-        # - open links into a new window
-        # - convert relative URL to absolute
-        for link in doc.querySelectorAll 'a[href]'
-            link.target = '_blank'
-            _toAbsolutePath link, 'href'
-
-        for image in doc.querySelectorAll 'img[src]'
-            # Do not display pictures
-            # when user doesnt want to
-            if imagesWarning
-                image.parentNode.removeChild image
-
-
-        html = doc.documentElement.innerHTML
-
-    return {html, imagesWarning}
-
-
-# Remove from given string:
-# * html tags
-# * extra spaces between reply markers and text
-# * empty reply lines
-_cleanReplyText = (html) ->
-
-    # Convert HTML to markdown
-    try
-        result = html.replace /<(style>)[^\1]*\1/gim, ''
-        result = toMarkdown result
-    catch
-        if html?
-            result = html.replace /<(style>)[^\1]*\1/gim, ''
-            result = html.replace /<[^>]*>/gi, ''
-
-    # convert HTML entities
-    tmp = document.createElement 'div'
-    tmp.innerHTML = result
-    result = tmp.textContent
-
-    # Make citation more human readable.
-    result = result.replace />[ \t]+/ig, '> '
-    result = result.replace /(> \n)+/g, '> \n'
-    result
-
-
-# Add signature at the end of the message
-_addSignature = (message, signature) ->
-    message.text += "\n\n-- \n#{signature}"
-    signatureHtml = signature.replace /\n/g, '<br>'
-    message.html += """
-    <p><br></p><p id="signature">-- \n<br>#{signatureHtml}</p>
-    <p><br></p>
-        """
-
-
-# Extract a reply address from a `message` object.
-_getReplyToAddress = (message) ->
-    reply = message?.get 'replyTo'
-    from = message?.get 'from'
-    if (reply? and reply.length isnt 0)
-        return reply
-    else
-        return from
-
-# Add a reply prefix to the current subject.
-# Do not add it again if it's already there.
-_getReplySubject = (message) ->
-    subject =  message?.get('subject') or ''
-    prefix = t 'compose reply prefix'
-    if subject.indexOf(prefix) isnt 0
-        subject = "#{prefix}#{subject}"
-    subject
-
-
-# Generate reply text by adding `>`
-# before each line of the given text.
-_generateReplyText = (message) ->
-    text = message?.get('text') or ''
-    result = _.map text.split('\n'), (line) -> "> #{line}"
-    result.join "\n"
-
-
-_toAbsolutePath = (elm, attribute, prefix='http://') ->
-    RGXP_PROTOCOL = /:\/\//
-    value = elm.getAttribute attribute
-    if value?.length and not RGXP_PROTOCOL.test value
-        elm.setAttribute attribute, prefix + value
-
-# coffeelint: disable=cyclomatic_complexity
-exports.formatContent = (message) ->
-    displayHTML = SettingsStore.get reduxStore.getState(), 'messageDisplayHTML'
-
-    # display full headers
-    fullHeaders = []
-    for key, value of message.get 'headers'
-        value = value.join('\n ') if Array.isArray value
-        fullHeaders.push "#{key}: #{value}"
-
-    # Do not display content
-    # if message isnt active
-    text = message.get 'text'
-    html = message.get 'html'
-
-    # Some calendar invitation
-    # may contain neither text nor HTML part
-    if not text?.length and not html?.length
-        text = if (message.get 'alternatives')?.length
-            t 'calendar unknown format'
-
-    # TODO: Do we want to convert text only messages to HTML ?
-    # /!\ if displayHTML is set, this method should always return
-    # a value fo html, otherwise the content of the email flashes
-    if text?.length and not html?.length and displayHTML
-        try
-            html = markdown.toHTML text.replace(/(^>.*$)([^>]+)/gm, "$1\n$2")
-            html = "<div class='textOnly'>#{html}</div>"
-        catch error
-            html = "<div class='textOnly'>#{text}</div>"
-
-    # Convert text into markdown
-    if html?.length and not text?.length and not displayHTML
-        text = toMarkdown html
-
-    if text?.length
-        # Tranform URL into links
-        urls = /((([A-Za-z]{3,9}:(?:\/\/)?)(?:[-;:&=\+\$,\w]+@)?[A-Za-z0-9.-]+|(?:www.|[-;:&=\+\$,\w]+@)[A-Za-z0-9.-]+)((?:\/[\+~%\/.\w-_]*)?\??(?:[-\+=&;%@.\w_]*)#?(?:[\w]*))?)/gim
-
-        rich = text.replace urls, '<a href="$1" target="_blank">$1</a>'
-
-        # Tranform Separation chars into HTML
-        rich = rich.replace /^>>>>>[^>]?.*$/gim, '<span class="quote5">$&</span><br />\r\n'
-        rich = rich.replace /^>>>>[^>]?.*$/gim, '<span class="quote4">$&</span><br />\r\n'
-        rich = rich.replace /^>>>[^>]?.*$/gim, '<span class="quote3">$&</span><br />\r\n'
-        rich = rich.replace /^>>[^>]?.*$/gim, '<span class="quote2">$&</span><br />\r\n'
-        rich = rich.replace /^>[^>]?.*$/gim, '<span class="quote1">$&</span><br />\r\n'
-
-    attachments = message.get 'attachments'
-    if html?.length
-        displayImages = message?.get('_displayImages') or false
-        props = {html, attachments, displayImages}
-        {html, imagesWarning} = _cleanHTML props
-
-    return {
-        attachments     : attachments
-        fullHeaders     : fullHeaders
-        imagesWarning   : imagesWarning
-        text            : text
-        rich            : rich
-        html            : html
-    }
