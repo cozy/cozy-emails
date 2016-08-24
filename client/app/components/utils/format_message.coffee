@@ -1,4 +1,4 @@
-SettingsStore = require('../../puregetters/settings')
+SettingsStore = require('../../getters/settings')
 reduxStore = require('../../reducers/_store')
 Immutable = require 'immutable'
 {MessageActions} = require '../../constants/app_constants'

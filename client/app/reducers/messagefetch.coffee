@@ -1,6 +1,6 @@
 Immutable = require 'immutable'
 {ActionTypes} = require '../constants/app_constants'
-RouterGetter = require '../puregetters/router'
+RouterGetter = require '../getters/router'
 {MSGBYPAGE} = require '../../../server/utils/constants'
 
 MessageFetch = Immutable.Record

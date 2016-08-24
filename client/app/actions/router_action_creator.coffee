@@ -1,7 +1,7 @@
 _ = require 'lodash'
 
-AccountGetter  = require '../puregetters/account'
-RouterGetter   = require '../puregetters/router'
+AccountGetter  = require '../getters/account'
+RouterGetter   = require '../getters/router'
 
 reduxStore = require '../reducers/_store'
 

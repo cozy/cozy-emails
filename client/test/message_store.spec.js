@@ -11,7 +11,7 @@ const getUID = require('./utils/guid').getUID;
 const MessageFixtures = require('./fixtures/message');
 const AccountFixture = require('./fixtures/account');
 const makeTestDispatcher = require('./utils/specs_dispatcher');
-const MessageGetter = require('../app/puregetters/messages');
+const MessageGetter = require('../app/getters/messages');
 
 
 describe('Message Store', () => {

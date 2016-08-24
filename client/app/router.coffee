@@ -2,7 +2,7 @@ Backbone = require 'backbone'
 React    = require 'react'
 ReactDOM = require 'react-dom'
 
-RouterGetter = require './puregetters/router'
+RouterGetter = require './getters/router'
 
 RouterActionCreator = require './actions/router_action_creator'
 

@@ -14,16 +14,15 @@ LayoutActionCreator  = require '../actions/layout_action_creator'
 MessageActionCreator  = require '../actions/message_action_creator'
 NotificationActionCreator = require '../actions/notification_action_creator'
 
-RouterGetter = require '../puregetters/router'
-MessageGetter = require '../puregetters/messages'
-LayoutGetter = require '../puregetters/layout'
-SelectionGetter = require '../puregetters/selection'
-RequestsGetter = require '../puregetters/requests'
-ContactGetter = require '../puregetters/contact'
+RouterGetter = require '../getters/router'
+MessageGetter = require '../getters/messages'
+LayoutGetter = require '../getters/layout'
+SelectionGetter = require '../getters/selection'
+RequestsGetter = require '../getters/requests'
+ContactGetter = require '../getters/contact'
 
 
 
-store = require('../reducers/_store')
 {Provider, connect} = require('react-redux')
 
 

@@ -33,10 +33,10 @@ module.exports = {
 
       '../routes',
 
-      '../puregetters/router',
-      '../puregetters/messages',
-      '../puregetters/pagination',
-      '../puregetters/requests',
+      '../getters/router',
+      '../getters/messages',
+      '../getters/pagination',
+      '../getters/requests',
       './messages',
       './accounts',
 

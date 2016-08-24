@@ -10,7 +10,7 @@ Form    = require '../../basics/form'
 Servers = require '../servers'
 
 reduxStore = require '../../../reducers/_store'
-RequestsGetter = require '../../../puregetters/requests'
+RequestsGetter = require '../../../getters/requests'
 
 
 # @TODO in this file

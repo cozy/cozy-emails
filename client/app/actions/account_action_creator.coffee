@@ -5,7 +5,7 @@ _ = require 'underscore'
 AccountsUtils = require '../libs/accounts'
 XHRUtils      = require '../libs/xhr'
 
-AccountGetter = require '../puregetters/account'
+AccountGetter = require '../getters/account'
 
 
 ###
