@@ -295,13 +295,6 @@ module.exports =
         .use throttle.plugin
         .end handleResponse _callback, "accountDiscover"
 
-    search: (url, callback) ->
-        request
-        .get url
-        .set 'Accept', 'application/json'
-        .use throttle.plugin
-        .end handleResponse callback, "search"
-
     refresh: (hard, callback) ->
         url = if hard then "refresh?all=true"
         else "refresh"

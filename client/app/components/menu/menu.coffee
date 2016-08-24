@@ -40,18 +40,6 @@ module.exports = Menu = React.createClass
             'aria-expanded': true,
 
             nav className: 'mainmenu',
-                if @props?.search and not @props.accountID
-                    div className: 'active',
-                        div className: 'account-title',
-                            a
-                                role: 'menuitem'
-                                className: 'account active',
-
-                                i className: 'fa fa-search'
-
-                                div
-                                    className: 'account-details',
-                                        span {}, @props?.search
                 @props.accounts.map @renderMailBoxes
                 .toArray()
 

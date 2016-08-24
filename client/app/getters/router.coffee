@@ -3,11 +3,10 @@ AccountActions} = require '../constants/app_constants'
 
 _         = require 'lodash'
 
-AccountStore      = require '../stores/account_store'
+AccountGetter = require '../getters/account'
 NotificationStore = require '../stores/notification_store'
 RequestsStore     = require '../stores/requests_store'
 RouterStore       = require '../stores/router_store'
-SearchStore       = require '../stores/search_store'
 
 FileGetter    = require '../getters/file'
 MessageGetter = require '../getters/message'
@@ -38,17 +37,17 @@ module.exports =
 
     getInboxID: (accountID) ->
         accountID ?= @getAccountID()
-        AccountStore.getInbox(accountID)?.get 'id'
+        AccountGetter.getInbox(accountID)?.get 'id'
 
 
     getInboxMailboxes: (accountID) ->
         RouterStore.getAllMailboxes(accountID).filter (mailbox) ->
-            AccountStore.isInbox accountID, mailbox.get('id'), true
+            AccountGetter.isInbox accountID, mailbox.get('id'), true
 
 
     getOtherMailboxes: (accountID) ->
         RouterStore.getAllMailboxes(accountID).filter (mailbox) ->
-            not AccountStore.isInbox accountID, mailbox.get('id'), true
+            not AccountGetter.isInbox accountID, mailbox.get('id'), true
 
 
     # Sometimes we need a real URL
@@ -65,7 +64,7 @@ module.exports =
     isTrashbox: (mailboxID) ->
         accountID = @getAccountID()
         mailboxID ?= @getMailboxID()
-        AccountStore.isTrashbox accountID, mailboxID
+        AccountGetter.isTrashbox accountID, mailboxID
 
 
     # Sometimes we need a real URL
@@ -98,10 +97,6 @@ module.exports =
 
     getFilter: ->
         RouterStore.getFilter()
-
-
-    getSearch: ->
-        SearchStore.getCurrentSearch()
 
 
     getSelectedTab: ->
@@ -148,21 +143,21 @@ module.exports =
     getMailbox: (accountID, mailboxID) ->
         accountID ?= @getAccountID()
         mailboxID ?= @getMailboxID()
-        AccountStore.getMailbox accountID, mailboxID
+        AccountGetter.getMailbox accountID, mailboxID
 
 
     getUnreadLength: (accountID) ->
         accountID ?= @getAccountID()
-        AccountStore.getInbox(accountID)?.get 'nbUnread'
+        AccountGetter.getInbox(accountID)?.get 'nbUnread'
 
 
     getFlaggedLength: (accountID) ->
         accountID ?= @getAccountID()
-        AccountStore.getInbox(accountID)?.get 'nbFlagged'
+        AccountGetter.getInbox(accountID)?.get 'nbFlagged'
 
 
     getAccounts: ->
-        AccountStore.getAll()
+        AccountGetter.getAll()
 
 
     getAccountSignature: ->
@@ -200,11 +195,11 @@ module.exports =
 
         # If current mailboxID is inbox
         # test Inbox instead of 1rst mailbox
-        if (AccountStore.isInbox accountID, mailboxID)
+        if (AccountGetter.isInbox accountID, mailboxID)
             # Gmail issue
             # Test \All tag insteadof \INBOX
-            mailbox = AccountStore.getAllMailbox accountID
-            mailbox ?= AccountStore.getInbox accountID
+            mailbox = AccountGetter.getAllMailbox accountID
+            mailbox ?= AccountGetter.getInbox accountID
 
         mailbox ?= @getMailbox()
         mailbox?.get('lastSync')

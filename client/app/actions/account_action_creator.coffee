@@ -6,7 +6,7 @@ AccountsUtils = require '../libs/accounts'
 AppDispatcher = require '../libs/flux/dispatcher/dispatcher'
 XHRUtils      = require '../libs/xhr'
 
-AccountStore = require '../stores/account_store'
+AccountGetter = require '../getters/account'
 RouterStore  = require '../stores/router_store'
 
 ###
@@ -51,7 +51,7 @@ module.exports = AccountActionCreator =
 
 
     edit: ({value, accountID}) ->
-        newAccount = AccountStore.getByID(accountID).mergeDeep value
+        newAccount = AccountGetter.getByID(accountID).mergeDeep value
 
         AppDispatcher.dispatch
             type: ActionTypes.EDIT_ACCOUNT_REQUEST
@@ -69,7 +69,7 @@ module.exports = AccountActionCreator =
 
     check: ({value: account, accountID}) ->
         if accountID
-            account = AccountStore.getByID(accountID).mergeDeep(account).toJS()
+            account = AccountGetter.getByID(accountID).mergeDeep(account).toJS()
 
         # Extract domain from login field, to compare w/ know OAuth-aware
         # domains

@@ -337,10 +337,6 @@ module.exports.batchMove = function(req, res, next) {
   });
 };
 
-module.exports.search = function(req, res, next) {
-  return next(new Error('search is disabled'));
-};
-
 module.exports.raw = function(req, res, next) {
   var boxID, uid;
   boxID = Object.keys(req.message.mailboxIDs)[0];

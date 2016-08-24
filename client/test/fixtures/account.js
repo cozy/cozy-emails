@@ -139,7 +139,7 @@ module.exports.createFlaggedMailbox = function FlaggedMailbox() {
 };
 
 
-module.exports.createAccount = function Account() {
+module.exports.createAccount = function Account(options) {
   const inboxMailbox = new module.exports.createInboxMailbox();
   const draftMailbox = new module.exports.createDraftMailbox();
   const junkMailbox = new module.exports.createJunkMailbox();
@@ -159,11 +159,21 @@ module.exports.createAccount = function Account() {
   mailboxes.push(unreadMailbox);
   mailboxes.push(flaggedMailbox);
 
-  // Add mailbox created by user
-  let counter = Math.round(Math.random() * 6);
-  while (counter > 0) {
-    mailboxes.push(new module.exports.createMailbox());
-    --counter;
+  // Do not add random content in a fixture, how to test with random
+  // number of values ?
+  // Setting randomizeAdditionalMailboxes to true by default to preserve legacy
+  // but additional mailboxes should be passed as a parameter.
+  let randomizeAdditionalMailboxes = !options ||
+    typeof options.randomizeAdditionalMailboxes === 'undefined' ||
+      options.randomizeAdditionalMailboxes;
+
+  if(randomizeAdditionalMailboxes){
+    // Add mailbox created by user
+    let counter = Math.round(Math.random() * 6);
+    while (counter > 0) {
+      mailboxes.push(new module.exports.createMailbox());
+      --counter;
+    }
   }
 
   return {

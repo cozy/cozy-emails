@@ -11,8 +11,6 @@ Participants = React.createFactory require './participants'
 RouterGetter = require '../getters/router'
 MessageGetter = require '../getters/message'
 ContactGetter = require '../getters/contact'
-SearchGetter = require '../getters/search'
-
 
 module.exports = React.createClass
     displayName: 'MessagesItem'
@@ -23,7 +21,9 @@ module.exports = React.createClass
 
 
     getSubject: ->
-        @highlightSearch text: @props.message.get 'subject'
+        subject = (@props.message.get('subject') or '').substr 0, 1024
+        props = [subject]
+        p null, props...
 
 
     getAvatar: ->
@@ -122,12 +122,6 @@ module.exports = React.createClass
                             if @props.conversationLengths > 1
                                 span className: 'conversation-length',
                                     @props.conversationLengths
-
-
-    highlightSearch: ({text}, options = null) ->
-        text = (text or '').substr 0, 1024
-        props = SearchGetter.highlightSearch text
-        p options, props...
 
 
     onMessageClick: ->
