@@ -6,7 +6,7 @@ module.exports =
         state.get('route').get('URIKey')
 
     getMessagesPerPage: (state) ->
-        state.getIn ['messagefetch', 'messagesPerPage']
+        state.getIn ['message_fetch', 'messagesPerPage']
 
     getRequestStatus: (state, URIKey) ->
-        state.getIn ['messagefetch', 'requests', URIKey], Immutable.Map()
+        state.getIn ['message_fetch', 'requests', URIKey], Immutable.Map()

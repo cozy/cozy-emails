@@ -54,7 +54,7 @@ module.exports = {
       './layout',
       './contact',
       './refreshes',
-      './messagefetch',
+      './message_fetch',
 
       'superagent-throttle',
       'node-event-emitter',
