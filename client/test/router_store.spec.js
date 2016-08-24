@@ -30,7 +30,7 @@ const makeTestDispatcher = require('./utils/specs_dispatcher');
 const BackboneRoutes = require('../app/routes').BACKBONE_ROUTES;
 
 const DEFAULT_TAB = 'account';
-// const reduxStore = require('../app/reducers/_store');
+
 describe('RouterStore', () => {
   let RouterStore;
   let AccountStore;

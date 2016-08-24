@@ -3,7 +3,7 @@ _ = require 'lodash'
 AccountGetter  = require '../getters/account'
 RouterGetter   = require '../getters/router'
 
-reduxStore = require '../reducers/_store'
+reduxStore = require '../redux_store'
 
 Realtime = require '../libs/realtime'
 

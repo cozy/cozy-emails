@@ -9,7 +9,7 @@ AccountsUtils = require '../../../libs/accounts'
 Form    = require '../../basics/form'
 Servers = require '../servers'
 
-reduxStore = require '../../../reducers/_store'
+reduxStore = require '../../../redux_store'
 RequestsGetter = require '../../../getters/requests'
 
 

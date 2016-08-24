@@ -36,7 +36,7 @@ notify = (state, level, message, options) ->
     # @TODO this should be somewhere else
     unless options?.waitConfirmation
         setTimeout ->
-            require('./_store').dispatch
+            require('../redux_store').dispatch
                 type: ActionTypes.CLICKED_TASK_OK
                 value: id
         , AUTOCLOSETIMER

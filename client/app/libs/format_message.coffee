@@ -1,5 +1,5 @@
 SettingsStore = require('../../getters/settings')
-reduxStore = require('../../reducers/_store')
+reduxStore = require('../../redux_store')
 {markdown}  = require 'markdown'
 toMarkdown  = require 'to-markdown'
 

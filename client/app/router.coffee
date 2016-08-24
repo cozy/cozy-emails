@@ -9,7 +9,7 @@ RouterActionCreator = require './actions/router_action_creator'
 {ActionTypes} = require './constants/app_constants'
 
 routes = require './routes'
-reduxStore = require './reducers/_store'
+reduxStore = require './redux_store'
 
 Polyglot = require 'node-polyglot'
 moment   = require 'moment'
