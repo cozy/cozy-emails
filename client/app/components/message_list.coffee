@@ -1,11 +1,12 @@
 React     = require 'react'
 Immutable = require 'immutable'
 
-{div, section, p, button, ul, strong} = React.DOM
+{div, section, p, button, ul} = React.DOM
 
-MessageItem         = React.createFactory require './message-list-item'
+MessageItem         = React.createFactory require './message_list_item'
+MessageListLoader   = React.createFactory require './message_list_loader'
 
-{Spinner, Progress} = require('./basics/components').factories
+{Progress} = require('./basics/components').factories
 
 isVisible = require '../libs/is_visible'
 
@@ -43,10 +44,7 @@ module.exports = React.createClass
             'className'         : 'messages-list panel'
 
             unless @props.lastSync?
-                div className: 'mailbox-loading',
-                    Spinner color: 'blue'
-                    strong null, t 'emails are fetching'
-                    p null, t 'thanks for patience'
+                MessageListLoader()
 
             # Progress Bar of mailbox refresh
             if @props.isLoading
