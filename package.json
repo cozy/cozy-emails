@@ -73,7 +73,7 @@
     "build:views": "jade2commonjs --no-debug --out build/server/views server/views",
     "clean": "rm -rf build",
     "copy:locales": "mkdir -p build/client/app/locales && cp -r client/app/locales/*.json build/client/app/locales/",
-    "deploy" : "git-directory-deploy --directory ./ --branch development-build --repo=https://$GITHUB_TOKEN@github.com/cozy/cozy-emails.git",
+    "deploy" : "git-directory-deploy --username emails-autodeploy --email fake@cozy.io --directory ./ --branch development-build --repo=https://$GITHUB_TOKEN@github.com/cozy/cozy-emails.git",
     "ensure:client": "cd client && npm install",
     "fixtures": "npm-run-all 'fixtures:*'",
     "fixtures:generate": "coffee tests/fixtures/generator.coffee 1000",
