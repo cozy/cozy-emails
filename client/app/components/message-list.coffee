@@ -7,7 +7,7 @@ MessageItem         = React.createFactory require './message-list-item'
 
 {Spinner, Progress} = require('./basics/components').factories
 
-isVisible = require './utils/is_visible'
+isVisible = require '../libs/is_visible'
 
 module.exports = React.createClass
     displayName: 'MessageList'
