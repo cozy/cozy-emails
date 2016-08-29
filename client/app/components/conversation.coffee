@@ -9,7 +9,7 @@ Message = React.createFactory require './message'
 
 FlagsConstants = require '../constants/app_constants'
 
-MessageUtils = require './utils/format_message'
+MessageUtils = require '../libs/format_message'
 isVisible = require '../libs/is_visible'
 
 _scrollToActive = ->

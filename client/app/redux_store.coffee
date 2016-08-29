@@ -2,9 +2,9 @@ Immutable = require 'immutable'
 {createStore} = require 'redux'
 Immutable = require 'immutable'
 
-rootReducer = require './root'
-contactMapper = require '../libs/mappers/contact'
-Account = require '../models/account'
+rootReducer = require './reducers'
+contactMapper = require './libs/mappers/contact'
+Account = require './models/account'
 
 initialContacts = Immutable.Map()
     .withMutations contactMapper.toMapMutator window?.contacts or []
