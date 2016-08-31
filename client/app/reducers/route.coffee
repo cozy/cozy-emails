@@ -11,8 +11,8 @@ RouterGetter = require '../getters/router'
 makeURIKey = require '../libs/urikey'
 
 DEFAULT_TAB = 'account'
-
 DEFAULT_STATE = new Route()
+
 
 # This reducer expects the whole state as a 3rd param.
 module.exports = (state = DEFAULT_STATE, action, appstate) ->
@@ -134,6 +134,7 @@ module.exports = (state = DEFAULT_STATE, action, appstate) ->
 
             return state
 
+
         when ActionTypes.GO_TO_NEXT
             messages = RouterGetter.getMessagesList(appstate)
             ids = messages.keySeq().toArray()
@@ -157,12 +158,14 @@ module.exports = (state = DEFAULT_STATE, action, appstate) ->
                 nearestMessage = RouterGetter.getNearestMessage(appstate)
                 return state.set 'nearestMessage', nearestMessage
 
+
         # Delete nearestMessage
         # because it's beacame useless
         when ActionTypes.MESSAGE_TRASH_FAILURE
             {target} = action.value
             if target.messageID is state.get('messageID')
                 return state.remove 'nearestMessage'
+
 
         # Select nearest message from deleted message
         # and remove message from mailbox and conversation lists

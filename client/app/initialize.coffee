@@ -12,6 +12,7 @@ Realtime = require './libs/realtime'
 Performances = require './libs/performances'
 reduxStore = require './redux_store'
 
+
 document.addEventListener 'DOMContentLoaded', ->
 
     __DEV__ = window.location.hostname is 'localhost'

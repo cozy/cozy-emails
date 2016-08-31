@@ -21,15 +21,12 @@ SelectionGetter = require '../getters/selection'
 RequestsGetter = require '../getters/requests'
 ContactGetter = require '../getters/contact'
 
-
-
 {Provider, connect} = require('react-redux')
 
 
 ###
     This component is the root of the React tree.
     It listens to the store and re-render
-
 ###
 
 bindStore = connect(
