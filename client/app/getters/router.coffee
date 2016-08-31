@@ -42,10 +42,6 @@ module.exports =
         @getRouteObject(state).get('conversationID')
 
 
-    getSelectedTab: (state) ->
-        @getRouteObject(state).get('tab')
-
-
     getFilter: (state) ->
         @getRouteObject(state).get('messagesFilter')
 

@@ -678,53 +678,6 @@ describe('RouterStore', () => {
         return AccountStore.getMailbox(mailboxID);
       }
     });
-
-
-    describe('getSelectedTab', () => {
-
-      it('Should return `null`', () => {
-        assert.equal(RouterStore.getSelectedTab(), null);
-      });
-
-      it('Shouldnt be stored (err)', () => {
-        Dispatcher.dispatch({
-          type: ActionTypes.ROUTE_CHANGE,
-          value: { action: AccountActions.CREATE },
-        });
-        assert.equal(RouterStore.getSelectedTab(), null);
-
-        Dispatcher.dispatch({
-          type: ActionTypes.ROUTE_CHANGE,
-          value: { action: AccountActions.CREATE, tab: 'plip' },
-        });
-        assert.equal(RouterStore.getSelectedTab(), null);
-      });
-
-      it('Should return (default) `value`', () => {
-        Dispatcher.dispatch({
-          type: ActionTypes.ROUTE_CHANGE,
-          value: { action: AccountActions.EDIT },
-        });
-        assert.equal(RouterStore.getSelectedTab(), 'account');
-        assert.equal(RouterStore.getSelectedTab(), DEFAULT_TAB);
-      });
-
-      it('Should save dispatched `value`', () => {
-        Dispatcher.dispatch({
-          type: ActionTypes.ROUTE_CHANGE,
-          value: { action: AccountActions.EDIT, tab: 'plip' },
-        });
-        assert.equal(RouterStore.getSelectedTab(), 'plip');
-      });
-
-      it('Should reset `value` when `action` changes', () => {
-        Dispatcher.dispatch({
-          type: ActionTypes.ROUTE_CHANGE,
-          value: { action: MessageActions.SHOW_ALL },
-        });
-        assert.equal(RouterStore.getSelectedTab(), null);
-      });
-    });
   });
 
 
