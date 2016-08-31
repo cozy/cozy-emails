@@ -16,7 +16,6 @@ module.exports = BasicFormFieldset = React.createClass
 
 
     componentWillReceiveProps: (nextProps) ->
-        # update internal state w/ passed props
         @setState expanded: nextProps.expanded
 
 

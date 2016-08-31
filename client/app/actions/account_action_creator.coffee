@@ -2,7 +2,7 @@
 
 _ = require 'underscore'
 
-AccountsUtils = require '../libs/accounts'
+AccountsLib = require '../libs/accounts'
 XHRUtils      = require '../libs/xhr'
 
 AccountGetter = require '../getters/account'
@@ -66,13 +66,14 @@ module.exports = AccountActionCreator = (dispatch, state) ->
                     type: ActionTypes.EDIT_ACCOUNT_SUCCESS
                     value: {rawAccount}
 
+
     check: ({value: account, accountID}) ->
         if accountID
             account = AccountGetter.getByID(state,accountID)
             .mergeDeep(account).toJS()
 
-        # Extract domain from login field, to compare w/ know OAuth-aware
-        # domains
+        # Extract domain from login field,
+        # to compare w/ know OAuth-aware domains
         [..., domain] = account.login.split '@'
 
         dispatch
@@ -92,6 +93,7 @@ module.exports = AccountActionCreator = (dispatch, state) ->
                 dispatch
                     type: ActionTypes.CHECK_ACCOUNT_SUCCESS
                     value: {res}
+
 
     remove: (accountID) ->
         dispatch
@@ -124,14 +126,15 @@ module.exports = AccountActionCreator = (dispatch, state) ->
             # same methods the view component uses by exploiting same mixins).
             # Also, dispatch a success event for the discovery action.
             else
-                servers = AccountsUtils.parseProviders provider
-                config  = AccountsUtils.sanitizeConfig _.extend config, servers
+                servers = AccountsLib.getProviderProps provider
+                config  = AccountsLib.sanitizeConfig _.extend config, servers
 
                 AccountActionCreator.check value: config
 
                 dispatch
                     type: ActionTypes.DISCOVER_ACCOUNT_SUCCESS
                     value: {domain, provider}
+
 
     # FIXME: move this elsewhere
     # Action is not a getter/setter!

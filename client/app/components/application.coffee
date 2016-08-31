@@ -32,14 +32,6 @@ ContactGetter = require '../getters/contact'
 bindStore = connect(
     # MapStateToProps
     (state) ->
-        # Account: creation
-        isAccountCreationBusy   : RequestsGetter.isAccountCreationBusy(state)
-        isAccountDiscoverable   : RequestsGetter.isAccountDiscoverable(state)
-        accountCreationAlert    : RequestsGetter.getAccountCreationAlert(state)
-        isAccountOAuth          : RequestsGetter.isAccountOAuth(state)
-        accountCreationSuccess  : RequestsGetter.getAccountCreationSuccess(state)?.account
-        accountCreationDiscover : RequestsGetter.getAccountCreationDiscover(state)
-
         # Store
         action                  : RouterGetter.getAction(state)
         hasAccounts             : RouterGetter.hasAccounts(state)

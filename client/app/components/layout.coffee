@@ -24,6 +24,7 @@ module.exports = React.createClass
         AriaTips.bind()
 
     render: ->
+        console.log 'LOGIN?', @props.login
         if @props.isIndexing
             return div className: 'reindexing-message',
                 img
@@ -106,14 +107,7 @@ module.exports = React.createClass
 
             if @props.action is AccountActions.CREATE
                 AccountWizardCreation
-                    key: 'modal-account-wizard'
-                    isBusy              : @props.isAccountCreationBusy
-                    isDiscoverable      : @props.isAccountDiscoverable
-                    alert               : @props.accountCreationAlert
-                    isOAuth             : @props.isAccountOAuth
-                    account             : @props.accountCreationSuccess
-                    discover            : @props.accountCreationDiscover
-                    login               : @props.login
+                    key                 : 'modal-account-wizard'
                     doAccountDiscover   : @props.doAccountDiscover
                     doAccountCheck      : @props.doAccountCheck
                     doCloseModal        : @props.doCloseModal
