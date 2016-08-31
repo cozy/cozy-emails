@@ -1,29 +1,29 @@
-"use strict";
+'use strict';
 
+const random = require('./pseudorandom');
 
 
 module.exports.getUID = function GUID() {
   function s4() {
-    return Math.floor((1 + Math.random()) * 0x10000)
+    return Math.floor((1 + random()) * 0x10000)
       .toString(16)
       .substring(1);
   }
-  return  s4() + s4() + '-' + s4() + '-' + s4() + '-' +
+  // eslint-disable-next-line prefer-template
+  return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
     s4() + '-' + s4() + s4() + s4();
-}
+};
 
 
-module.exports.getName = function Name() {
-  let prefix = arguments[0] || '';
-
-  let length = 20;
+module.exports.getName = function Name(prefix) {
+  const length = 20;
   const alphanumeric = 'abcdefghijklmnopqrstuvwxyz';
 
-  let value = [];
-  if (arguments[0] != undefined) value.push(arguments[0], '-');
+  const value = [];
+  if (prefix !== undefined) value.push(prefix, '-');
   while (value.length < length) {
-    let index = Math.floor(Math.random() * alphanumeric.length)
+    const index = Math.floor(random() * alphanumeric.length);
     value.push(alphanumeric[index]);
   }
   return value.join('');
-}
+};

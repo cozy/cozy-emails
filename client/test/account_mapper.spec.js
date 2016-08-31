@@ -1,9 +1,8 @@
 'use strict';
 
 const assert = require('chai').assert
-const Immutable = require('immutable');
 
-const accountMapper = require('../app/libs/mappers/account');
+const Account = require('../app/models/account');
 const accountFixture = require('./fixtures/account');
 
 
@@ -20,8 +19,7 @@ describe('Account Mapper', () => {
         });
 
         // act
-        let result = accountMapper
-          .formatAccount(rawAccount)
+        let result = Account.from(rawAccount)
           .get('mailboxes');
 
         // assert

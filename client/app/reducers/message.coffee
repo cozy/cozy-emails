@@ -9,6 +9,8 @@ shouldUpdateMessage = (current, updates) ->
     value = current?.get 'updated'
     (not value?) or (not updates.updated?) or (value < updates.updated)
 
+Message = require '../models/message'
+
 applyChangesOneMessage = (messages, updatedMsg) ->
 
     oldMessage = messages.get updatedMsg.id
@@ -19,7 +21,7 @@ applyChangesOneMessage = (messages, updatedMsg) ->
     attachments = attachments.map (file) -> Immutable.Map(file)
     attachments = Immutable.List(attachments)
 
-    toUpdate = new Immutable.Map({ # defaults
+    toUpdate = new Message({ # defaults
         date: now.toISOString()
         createdAt: updatedMsg.date
         flags: Immutable.List()
@@ -64,7 +66,8 @@ messagesReducer = (messages = Immutable.OrderedMap(), action) ->
         when ActionTypes.MESSAGE_RESET_REQUEST
             return Immutable.OrderedMap()
 
-        when ActionTypes.MESSAGE_FETCH_SUCCESS
+        when ActionTypes.MESSAGE_FETCH_SUCCESS, \
+             ActionTypes.CONVERSATION_FETCH_SUCCESS
             updateds = action.value.result.messages
             return updateds.reduce(applyChangesOneMessage, messages)
 
@@ -112,7 +115,7 @@ messagesReducer = (messages = Immutable.OrderedMap(), action) ->
             else
                 value = !!displayImages
 
-            updated = messages.get(messageID).set '_displayImages', value
+            updated = messages.get(messageID)?.set '_displayImages', value
             return messages.set(messageID, updated)
 
         else
@@ -132,9 +135,9 @@ extractMessagesIDs = (action) ->
     else if action.type is ActionTypes.RECEIVE_MESSAGE_DELETE
         return [action.value]
 
-module.exports = (state = {}, action) ->
-    newMessages = messagesReducer(state.messages, action)
-    newConvLengths = state.conversationLength or Immutable.Map()
+module.exports = (state = Immutable.Map(), action) ->
+    newMessages = messagesReducer(state.get('messages'), action)
+    newConvLengths = state.get('conversationsLengths') or Immutable.Map()
 
     # FIXME: server side data
     #  - The fact that the conversation length is calculated remotely,
@@ -146,17 +149,31 @@ module.exports = (state = {}, action) ->
         changes = action.value.result.conversationLength
         newConvLengths = newConvLengths.merge(changes)
 
+    if action.type is ActionTypes.CONVERSATION_FETCH_SUCCESS
+        # Apply filters to messages
+        # to upgrade conversationLength
+        # FIXME: should be moved server side
+        convID = action.value.result.messages[0].conversationID
+        convLength = action.value.result.messages
+        .filter (msg) -> newMessages.get(msg.id)
+        .length
+
+        # FIXME: why do we apply filter before adding to store
+        # filterFunction = RouterGetter.getFilterFunction appstate
+        # messages = _.filter messages, filterFunction
+        newConvLengths = newConvLengths.set convID, convLength
+
+
     if action.type in [ActionTypes.MESSAGE_TRASH_SUCCESS, \
                        ActionTypes.RECEIVE_MESSAGE_DELETE]
 
         messageIDs = extractMessagesIDs(action)
         for messageID in messageIDs
             # Note: we use old state cause we want to get deleted messages too
-            conversationID = state.messages.get(messageID).get 'conversationID'
+            conversationID = state.getIn(['messages', messageID,
+                                                            'conversationID'])
             newConvLengths = decrementNoZero newConvLengths, conversationID
 
-    if newMessages isnt state.messages or
-    newConvLengths isnt state.conversationLength
-        return {messages: newMessages, conversationLength: newConvLengths}
-    else
-        return state
+    return state.merge
+        messages: newMessages,
+        conversationsLengths: newConvLengths

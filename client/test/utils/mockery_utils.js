@@ -11,42 +11,51 @@ module.exports = {
     // this feels hacky, but only wait for
     // mockery to not bother about all redux dependencies:
     mockery.registerMock('redux', redux);
-    mockery.registerMock('../dispatcher/dispatcher', dispatcher);
-    mockery.registerMock(
-      '../libs/flux/dispatcher/dispatcher', dispatcher);
+    // mockery.registerMock('../dispatcher/dispatcher', dispatcher);
   },
 
   initActionsStores: () => {
     mockery.registerMock('superagent', superagent);
     mockery.registerMock('socket.io-client', {});
-
-    mockery.registerMock('../stores/router_store', {});
-    mockery.registerMock('../stores/account_store', {});
-    mockery.registerMock('../stores/message_store', {});
-    mockery.registerMock('../stores/layout_store', {});
-    mockery.registerMock('../stores/contact_store', {});
-    mockery.registerMock('../stores/requests_store', {});
-    mockery.registerMock('../stores/settings_store', {});
   },
 
 
   // Configure mockery to run properly with stores.
   initForStores: (allowables) => {
-    if (allowables === null) allowables = [];
+    if(allowables === undefined) allowables = [];
     mockery.enable({
       warnOnUnregistered: true,
       useCleanCache: true,
     });
 
+    mockery.registerMock('../stores/notification_store', {});
     mockery.registerAllowables([
-      '../getters/message',
-      '../app/getters/message',
 
-      //   reducers
+      '../routes',
+
+      '../puregetters/router',
+      '../puregetters/messages',
+      '../puregetters/pagination',
+      '../puregetters/requests',
+      './messages',
+      './accounts',
+
+      '../models/message',
+      '../models/route',
+
+      // reducers can only be required from reducers/_store
       '../reducers/_store',
       './root',
       './message',
       './selection',
+      './route',
+      './modal',
+      './requests',
+      './layout',
+      './contact',
+      './refreshes',
+      './messagefetch',
+
       'superagent-throttle',
       'node-event-emitter',
       'immutable',
@@ -56,12 +65,16 @@ module.exports = {
       'moment',
       'lodash',
       'underscore',
+      './constants/app_constants',
       '../constants/app_constants',
-      '../libs/flux/store/store',
       '../libs/xhr',
+      '../libs/mappers/contact',
+      '../libs/urikey',
       '../libs/realtime',
+      '../libs/attachment_types',
       '../libs/accounts',
       '../libs/notification',
+      '../../../server/utils/constants',
       '../invariant',
     ].concat(allowables));
   },

@@ -1,9 +1,9 @@
 _ = require 'lodash'
 
-AppDispatcher   = require '../libs/flux/dispatcher/dispatcher'
+AccountGetter  = require '../puregetters/account'
+RouterGetter   = require '../puregetters/router'
 
-AccountGetter  = require '../getters/account'
-RouterStore   = require '../stores/router_store'
+reduxStore = require '../reducers/_store'
 
 Realtime = require '../libs/realtime'
 
@@ -15,42 +15,58 @@ RouterActionCreator =
     # Refresh Emails from Server
     # This is a read data pattern
     # ActionCreator is a write data pattern
-    refreshMailbox: ({mailboxID, deep}) ->
-        return unless (mailboxID ?= RouterStore.getMailboxID())
-        deep ?= true
-        silent = true
+    refreshMailbox: (dispatch, {mailboxID}) ->
+        throw new Error('expected mailboxID') unless mailboxID
 
-        AppDispatcher.dispatch
+        dispatch
             type: ActionTypes.REFRESH_REQUEST
-            value: {mailboxID, deep, silent}
+            value: {mailboxID, deep: true, silent: true}
 
-        XHRUtils.refreshMailbox mailboxID, {deep, silent}, (error, updated) ->
+        options = deep: true, silent: true
+        XHRUtils.refreshMailbox mailboxID, options, (error, updated) ->
             if error?
-                AppDispatcher.dispatch
+                dispatch
                     type: ActionTypes.REFRESH_FAILURE
                     value: {mailboxID, error}
             else
-                AppDispatcher.dispatch
+                dispatch
                     type: ActionTypes.REFRESH_SUCCESS
                     value: {mailboxID, updated}
 
+    # called by message-list when the user click on the button at bottom
+    loadMore: (dispatch) ->
+        state = reduxStore.getState()
+        url = RouterGetter.getFetchURL(state)
+        hasNextPage = RouterGetter.hasNextPage(state)
+        isLoading = RouterGetter.isLoading(state)
 
-    getCurrentPage: (params={}) ->
-        {url, action, mailboxID, filter} = params
+        if url and hasNextPage and not isLoading
+            @doFetchMessages dispatch, url
 
-        url ?= RouterStore.getCurrentURL {action, mailboxID, filter}
+
+    # called by the router when the page is shown and above
+    getCurrentPage: (dispatch) ->
+        state = reduxStore.getState()
+        url = RouterGetter.getFetchURL(state)
+
+        if url and
+        RouterGetter.hasNextPage(state) and
+        not RouterGetter.isPageComplete(state) and
+        not RouterGetter.isLoading(state)
+            @doFetchMessages dispatch, url
+
+    doFetchMessages: (dispatch, url) ->
 
         # Always load messagesList
-        action = MessageActions.SHOW_ALL
         timestamp = (new Date()).valueOf()
 
-        AppDispatcher.dispatch
+        dispatch
             type: ActionTypes.MESSAGE_FETCH_REQUEST
             value: {url, timestamp}
 
         XHRUtils.fetchMessagesByFolder url, (error, result={}) =>
             if error?
-                AppDispatcher.dispatch
+                dispatch
                     type: ActionTypes.MESSAGE_FETCH_FAILURE
                     value: {error, url, timestamp}
             else
@@ -60,7 +76,7 @@ RouterActionCreator =
                 before = lastMessage?.date or timestamp
                 Realtime.setServerScope {mailboxID, before}
 
-                AppDispatcher.dispatch
+                dispatch
                     type: ActionTypes.MESSAGE_FETCH_SUCCESS
                     value: {result, url, timestamp}
 
@@ -71,95 +87,98 @@ RouterActionCreator =
                 # - try to select nearestMessage
                 # - if not select current MessageList
                 # - if no messageList go to default mailbox
-                isPageComplete = RouterStore.isPageComplete()
-                hasNextPage = RouterStore.hasNextPage()
-                if hasNextPage and not isPageComplete
-                    @gotoNextPage()
+                state = reduxStore.getState()
+                if RouterGetter.hasNextPage(state) and
+                not RouterGetter.isPageComplete(state)
+                    @getCurrentPage dispatch
 
-
-    gotoNextPage: ->
-        if (url = RouterStore.getNextRequest())?
-            @getCurrentPage {url}
-        else
-            URI = RouterStore.getURI()
-            AppDispatcher.dispatch
-                type: ActionTypes.MESSAGE_FETCH_FAILURE
-                value: { error: 'NEXT_PAGE_IS_NULL', URI }
-
-
-    gotoCompose: (params={}) ->
+    gotoCompose: (dispatch, params={}) ->
         {messageID, mailboxID} = params
 
         action = MessageActions.NEW
-        mailboxID ?= RouterStore.getMailboxID messageID
+        state = reduxStore.getState()
+        mailboxID ?= RouterGetter.getMailboxID state, messageID
 
-        AppDispatcher.dispatch
+        dispatch
             type: ActionTypes.ROUTE_CHANGE
             value: {mailboxID, messageID, action}
 
 
     # Get last message unread
     # or get last message if not
-    gotoConversation: (params={}) ->
+    gotoConversation: (dispatch, params={}) ->
         {conversationID} = params
 
         # 1rst: load all messages from conversation
-        @getConversation conversationID
+        @getConversation dispatch, conversationID
 
         # 2nd: redirect to conversation
-        messageID = RouterStore.getMessageID conversationID
-        @gotoMessage {conversationID, messageID}
+        # At first get unread Message
+        # if not get last message
+        state = reduxStore.getState()
+        messages = RouterGetter.getConversation state, conversationID
+        message = messages.find((message) -> message.isUnread()) or
+        messages.first()
+        messageID = message?.get 'id'
+        @gotoMessage dispatch, {conversationID, messageID}
 
 
-    gotoMessage: (message={}) ->
+    gotoMessage: (dispatch, message={}) ->
         {conversationID, messageID, mailboxID, filter} = message
 
-        messageID ?= RouterStore.getMessageID()
-        mailboxID ?= RouterStore.getMailboxID messageID
-        filter = filter or RouterStore.getFilter()
+        state = reduxStore.getState()
+        messageID ?= RouterGetter.getMessageID(state)
+        mailboxID ?= RouterGetter.getMailboxID state, messageID
+        filter = filter or RouterGetter.getFilter(state)
 
         unless messageID
             action = MessageActions.SHOW_ALL
-            AppDispatcher.dispatch
+            dispatch
                 type: ActionTypes.ROUTE_CHANGE
                 value: {mailboxID, action, filter}
         else
             action = MessageActions.SHOW
-            AppDispatcher.dispatch
+            dispatch
                 type: ActionTypes.ROUTE_CHANGE
                 value: {conversationID, messageID, mailboxID, action, filter}
 
 
-    gotoPreviousConversation: ->
-        message = RouterStore.getNextConversation()
-        @gotoMessage message?.toJS()
+    gotoPreviousConversation: (dispatch) ->
+        dispatch
+            type: ActionTypes.GO_TO_PREVIOUS
+            value: null
+
+    gotoNextConversation: (dispatch) ->
+        dispatch
+            type: ActionTypes.GO_TO_NEXT
+            value: null
 
 
-    gotoNextConversation: ->
-        message = RouterStore.getNextConversation()
-        @gotoMessage message?.toJS()
-
-
-    closeConversation: (params={}) ->
+    closeConversation: (dispatch, params={}) ->
         {mailboxID} = params
-        mailboxID ?= RouterStore.getMailboxID()
+        state = reduxStore.getState(state)
+        mailboxID ?= RouterGetter.getMailboxID(state)
         action = MessageActions.SHOW_ALL
-        filter = RouterStore.getFilter()
-        AppDispatcher.dispatch
+        filter = RouterGetter.getFilter(state)
+        dispatch
             type: ActionTypes.ROUTE_CHANGE
             value: {mailboxID, action, filter}
 
 
-    closeModal: (mailboxID = RouterStore.getMailboxID()) ->
+    closeModal: (dispatch, mailboxID) ->
+
+        state = reduxStore.getState(state)
+        mailboxID ?= RouterGetter.getMailboxID(state)
         return unless mailboxID
 
-        account = AccountGetter.getByMailbox mailboxID
+        state = reduxStore.getState()
+        account = AccountGetter.getByMailbox state, mailboxID
 
         # Load last messages
-        @refreshMailbox {mailboxID}
+        @refreshMailbox dispatch, {mailboxID}
 
         # Dispatch modal close
-        AppDispatcher.dispatch
+        dispatch
             type: ActionTypes.ROUTE_CHANGE
             value:
                 action:    MessageActions.SHOW_ALL
@@ -167,75 +186,37 @@ RouterActionCreator =
                 mailboxID: mailboxID
 
 
-    showMessageList: (params={}) ->
-        @closeConversation params
+    showMessageList: (dispatch, params={}) ->
+        @closeConversation dispatch, params
 
 
-    getConversation: (conversationID) ->
-        conversationID ?= RouterStore.getConversationID()
+    getConversation: (dispatch, conversationID) ->
+        state = reduxStore.getState()
+        conversationID ?= RouterGetter.getConversationID(state)
         timestamp = (new Date()).toISOString()
 
-        AppDispatcher.dispatch
-            type: ActionTypes.MESSAGE_FETCH_REQUEST
+        dispatch
+            type: ActionTypes.CONVERSATION_FETCH_REQUEST
             value: {conversationID, timestamp}
 
         XHRUtils.fetchConversation {conversationID}, (error, messages) ->
             if error?
-                AppDispatcher.dispatch
-                    type: ActionTypes.MESSAGE_FETCH_FAILURE
+                dispatch
+                    type: ActionTypes.CONVERSATION_FETCH_FAILURE
                     value: {error, conversationID, timestamp}
             else
-                # Apply filters to messages
-                # to upgrade conversationLength
-                # FIXME: should be moved server side
-                messages = _.filter messages, RouterStore.filterByFlags
-
                 # Update Realtime
                 lastMessage = _.last messages
                 mailboxID = lastMessage?.mailboxID
                 before = lastMessage?.date or timestamp
                 Realtime.setServerScope {mailboxID, before}
 
-                # Update _conversationLength value
-                # that is only displayed by the server
-                # with method fetchMessagesByFolder
-                # FIXME: should be sent by server
-                conversationLength = {}
-                conversationLength[conversationID] = messages.length
-
-                result = {messages, conversationLength}
-                AppDispatcher.dispatch
-                    type: ActionTypes.MESSAGE_FETCH_SUCCESS
+                result = {messages}
+                dispatch
+                    type: ActionTypes.CONVERSATION_FETCH_SUCCESS
                     value: {result, conversationID, timestamp}
 
-
-    addFilter: (params) ->
-        filter = {}
-        separator = ','
-        filters = RouterStore.getFilter()
-
-        for key, value of params
-            # Toggle filter value
-            # Add value if it doesnt exist
-            # Remove if from filters otherwhise
-            tmp = filters[key]
-            tmp = tmp.split separator if _.isString filters[key]
-            value = decodeURIComponent value
-
-            if 'flags' is key
-                tmp ?= []
-                if -1 < tmp.indexOf value
-                    tmp = _.without tmp, value
-                else
-                    tmp.push value
-                filter[key] = tmp?.join separator
-            else
-                filter[key] = value
-
-        # FIXME : use distacher instead
-        # then into routerStore, use navigate
-        @navigate url: RouterStore.getCurrentURL {filter, isServer: false}
-
-
+    markMessage:  ->
+        throw new Error('NOT IMPLEMENTED YET')
 
 module.exports = RouterActionCreator

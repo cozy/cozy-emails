@@ -7,59 +7,35 @@ React      = require 'react'
 Animate             = React.createFactory require 'rc-animate'
 Toast               = React.createFactory require './toast'
 
-LayoutGetter        = require '../getters/layout'
-RouterGetter        = require '../getters/router'
-LayoutActionCreator = require '../actions/layout_action_creator'
-
-
 # Main container in wich toasts are displayed.
 module.exports = ToastContainer = React.createClass
     displayName: 'ToastContainer'
 
-    # FIXME : use getters instead
-    # such as : ToastContainer.getState()
-    getInitialState: ->
-        @getStateFromStores()
-
-    # FIXME : use getters instead
-    # such as : ToastContainer.getState()
-    componentWillReceiveProps: (nextProps={}) ->
-        @setState @getStateFromStores()
-        nextProps
-
-    getStateFromStores: ->
-        return {
-            toasts: RouterGetter.getToasts()
-            hidden: LayoutGetter.isToastHidden()
-        }
-
-
-    shouldComponentUpdate: (nextProps, nextState) ->
-        isNextState = _.isEqual nextState, @state
-        isNextProps = _.isEqual nextProps, @props
-        return not(isNextState and isNextProps)
-
+    shouldComponentUpdate: (nextProps) ->
+        return not _.isEqual nextProps, @props
 
     render: ->
-        toasts = @state.toasts
-        .mapEntries ([id, toast]) ->
-            ["toast-#{id}", Toast {key: id, toast}]
-        .toArray()
-
         div
             className: classNames
                 'toasts-container': true
-                'has-toasts': toasts.size isnt 0
-            'aria-hidden': @state.hidden,
-            
-            Animate transitionName: 'toast', toasts
+                'has-toasts': @props.toasts.size isnt 0
+            'aria-hidden': @props.hidden,
+
+            Animate transitionName: 'toast',
+                @props.toasts.map (toast) =>
+                    Toast
+                        key: toast.get('id')
+                        toast: toast
+                        displayModal: @props.displayModal
+                        doDeleteToast: @props.doDeleteToast
+                .toArray()
 
 
     toggleHidden: ->
-        if @state.hidden
-            LayoutActionCreator.toastsShow()
+        if @props.hidden
+            @props.toastsShow()
         else
-            LayoutActionCreator.toastsHide()
+            @props.toastsHide()
 
     # Clear hidden toasts on a regular basis.
     _clearToasts: ->
@@ -71,7 +47,7 @@ module.exports = ToastContainer = React.createClass
 
 
     closeAll: ->
-        LayoutActionCreator.clearToasts()
+        @props.clearToasts()
 
 
     componentDidMount: ->

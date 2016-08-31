@@ -24,10 +24,10 @@ describe('Settings Reducer', () => {
         let result = settingsReducer(state, action);
 
         // assert
-        assert.isNotNull(result.settings);
-        assert.equal(result.settings.size, 2);
-        assert.equal('value1', result.settings.get('setting1'));
-        assert.equal('value2', result.settings.get('setting2'));
+        assert.isNotNull(result);
+        assert.equal(result.size, 2);
+        assert.equal('value1', result.get('setting1'));
+        assert.equal('value2', result.get('setting2'));
       });
 
       it('should merge state with new values', () => {
@@ -49,10 +49,10 @@ describe('Settings Reducer', () => {
         let result = settingsReducer(state, action);
 
         // assert
-        assert.equal(result.settings.size, 3);
-        assert.equal('value1', result.settings.get('setting1'));
-        assert.equal('newValue2', result.settings.get('setting2'));
-        assert.equal('value3', result.settings.get('setting3'));
+        assert.equal(result.size, 3);
+        assert.equal('value1', result.get('setting1'));
+        assert.equal('newValue2', result.get('setting2'));
+        assert.equal('value3', result.get('setting3'));
       });
 
     });

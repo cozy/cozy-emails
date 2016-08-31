@@ -1,7 +1,7 @@
 ioclient = require 'socket.io-client'
 {ActionTypes} = require '../constants/app_constants'
 
-module.exports.initialize = (dispatcher) ->
+module.exports.initialize = (dispatch) ->
     socket = ioclient.connect window.location.origin,
         path: "#{window.location.pathname}socket.io"
         reconnectionDelayMax: 60000
@@ -30,6 +30,9 @@ module.exports.initialize = (dispatcher) ->
         'mailbox.update':   ActionTypes.RECEIVE_MAILBOX_UPDATE
         'refresh.notify':   ActionTypes.RECEIVE_REFRESH_NOTIF
 
-    for event, action of socket2Action
-        socket.on(event, (value) ->
-            dispatcher.dispatch {type: action, value: value})
+    Object.keys(socket2Action).forEach (eventname) ->
+        socket.on eventname, (value) ->
+            console.log("REALTIME", eventname, value)
+            dispatch {type: socket2Action[eventname], value: value}
+
+    undefined

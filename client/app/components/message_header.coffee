@@ -1,10 +1,8 @@
-_     = require 'underscore'
 React = require 'react'
-{header, div, span, span, i, img, a} = React.DOM
+{header, div, span, span, i, a} = React.DOM
 
 ContactLabel = React.createFactory require '../components/contact_label'
-
-RouterActionCreator = require '../actions/router_action_creator'
+Avatar = React.createFactory require './avatar'
 
 module.exports = React.createClass
     displayName: 'MessageHeader'
@@ -13,20 +11,19 @@ module.exports = React.createClass
     gotoMessage: ->
         conversationID = @props.message?.get 'conversationID'
         messageID = @props.message?.get 'id'
-        RouterActionCreator.gotoMessage {conversationID, messageID}
+        @props.doGotoMessage {conversationID, messageID}
 
 
     render: ->
         header
             onClick: @gotoMessage
-
             key: "message-header-#{@props.message.get 'id'}",
-            if @props.avatar
-                span
-                    className: 'sender-avatar',
-                    img
-                        className: 'media-object'
-                        src: @props.avatar
+
+            if @props.contacts.get(@props.message.get('from')[0])
+                span className: 'sender-avatar',
+                    Avatar
+                        participant: @props.message.get('from')[0]
+                        contacts: @props.contacts
 
             div
                 className: 'infos',
@@ -56,7 +53,8 @@ module.exports = React.createClass
 
 
     renderAddress: (field) ->
-        if (contacts = @props.contacts[field])?.length
+        participants = @props.message.get(field)
+        if participants?.length
             span
                 className: "addresses #{field}"
                 key: "address-#{field}",
@@ -66,10 +64,10 @@ module.exports = React.createClass
                         span className: 'field',
                             t "mail #{field}"
 
-                    _.map contacts, (contact, index) ->
+                    participants.map (participant, index) =>
                         ContactLabel
-                            ref: "contact-#{field}"
                             key: "contact-#{field}-#{index}"
-                            model: contact.model
-                            address: contact.address
-                            contact: contact.value
+                            contacts: @props.contacts
+                            participant: participant
+                            createContact: @props.createContact
+                            displayModal: @props.displayModal

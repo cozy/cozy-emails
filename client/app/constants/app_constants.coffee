@@ -66,6 +66,9 @@ module.exports =
         'MESSAGE_FETCH_REQUEST'         : 'MESSAGE_FETCH_REQUEST'
         'MESSAGE_FETCH_SUCCESS'         : 'MESSAGE_FETCH_SUCCESS'
         'MESSAGE_FETCH_FAILURE'         : 'MESSAGE_FETCH_FAILURE'
+        'CONVERSATION_FETCH_REQUEST'    : 'CONVERSATION_FETCH_REQUEST'
+        'CONVERSATION_FETCH_SUCCESS'    : 'CONVERSATION_FETCH_SUCCESS'
+        'CONVERSATION_FETCH_FAILURE'    : 'CONVERSATION_FETCH_FAILURE'
 
 
         # Contacts
@@ -78,8 +81,9 @@ module.exports =
         'CONTACT_LOCAL_SEARCH'       : 'CONTACT_LOCAL_SEARCH'
 
         # Router
-        'ROUTES_INITIALIZE'     : 'ROUTES_INITIALIZE'
         'ROUTE_CHANGE'          : 'ROUTE_CHANGE'
+        'GO_TO_NEXT'            : 'GO_TO_NEXT'
+        'GO_TO_PREVIOUS'        : 'GO_TO_PREVIOUS'
 
         # Layout
         'DISPLAY_MODAL'             : 'DISPLAY_MODAL'
@@ -92,8 +96,7 @@ module.exports =
         'SETTINGS_UPDATE_FAILURE'   : 'SETTINGS_UPDATE_FAILURE'
 
         # Tasks
-        'RECEIVE_TASK_UPDATE'       : 'RECEIVE_TASK_UPDATE'
-        'RECEIVE_TASK_DELETE'       : 'RECEIVE_TASK_DELETE'
+        'CLICKED_TASK_OK'           : 'CLICKED_TASK_OK'
         'CLEAR_TOASTS'              : 'CLEAR_TOASTS'
 
         # Refreshes
@@ -110,7 +113,6 @@ module.exports =
         # Toasts
         'TOASTS_SHOW'               : 'TOASTS_SHOW'
         'TOASTS_HIDE'               : 'TOASTS_HIDE'
-
 
     Requests:
         'DISCOVER_ACCOUNT':     'DISCOVER_ACCOUNT'
@@ -130,6 +132,8 @@ module.exports =
         'VIEW_ACTION'   : 'VIEW_ACTION'
         'SERVER_ACTION' : 'SERVER_ACTION'
 
+    DefaultActions:
+        'DEFAULT': 'default'
 
     AccountActions:
         'EDIT'      : 'account.edit'
@@ -170,6 +174,7 @@ module.exports =
         'FLAGGED'      : 'flagged'
         'UNSEEN'       : 'unseen'
 
+    # warning, order of these flags are important
     MailboxFlags:
         'INBOX'   :  '\\Inbox'
         'DRAFT'   :  '\\Drafts'

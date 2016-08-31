@@ -8,7 +8,7 @@ module.exports = (state = DEFAULTSTATE, action) ->
 
     switch action.type
         when ActionTypes.SETTINGS_UPDATE_SUCCESS
-            nextState =
-                settings: state.merge action.value
+            return state.merge action.value
 
-    return nextState or state
+    return state
+    

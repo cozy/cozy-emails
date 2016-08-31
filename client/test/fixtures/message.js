@@ -5,6 +5,7 @@ const Immutable = require('immutable');
 
 const MessageFlags = require('../../app/constants/app_constants').MessageFlags;
 
+const random = require('../utils/pseudorandom');
 const getUID = require('../utils/guid').getUID;
 const getName = require('../utils/guid').getName;
 
@@ -42,7 +43,7 @@ module.exports.createMessage = function createMessage(data) {
 
     // TODO: these tags should be tested
     // when compose feature will be implemented
-    // so as ../../app/getters/message.coffee
+    // so as ../../app/puregetters/message.coffee
     // that format messageStore for ReactComponent
     // to: [],
     // replyTo: [],
@@ -109,8 +110,8 @@ module.exports.createAttached = function AttachedMessage(data) {
 
 
 function createMailboxIDs (account) {
-  const max = Math.round(Math.random() * account.mailboxes.length);
-  const min = Math.round(Math.random() * max);
+  const max = Math.round(random() * account.mailboxes.length);
+  const min = Math.round(random() * max);
   const mailboxes = account.mailboxes.slice(min, max + 1);
 
   // Create MailboxIDs

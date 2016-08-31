@@ -1,4 +1,5 @@
-{createClass, createFactory, PropTypes, DOM} = require 'react'
+React = require 'react'
+{createClass, createFactory, PropTypes, DOM} = React
 classNames                                   = require 'classnames'
 
 {
@@ -269,30 +270,36 @@ registry.Dropdown = createClass
 # If no name is provided => address@contact.com
 registry.AddressLabel = createClass
 
+    propTypes: ->
+        participant: React.PropTypes.shape(
+            address: React.PropTypes.string.isRequired,
+            name: React.PropTypes.string
+        )
+
     render: ->
         meaninglessKey = 0
 
-        if @props.contact.name?.length > 0 and @props.contact.address
-            key = @props.contact.address.replace /\W/g, ''
+        if @props.participant.name?.length > 0 and @props.participant.address
+            key = @props.participant.address.replace /\W/g, ''
 
             result = span null,
                 span
                     className: 'highlight'
-                    @props.contact.name
+                    @props.participant.name
                 span
-                    className: 'contact-address'
+                    className: 'participant-address'
                     key: key
                     ,
                         i className: 'fa fa-angle-left'
-                        @props.contact.address
+                        @props.participant.address
                         i className: 'fa fa-angle-right'
 
-        else if @props.contact.name?.length > 0
+        else if @props.participant.name?.length > 0
             result = span key: "label-#{meaninglessKey++}",
-                @props.contact.name
+                @props.participant.name
 
         else
-            result = span null, @props.contact.address
+            result = span null, @props.participant.address
 
         return result
 
