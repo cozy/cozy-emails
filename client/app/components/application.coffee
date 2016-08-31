@@ -32,7 +32,7 @@ ContactGetter = require '../getters/contact'
 bindStore = connect(
     # MapStateToProps
     (state) ->
-        # Create an account
+        # Account: creation
         isAccountCreationBusy   : RequestsGetter.isAccountCreationBusy(state)
         isAccountDiscoverable   : RequestsGetter.isAccountDiscoverable(state)
         accountCreationAlert    : RequestsGetter.getAccountCreationAlert(state)
@@ -40,35 +40,54 @@ bindStore = connect(
         accountCreationSuccess  : RequestsGetter.getAccountCreationSuccess(state)?.account
         accountCreationDiscover : RequestsGetter.getAccountCreationDiscover(state)
 
+        # Store
         action                  : RouterGetter.getAction(state)
         hasAccounts             : RouterGetter.hasAccounts(state)
-        modal                   : RouterGetter.getModal(state)
-        mailboxID               : RouterGetter.getMailboxID(state)
         accounts                : RouterGetter.getAllAccounts(state)
         accountID               : RouterGetter.getAccountID(state)
-        conversationID          : RouterGetter.getConversationID(state)
         messageID               : RouterGetter.getMessageID(state)
-        subject                 : RouterGetter.getSubject(state)
-        lastSync                : RouterGetter.getLastSync(state)
-        isLoading               : RequestsGetter.isRefreshing(state)
         trashboxID              : RouterGetter.getTrashBoxID(state)
-        isTrashbox              : RouterGetter.isTrashbox(state)
-        isIndexing              : RouterGetter.isMailboxIndexing(state)
-        hasNextPage             : RouterGetter.hasNextPage(state)
+
+        # Selection
         isAllSelected           : SelectionGetter.isAllSelected(state)
         selection               : SelectionGetter.getSelection(state)
-        messages                : RouterGetter.getMessagesListWithIsDeleted(state)
-        emptyMessages           : RouterGetter.getEmptyMessage(state)
+
+        # URL
         composeURL              : RouterGetter.getComposeURL(state)
         newAccountURL           : RouterGetter.getCreateAccountURL(state)
+
+        # Mailbox
+        mailboxID               : RouterGetter.getMailboxID(state)
+        isTrashbox              : RouterGetter.isTrashbox(state)
         nbUnread                : RouterGetter.getUnreadLength(state)
         nbFlagged               : RouterGetter.getFlaggedLength(state)
+
+        # Conversation
+        conversationID          : RouterGetter.getConversationID(state)
         conversation            : RouterGetter.getConversation(state)
+        subject                 : RouterGetter.getSubject(state)
+        contacts                : ContactGetter.getAll(state)
+        messages                : RouterGetter.getMessagesListWithIsDeleted(state)
+        emptyMessages           : RouterGetter.getEmptyMessage(state)
+
+        # MessageList Container
+        hasNextPage             : RouterGetter.hasNextPage(state)
         previewSize             : LayoutGetter.getPreviewSize(state)
+
+        # Modal Container
+        modal                   : RouterGetter.getModal(state)
+
+        # Account
+        login                   : RouterGetter.getLogin(state)
+
+        # Notifications
         toasts                  : RouterGetter.getToasts(state)
         toastsHidden            : LayoutGetter.isToastHidden(state)
-        contacts                : ContactGetter.getAll(state)
-        login                   : RouterGetter.getLogin(state)
+
+        # Metrics about loading
+        lastSync                : RouterGetter.getLastSync(state)
+        isLoading               : RequestsGetter.isRefreshing(state)
+        isIndexing              : RouterGetter.isMailboxIndexing(state)
         hasSettingsChanged      : RouterGetter.hasSettingsChanged(state)
         conversationsLengths    : MessageGetter.getConversationsLengths(state)
         isConversationLoading   : RequestsGetter.isConversationLoading(state)
@@ -78,29 +97,31 @@ bindStore = connect(
 
     # MapDispatchToProps
     (dispatch) ->
-        onLoadMore            : RouterAC.loadMore.bind(RouterAC, dispatch)
-        doCloseModal          : RouterAC.closeModal.bind(RouterAC, dispatch)
-
+        # Account: creation
         doAccountDiscover     : AccountActionCreator(dispatch).discover
         doAccountCheck        : AccountActionCreator(dispatch).check
 
+        # Messages
         doCreateContact       : ContactActionCreator(dispatch).createContact
 
+        # Modal container
+        displayModal          : LayoutActionCreator(dispatch).displayModal
+        doCloseModal          : RouterAC.closeModal.bind(RouterAC, dispatch)
+
+        # Messages
+        onLoadMore            : RouterAC.loadMore.bind(RouterAC, dispatch)
+        doDisplayImages       : MessageActionCreator(dispatch).displayImages
+        doDeleteMessage       : MessageActionCreator(dispatch).deleteMessage
+        doCloseConversation   : RouterAC.closeConversation.bind(RouterAC, dispatch)
+        doMarkMessage         : RouterAC.markMessage.bind(RouterAC, dispatch)
+        doGotoMessage         : RouterAC.gotoMessage.bind(RouterAC, dispatch)
+        gotoConversation      : RouterAC.gotoConversation.bind(RouterAC, dispatch)
+
+        # Notifications
         toastsShow            : LayoutActionCreator(dispatch).toastsShow
         toastsHide            : LayoutActionCreator(dispatch).toastsHide
         clearToasts           : LayoutActionCreator(dispatch).clearToasts
-        displayModal          : LayoutActionCreator(dispatch).displayModal
-
-        doDisplayImages       : MessageActionCreator.displayImages.bind(MessageActionCreator, dispatch)
-        doDeleteMessage       : MessageActionCreator.deleteMessage.bind(MessageActionCreator, dispatch)
-
         doDeleteToast         : NotificationActionCreator(dispatch).taskDelete
-
-        doCloseConversation   : RouterAC.closeConversation.bind(RouterAC, dispatch)
-        doMarkMessage         : RouterAC.markMessage.bind(RouterAC, dispatch)
-
-        doGotoMessage         : RouterAC.gotoMessage.bind(RouterAC, dispatch)
-        gotoConversation      : RouterAC.gotoConversation.bind(RouterAC, dispatch)
 )
 
 Layout = React.createFactory bindStore Layout
