@@ -24,25 +24,28 @@ RequestsGetter = require '../../../getters/requests'
 redirectTimer = undefined
 
 
+_createStateFromProps = (props) ->
+    # Get data from props not from getter
+    state =
+        isBusy          : props.isBusy
+        isDiscoverable  : props.isDiscoverable
+        alert           : props.alert
+        isOAuth         : props.isOAuth
+        mailboxID       : props.account?.inboxMailbox
+        login           : props.login
+
+    if props.discover
+        _.extend state, AccountsUtils.parseProviders props.discover
+
+    return state
+
 module.exports = AccountWizardCreation = React.createClass
 
     displayName: 'AccountWizardCreation'
 
-    componentWillReceiveProps: () ->
-        appstate = reduxStore.getState()
-        account  = RequestsGetter.getAccountCreationSuccess(appstate)?.account
-        discover = RequestsGetter.getAccountCreationDiscover(appstate)
+    componentWillReceiveProps: (props) ->
+        @setState _createStateFromProps props
 
-        state =
-            isBusy:         RequestsGetter.isAccountCreationBusy(appstate)
-            isDiscoverable: RequestsGetter.isAccountDiscoverable(appstate)
-            alert:          RequestsGetter.getAccountCreationAlert(appstate)
-            OAuth:          RequestsGetter.isAccountOAuth(appstate)
-
-        state.mailboxID = account.inboxMailbox if account
-        _.extend state, AccountsUtils.parseProviders discover if discover
-
-        @setState(state);
 
     componentWillUpdate: (nextProps, nextState) ->
         # Only enable submit when a request isnt performed in background and
@@ -59,10 +62,15 @@ module.exports = AccountWizardCreation = React.createClass
 
 
     componentDidMount: ->
-        ReactDOM.findDOMNode(@).querySelector('[name=login]').focus()
+        # Initialize state
+        @setState _createStateFromProps @props
+
+        # Select first field of the form
+        ReactDOM.findDOMNode(@).querySelector('[name=login]')?.focus()
 
 
     render: ->
+        console.log "CREATE_ACCOUNT", @state
         <div role='complementary' className="backdrop" onClick={@close}>
             <div className="backdrop-wrapper">
                 <section className='settings'>
@@ -75,28 +83,28 @@ module.exports = AccountWizardCreation = React.createClass
                         <Form.Input type="text"
                                     name="login"
                                     label={t('account wizard creation login label')}
-                                    value={@state.login}
+                                    value={@state?.login}
                                     onChange={_.partial @updateState, 'login'} />
                         <Form.Input type="password"
                                     name="password"
                                     label={t('account wizard creation password label')}
-                                    value={@state.password}
+                                    value={@state?.password}
                                     onChange={_.partial @updateState, 'password'} />
 
                         {<div className="alert">
                             <p>
-                                {t("account wizard alert #{@state.alert.status}")}
+                                {t("account wizard alert #{@state?.alert.status}")}
                             </p>
                             {<p>
-                                {t("account wizard error #{@state.alert.type}")}
-                            </p> if @state.alert.type}
+                                {t("account wizard error #{@state?.alert.type}")}
+                            </p> if @state?.alert.type}
                             {<p>
                                 {t("account wizard alert oauth")}
-                                <a href={OAuthDomains[@state.OAuth]} target="_blank">{t("account wizard alert oauth link label")}</a>.
-                            </p> if @state.OAuth}
-                        </div> if @state.alert}
+                                <a href={OAuthDomains[@state?.isOAuth]} target="_blank">{t("account wizard alert oauth link label")}</a>.
+                            </p> if @state?.isOAuth}
+                        </div> if @state?.alert}
 
-                        <Servers expanded={not @state.isDiscoverable}
+                        <Servers expanded={not @state?.isDiscoverable}
                                  legend={t('account wizard creation advanced parameters')}
                                  onExpand={@onExpand}
                                  onChange={@updateState}
@@ -110,20 +118,20 @@ module.exports = AccountWizardCreation = React.createClass
                                      name="redirect"
                                      onClick={@close}>
                                 {t('account wizard creation success')}
-                            </button> if @state.mailboxID}
+                            </button> if @state?.mailboxID}
 
                             {<button name="cancel"
                                      ref="cancel"
                                      type="button"
                                      onClick={@close}>
                                 {t('app cancel')}
-                            </button> if @props.hasAccount and not @state.mailboxID}
+                            </button> if @props.account? and not @state?.mailboxID}
                             {<button type="submit"
                                      form="account-wizard-creation"
-                                     aria-busy={@state.isBusy}
-                                     disabled={not @state.enableSubmit}>
+                                     aria-busy={@state?.isBusy}
+                                     disabled={not @state?.enableSubmit}>
                                 {t('account wizard creation save')}
-                            </button> unless @state.mailboxID}
+                            </button> unless @state?.mailboxID}
                         </nav>
                     </footer>
                 </section>
@@ -139,8 +147,8 @@ module.exports = AccountWizardCreation = React.createClass
     create: (event) ->
         event.preventDefault()
 
-        if @state.isDiscoverable and not(@state.imapServer or @state.smtpServer)
-            [..., domain] = @state.login.split '@'
+        if @state?.isDiscoverable and not(@state?.imapServer or @state?.smtpServer)
+            [..., domain] = @state?.login.split '@'
             @props.doAccountDiscover domain, AccountsUtils.sanitizeConfig @state
         else
             @props.doAccountCheck
@@ -161,7 +169,7 @@ module.exports = AccountWizardCreation = React.createClass
     # aforementioned element and if there's already one account available
     # (otherwise this setting step is mandatory).
     close: (event) ->
-        disabled  = not @props.hasAccount
+        disabled  = not @props.account
         success   = event.target is @refs.success
         backdrops = event.target in [ReactDOM.findDOMNode(@), @refs.cancel]
 
@@ -175,7 +183,7 @@ module.exports = AccountWizardCreation = React.createClass
 
         # Redirect to mailboxID if available, will automatically fallback to
         # current mailbox if no mailboxID is given (cancel case)
-        @props.doCloseModal @state.mailboxID
+        @props.doCloseModal @state?.mailboxID
 
 
     # Update state according to user inputs

@@ -4,23 +4,31 @@ DEFAULTORDER = 100
 
 module.exports =
 
-    getAll: (state) -> @getAllAccounts(state)
+    getAll: (state) ->
+        @getAllAccounts(state)
 
-    getAllAccounts:    (state) -> state.get('accounts')
 
-    getAccount:        (state, accountID) ->
+    getAllAccounts: (state) ->
+        state.get('accounts')
+
+
+    getAccount: (state, accountID) ->
         @getAllAccounts(state).get(accountID)
+
 
     getAccountByMailbox: (state, mailboxID) ->
         @getAllAccounts(state).find (account) ->
             account.get('mailboxes').get mailboxID
 
-    getAllMailboxes:     (state, accountID) ->
+
+    getAllMailboxes: (state, accountID) ->
         if accountID
             return @getAccount(state, accountID)?.get('mailboxes')
 
-    getMailbox:        (state, mailboxID ) ->
+
+    getMailbox: (state, mailboxID ) ->
         @getByMailbox(state, mailboxID)?.get('mailboxes').get(mailboxID)
+
 
     getByMailbox: (state, mailboxID) ->
         @getAllAccounts(state).find (account) ->
@@ -34,8 +42,13 @@ module.exports =
 
 
     # Legacy AccountStore mapping
-    getById: (state, accountID) -> @getAccount(state, accountID)
-    getByID: (state, accountID) -> @getAccount(state, accountID)
+    getById: (state, accountID) ->
+        @getAccount(state, accountID)
+
+
+    getByID: (state, accountID) ->
+        @getAccount(state, accountID)
+
 
     getDefault: (state, mailboxID) ->
         return @getByMailbox(state, mailboxID) if mailboxID

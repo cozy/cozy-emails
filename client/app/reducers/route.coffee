@@ -21,9 +21,9 @@ module.exports = (state = DEFAULT_STATE, action, appstate) ->
 
         when ActionTypes.ROUTE_CHANGE
             throw new Error("malformed action") unless action.value
+
             {accountID, mailboxID, tab, filter, action: routeAction,
             messageID, conversationID} = action.value
-
 
             if routeAction is DefaultActions.DEFAULT
                 firstAccount = appstate.get('accounts').first()
@@ -68,9 +68,6 @@ module.exports = (state = DEFAULT_STATE, action, appstate) ->
 
             currentFilter = new Filter(filter)
 
-            if routeAction isnt AccountActions.EDIT then tab = null
-            else tab ?= DEFAULT_TAB
-
             state = state.merge
                 tab: tab
                 action: routeAction
@@ -81,6 +78,7 @@ module.exports = (state = DEFAULT_STATE, action, appstate) ->
                 messagesFilter: currentFilter
 
             return state.set('URIKey', makeURIKey(state))
+
 
         when ActionTypes.CONVERSATION_FETCH_SUCCESS
             {result, conversationID} = action.value
