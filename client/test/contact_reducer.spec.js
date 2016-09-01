@@ -1,3 +1,4 @@
+/* eslint-env mocha */
 'use strict';
 const assert = require('chai').assert;
 const Immutable = require('immutable');
@@ -5,6 +6,7 @@ const Immutable = require('immutable');
 const ActionTypes = require('../app/constants/app_constants').ActionTypes;
 const contactMapper = require('../app/libs/mappers/contact');
 const contactReducer = require('../app/reducers/contact');
+const contactSearchReducer = require('../app/reducers/contactsearch');
 
 const fixtures = {
   contact1: {
@@ -42,22 +44,22 @@ describe('ContactReducer', () => {
 
       it('should import created contact', () => {
         // arrange
-        let state = null;
+        let initialState = null;
 
         // act
-        let result = contactReducer(state, {
+        let result = contactReducer(initialState, {
           type: ActionTypes.CREATE_CONTACT_SUCCESS,
           value: fixtures.contact1
         });
 
         // assert
-        assert.equal(result.contacts.size, 2);
+        assert.equal(result.size, 2);
 
-        assert.isTrue(result.contacts.has('test@right.com'));
-        assert.isTrue(result.contacts.has('test2@right.com'));
+        assert.isTrue(result.has('test@right.com'));
+        assert.isTrue(result.has('test2@right.com'));
 
-        assert.equal(result.contacts.get('test@right.com').get('id'), 'c1');
-        assert.equal(result.contacts.get('test2@right.com').get('id'), 'c1');
+        assert.equal(result.get('test@right.com').get('id'), 'c1');
+        assert.equal(result.get('test2@right.com').get('id'), 'c1');
       });
 
     });;
@@ -70,33 +72,33 @@ describe('ContactReducer', () => {
         fixtures.contact3
       ];
 
-      let initialState = {
+      let appState = Immutable.Map({
         contacts: Immutable
           .Map()
           .withMutations(contactMapper.toMapMutator(initialContacts)),
-        results: Immutable.OrderedMap()
-      };
+        contactsearch: null
+      });
 
       it('should return matching contacts', () => {
         // arrange
         let query = 'test';
 
         // act
-        let result = contactReducer(initialState, {
+        let result = contactSearchReducer(null, {
           type: ActionTypes.CONTACT_LOCAL_SEARCH,
           value: query
-        });
+      }, appState);
 
         // assert
-        assert.equal(result.results.size, 3);
+        assert.equal(result.size, 3);
 
-        assert.isTrue(result.results.has('test@right.com'));
-        assert.isTrue(result.results.has('test2@right.com'));
-        assert.isTrue(result.results.has('test@cozy.io'));
+        assert.isTrue(result.has('test@right.com'));
+        assert.isTrue(result.has('test2@right.com'));
+        assert.isTrue(result.has('test@cozy.io'));
 
-        assert.equal(result.results.get('test@right.com').get('id'), 'c1');
-        assert.equal(result.results.get('test2@right.com').get('id'), 'c1');
-        assert.equal(result.results.get('test@cozy.io').get('id'), 'c3');
+        assert.equal(result.get('test@right.com').get('id'), 'c1');
+        assert.equal(result.get('test2@right.com').get('id'), 'c1');
+        assert.equal(result.get('test@cozy.io').get('id'), 'c3');
 
       });
 
@@ -104,26 +106,26 @@ describe('ContactReducer', () => {
         // arrange
         let query = ''
         // act
-        let result = contactReducer(initialState, {
+        let result = contactSearchReducer(null, {
           type: ActionTypes.CONTACT_LOCAL_SEARCH,
           value: query
-        });
+        }, appState);
 
         // assert
-        assert.equal(result.results.size, 0);
+        assert.equal(result.size, 0);
       });
 
       it('should not return any contacts when query does not match', () => {
         // arrange
         let query = 'no match'
         // act
-        let result = contactReducer(initialState, {
+        let result = contactSearchReducer(null, {
           type: ActionTypes.CONTACT_LOCAL_SEARCH,
           value: query
-        });
+        }, appState);
 
         // assert
-        assert.equal(result.results.size, 0);
+        assert.equal(result.size, 0);
       });
 
     });

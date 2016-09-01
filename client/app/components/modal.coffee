@@ -43,7 +43,7 @@ module.exports = Modal = React.createFactory React.createClass
                                 button
                                     type: 'button',
                                     className: 'btn btn-cozy modal-action',
-                                    onClick: @props.action,
+                                    onClick: @doAction,
                                     @props.actionLabel
                             if @props.closeLabel?
                                 button
@@ -52,6 +52,8 @@ module.exports = Modal = React.createFactory React.createClass
                                     onClick: @props.closeModal,
                                     @props.closeLabel
 
+    doAction: ->
+        @props.action(@props.closeModal)
 
     copyContent: ->
         sel = window.getSelection()

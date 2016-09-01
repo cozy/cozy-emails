@@ -308,11 +308,16 @@ module.exports.batchTrash = function(req, res, next) {
 };
 
 module.exports.batchAddFlag = function(req, res, next) {
-  return Message.batchAddFlag(req.messages, req.body.flag, function(err, updated) {
+  return Message.batchAddFlag(req.messages, req.body.flag, function(err, updatedMessages) {
     if (err) {
       return next(err);
     }
-    return res.send(updated);
+    return Message.getConversationLengths(updatedMessages, function(err, convLength) {
+      return res.send({
+        messages: updatedMessages,
+        conversationLength: convLength
+      });
+    });
   });
 };
 

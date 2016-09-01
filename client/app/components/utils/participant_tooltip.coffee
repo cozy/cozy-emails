@@ -1,4 +1,3 @@
-ContactGetter = require "../../getters/contact"
 jQuery = require('jquery')
 t = window.t
 
@@ -8,8 +7,7 @@ t = window.t
 #  - container  : tooltip container
 #  - delay      : nb of miliseconds to wait before displaying tooltip
 #  - showOnClick: set to true to display tooltip when clicking on element
-module.exports.tooltip = (node, address, onAdd, options) ->
-    options ?= {}
+module.exports.tooltip = (node, contact, address, onAdd) ->
     timeout = null
     doAdd = (e) ->
         e.preventDefault()
@@ -19,7 +17,7 @@ module.exports.tooltip = (node, address, onAdd, options) ->
         if node.dataset.tooltip
             return
         node.dataset.tooltip = true
-        contact = ContactGetter.getByAddress address
+        contact = getContact address
         avatar  = contact?.get 'avatar'
         add   = ''
         image = ''

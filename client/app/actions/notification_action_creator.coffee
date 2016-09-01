@@ -1,13 +1,10 @@
-AppDispatcher = require '../libs/flux/dispatcher/dispatcher'
-
 {ActionTypes} = require '../constants/app_constants'
 
-
-NotificationActionCreator =
+NotificationActionCreator = (dispatch) ->
 
     taskDelete: (id) ->
-        AppDispatcher.dispatch
-            type: ActionTypes.RECEIVE_TASK_DELETE
+        dispatch
+            type: ActionTypes.CLICKED_TASK_OK
             value: id
 
 

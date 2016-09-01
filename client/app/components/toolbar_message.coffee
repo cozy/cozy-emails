@@ -1,19 +1,17 @@
 React = require 'react'
-{nav, div, button, a} = React.DOM
+{nav, div, button} = React.DOM
 
 {Tooltips} = require '../constants/app_constants'
-MessageActionCreator = require '../actions/message_action_creator'
 
 module.exports = React.createClass
     displayName: 'ToolbarMessage'
 
 
     deleteMessage: ->
-        MessageActionCreator.deleteMessage @props
+        @props.onDeleteClicked(@props)
 
 
     render: ->
-        messageID = @props.messageID
         cBtnGroup = 'btn-group btn-group-sm pull-right'
         cBtn      = 'btn btn-default fa'
 

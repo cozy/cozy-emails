@@ -1,15 +1,15 @@
-"use strict";
+'use strict';
 
+const random = require('../utils/pseudorandom');
 const getUID = require('../utils/guid').getUID;
 const getName = require('../utils/guid').getName;
 
-const MailboxFlags = require('../../app/constants/app_constants').MailboxFlags;
-const MailboxSpecial = require('../../app/constants/app_constants').MailboxSpecial;
-const MessageFilter = require('../../app/constants/app_constants').MessageFilter;
-const FlagsConstants = require('../../app/constants/app_constants').FlagsConstants;
-const MessageFlags = require('../../app/constants/app_constants').MessageFlags;
+const Constants = require('../../app/constants/app_constants');
+const MailboxFlags = Constants.MailboxFlags;
+const FlagsConstants = Constants.FlagsConstants;
 
 const inboxLabel = 'Boite principale';
+
 
 module.exports.createMailbox = function Mailbox() {
   return {
@@ -25,13 +25,12 @@ module.exports.createMailbox = function Mailbox() {
     nbRecent: 0,
     nbTotal: 35,
     nbUnread: 4,
-  }
+  };
 };
 
 
 module.exports.createInboxMailbox = function Inbox() {
-  const mailboxLabel = 'Tous mes messages';
-  const mailbox = new module.exports.createMailbox();
+  const mailbox = module.exports.createMailbox();
 
   return Object.assign(mailbox, {
     label: inboxLabel,
@@ -43,7 +42,7 @@ module.exports.createInboxMailbox = function Inbox() {
 
 module.exports.createAllMailbox = function AllMailbox() {
   const mailboxLabel = 'Tous mes messages';
-  const mailbox = new module.exports.createMailbox();
+  const mailbox = module.exports.createMailbox();
 
   return Object.assign(mailbox, {
     label: mailboxLabel,
@@ -55,7 +54,7 @@ module.exports.createAllMailbox = function AllMailbox() {
 
 module.exports.createDraftMailbox = function DraftMailbox() {
   const mailboxLabel = 'Mes brouillons';
-  const mailbox = new module.exports.createMailbox();
+  const mailbox = module.exports.createMailbox();
 
   return Object.assign(mailbox, {
     label: mailboxLabel,
@@ -68,7 +67,7 @@ module.exports.createDraftMailbox = function DraftMailbox() {
 
 module.exports.createSentMailbox = function SentMailbox() {
   const mailboxLabel = 'Mes messages envoyés';
-  const mailbox = new module.exports.createMailbox();
+  const mailbox = module.exports.createMailbox();
 
   return Object.assign(mailbox, {
     label: mailboxLabel,
@@ -83,7 +82,7 @@ module.exports.createSentMailbox = function SentMailbox() {
 
 module.exports.createTrashMailbox = function TrashMailbox() {
   const mailboxLabel = 'Poubelle';
-  const mailbox = new module.exports.createMailbox();
+  const mailbox = module.exports.createMailbox();
 
   return Object.assign(mailbox, {
     label: mailboxLabel,
@@ -98,7 +97,7 @@ module.exports.createTrashMailbox = function TrashMailbox() {
 
 module.exports.createJunkMailbox = function JunkMailbox() {
   const mailboxLabel = 'Mes messages non désirés';
-  const mailbox = new module.exports.createMailbox();
+  const mailbox = module.exports.createMailbox();
 
   return Object.assign(mailbox, {
     label: mailboxLabel,
@@ -113,7 +112,7 @@ module.exports.createJunkMailbox = function JunkMailbox() {
 
 module.exports.createUnreadMailbox = function UnreadMailbox() {
   const mailboxLabel = 'Mes messages non lu';
-  const mailbox = new module.exports.createMailbox();
+  const mailbox = module.exports.createMailbox();
 
   return Object.assign(mailbox, {
     label: mailboxLabel,
@@ -127,7 +126,7 @@ module.exports.createUnreadMailbox = function UnreadMailbox() {
 
 module.exports.createFlaggedMailbox = function FlaggedMailbox() {
   const mailboxLabel = 'Mon courrier important';
-  const mailbox = new module.exports.createMailbox();
+  const mailbox = module.exports.createMailbox();
 
   return Object.assign(mailbox, {
     label: mailboxLabel,
@@ -140,16 +139,16 @@ module.exports.createFlaggedMailbox = function FlaggedMailbox() {
 
 
 module.exports.createAccount = function Account(options) {
-  const inboxMailbox = new module.exports.createInboxMailbox();
-  const draftMailbox = new module.exports.createDraftMailbox();
-  const junkMailbox = new module.exports.createJunkMailbox();
-  const sentMailbox = new module.exports.createSentMailbox();
-  const trashMailbox = new module.exports.createTrashMailbox();
-  const unreadMailbox = new module.exports.createUnreadMailbox();
-  const flaggedMailbox = new module.exports.createFlaggedMailbox();
-  const allMailbox = new module.exports.createAllMailbox();
+  const inboxMailbox = module.exports.createInboxMailbox();
+  const draftMailbox = module.exports.createDraftMailbox();
+  const junkMailbox = module.exports.createJunkMailbox();
+  const sentMailbox = module.exports.createSentMailbox();
+  const trashMailbox = module.exports.createTrashMailbox();
+  const unreadMailbox = module.exports.createUnreadMailbox();
+  const flaggedMailbox = module.exports.createFlaggedMailbox();
+  const allMailbox = module.exports.createAllMailbox();
 
-  let mailboxes = [];
+  const mailboxes = [];
   mailboxes.push(allMailbox);
   mailboxes.push(inboxMailbox);
   mailboxes.push(draftMailbox);
@@ -163,15 +162,15 @@ module.exports.createAccount = function Account(options) {
   // number of values ?
   // Setting randomizeAdditionalMailboxes to true by default to preserve legacy
   // but additional mailboxes should be passed as a parameter.
-  let randomizeAdditionalMailboxes = !options ||
+  const randomizeAdditionalMailboxes = !options ||
     typeof options.randomizeAdditionalMailboxes === 'undefined' ||
       options.randomizeAdditionalMailboxes;
 
-  if(randomizeAdditionalMailboxes){
+  if (randomizeAdditionalMailboxes) {
     // Add mailbox created by user
-    let counter = Math.round(Math.random() * 6);
+    let counter = Math.round(random() * 6);
     while (counter > 0) {
-      mailboxes.push(new module.exports.createMailbox());
+      mailboxes.push(module.exports.createMailbox());
       --counter;
     }
   }
@@ -213,13 +212,12 @@ module.exports.createAccount = function Account(options) {
     smtpSSL: true,
     smtpServer: 'SSL0.OVH.NET',
     smtpTLS: false,
-  }
-
+  };
 };
 
 
 module.exports.createGmailAccount = function Account() {
-  let account = module.exports.createAccount();
+  // let account = module.exports.createAccount();
 
   // TODO: add [Gmail] mailbox:
   // - account.mailboxes.get('[Gmail]').attribs = [\Noselect]
@@ -235,11 +233,11 @@ module.exports.createGmailAccount = function Account() {
   //     attribs: [MailboxFlags.DRAFT],
   //     tree: [MailboxSpecial.draftMailbox],
   // });
-}
+};
 
 
 module.exports.createOVHAccount = function Account() {
-  let account = module.exports.createAccount();
+  // let account = module.exports.createAccount();
 
   // TODO: add twice INBOX mailbox
   // with different ID
@@ -247,4 +245,4 @@ module.exports.createOVHAccount = function Account() {
   //     attribs: [MailboxFlags.DRAFT],
   //     tree: [MailboxSpecial.draftMailbox],
   // });
-}
+};

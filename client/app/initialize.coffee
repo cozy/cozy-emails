@@ -10,7 +10,7 @@ Router = require './router'
 Reporting = require './libs/reporting'
 Realtime = require './libs/realtime'
 Performances = require './libs/performances'
-AppDispatcher = require './libs/flux/dispatcher/dispatcher'
+reduxStore = require './reducers/_store'
 
 document.addEventListener 'DOMContentLoaded', ->
 
@@ -20,9 +20,9 @@ document.addEventListener 'DOMContentLoaded', ->
     # External notifications
     Reporting.initialize()
     try
-        Notification.initialize() if __DEV__
         Performances.initialize() if __DEV__
-        Realtime.initialize(AppDispatcher) if __DEV__
+        Notification.initialize()
+        Realtime.initialize(reduxStore.dispatch)
     catch err
         console.error err
         Reporting.report(err)

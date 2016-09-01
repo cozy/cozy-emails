@@ -1,10 +1,8 @@
 React      = require 'react'
 classNames = require 'classnames'
 
-{a, h4,  pre, div, button, span, strong, i} = React.DOM
+{pre, div, button, span} = React.DOM
 
-LayoutActionCreator = require '../actions/layout_action_creator'
-NotificationActionCreator = require '../actions/notification_action_creator'
 
 {AlertLevel} = require '../constants/app_constants'
 
@@ -70,7 +68,7 @@ module.exports = Toast = React.createClass
     onModalShowClicked: ->
         errorText = JSON.stringify(@props.toast.get('errors')[0])
 
-        LayoutActionCreator.displayModal
+        @props.displayModal
             title       : t 'modal please contribute'
             subtitle    : t 'modal please report'
             closeLabel  : t 'app alert close'
@@ -80,4 +78,4 @@ module.exports = Toast = React.createClass
 
 
     acknowledge: ->
-        NotificationActionCreator.taskDelete @props.toast.get 'id'
+        @props.doDeleteToast @props.toast.get 'id'

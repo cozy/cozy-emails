@@ -1,20 +1,17 @@
-'use strict'
+/* eslint-env mocha */
+'use strict';
 
-const assert = require('chai').assert
-
-const mockeryUtils   = require('./utils/mockery_utils')
-const SpecDispatcher = require('./utils/specs_dispatcher')
-const ActionTypes  = require('../app/constants/app_constants').ActionTypes
+const makeTestDispatcher = require('./utils/specs_dispatcher');
+const RequestsGetter = require('../app/puregetters/requests');
 
 
-describe("Requests Store", () => {
+describe('Requests Store', () => {
   let requestsStore;
   let dispatcher;
 
   before(() => {
-    dispatcher = new SpecDispatcher();
-    mockeryUtils.initDispatcher(dispatcher);
-    mockeryUtils.initForStores(['../app/stores/requests_store']);
-    requestsStore = require('../app/stores/message_store');
+    const tools = makeTestDispatcher();
+    dispatcher = tools.Dispatcher;
+    requestsStore = tools.makeStateFullGetter(RequestsGetter);
   });
-})
+});

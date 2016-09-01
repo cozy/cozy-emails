@@ -15,5 +15,8 @@
   },
   "prefer_english_operator": {
     "level": "warn"
+  },
+  "cyclomatic_complexity": {
+    "level": "ignore"
   }
 }

@@ -1,5 +1,4 @@
 Scheduler    = require '../processes/_scheduler'
-Account      = require '../models/account'
 Contact      = require '../models/contact'
 Settings     = require '../models/settings'
 CONSTANTS    = require '../utils/constants'

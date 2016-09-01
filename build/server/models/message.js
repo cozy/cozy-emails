@@ -184,7 +184,9 @@ module.exports = Message = (function(superClass) {
     });
   };
 
-  Message.getConversationLengths = function(conversationIDs, callback) {
+  Message.getConversationLengths = function(messages, callback) {
+    var conversationIDs;
+    conversationIDs = _.uniq(_.pluck(messages, 'conversationID'));
     return Message.rawRequest('byConversationID', {
       keys: conversationIDs,
       group: true,
@@ -259,13 +261,12 @@ module.exports = Message = (function(superClass) {
         return Message.getResults(mailboxID, params, cb);
       }
     ], function(error, results) {
-      var conversationIDs, count, messages;
+      var count, messages;
       if (error) {
         return callback(error);
       }
       count = results[0], messages = results[1];
-      conversationIDs = _.uniq(_.pluck(messages, 'conversationID'));
-      return Message.getConversationLengths(conversationIDs, function(error, conversationLength) {
+      return Message.getConversationLengths(messages, function(error, conversationLength) {
         if (error) {
           return callback(error);
         }
@@ -535,10 +536,10 @@ module.exports = Message = (function(superClass) {
     attachments = [];
     if (mail.attachments) {
       attachments = mail.attachments.map(function(att) {
-        var buffer, out;
+        var buffer;
         buffer = att.content;
         delete att.content;
-        return out = {
+        return {
           name: att.generatedFileName,
           buffer: buffer
         };
@@ -601,16 +602,14 @@ module.exports = Message = (function(superClass) {
   };
 
   Message.doGroupedByBox = function(messages, iterator, done) {
-    var boxID, i, len, message, messagesByBoxID, ref, state, uid;
+    var boxID, i, len, message, messagesByBoxID, state;
     if (messages.length === 0) {
       return done(null);
     }
     messagesByBoxID = {};
     for (i = 0, len = messages.length; i < len; i++) {
       message = messages[i];
-      ref = message.mailboxIDs;
-      for (boxID in ref) {
-        uid = ref[boxID];
+      for (boxID in message.mailboxIDs) {
         if (messagesByBoxID[boxID] == null) {
           messagesByBoxID[boxID] = [];
         }
