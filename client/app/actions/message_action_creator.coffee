@@ -1,29 +1,27 @@
 {ActionTypes}   = require '../constants/app_constants'
 XHRUtils        = require '../libs/xhr'
 
-MessageGetters  = require '../puregetters/messages'
+MessageActionCreator =
 
-MessageActionCreator = (dispatch, state) ->
-
-    receiveRawMessages: (messages) ->
+    receiveRawMessages: (dispatch, messages) ->
         dispatch
             type: ActionTypes.RECEIVE_RAW_MESSAGES
             value: messages
 
 
-    receiveRawMessage: (message) ->
+    receiveRawMessage: (dispatch, message) ->
         dispatch
             type: ActionTypes.RECEIVE_RAW_MESSAGE
             value: message
 
 
-    displayImages: ({messageID, displayImages=true})->
+    displayImages: (dispatch, {messageID, displayImages=true})->
         dispatch
             type: ActionTypes.SETTINGS_UPDATE_REQUEST
             value: {messageID, displayImages}
 
 
-    send: (action, message) ->
+    send: (dispatch, action, message) ->
         # Message should have a html content
         # event if it is a simple text
         unless message.composeInHTML
@@ -44,13 +42,8 @@ MessageActionCreator = (dispatch, state) ->
                     value: {action, message}
 
 
-    mark: (target, flags) ->
+    markMessage: (dispatch, target, flags) ->
         timestamp = Date.now()
-
-        # Do not mark a removed message
-        {messageID} = target
-        if messageID and not (message = MessageGetters.getByID state, messageID)
-            return
 
         dispatch
             type: ActionTypes.MESSAGE_FLAGS_REQUEST
@@ -62,14 +55,6 @@ MessageActionCreator = (dispatch, state) ->
                     type: ActionTypes.MESSAGE_FLAGS_FAILURE
                     value: {target, error, flags, timestamp}
             else
-                # Update _conversationLength value
-                # that is only displayed by the server
-                # with method fetchMessagesByFolder
-                # FIXME: should be sent by server
-
-                # FIXME: clent shouldnt add this information
-                # it shoul be done server side
-                updated = {messages: [message]}
                 dispatch
                     type: ActionTypes.MESSAGE_FLAGS_SUCCESS
                     value: {target, updated, flags, timestamp}
@@ -81,7 +66,7 @@ MessageActionCreator = (dispatch, state) ->
     # - messageIDs or
     # - conversationIDs or
     # - conversationIDs
-    deleteMessage: (target={}) ->
+    deleteMessage: (dispatch, target={}) ->
         {messageID, accountID} = target
         return if not messageID? or not accountID?
 
