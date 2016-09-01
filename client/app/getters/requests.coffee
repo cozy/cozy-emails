@@ -73,15 +73,15 @@ module.exports =
 
 
     getAccountCreationAlert: (state) ->
-        isCreateFailure = @getError state, Requests.ADD_ACCOUNT
-        isCheckFailure = @getError state, Requests.CHECK_ACCOUNT
-        isDiscoverFailure = @getError state, Requests.DISCOVER_ACCOUNT
+        createFailure = @getError state, Requests.ADD_ACCOUNT
+        checkFailure = @getError state, Requests.CHECK_ACCOUNT
+        discoverFailure = @getError state, Requests.DISCOVER_ACCOUNT
 
-        if isCreateFailure
+        if createFailure
             status: 'CREATE_FAILED'
 
-        if isCheckFailure
-            fields = check.res.error.response.body.causeFields
+        if checkFailure
+            fields = checkFailure.error.response.body.causeFields
 
             status: 'CHECK_FAILED'
             type: if fields and 'smtpServer' in fields
@@ -93,10 +93,10 @@ module.exports =
 
         # FIXME : this bahavior is partially implemented
         # missing last condition
-        
+
         # 1. autodiscover failed: set an alert
         # 2. only if check isn't already performed
-        else if isDiscoverFailure
+        else if discoverFailure
             status: 'DISCOVER_FAILED'
 
         else
