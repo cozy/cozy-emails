@@ -47,7 +47,6 @@ module.exports =
     validateState: (nextState={}, previousState={}) ->
         fields = {}
         previousFields = {}
-        expanded = false
 
         protocolKeys = _.keys @DEFAULT_PORTS
 
@@ -105,17 +104,7 @@ module.exports =
                     .object()
                     .value()
 
-            # If the modified field is 'login' and servers field are empty, we
-            # assume the user just fix a typo in its email address after a failed
-            # autodiscover request, so we smartly re-enable it to perform another
-            # aiutodiscover test.
-            if key is 'login' and
-                    not(previousState.fields.imapServer or
-                    previousState.fields.smtpServer)
-
-                expanded = true
-
-        _.extend {}, {fields: previousFields}, {fields, expanded}
+        _.extend {}, {fields: previousFields}, {fields}
 
 
     # Take a given state:

@@ -39,7 +39,6 @@ _getInitialState = ->
 
         alert: null
 
-        expanded: false
         isBusy: false
         disable: true
 
@@ -61,28 +60,30 @@ _getInitialState = ->
 
 # Get some state.properties
 # from RequestStore to handle activity from outside
-_getStateFromStores = (props={}) ->
-    account = RequestsGetter.getAccountCreationSuccess(state)?.account
+_getStateFromStore = (previousState={}) ->
+    reduxState = reduxStore.getState()
+    login = previousState.fields.login
+    password = previousState.fields.password
+    account = RequestsGetter.getAccountCreationSuccess(reduxState)?.account
+    isBusy = RequestsGetter.isAccountCreationBusy reduxState
 
     state =
-        account: account
-        OAuth: RequestsGetter.isAccountOAuth(state)
         mailboxID: account?.inboxMailbox
-        # discover: RequestsGetter.getAccountCreationDiscover(state)
+        isBusy: isBusy
+        alert: RequestsGetter.getAccountCreationAlert reduxState
+        discover: RequestsGetter.getAccountCreationDiscover reduxState
 
-        isBusy: RequestsGetter.isAccountCreationBusy(state)
-
-        # Only enable submit when a request isnt performed in background and
+        # Only enable submit
+        # when a request isnt performed in background and
         # if required fields (email / password) are filled
-        disable: not (not state.isBusy and not _.isEmpty(props.login) and
-                    not _.isEmpty(props.password))
-
-        alert: RequestsGetter.getAccountCreationAlert(state)
+        disable: not (not isBusy and not _.isEmpty(login) and
+                    not _.isEmpty(password))
 
     # Get Specific Provider properties
     # ie. Server, Port, or Security values
     if state.discover
         _.extend state, AccountsLib.getProviderProps state.discover
+
 
     return state
 
@@ -112,18 +113,20 @@ module.exports = AccountWizardCreation = React.createClass
 
 
     componentWillReceiveProps: (nextProps) ->
-        @updateState _getStateFromStores nextProps, @state
+        @updateState _getStateFromStore @state
 
 
     componentWillUpdate: (nextProps, nextState) ->
-        # FIXME : corriger la création du compte
-        # # Enable auto-redirect only on update
-        # # after an ADD_ACCOUNT_SUCCESS
-        # if nextProps.mailboxID
-        #     redirectTimer = setTimeout ->
-        #         if RequestsGetter.getAccountCreationSuccess reduxStore.getState()
-        #             @props.doCloseModal nextProps.mailboxID
-        #     , AccountsLib.REDIRECT_DELAY
+        # Update state
+        _.extend nextState, _getStateFromStore nextState
+
+        # Enable auto-redirect only on update
+        # after an ADD_ACCOUNT_SUCCESS
+        if nextState.mailboxID
+            redirectTimer = setTimeout ->
+                if nextState.account
+                    @props.doCloseModal nextState.mailboxID
+            , AccountsLib.REDIRECT_DELAY
 
 
     toValueLink: (name) ->
@@ -135,7 +138,7 @@ module.exports = AccountWizardCreation = React.createClass
         # TODO : passer le state en props
         # ajouter la mechanique qui permet à la vue
         # de mettre elle même à jour ses props
-        console.log "CREATE", @state, @props
+        console.log "CREATION.RENDER", @state.disable
 
         <div role='complementary' className="backdrop" onClick={@close}>
             <div className="backdrop-wrapper">
@@ -173,9 +176,9 @@ module.exports = AccountWizardCreation = React.createClass
                             </p> if @state.OAuth}
                         </div> if @state.alert}
 
-                        <Servers expanded={not @state.expanded}
+                        <Servers expanded={not @state.disable}
                                 toValueLink={@toValueLink}
-                                expanded={@state.expanded}
+                                expanded={not @state.disable}
                                 legend={t 'account wizard creation advanced parameters'} />
                     </Form>
 
@@ -193,7 +196,7 @@ module.exports = AccountWizardCreation = React.createClass
                                      type="button"
                                      onClick={@close}>
                                 {t('app cancel')}
-                            </button> if not @state.mailboxID}
+                            </button> unless @state.mailboxID}
 
                             {<button type="submit"
                                      form="account-wizard-creation"
@@ -243,21 +246,21 @@ module.exports = AccountWizardCreation = React.createClass
     # aforementioned element and if there's already one account available
     # (otherwise this setting step is mandatory).
     close: (event) ->
-        # disabled  = not @state.mailboxID
-        # success   = event.target is @refs.success
-        # backdrops = event.target in [ReactDOM.findDOMNode(@), @refs.cancel]
-        #
-        # return if not success and (disabled or not(backdrops))
-        #
-        # event.stopPropagation()
-        # event.preventDefault()
-        #
-        # # Disable auto-redirect
-        # clearTimeout redirectTimer
-        #
-        # # Redirect to mailboxID if available, will automatically fallback to
-        # # current mailbox if no mailboxID is given (cancel case)
-        # @props.doCloseModal @state.mailboxID
+        disabled  = @state.disable
+        success   = event.target is @refs.success
+        backdrops = event.target in [ReactDOM.findDOMNode(@), @refs.cancel]
+
+        return if not success and (disabled or not(backdrops))
+
+        event.stopPropagation()
+        event.preventDefault()
+
+        # Disable auto-redirect
+        clearTimeout redirectTimer
+
+        # Redirect to mailboxID if available, will automatically fallback to
+        # current mailbox if no mailboxID is given (cancel case)
+        @props.doCloseModal @state.mailboxID
 
 
     onFieldChange: (event) ->

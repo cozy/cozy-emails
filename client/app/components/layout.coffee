@@ -24,7 +24,7 @@ module.exports = React.createClass
         AriaTips.bind()
 
     render: ->
-        console.log 'LOGIN?', @props.login
+        # console.log 'LOGIN?', @props.login
         if @props.isIndexing
             return div className: 'reindexing-message',
                 img
