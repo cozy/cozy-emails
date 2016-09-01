@@ -26,8 +26,6 @@ module.exports = AccountServer = React.createClass
 
 
     render: ->
-        console.log 'SERVER', @props.port, @props.security
-
         <div className={classnames 'content', 'server', customized: @props.isCustomized}>
 
             <h2>{@props.protocol}</h2>

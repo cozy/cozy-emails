@@ -85,6 +85,7 @@ bindStore = connect(
         isConversationLoading   : RequestsGetter.isConversationLoading(state)
         isMailboxLoading        : RouterGetter.isMailboxLoading(state)
         isRefreshError          : RequestsGetter.isRefreshError(state)
+        isRequestError          : RequestsGetter.isRequestError(state)
 
 
     # MapDispatchToProps

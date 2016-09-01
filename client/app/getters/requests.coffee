@@ -2,16 +2,25 @@
 
 module.exports =
 
-    getRequests: (state) ->
-        state.get('requests')
+    getInFlight: (state) ->
+        state?.get('requests')?.get 'inflight'
 
 
-    get: (state, req) ->
-        @getRequests(state).get req
+    getValue: (state, req) ->
+        results = state?.get('requests')?.get 'success'
+        results?.get req
+
+    getError: (state, req) ->
+        results = state?.get('requests')?.get 'error'
+        results?.get req
+
+
+    isRequestError: (state) ->
+        !!state?.get('requests')?.get('error')?.size
 
 
     isLoading: (state, req) ->
-        RequestStatus.INFLIGHT is @get(state, req)?.status
+        @getInFlight(state) is req
 
 
     getRefreshes: (state) ->
@@ -44,15 +53,15 @@ module.exports =
 
 
     isAccountCreationBusy: (state) ->
-        RequestStatus.INFLIGHT in [
-            @get(state, Requests.DISCOVER_ACCOUNT).status
-            @get(state, Requests.CHECK_ACCOUNT).status
-            @get(state, Requests.ADD_ACCOUNT).status
+        @getInFlight(state) in [
+            Requests.DISCOVER_ACCOUNT,
+            Requests.CHECK_ACCOUNT,
+            Requests.ADD_ACCOUNT
         ]
 
     # isAccountDiscoverable: (state) ->
-    #     discover = @get state, Requests.DISCOVER_ACCOUNT
-    #     check    = @get state, Requests.CHECK_ACCOUNT
+    #     discover = @getValue state, Requests.DISCOVER_ACCOUNT
+    #     check    = @getValue state, Requests.CHECK_ACCOUNT
     #
     #     if discover.status is RequestStatus.SUCCESS
     #         return true
@@ -64,54 +73,47 @@ module.exports =
 
 
     getAccountCreationAlert: (state) ->
-        # TODO : tester avec une seule valeur de la Requeste
-        # avec un singleton sur le requestStore
+        isCreateFailure = @getError state, Requests.ADD_ACCOUNT
+        isCheckFailure = @getError state, Requests.CHECK_ACCOUNT
+        isDiscoverFailure = @getError state, Requests.DISCOVER_ACCOUNT
 
-        # discover = @get state, Requests.DISCOVER_ACCOUNT
-        # check    = @get state, Requests.CHECK_ACCOUNT
-        # create   = @get state, Requests.ADD_ACCOUNT
+        if isCreateFailure
+            status: 'CREATE_FAILED'
 
-        # FIXME: state vaut Object {status: null, res: undefined}
-        console.log 'getAccountCreationAlert', state.toJS()
+        if isCheckFailure
+            fields = check.res.error.response.body.causeFields
 
-        # if create.status is RequestStatus.ERROR
-        #     status: 'CREATE_FAILED'
-        #
-        # else if check.status is RequestStatus.ERROR
-        #     fields = check.res.error.response.body.causeFields
-        #
-        #     status: 'CHECK_FAILED'
-        #     type: if fields and 'smtpServer' in fields
-        #         'SMTP_SERVER'
-        #     else if fields and 'imapServer' in fields
-        #         'IMAP_SERVER'
-        #     else
-        #         'AUTH'
-        #
-        # # autodiscover failed: set an alert only if check isn't already
-        # # performed
-        # else if discover.status is RequestStatus.ERROR and check.status is null
-        #     status: 'DISCOVER_FAILED'
-        #
-        # else
-        #     null
+            status: 'CHECK_FAILED'
+            type: if fields and 'smtpServer' in fields
+                'SMTP_SERVER'
+            else if fields and 'imapServer' in fields
+                'IMAP_SERVER'
+            else
+                'AUTH'
+
+        # FIXME : this bahavior is partially implemented
+        # missing last condition
+        
+        # 1. autodiscover failed: set an alert
+        # 2. only if check isn't already performed
+        else if isDiscoverFailure
+            status: 'DISCOVER_FAILED'
+
+        else
+            null
 
 
-    isAccountOAuth: (state) ->
-        check = @get state, Requests.CHECK_ACCOUNT
-        if check.status is RequestStatus.ERROR
-            check.res.oauth
-
-
+    # FIXME: this may not work
+    # FIXME : on ne stocke plus la valeur
+    # par contre le stocker dasn Account
     getAccountCreationDiscover: (state) ->
-        discover = @get state, Requests.DISCOVER_ACCOUNT
-        if discover.status is RequestStatus.SUCCESS
-            discover.res
+        discover = @getValue state, Requests.DISCOVER_ACCOUNT
+        # if discover.status is RequestStatus.SUCCESS
+        #     discover.res
 
 
+    # FIXME: this may not work
     # return create request result
     # i.e. `{account}` on success
     getAccountCreationSuccess: (state) ->
-        create = @get state, Requests.ADD_ACCOUNT
-        if create.status is RequestStatus.SUCCESS
-            create.res
+        @getValue state, Requests.ADD_ACCOUNT

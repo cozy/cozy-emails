@@ -1,16 +1,85 @@
+# TODO:
+# This way to handle request is not very serious
+# we have to fin a more consistant solution
+# for temporary data persistence
+
 Immutable = require 'immutable'
 {ActionTypes, RequestStatus, Requests} = require '../constants/app_constants'
 
 DEFAULT_STATE = Immutable.Map
-    "#{Requests.DISCOVER_ACCOUNT}":     status: null, res: undefined
-    "#{Requests.CHECK_ACCOUNT}":        status: null, res: undefined
-    "#{Requests.ADD_ACCOUNT}":          status: null, res: undefined
-    "#{Requests.INDEX_MAILBOX}":        status: null, res: undefined
-    "#{Requests.REFRESH_MAILBOX}":      status: null, res: undefined
-    "#{Requests.FETCH_CONVERSATION}":   status: null, res: undefined
-
+    requests: Immutable.Map {inflight: null, queue: []}
+    error: Immutable.Map()
+    success: Immutable.Map()
 
 module.exports = (state = DEFAULT_STATE, action) ->
+
+    _add = (name) ->
+        requests = state.get 'requests'
+
+        unless requests.get 'inflight'
+            requests = requests.set 'inflight', name
+        else
+            (request = requests.get('queue') or []).push name
+            requests = requests.set 'queue', request
+
+        state = state.set 'requests', requests
+        console.log '(ADD)', state.get('requests').toJS()
+
+        return state
+
+
+    # Get oldest event added into queue
+    # Set as state.inflight
+    # Update state.queue
+    _next = (name) ->
+        requests = state.get 'requests'
+
+        if (queue = requests.get 'queue')?.length
+            request = queue.shift()
+            requests = requests.set 'inflight', request
+            requests = requests.set 'queue', queue
+            console.log '(NEXT)', request
+        else
+            requests = requests.set 'inflight', null
+
+
+        state = state.set 'requests', requests
+
+        return state
+
+
+    _addError = (name) ->
+        # If request.value has changed
+        # reset success storage
+        # store only "last" request (consistancy)
+        if (state.get('success').get name)
+            success = state.get 'success'
+            success = success.delete name
+            state = state.set 'success', success
+
+        error = state.get 'error'
+        error = error.set name, action.value
+        state = state.set 'error', error
+
+        return state
+
+
+    _addSuccess = (name) ->
+        # If request has finally succeed
+        # remove its name from errors
+        # store only "last" request (consistancy)
+        if (state.get('error').get name)
+            error = state.get 'error'
+            error = error.delete name
+            state = state.set 'error', error
+
+        success = state.get 'success'
+        success = success.set name, action.value
+        state = state.set 'success', success
+
+        return state
+
+
     switch action.type
 
         # Assume that when a route 'change',
@@ -21,107 +90,100 @@ module.exports = (state = DEFAULT_STATE, action) ->
 
 
         when ActionTypes.DISCOVER_ACCOUNT_REQUEST
-            return state.set Requests.DISCOVER_ACCOUNT,
-                status: RequestStatus.INFLIGHT, res: undefined
+            return _add Requests.DISCOVER_ACCOUNT
 
 
         when ActionTypes.DISCOVER_ACCOUNT_FAILURE
-            {error} = action.value
-            return state.set Requests.DISCOVER_ACCOUNT,
-                status: RequestStatus.ERROR, res: error
+            # Save error
+            _addError Requests.DISCOVER_ACCOUNT
+
+            # Handle next request
+            return _next Requests.DISCOVER_ACCOUNT
+
 
         when ActionTypes.DISCOVER_ACCOUNT_SUCCESS
-            {provider} = action.value
-            return state.set Requests.DISCOVER_ACCOUNT,
-                status: RequestStatus.SUCCESS, res: provider
+            # Handle next request
+            return _next Requests.DISCOVER_ACCOUNT
+
 
         when ActionTypes.CHECK_ACCOUNT_REQUEST
-            return state.set Requests.CHECK_ACCOUNT,
-                status: RequestStatus.INFLIGHT, res: undefined
+            return _add Requests.CHECK_ACCOUNT
+
 
         when ActionTypes.CHECK_ACCOUNT_FAILURE
-            {error, oauth} = action.value
-            return state.set Requests.CHECK_ACCOUNT,
-                status: RequestStatus.ERROR, res: {error, oauth}
+            # Save error
+            _addError Requests.CHECK_ACCOUNT
+
+            # Handle next request
+            return _next Requests.CHECK_ACCOUNT
 
 
         when ActionTypes.CHECK_ACCOUNT_SUCCESS
-            {account} = action.value
-            return state.set Requests.CHECK_ACCOUNT,
-                status: RequestStatus.SUCCESS, res: account
+            return _next Requests.CHECK_ACCOUNT
 
 
         when ActionTypes.ADD_ACCOUNT_REQUEST
-            return state.set Requests.ADD_ACCOUNT,
-                status: RequestStatus.INFLIGHT, res: undefined
+            return _add Requests.ADD_ACCOUNT
 
 
         when ActionTypes.ADD_ACCOUNT_FAILURE
-            {error} = action.value
-            return state.set Requests.ADD_ACCOUNT,
-                status: RequestStatus.ERROR, res: {error}
+            # Save error
+            _addError Requests.ADD_ACCOUNT
+
+            # Handle next request
+            return _next Requests.ADD_ACCOUNT
 
 
         when ActionTypes.ADD_ACCOUNT_SUCCESS
-            res = action.value
-            return state.set Requests.ADD_ACCOUNT,
-                status: RequestStatus.SUCCESS, res: res
+            return _next Requests.ADD_ACCOUNT
 
 
         when ActionTypes.RECEIVE_INDEXES_REQUEST
-            mailbox = action.value
-            return state.set Requests.INDEX_MAILBOX,
-                status: RequestStatus.INFLIGHT, res: mailbox
+            return _add Requests.RECEIVE_INDEXES_REQUEST
 
 
         when ActionTypes.RECEIVE_INDEXES_COMPLETE
-            return state.set Requests.INDEX_MAILBOX,
-                status: RequestStatus.SUCCESS
+            return _next Requests.INDEX_MAILBOX
 
 
         when ActionTypes.RECEIVE_ACCOUNT_CREATE
-            return state.set Requests.ADD_ACCOUNT,
-                status: RequestStatus.INFLIGHT, res: undefined
+            return _add Requests.ADD_ACCOUNT
 
 
         when ActionTypes.RECEIVE_MAILBOX_CREATE
-            return state.set Requests.INDEX_MAILBOX,
-                status: RequestStatus.INFLIGHT, res: undefined
+            return _add Requests.INDEX_MAILBOX
 
 
         when ActionTypes.CONVERSATION_FETCH_REQUEST
-            res = action.value
-            return state.set Requests.FETCH_CONVERSATION,
-                status: RequestStatus.INFLIGHT, res: undefined
+            return _add Requests.FETCH_CONVERSATION
 
 
         when ActionTypes.CONVERSATION_FETCH_SUCCESS
-            res = action.value
-            return state.set Requests.FETCH_CONVERSATION,
-                status: RequestStatus.SUCCESS, res: {res}
+            return _next Requests.FETCH_CONVERSATION
 
 
         when ActionTypes.CONVERSATION_FETCH_FAILURE
-            {error} = action.value
-            return state.set Requests.FETCH_CONVERSATION,
-                status: RequestStatus.ERROR, res: {error}
+            # Save error
+            _addError Requests.FETCH_CONVERSATION
+
+            # Handle next request
+            return _next Requests.FETCH_CONVERSATION
 
 
         when ActionTypes.REFRESH_REQUEST
-            return state.set Requests.REFRESH_MAILBOX,
-                status: RequestStatus.INFLIGHT, res: undefined
+            return _add Requests.REFRESH_MAILBOX
 
 
         when ActionTypes.REFRESH_SUCCESS
-            res = action.value
-            return state.set Requests.REFRESH_MAILBOX,
-                status: RequestStatus.SUCCESS, res: res
+            return _next Requests.REFRESH_MAILBOX
 
 
         when ActionTypes.REFRESH_FAILURE
-            {error} = action.value
-            return state.set Requests.REFRESH_MAILBOX,
-                status: RequestStatus.ERROR, res: {error}
+            # Save error
+            _addError Requests.REFRESH_MAILBOX
+
+            # Handle next request
+            return _next Requests.REFRESH_MAILBOX
 
 
     return state

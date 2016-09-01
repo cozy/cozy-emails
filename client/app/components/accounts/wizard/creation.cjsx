@@ -35,7 +35,12 @@ _getInitialState = ->
 
         isBusy: false
         disable: true
+
+        # Auto-open form if discover have failed
+        # otherwise keep close
+        # Don't forget manual opening
         expanded: false
+        discover: false
 
         fields:
             login: null
@@ -95,11 +100,7 @@ module.exports = AccountWizardCreation = React.createClass
 
 
     render: ->
-        # TODO : passer le state en props
-        # ajouter la mechanique qui permet à la vue
-        # de mettre elle même à jour ses props
-        console.log "CREATION.RENDER", @state
-
+        console.log 'RENDER', @state
         <div role='complementary' className="backdrop" onClick={@close}>
             <div className="backdrop-wrapper">
                 <section className='settings'>
@@ -176,18 +177,19 @@ module.exports = AccountWizardCreation = React.createClass
     #   1/ if `expanded` feature is enable, perform a discover action
     #   2/ if not, directly check auth
     create: (event) ->
-        event.preventDefault()
-
-        console.log "CREATE", @props, @state
+        event.preventDefault() if event?
 
         { expanded, fields: {imapServer, smtpServer} } = @state
+        value = AccountsLib.sanitizeConfig @state
+
+        # Extract domain from login field,
+        # to compare w/ know OAuth-aware domains
+        [..., domain] = @state.fields.login.split '@'
 
         if @state.expanded and not(imapServer or smtpServer)
-            [..., domain] = @props.login.split '@'
-            @props.doAccountDiscover domain, AccountsLib.sanitizeConfig @state
+            @props.doAccountDiscover {domain, value}
         else
-            @props.doAccountCheck
-                value: AccountsLib.sanitizeConfig @state
+            @props.doAccountCheck {domain, value}
 
 
     # Close the modal when:
@@ -228,5 +230,5 @@ module.exports = AccountWizardCreation = React.createClass
 
     updateState: (nextState) ->
         state = AccountsLib.validateState nextState, @state
-        console.log 'UPDATE', state.fields
+
         @setState state

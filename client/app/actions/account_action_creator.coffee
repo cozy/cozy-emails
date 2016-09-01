@@ -67,14 +67,10 @@ module.exports = AccountActionCreator = (dispatch, state) ->
                     value: {rawAccount}
 
 
-    check: ({value: account, accountID}) ->
+    check: ({config: account, accountID, domain}) ->
         if accountID
             account = AccountGetter.getByID(state,accountID)
             .mergeDeep(account).toJS()
-
-        # Extract domain from login field,
-        # to compare w/ know OAuth-aware domains
-        [..., domain] = account.login.split '@'
 
         dispatch
             type: ActionTypes.CHECK_ACCOUNT_REQUEST
@@ -109,7 +105,8 @@ module.exports = AccountActionCreator = (dispatch, state) ->
                     type: ActionTypes.REMOVE_ACCOUNT_SUCCESS
                     value: {accountID}
 
-    discover: (domain, config) ->
+
+    discover: ({domain, config}) ->
         dispatch
             type: ActionTypes.DISCOVER_ACCOUNT_REQUEST
             value: {domain}
@@ -126,14 +123,13 @@ module.exports = AccountActionCreator = (dispatch, state) ->
             # same methods the view component uses by exploiting same mixins).
             # Also, dispatch a success event for the discovery action.
             else
-                servers = AccountsLib.getProviderProps provider
-                config  = AccountsLib.sanitizeConfig _.extend config, servers
-
-                AccountActionCreator.check value: config
-
                 dispatch
                     type: ActionTypes.DISCOVER_ACCOUNT_SUCCESS
                     value: {domain, provider}
+
+                servers = AccountsLib.getProviderProps provider
+                config  = AccountsLib.sanitizeConfig _.extend config, servers
+                AccountActionCreator.check {config}
 
 
     # FIXME: move this elsewhere

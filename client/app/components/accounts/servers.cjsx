@@ -19,7 +19,6 @@ module.exports = AccountServers = React.createClass
         onChange    : React.PropTypes.func
 
     render: ->
-        console.log 'SERVERS', @props
         <Form.Fieldset expanded={ @props.expanded } legend={ @props.legend } onExpand={ @props.onExpand }>
             <Server {...AccountsLib.filterPropsByProvider @props, 'imap'} />
             <Server {...AccountsLib.filterPropsByProvider @props, 'smtp'} />
