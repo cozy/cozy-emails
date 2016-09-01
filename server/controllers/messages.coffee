@@ -270,9 +270,13 @@ module.exports.batchTrash = (req, res, next) ->
 # expect req.body.flag
 module.exports.batchAddFlag = (req, res, next) ->
 
-    Message.batchAddFlag req.messages, req.body.flag, (err, updated) ->
+    Message.batchAddFlag req.messages, req.body.flag, (err, updatedMessages) ->
         return next err if err
-        res.send updated
+        Message.getConversationLengths updatedMessages, (err, convLength) ->
+            res.send
+                messages: updatedMessages,
+                conversationLength: convLength
+
 
 # remove a flag from several messages
 # expect req.body.flag
