@@ -41,18 +41,6 @@ module.exports =
     REDIRECT_DELAY: 5000
 
 
-    # TODO : list params that arer needed
-    # document the code!
-    getServersProps: (state) ->
-        expanded: state.expanded
-        legend: t 'account wizard creation advanced parameters'
-
-
-    # FIXME: QUID de isAccountDiscoverable ?!
-    isExpanded: () ->
-
-
-
     # Take a state identifier (key), its value, and the previousState.
     # It ensures the type is right with PropTypes, and manage auto-filling for
     # associated keys (logins / passwords).

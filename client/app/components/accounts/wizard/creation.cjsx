@@ -174,8 +174,9 @@ module.exports = AccountWizardCreation = React.createClass
                         </div> if @state.alert}
 
                         <Servers expanded={not @state.expanded}
-                                toValueLink={ @toValueLink }
-                                 {...AccountsLib.getServersProps @state} />
+                                toValueLink={@toValueLink}
+                                expanded={@state.expanded}
+                                legend={t 'account wizard creation advanced parameters'} />
                     </Form>
 
                     <footer>
