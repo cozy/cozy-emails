@@ -1,7 +1,10 @@
+### eslint-env mocha ###
+### global client, store, helpers ###
+
 describe 'Account creation', ->
 
     it "When I post a new account to /accounts", (done) ->
-        @timeout 12000
+        @timeout 25000
         account = store.accountDefinition
         client.post '/account', account, (err, res, body) ->
             res.statusCode.should.equal 200
