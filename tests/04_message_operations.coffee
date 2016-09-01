@@ -22,7 +22,6 @@ describe 'Message actions', ->
             flag: '\\Seen'
         client.put path, body, (err, res, body) ->
             res.statusCode.should.equal 200
-            console.log(body);
             should.exist body.messages
             should.exist body.conversationLength
             body.messages.should.be.instanceof(Array).and.have.lengthOf(1)
