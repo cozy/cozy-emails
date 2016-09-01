@@ -168,7 +168,8 @@ module.exports = class Message extends cozydb.CozyModel
     #
     # Returns (callback) an {Object} with conversationsIDs as keys and
     #                    counts as values
-    @getConversationLengths: (conversationIDs, callback) ->
+    @getConversationLengths: (messages, callback) ->
+        conversationIDs = _.uniq _.pluck messages, 'conversationID'
         Message.rawRequest 'byConversationID',
             keys: conversationIDs
             group: true
@@ -244,10 +245,8 @@ module.exports = class Message extends cozydb.CozyModel
             return callback error if error
 
             [count, messages] = results
-            conversationIDs = _.uniq _.pluck messages, 'conversationID'
-
             Message.getConversationLengths(
-                conversationIDs, (error, conversationLength) ->
+                messages, (error, conversationLength) ->
                     return callback error if error
                     callback null, {conversationLength, messages, count}
             )
@@ -517,9 +516,10 @@ module.exports = class Message extends cozydb.CozyModel
             attachments = mail.attachments.map (att) ->
                 buffer = att.content
                 delete att.content
-                return out =
+                return {
                     name: att.generatedFileName
                     buffer: buffer
+                }
 
         # pick a method to find the conversation id
         # if there is a x-gm-thrid, use it
@@ -580,7 +580,7 @@ module.exports = class Message extends cozydb.CozyModel
 
         messagesByBoxID = {}
         for message in messages
-            for boxID, uid of message.mailboxIDs
+            for boxID of message.mailboxIDs
                 messagesByBoxID[boxID] ?= []
                 messagesByBoxID[boxID].push message
 

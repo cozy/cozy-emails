@@ -79,7 +79,6 @@ class Mailbox extends cozydb.CozyModel
                 log.debug 'found', type
                 changes[type] = box.id
 
-            # do not attempt fuzzy match if the server uses RFC6154
             else
                 type = box.guessUse()
                 if type
@@ -87,7 +86,8 @@ class Mailbox extends cozydb.CozyModel
                     guessed[type] = box.id
 
         # keep all guesses
-        changes[guessRole] ?= boxID for guessRole, boxID in guessed
+        changes[guessRole] ?= boxID for guessRole, boxID of guessed
+
 
         changes.favorites = Mailbox.pickFavorites boxes, changes
 

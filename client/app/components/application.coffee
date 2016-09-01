@@ -97,8 +97,8 @@ bindStore = connect(
         clearToasts           : LayoutActionCreator(dispatch).clearToasts
         displayModal          : LayoutActionCreator(dispatch).displayModal
 
-        doDisplayImages       : MessageActionCreator(dispatch).displayImages
-        doDeleteMessage       : MessageActionCreator(dispatch).deleteMessage
+        doDisplayImages       : MessageActionCreator.displayImages.bind(MessageActionCreator, dispatch)
+        doDeleteMessage       : MessageActionCreator.deleteMessage.bind(MessageActionCreator, dispatch)
 
         doDeleteToast         : NotificationActionCreator(dispatch).taskDelete
 
