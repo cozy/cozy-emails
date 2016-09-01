@@ -1,5 +1,7 @@
+### eslint-env mocha ###
+### global store, client, helpers SMTPTesting ###
+
 should = require 'should'
-log = -> console.log.apply(console, arguments)
 fs = require 'fs'
 
 describe 'Message actions', ->
@@ -20,14 +22,19 @@ describe 'Message actions', ->
             flag: '\\Seen'
         client.put path, body, (err, res, body) ->
             res.statusCode.should.equal 200
-            body.should.be.instanceof(Array).and.have.lengthOf(1)
-            body[0].id.should.equal store.latestInboxMessageId
-            body[0].flags.should.containEql '\\Seen'
-            store.uid = body[0].mailboxIDs[store.inboxID]
+            console.log(body);
+            should.exist body.messages
+            should.exist body.conversationLength
+            body.messages.should.be.instanceof(Array).and.have.lengthOf(1)
+            message = body.messages[0]
+            message.id.should.equal store.latestInboxMessageId
+            message.flags.should.containEql '\\Seen'
+            body.conversationLength[message.conversationID].should.equal 3
+            store.uid = message.mailboxIDs[store.inboxID]
             done()
 
     it "The flags has been changed on the server", (done) ->
-        imap = helpers.getImapServerRawConnection done, ->
+        helpers.getImapServerRawConnection done, ->
             @openBox 'INBOX', =>
                 @fetchOneMail store.uid, (err, msg) =>
                     msg.flags.should.containEql '\\Seen'
@@ -228,7 +235,7 @@ describe 'Message actions', ->
         # pretend GMail and add message sent via SMTP
         # to IMAP send box
         SMTPTesting.onSecondMessage = (env, callback) ->
-            imap = helpers.getImapServerRawConnection callback, ->
+            helpers.getImapServerRawConnection callback, ->
                 @append env.body, mailbox: 'Sent', flags: ['\\Seen'], ->
                     @end()
 
@@ -302,7 +309,7 @@ describe 'Message actions', ->
             accountID: store.accountID
             messageIDs: store.someIds
 
-        req = client.put "/messages/batchTrash", data, (err, res, body) ->
+        client.put "/messages/batchTrash", data, (err, res, body) ->
             should.not.exist err
             res.statusCode.should.equal 200
             done()
