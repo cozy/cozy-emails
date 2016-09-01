@@ -42,38 +42,42 @@ module.exports =
 
     REDIRECT_DELAY: 5000
 
+
     # Take a state identifier (key), its value, and the previousState.
     # It ensures the type is right with PropTypes, and manage auto-filling for
     # associated keys (logins / passwords).
     validateState: (nextState={}, previousState={}) ->
-        fields = {}
-        previousFields = {}
-
+        state = _.clone nextState
+        previousFields = previousState.fields or {}
         protocolKeys = _.keys @DEFAULT_PORTS
 
-        for key, value of nextState.fields
+        for key, value of state.fields
             # In case key is 'port',
             # ensure the value type is a number
             value = +value if /port$/i.test key
 
             # Only override port if it isn't a custom one
             # (be careful to convert type from state to be a number)
-            # if not nextState.port? and not previousState.port?
+            # if not state.port? and not previousState.port?
             if 'security' is (params = key.split('-'))[1]?.toLowerCase()
                 protocol = params[0]
-                portValue = nextState.fields["#{protocol}Port"]
+                portValue = state.fields["#{protocol}Port"]
                 portValue ?= previousFields["#{protocol}Port"]
 
                 if portValue in _.values @DEFAULT_PORTS[protocol]
-                    fields["#{protocol}Port"] = +@DEFAULT_PORTS[protocol][value]
+                    state.fields["#{protocol}Port"] = +@DEFAULT_PORTS[protocol][value]
 
 
             # Make sure that property is in camelCase
             # ie. imap-port -> imapPort
+            previousKey = key
             key = _toCamelCase key if params.length > 1
 
-            # prepare the state object
-            fields[key] = value
+            # Prepare the state object
+            state.fields[key] = value
+
+            # Remove bad called property
+            delete state.fields[previousKey] if key isnt previousKey
 
             # if key is login or password input, reflect the value in the
             # server's username / password fields, except if the value in
@@ -82,8 +86,9 @@ module.exports =
             # password field, and allow to input custom values in server's
             # sections if needed.
             if key in ['login', 'password']
-                # Ensure previousState contains all required fields
-                _.defaults previousState.fields,
+                # Ensure previousState contains
+                # all required fields
+                _.defaults previousFields,
                     imapLogin       : undefined
                     imapPassword    : undefined
                     smtpLogin       : undefined
@@ -91,12 +96,12 @@ module.exports =
 
                 # Extract values for filter
                 re     = new RegExp "#{key}$", 'i'
-                refVal = previousState.fields[key]
+                refVal = previousFields[key]
 
                 # Parse previousState and
                 # keep fields mapped to key
                 # with unaltered values
-                previousFields = _.chain previousState.fields
+                previousFields = _.chain previousFields
                     .pairs()
                     .filter ([_key, _value]) ->
                         re.test(_key) and _value is refVal
@@ -104,17 +109,19 @@ module.exports =
                         [_key, value]
                     .object()
                     .value()
+                _.extend state.fields, previousFields
+
 
             # If the modified field is 'login' and servers field are empty, we
             # assume the user just fix a typo in its email address after a failed
             # autodiscover request, so we smartly re-enable it to perform another
             # aiutodiscover test.
             if key is 'login' and
-                    not(nextState.fields.imapServer or
-                    nextState.fields.smtpServer)
-                _.extend nextState, {expanded: true}
+                    not(state.fields.imapServer or
+                    state.fields.smtpServer)
+                _.extend state, {expanded: true}
 
-        _.extend nextState, {fields: previousFields}, {fields}
+        return state
 
 
     # Merge accountView:
@@ -160,23 +167,25 @@ module.exports =
     # FIXME : missing comment to explain state
     # ie. type? if object: properties?
     sanitizeConfig: (state) ->
-        excludes = [
-            'OAuth'
-            'alert'
-            'success'
-            'enableSubmit'
-            'imapSecurity'
-            'smtpSecurity'
-        ]
-        [name, ...] = state.login.split '@'
+        [name, ...] = state.fields.login.split '@'
+        result = {
+            login: state.fields.login
+            password: state.fields.password
+            label: state.fields.login
+            name: name
 
-        _.extend _.omit(state, excludes),
-            label    : state.login
-            name     : name
-            imapSSL  : state.imapSecurity is 'ssl'
-            imapTLS  : state.imapSecurity is 'starttls'
-            smtpSSL  : state.smtpSecurity is 'ssl'
-            smtpTLS  : state.smtpSecurity is 'starttls'
+            imapHost: state.fields.imapHost
+            imapPort: state.fields.imapPort
+            imapLogin: state.fields.imapLogin
+            imapSSL: state.fields.imapSecurity is 'ssl'
+            imapTLS: state.fields.imapSecurity is 'starttls'
+
+            smtpHost: state.fields.smtpHost
+            smtpPort: state.fields.smtpPort
+            smtpLogin: state.fields.smtpLogin
+            smtpSSL: state.fields.smtpSecurity is 'ssl'
+            smtpTLS: state.fields.smtpSecurity is 'starttls'
+        }
 
 
     # Parses an array of providers as returned

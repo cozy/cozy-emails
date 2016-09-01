@@ -23,9 +23,7 @@ Servers = require '../servers'
 # Top var for redirect timeout
 redirectTimer = undefined
 
-
 _getInitialState = ->
-
     defaultSecurityValue = 'starttls'
     return {
         account: null
@@ -43,12 +41,12 @@ _getInitialState = ->
             login: null
             password: null
 
-            imapServer: null
+            imapHost: null
             imapPort: AccountsLib.DEFAULT_PORTS.imap[defaultSecurityValue]
             imapSecurity: defaultSecurityValue
             imapLogin: null
 
-            smtpServer: null
+            smtpHost: null
             smtpPort: AccountsLib.DEFAULT_PORTS.smtp[defaultSecurityValue]
             smtpSecurity: defaultSecurityValue
             smtpLogin: null
@@ -100,7 +98,7 @@ module.exports = AccountWizardCreation = React.createClass
         # TODO : passer le state en props
         # ajouter la mechanique qui permet à la vue
         # de mettre elle même à jour ses props
-        console.log "CREATION.RENDER", @state.disable
+        console.log "CREATION.RENDER", @state
 
         <div role='complementary' className="backdrop" onClick={@close}>
             <div className="backdrop-wrapper">
@@ -180,22 +178,16 @@ module.exports = AccountWizardCreation = React.createClass
     create: (event) ->
         event.preventDefault()
 
-        # FIXME : missing properties
-        # - imapServer, smtpServer
-
-        # TODO : create object from props
-        # TODO : add comment about context of these 2 cases
-
-        # A quoi corresponds ça?
-        # @state.expanded and not(@state?.imapServer or @state?.smtpServer)
         console.log "CREATE", @props, @state
 
-        # if @state.expanded and not(@state?.imapServer or @state?.smtpServer)
-        #     [..., domain] = @props.login.split '@'
-        #     @props.doAccountDiscover domain, AccountsLib.sanitizeConfig state
-        # else
-        #     @props.doAccountCheck
-        #         value: AccountsLib.sanitizeConfig state
+        { expanded, fields: {imapServer, smtpServer} } = @state
+
+        if @state.expanded and not(imapServer or smtpServer)
+            [..., domain] = @props.login.split '@'
+            @props.doAccountDiscover domain, AccountsLib.sanitizeConfig @state
+        else
+            @props.doAccountCheck
+                value: AccountsLib.sanitizeConfig @state
 
 
     # Close the modal when:
@@ -236,5 +228,5 @@ module.exports = AccountWizardCreation = React.createClass
 
     updateState: (nextState) ->
         state = AccountsLib.validateState nextState, @state
-        console.log 'UPDATE', state
+        console.log 'UPDATE', state.fields
         @setState state
