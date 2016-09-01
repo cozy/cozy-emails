@@ -119,7 +119,7 @@ module.exports =
             if key is 'login' and
                     not(state.fields.imapServer or
                     state.fields.smtpServer)
-                _.extend state, {expanded: true}
+                _.extend state, {isDiscoverable: true}
 
         return state
 
@@ -141,6 +141,7 @@ module.exports =
             isBusy: (isBusy = RequestsGetter.isAccountCreationBusy reduxState)
             alert: RequestsGetter.getAccountCreationAlert reduxState
             discover: RequestsGetter.getAccountCreationDiscover reduxState
+            isDiscoverable: RequestsGetter.isAccountDiscoverable reduxState
 
             # Only enable submit
             # when a request isnt performed in background and
@@ -151,7 +152,7 @@ module.exports =
         # Get Specific Provider properties
         # ie. Server, Port, or Security values
         if nextState.discover
-            _.extend state, @getProviderProps nextState.discover
+            _.extend nextState, @getProviderProps nextState.discover
 
         return nextState
 
@@ -193,7 +194,7 @@ module.exports =
     # service to extract IMAP/SMTP settings.
     getProviderProps: (providers) ->
         state = {}
-        providers.forEach (provider) ->
+        providers?.forEach (provider) ->
             return unless provider.type in ['imap', 'smtp']
 
             socketType = provider.socketType.toLowerCase()

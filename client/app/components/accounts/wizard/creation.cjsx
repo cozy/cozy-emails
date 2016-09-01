@@ -40,7 +40,15 @@ _getInitialState = ->
         # otherwise keep close
         # Don't forget manual opening
         expanded: false
+
+        # Contain the account values
+        # "discovered" by the API
         discover: false
+
+        # Check 1rst if API "discover"
+        # a configuration for the login
+        # If not do not try anymore
+        isDiscoverable: true
 
         fields:
             login: null
@@ -138,6 +146,7 @@ module.exports = AccountWizardCreation = React.createClass
                         </div> if @state.alert}
 
                         <Servers expanded={@state.expanded}
+                                onExpand={@onExpand}
                                 toValueLink={@toValueLink}
                                 legend={t 'account wizard creation advanced parameters'} />
                     </Form>
@@ -171,6 +180,14 @@ module.exports = AccountWizardCreation = React.createClass
         </div>
 
 
+    # Save expand value after manual activation
+    # Disable discover after 1rst expand
+    onExpand: (value) ->
+        state = expanded: value
+        state.isDiscoverable = false if value
+        @setState state
+
+
     # Account creation steps:
     # - reset alerts
     # - trigger action:
@@ -180,16 +197,16 @@ module.exports = AccountWizardCreation = React.createClass
         event.preventDefault() if event?
 
         { expanded, fields: {imapServer, smtpServer} } = @state
-        value = AccountsLib.sanitizeConfig @state
+        config = AccountsLib.sanitizeConfig @state
 
         # Extract domain from login field,
         # to compare w/ know OAuth-aware domains
         [..., domain] = @state.fields.login.split '@'
 
-        if @state.expanded and not(imapServer or smtpServer)
-            @props.doAccountDiscover {domain, value}
+        if @state.isDiscoverable and not(imapServer or smtpServer)
+            @props.doAccountDiscover {domain, config}
         else
-            @props.doAccountCheck {domain, value}
+            @props.doAccountCheck {domain, config}
 
 
     # Close the modal when:

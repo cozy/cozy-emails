@@ -59,17 +59,24 @@ module.exports =
             Requests.ADD_ACCOUNT
         ]
 
-    # isAccountDiscoverable: (state) ->
-    #     discover = @getValue state, Requests.DISCOVER_ACCOUNT
-    #     check    = @getValue state, Requests.CHECK_ACCOUNT
-    #
-    #     if discover.status is RequestStatus.SUCCESS
-    #         return true
-    #     # autodiscover failed w/o check in course: switch to manual config
-    #     else if discover.status is RequestStatus.ERROR and check.status is null
-    #         return false
-    #     else
-    #         return check.status is null
+
+    getAccountCreationDiscover: (state) ->
+        @getValue state, Requests.DISCOVER_ACCOUNT
+
+
+    isAccountDiscoverable: (state) ->
+        discoverSuccess = @getValue state, Requests.DISCOVER_ACCOUNT
+        discoverFailure = @getError state, Requests.DISCOVER_ACCOUNT
+        checkSuccess = @getValue state, Requests.CHECK_ACCOUNT
+
+        if discoverSuccess
+            return true
+        # autodiscover failed w/o check in course:
+        # switch to manual config
+        else if discoverFailure and not checkSuccess
+            return false
+        else
+            return not checkSuccess
 
 
     getAccountCreationAlert: (state) ->
@@ -101,15 +108,6 @@ module.exports =
 
         else
             null
-
-
-    # FIXME: this may not work
-    # FIXME : on ne stocke plus la valeur
-    # par contre le stocker dasn Account
-    getAccountCreationDiscover: (state) ->
-        discover = @getValue state, Requests.DISCOVER_ACCOUNT
-        # if discover.status is RequestStatus.SUCCESS
-        #     discover.res
 
 
     # FIXME: this may not work
