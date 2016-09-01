@@ -127,9 +127,16 @@ module.exports = AccountActionCreator = (dispatch, state) ->
                     type: ActionTypes.DISCOVER_ACCOUNT_SUCCESS
                     value: {domain, provider}
 
-                servers = AccountsLib.getProviderProps provider
-                config  = AccountsLib.sanitizeConfig _.extend config, servers
-                AccountActionCreator.check {config}
+                providerConfig = AccountsLib.getProviderProps provider
+                fields = _.extend {}, config, providerConfig
+                config  = AccountsLib.sanitizeConfig {fields}
+
+                # FIXME: Redux move all actionsCreator
+                # in an other scope
+                # that's why we can't call here
+                # other methods of this instance
+                # saga may be a solution for this case
+                AccountActionCreator.check {config, domain}
 
 
     # FIXME: move this elsewhere
