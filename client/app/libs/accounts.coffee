@@ -12,6 +12,8 @@ responses).
 {ServersEncProtocols} = require '../constants/app_constants'
 _ = require 'underscore'
 
+reduxStore = require '../reducers/_store'
+RequestsGetter = require '../puregetters/requests'
 
 module.exports =
 
@@ -103,7 +105,49 @@ module.exports =
                     .object()
                     .value()
 
-        _.extend {}, {fields: previousFields}, {fields}
+            # If the modified field is 'login' and servers field are empty, we
+            # assume the user just fix a typo in its email address after a failed
+            # autodiscover request, so we smartly re-enable it to perform another
+            # aiutodiscover test.
+            if key is 'login' and
+                    not(nextState.fields.imapServer or
+                    nextState.fields.smtpServer)
+                _.extend nextState, {expanded: true}
+
+        _.extend nextState, {fields: previousFields}, {fields}
+
+
+    # Merge accountView:
+    # - form.fields
+    # - form.status (expand, disable)
+    # - modal.layout
+    # with RequestsValues from reduxStore
+    mergeWithStore: (nextState) ->
+        reduxState = reduxStore.getState()
+
+        login = nextState.fields.login
+        password = nextState.fields.password
+        accountStored = RequestsGetter.getAccountCreationSuccess(reduxState)
+
+        _.extend nextState,
+            mailboxID: accountStored?.account?.inboxMailbox
+            isBusy: (isBusy = RequestsGetter.isAccountCreationBusy reduxState)
+            alert: RequestsGetter.getAccountCreationAlert reduxState
+            discover: RequestsGetter.getAccountCreationDiscover reduxState
+
+            # Only enable submit
+            # when a request isnt performed in background and
+            # if required fields (email / password) are filled
+            disable: not (not isBusy and not _.isEmpty(login) and
+                        not _.isEmpty(password))
+
+        # Get Specific Provider properties
+        # ie. Server, Port, or Security values
+        if nextState.discover
+            _.extend state, @getProviderProps nextState.discover
+
+        return nextState
+
 
 
     # Take a given state:

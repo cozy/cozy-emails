@@ -11,10 +11,6 @@ LinkedStateMixin = require 'react-addons-linked-state-mixin'
 Form    = require '../../basics/form'
 Servers = require '../servers'
 
-reduxStore = require '../../../redux_store'
-RequestsGetter = require '../../../getters/requests'
-
-
 # @TODO in this file
 #  - separate account props from commonent state
 #           (state.account instanceof Account)
@@ -41,6 +37,7 @@ _getInitialState = ->
 
         isBusy: false
         disable: true
+        expanded: false
 
         fields:
             login: null
@@ -56,36 +53,6 @@ _getInitialState = ->
             smtpSecurity: defaultSecurityValue
             smtpLogin: null
     }
-
-
-# Get some state.properties
-# from RequestStore to handle activity from outside
-_getStateFromStore = (previousState={}) ->
-    reduxState = reduxStore.getState()
-    login = previousState.fields.login
-    password = previousState.fields.password
-    account = RequestsGetter.getAccountCreationSuccess(reduxState)?.account
-    isBusy = RequestsGetter.isAccountCreationBusy reduxState
-
-    state =
-        mailboxID: account?.inboxMailbox
-        isBusy: isBusy
-        alert: RequestsGetter.getAccountCreationAlert reduxState
-        discover: RequestsGetter.getAccountCreationDiscover reduxState
-
-        # Only enable submit
-        # when a request isnt performed in background and
-        # if required fields (email / password) are filled
-        disable: not (not isBusy and not _.isEmpty(login) and
-                    not _.isEmpty(password))
-
-    # Get Specific Provider properties
-    # ie. Server, Port, or Security values
-    if state.discover
-        _.extend state, AccountsLib.getProviderProps state.discover
-
-
-    return state
 
 
 module.exports = AccountWizardCreation = React.createClass
@@ -112,20 +79,15 @@ module.exports = AccountWizardCreation = React.createClass
         ReactDOM.findDOMNode(@).querySelector('[name=login]')?.focus()
 
 
-    componentWillReceiveProps: (nextProps) ->
-        @updateState _getStateFromStore @state
-
-
     componentWillUpdate: (nextProps, nextState) ->
         # Update state
-        _.extend nextState, _getStateFromStore nextState
+        AccountsLib.mergeWithStore nextState
 
         # Enable auto-redirect only on update
         # after an ADD_ACCOUNT_SUCCESS
         if nextState.mailboxID
             redirectTimer = setTimeout ->
-                if nextState.account
-                    @props.doCloseModal nextState.mailboxID
+                @props.doCloseModal nextState.mailboxID
             , AccountsLib.REDIRECT_DELAY
 
 
@@ -176,9 +138,8 @@ module.exports = AccountWizardCreation = React.createClass
                             </p> if @state.OAuth}
                         </div> if @state.alert}
 
-                        <Servers expanded={not @state.disable}
+                        <Servers expanded={@state.expanded}
                                 toValueLink={@toValueLink}
-                                expanded={not @state.disable}
                                 legend={t 'account wizard creation advanced parameters'} />
                     </Form>
 
