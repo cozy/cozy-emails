@@ -32,14 +32,13 @@ module.exports =
     SECURITY_OPTS: ServersEncProtocols
         .map (protocol) ->
             value: protocol
-            label: t "server protocol #{protocol}"
+            label: "server protocol #{protocol}"
         .concat
             value: 'none'
             label: 'server protocol none'
 
 
     REDIRECT_DELAY: 5000
-
 
     # Take a state identifier (key), its value, and the previousState.
     # It ensures the type is right with PropTypes, and manage auto-filling for

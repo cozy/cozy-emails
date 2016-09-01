@@ -27,6 +27,7 @@ module.exports = AccountServer = React.createClass
 
     render: ->
         console.log 'SERVER', @props.port, @props.security
+
         <div className={classnames 'content', 'server', customized: @props.isCustomized}>
 
             <h2>{@props.protocol}</h2>
@@ -45,7 +46,7 @@ module.exports = AccountServer = React.createClass
 
             <Form.Select name="#{@props.protocol}-security"
                          label={t("account wizard creation #{@props.protocol} security")}
-                         options={AccountsLib.SECURITY_OPTS}
+                         options={@getSecurityLabels()}
                          value={@props.security.value}
                          onChange={@props.security.requestChange} />
 
@@ -61,3 +62,11 @@ module.exports = AccountServer = React.createClass
                         value={@props.password.value}
                         onChange={@props.password.requestChange} />
         </div>
+
+
+    getSecurityLabels: ->
+        # translation can't be moved from views
+        # otherwhise travis tests will fail
+        AccountsLib.SECURITY_OPTS.map (data) ->
+            data.label = t data.label
+            return data
