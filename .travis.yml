@@ -5,6 +5,9 @@ matrix:
   - node_js: '5'
 node_js:
 - '4'
+branches:
+  except:
+  - development-build
 services:
 - couchdb
 env:
@@ -14,27 +17,25 @@ env:
   - NAME=emails
   - TOKEN=apptoken
   - CXX=g++-4.8
-  - secure: FVtPCjIQ5GdH4bANNbfZnkFKCPnakGJGFrhngBM/RpBGAs8SAb9C5AmniToYaT/NMIt+nFms87E/mYjqoFFjcrawqWPkaPwZqZqWaSX3mgNZz7cLiEo5+L59SDajqVcRACWFw9R4k4PtMnB4YW1j/cOp0HTUD8DIHU9gFpO/f80=
-  - secure: H7oTliG3EspI3dqHWV2QqPA1+FXjmrHVh7rBLFVBln1jDHePF+73fNJK7EJ2cEhLyXmagXWSp7V888XaSlIAVcW+qeY0gCGzC1xPgAl2XbDdNimABEE6x3d4XJ3Mii3CjkY93p8RU05cM3n8/7CbnUSzZoz4spuYSfKfROAt0U8=
+  - secure: J2X6gwPCp2dwsHWmc0IzXYcJYkpSBDwkm3S3DmtveK5YcZp7DMiYwOvQJuyPYFIyQ4hl6WCM6IHePnhmY0Kdvha6+PCj4mXR/wVtVR+gAPvUK5KY8gu8XdhEPX65CutiSjP6PpOKeTyaT8YuehJaCNRo823V5z48Chn1ghnQGns=
+  - secure: kVP5RYMRJg/GeMSYTV8rDUCGRskUcuiFj8UizF0xQ13P9+GQQqugnwK5vE/AcvC+kD5PRK+wBqFFAco9emyrFpg8PZnRoP4hyDY/lX8a6T5/1jbUwYTY6IXsFSSpFb5y2MbBEHscK5AF9redX73sm2SninD0RYLqAsY/Agdyj0s=
 addons:
   apt:
     sources:
     - ubuntu-toolchain-r-test
+    - deadsnakes
     packages:
     - gcc-4.8
     - g++-4.8
+    - python3.5
 before_install:
-- travis_retry npm install npm@latest-2 -g
-- travis_retry npm install forever coffee-script -g
-- travis_retry pip install --user transifex-client
-- travis_retry git clone git://github.com/cozy/cozy-data-system.git
-- git clone http://code.transifex.com/transifex-client
-- cd transifex-client
-- git checkout 0.12.1
-- sudo python setup.py install
-- cd $TRAVIS_BUILD_DIR
+- curl -fsSL https://bootstrap.pypa.io/get-pip.py | python3.5 - --user
+- travis_retry pip3.5 install --user transifex-client
 - install -m0644 .transifexrc.tpl ~/.transifexrc
 - echo "password = $TX_PASSWD" >> ~/.transifexrc
+- travis_retry npm install npm@latest-2 -g
+- travis_retry npm install forever coffee-script -g
+- travis_retry git clone git://github.com/cozy/cozy-data-system.git
 - cd cozy-data-system
 - travis_retry npm install
 - env NAME=data-system TOKEN=token forever start -o forever-ds.log build/server.js
