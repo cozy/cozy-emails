@@ -109,7 +109,13 @@ module.exports = AccountActionCreator = (dispatch, state) ->
                         oauth: domain if domain in _.keys OAuthDomains
 
             else
+                # FIXME: Redux move all actionsCreator
+                # in an other scope
+                # that's why we can't call here
+                # other methods of this instance
+                # saga may be a solution for this case
                 AccountActionCreator.create value: account
+
                 dispatch
                     type: ActionTypes.CHECK_ACCOUNT_SUCCESS
                     value: {res}

@@ -91,30 +91,29 @@ bindStore = connect(
     # MapDispatchToProps
     (dispatch) ->
         # Account: creation
-        doAccountDiscover     : AccountActionCreator(dispatch).discover
-        doAccountCheck        : AccountActionCreator(dispatch).check
+        doAccountCreate      : AccountActionCreator(dispatch).create
 
         # Messages
-        doCreateContact       : ContactActionCreator(dispatch).createContact
+        doCreateContact      : ContactActionCreator(dispatch).createContact
 
         # Modal container
-        displayModal          : LayoutActionCreator(dispatch).displayModal
-        doCloseModal          : RouterAC.closeModal.bind(RouterAC, dispatch)
+        displayModal         : LayoutActionCreator(dispatch).displayModal
+        doCloseModal         : RouterAC.closeModal.bind(RouterAC, dispatch)
 
         # Messages
-        onLoadMore            : RouterAC.loadMore.bind(RouterAC, dispatch)
-        doDisplayImages       : MessageActionCreator(dispatch).displayImages
-        doDeleteMessage       : MessageActionCreator(dispatch).deleteMessage
-        doCloseConversation   : RouterAC.closeConversation.bind(RouterAC, dispatch)
-        doMarkMessage         : RouterAC.markMessage.bind(RouterAC, dispatch)
-        doGotoMessage         : RouterAC.gotoMessage.bind(RouterAC, dispatch)
-        gotoConversation      : RouterAC.gotoConversation.bind(RouterAC, dispatch)
+        onLoadMore          : RouterAC.loadMore.bind(RouterAC, dispatch)
+        doDisplayImages     : MessageActionCreator(dispatch).displayImages
+        doDeleteMessage     : MessageActionCreator(dispatch).deleteMessage
+        doCloseConversation : RouterAC.closeConversation.bind(RouterAC, dispatch)
+        doMarkMessage       : RouterAC.markMessage.bind(RouterAC, dispatch)
+        doGotoMessage       : RouterAC.gotoMessage.bind(RouterAC, dispatch)
+        gotoConversation    : RouterAC.gotoConversation.bind(RouterAC, dispatch)
 
         # Notifications
-        toastsShow            : LayoutActionCreator(dispatch).toastsShow
-        toastsHide            : LayoutActionCreator(dispatch).toastsHide
-        clearToasts           : LayoutActionCreator(dispatch).clearToasts
-        doDeleteToast         : NotificationActionCreator(dispatch).taskDelete
+        toastsShow          : LayoutActionCreator(dispatch).toastsShow
+        toastsHide          : LayoutActionCreator(dispatch).toastsHide
+        clearToasts         : LayoutActionCreator(dispatch).clearToasts
+        doDeleteToast       : NotificationActionCreator(dispatch).taskDelete
 )
 
 Layout = React.createFactory bindStore Layout

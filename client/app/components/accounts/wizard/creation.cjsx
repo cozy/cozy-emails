@@ -75,8 +75,7 @@ module.exports = AccountWizardCreation = React.createClass
     # TODO: voir quelles props sont à déplacer dans le state
     # formValues
     propTypes:
-        doAccountDiscover   : React.PropTypes.func.isRequired
-        doAccountCheck      : React.PropTypes.func.isRequired
+        doAccountCreate     : React.PropTypes.func.isRequired
         doCloseModal        : React.PropTypes.func.isRequired
 
 
@@ -205,10 +204,8 @@ module.exports = AccountWizardCreation = React.createClass
 
         # FIXME: discover actions workflow
         # doesnt work with Redux
-        # if @state.isDiscoverable and not(imapServer or smtpServer)
-        #     @props.doAccountDiscover {domain, config}
-        # else
-        @props.doAccountCheck {domain, config}
+        # so call directly create method
+        @props.doAccountCreate {value: config}
 
 
     # Close the modal when:
