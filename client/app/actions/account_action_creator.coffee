@@ -72,6 +72,30 @@ module.exports = AccountActionCreator = (dispatch, state) ->
             account = AccountGetter.getByID(state,accountID)
             .mergeDeep(account).toJS()
 
+        # FIXME: is smtpMethod is the missing propertie
+        # to validate this action?
+
+        propTypes =
+            label: String               # human readable label for the account
+            name: String                # user name to put in sent mails
+            login: String               # IMAP & SMTP login
+            password: String            # IMAP & SMTP password
+            smtpServer: String          # SMTP host
+            smtpPort: Number            # SMTP port
+            smtpSSL: Boolean            # Use SSL
+            smtpTLS: Boolean            # Use STARTTLS
+            smtpLogin: String           # SMTP login, if different from default
+            smtpPassword: String        # SMTP password, if different from default
+
+            smtpMethod: String          # SMTP Auth Method
+
+            imapLogin: String           # IMAP login
+            imapServer: String          # IMAP host
+            imapPort: Number            # IMAP port
+            imapSSL: Boolean            # Use SSL
+            imapTLS: Boolean            # Use STARTTLS
+
+
         dispatch
             type: ActionTypes.CHECK_ACCOUNT_REQUEST
             value: {account}

@@ -203,10 +203,12 @@ module.exports = AccountWizardCreation = React.createClass
         # to compare w/ know OAuth-aware domains
         [..., domain] = @state.fields.login.split '@'
 
-        if @state.isDiscoverable and not(imapServer or smtpServer)
-            @props.doAccountDiscover {domain, config}
-        else
-            @props.doAccountCheck {domain, config}
+        # FIXME: discover actions workflow
+        # doesnt work with Redux
+        # if @state.isDiscoverable and not(imapServer or smtpServer)
+        #     @props.doAccountDiscover {domain, config}
+        # else
+        @props.doAccountCheck {domain, config}
 
 
     # Close the modal when:

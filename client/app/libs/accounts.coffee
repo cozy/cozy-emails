@@ -169,6 +169,7 @@ module.exports =
     # ie. type? if object: properties?
     sanitizeConfig: (state) ->
         [name, ...] = state.fields.login.split '@'
+
         result = {
             login: state.fields.login
             password: state.fields.password
@@ -176,14 +177,18 @@ module.exports =
             name: name
 
             imapHost: state.fields.imapHost
+            imapServer: state.fields.imapHost
             imapPort: state.fields.imapPort
             imapLogin: state.fields.imapLogin
+            imapPassword: state.fields.imapPassword
             imapSSL: state.fields.imapSecurity is 'ssl'
             imapTLS: state.fields.imapSecurity is 'starttls'
 
             smtpHost: state.fields.smtpHost
+            smtpServer: state.fields.smtpHost
             smtpPort: state.fields.smtpPort
             smtpLogin: state.fields.smtpLogin
+            smtpPassword: state.fields.smtpPassword
             smtpSSL: state.fields.smtpSecurity is 'ssl'
             smtpTLS: state.fields.smtpSecurity is 'starttls'
         }
