@@ -67,6 +67,11 @@ module.exports = AccountActionCreator = (dispatch, state) ->
                     value: {rawAccount}
 
 
+    # FIXME: Redux move all actionsCreator
+    # in an other scope
+    # that's why we can't call here
+    # other methods of this instance
+    # saga may be a solution for this case
     check: ({config: account, accountID, domain}) ->
         if accountID
             account = AccountGetter.getByID(state,accountID)
@@ -109,11 +114,6 @@ module.exports = AccountActionCreator = (dispatch, state) ->
                         oauth: domain if domain in _.keys OAuthDomains
 
             else
-                # FIXME: Redux move all actionsCreator
-                # in an other scope
-                # that's why we can't call here
-                # other methods of this instance
-                # saga may be a solution for this case
                 AccountActionCreator.create value: account
 
                 dispatch
@@ -136,6 +136,11 @@ module.exports = AccountActionCreator = (dispatch, state) ->
                     value: {accountID}
 
 
+    # FIXME: Redux move all actionsCreator
+    # in an other scope
+    # that's why we can't call here
+    # other methods of this instance
+    # saga may be a solution for this case
     discover: ({domain, config}) ->
         dispatch
             type: ActionTypes.DISCOVER_ACCOUNT_REQUEST
@@ -161,11 +166,6 @@ module.exports = AccountActionCreator = (dispatch, state) ->
                 fields = _.extend {}, config, providerConfig
                 config  = AccountsLib.sanitizeConfig {fields}
 
-                # FIXME: Redux move all actionsCreator
-                # in an other scope
-                # that's why we can't call here
-                # other methods of this instance
-                # saga may be a solution for this case
                 AccountActionCreator.check {config, domain}
 
 

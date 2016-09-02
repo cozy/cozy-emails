@@ -13,14 +13,18 @@ DEFAULT_STATE = Immutable.Map
 
 module.exports = (state = DEFAULT_STATE, action) ->
 
-    _add = (name) ->
+    _addRequest = (name) ->
         requests = state.get 'requests'
 
         unless requests.get 'inflight'
             requests = requests.set 'inflight', name
+
         else
+            # Add this request to requests queue
             (request = requests.get('queue') or []).push name
             requests = requests.set 'queue', request
+
+            console.log 'QUEUE', request, requests.get('queue')
 
         state = state.set 'requests', requests
         console.log '(ADD)', state.get('requests').toJS()
@@ -31,14 +35,22 @@ module.exports = (state = DEFAULT_STATE, action) ->
     # Get oldest event added into queue
     # Set as state.inflight
     # Update state.queue
-    _next = (name) ->
+    _nextRequest = () ->
         requests = state.get 'requests'
+
 
         if (queue = requests.get 'queue')?.length
             request = queue.shift()
+
+            # clean success/error context
+            # not to have returns from previous request
+            _removeSuccess request
+            _removeError request
+
+            console.log 'NEXT', request, queue
             requests = requests.set 'inflight', request
             requests = requests.set 'queue', queue
-            console.log '(NEXT)', request
+
         else
             requests = requests.set 'inflight', null
 
@@ -49,34 +61,30 @@ module.exports = (state = DEFAULT_STATE, action) ->
 
 
     _addError = (name) ->
-        # If request.value has changed
-        # reset success storage
-        # store only "last" request (consistancy)
-        if (state.get('success').get name)
-            success = state.get 'success'
-            success = success.delete name
-            state = state.set 'success', success
-
         error = state.get 'error'
         error = error.set name, action.value
         state = state.set 'error', error
+        return state
 
+
+    _removeError = (name) ->
+        error = state.get 'error'
+        error = error.remove name
+        state = state.set 'error', error
         return state
 
 
     _addSuccess = (name) ->
-        # If request has finally succeed
-        # remove its name from errors
-        # store only "last" request (consistancy)
-        if (state.get('error').get name)
-            error = state.get 'error'
-            error = error.delete name
-            state = state.set 'error', error
-
         success = state.get 'success'
         success = success.set name, action.value
         state = state.set 'success', success
+        return state
 
+
+    _removeSuccess = (name) ->
+        success = state.get 'success'
+        success = success.remove name
+        state = state.set 'success', success
         return state
 
 
@@ -90,7 +98,7 @@ module.exports = (state = DEFAULT_STATE, action) ->
 
 
         when ActionTypes.DISCOVER_ACCOUNT_REQUEST
-            return _add Requests.DISCOVER_ACCOUNT
+            return _addRequest Requests.DISCOVER_ACCOUNT
 
 
         when ActionTypes.DISCOVER_ACCOUNT_FAILURE
@@ -98,16 +106,19 @@ module.exports = (state = DEFAULT_STATE, action) ->
             _addError Requests.DISCOVER_ACCOUNT
 
             # Handle next request
-            return _next Requests.DISCOVER_ACCOUNT
+            return _nextRequest()
 
 
         when ActionTypes.DISCOVER_ACCOUNT_SUCCESS
+            # Delete error
+            _removeError Requests.DISCOVER_ACCOUNT
+
             # Handle next request
-            return _next Requests.DISCOVER_ACCOUNT
+            return _nextRequest()
 
 
         when ActionTypes.CHECK_ACCOUNT_REQUEST
-            return _add Requests.CHECK_ACCOUNT
+            return _addRequest Requests.CHECK_ACCOUNT
 
 
         when ActionTypes.CHECK_ACCOUNT_FAILURE
@@ -115,15 +126,19 @@ module.exports = (state = DEFAULT_STATE, action) ->
             _addError Requests.CHECK_ACCOUNT
 
             # Handle next request
-            return _next Requests.CHECK_ACCOUNT
+            return _nextRequest()
 
 
         when ActionTypes.CHECK_ACCOUNT_SUCCESS
-            return _next Requests.CHECK_ACCOUNT
+            # Delete error
+            _removeError Requests.CHECK_ACCOUNT
+
+            # Handle next request
+            return _nextRequest()
 
 
         when ActionTypes.ADD_ACCOUNT_REQUEST
-            return _add Requests.ADD_ACCOUNT
+            return _addRequest Requests.ADD_ACCOUNT
 
 
         when ActionTypes.ADD_ACCOUNT_FAILURE
@@ -131,35 +146,47 @@ module.exports = (state = DEFAULT_STATE, action) ->
             _addError Requests.ADD_ACCOUNT
 
             # Handle next request
-            return _next Requests.ADD_ACCOUNT
+            return _nextRequest()
 
 
         when ActionTypes.ADD_ACCOUNT_SUCCESS
-            return _next Requests.ADD_ACCOUNT
+            # Delete error
+            _removeError Requests.ADD_ACCOUNT
+
+            # Handle next request
+            return _nextRequest()
 
 
         when ActionTypes.RECEIVE_INDEXES_REQUEST
-            return _add Requests.RECEIVE_INDEXES_REQUEST
+            return _addRequest Requests.RECEIVE_INDEXES_REQUEST
 
 
         when ActionTypes.RECEIVE_INDEXES_COMPLETE
-            return _next Requests.INDEX_MAILBOX
+            # Delete error
+            _removeError Requests.INDEX_MAILBOX
+
+            # Handle next request
+            return _nextRequest()
 
 
         when ActionTypes.RECEIVE_ACCOUNT_CREATE
-            return _add Requests.ADD_ACCOUNT
+            return _addRequest Requests.ADD_ACCOUNT
 
 
         when ActionTypes.RECEIVE_MAILBOX_CREATE
-            return _add Requests.INDEX_MAILBOX
+            return _addRequest Requests.INDEX_MAILBOX
 
 
         when ActionTypes.CONVERSATION_FETCH_REQUEST
-            return _add Requests.FETCH_CONVERSATION
+            return _addRequest Requests.FETCH_CONVERSATION
 
 
         when ActionTypes.CONVERSATION_FETCH_SUCCESS
-            return _next Requests.FETCH_CONVERSATION
+            # Delete error
+            _removeError Requests.FETCH_CONVERSATION
+
+            # Handle next request
+            return _nextRequest()
 
 
         when ActionTypes.CONVERSATION_FETCH_FAILURE
@@ -167,15 +194,19 @@ module.exports = (state = DEFAULT_STATE, action) ->
             _addError Requests.FETCH_CONVERSATION
 
             # Handle next request
-            return _next Requests.FETCH_CONVERSATION
+            return _nextRequest()
 
 
         when ActionTypes.REFRESH_REQUEST
-            return _add Requests.REFRESH_MAILBOX
+            return _addRequest Requests.REFRESH_MAILBOX
 
 
         when ActionTypes.REFRESH_SUCCESS
-            return _next Requests.REFRESH_MAILBOX
+            # Delete error
+            _removeError Requests.FETCH_CONVERSATION
+
+            # Handle next request
+            return _nextRequest()
 
 
         when ActionTypes.REFRESH_FAILURE
@@ -183,7 +214,7 @@ module.exports = (state = DEFAULT_STATE, action) ->
             _addError Requests.REFRESH_MAILBOX
 
             # Handle next request
-            return _next Requests.REFRESH_MAILBOX
+            return _nextRequest()
 
 
     return state
