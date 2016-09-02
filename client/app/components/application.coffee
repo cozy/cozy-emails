@@ -102,8 +102,8 @@ bindStore = connect(
 
         # Messages
         onLoadMore          : RouterAC.loadMore.bind(RouterAC, dispatch)
-        doDisplayImages     : MessageActionCreator(dispatch).displayImages
-        doDeleteMessage     : MessageActionCreator(dispatch).deleteMessage
+        doDisplayImages     : MessageActionCreator.displayImages.bind(MessageActionCreator, dispatch)
+        doDeleteMessage     : MessageActionCreator.deleteMessage.bind(MessageActionCreator, dispatch)
         doCloseConversation : RouterAC.closeConversation.bind(RouterAC, dispatch)
         doMarkMessage       : RouterAC.markMessage.bind(RouterAC, dispatch)
         doGotoMessage       : RouterAC.gotoMessage.bind(RouterAC, dispatch)
