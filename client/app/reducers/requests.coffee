@@ -1,17 +1,32 @@
-# TODO:
-# This way to handle request is not very serious
-# we have to fin a more consistant solution
-# for temporary data persistence
+# RequestReducer
+#
+# handle Request as a queue of events
+# each event is define with its name
+#
+# Inflight is the name of current executed event
+# Requests is an array of events name
+# Success is an array of events name
+# Errors is an array of events name
+#
+# It doesnt store Error/Success value
+# that doesnt seem important
+# to handle Error/Success Component
+#
+# Name is enough to specify the kind of error
+# ie. discover, check for Account
 
 Immutable = require 'immutable'
-{ActionTypes, RequestStatus, Requests} = require '../constants/app_constants'
+{ActionTypes, Requests} = require '../constants/app_constants'
 
 DEFAULT_STATE = Immutable.Map
     requests: Immutable.Map {inflight: null, queue: []}
     error: Immutable.Map()
     success: Immutable.Map()
 
-module.exports = (state = DEFAULT_STATE, action) ->
+
+RequestReducer = (state = DEFAULT_STATE, action) ->
+
+
 
     _saveRequest = (name) ->
         requests = state.get 'requests'
@@ -43,7 +58,6 @@ module.exports = (state = DEFAULT_STATE, action) ->
 
 
     _saveError = (name) ->
-        console.log 'ADD_ERROR', name
         error = state.get 'error'
         error = error.set name, action.value
         state = state.set 'error', error
@@ -51,7 +65,6 @@ module.exports = (state = DEFAULT_STATE, action) ->
 
 
     _deleteError = (name) ->
-        console.log 'REMOVE_ERROR', name
         error = state.get 'error'
         error = error.remove name
         state = state.set 'error', error
@@ -59,7 +72,6 @@ module.exports = (state = DEFAULT_STATE, action) ->
 
 
     _addSuccess = (name) ->
-        console.log 'ADD_SUCCESS', name
         success = state.get 'success'
         success = success.set name, action.value
         state = state.set 'success', success
@@ -67,7 +79,6 @@ module.exports = (state = DEFAULT_STATE, action) ->
 
 
     _removeSuccess = (name) ->
-        console.log 'REMOVE_SUCCESS', name
         success = state.get 'success'
         success = success.remove name
         state = state.set 'success', success
@@ -236,3 +247,6 @@ module.exports = (state = DEFAULT_STATE, action) ->
 
 
     return state
+
+
+module.exports = RequestReducer
