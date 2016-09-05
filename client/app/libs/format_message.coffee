@@ -115,11 +115,10 @@ exports.formatContent = (message) ->
         rich = text.replace urls, '<a href="$1" target="_blank">$1</a>'
 
         # Tranform Separation chars into HTML
-        rich = rich.replace /^>>>>>[^>]?.*$/gim, '<span class="quote5">$&</span><br />\r\n'
-        rich = rich.replace /^>>>>[^>]?.*$/gim, '<span class="quote4">$&</span><br />\r\n'
-        rich = rich.replace /^>>>[^>]?.*$/gim, '<span class="quote3">$&</span><br />\r\n'
-        rich = rich.replace /^>>[^>]?.*$/gim, '<span class="quote2">$&</span><br />\r\n'
-        rich = rich.replace /^>[^>]?.*$/gim, '<span class="quote1">$&</span><br />\r\n'
+        for n in [5..1]
+            rex = new RegExp "^#{Array(n+1).join('>')}[^>]?.*$", 'gim'
+            rich = rich.replace rex, "<span class='quote#{n}'>$&</span><br>\r\n"
+
 
     attachments = message.get 'attachments'
     if html?.length
