@@ -12,8 +12,8 @@ responses).
 {ServersEncProtocols} = require '../constants/app_constants'
 _ = require 'underscore'
 
-reduxStore = require '../reducers/_store'
-RequestsGetter = require '../puregetters/requests'
+reduxStore = require '../redux_store'
+RequestsGetter = require '../getters/requests'
 
 module.exports =
 
