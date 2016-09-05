@@ -9,7 +9,7 @@ const MailboxFlags = require('../app/constants/app_constants').MailboxFlags;
 
 const AccountFixture = require('./fixtures/account');
 const makeTestDispatcher = require('./utils/specs_dispatcher');
-const AccountGetter = require('../app/puregetters/account');
+const AccountGetter = require('../app/getters/account');
 
 
 describe('AccountStore', () => {

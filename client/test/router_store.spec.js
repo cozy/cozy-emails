@@ -21,16 +21,16 @@ const getUID = require('./utils/guid').getUID;
 const AccountFixtures = require('./fixtures/account');
 const MessageFixtures = require('./fixtures/message');
 
-const AccountGetter = require('../app/puregetters/account');
-const MessageGetter = require('../app/puregetters/messages');
-const RouterGetter = require('../app/puregetters/router');
+const AccountGetter = require('../app/getters/account');
+const MessageGetter = require('../app/getters/messages');
+const RouterGetter = require('../app/getters/router');
 
 const makeTestDispatcher = require('./utils/specs_dispatcher');
 
 const BackboneRoutes = require('../app/routes').BACKBONE_ROUTES;
 
 const DEFAULT_TAB = 'account';
-// const reduxStore = require('../app/reducers/_store');
+
 describe('RouterStore', () => {
   let RouterStore;
   let AccountStore;

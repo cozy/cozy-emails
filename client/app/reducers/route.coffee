@@ -3,8 +3,8 @@
 {DefaultActions, AccountActions,
 MessageActions} = require '../constants/app_constants'
 
-MessageGetter = require '../puregetters/messages'
-RouterGetter = require '../puregetters/router'
+MessageGetter = require '../getters/messages'
+RouterGetter = require '../getters/router'
 
 {Route, Filter} = require '../models/route'
 
