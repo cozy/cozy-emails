@@ -40,7 +40,7 @@ module.exports = React.createClass
             className: "layout layout-column layout-preview-#{@props.previewSize}",
 
             div className: 'app',
-                unless @props.hasAccounts
+                if @props.hasAccounts
                     Menu
                         ref             : 'menu'
                         key             : 'menu-' + @props.accountID
@@ -55,6 +55,7 @@ module.exports = React.createClass
                         isMailboxLoading: @props.isMailboxLoading
                         isRefreshError  : @props.isRefreshError
 
+                if @props.hasAccounts
                     main null,
                         div
                             className: 'panels',

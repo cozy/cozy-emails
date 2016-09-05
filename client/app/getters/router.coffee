@@ -59,7 +59,7 @@ module.exports =
 
 
     hasAccounts: (state) ->
-        !@getAllAccounts(state)?.size
+        !!@getAccounts(state)?.size
 
 
     getAllAccounts: (state) ->
