@@ -31,44 +31,44 @@ describe('AccountActionCreator', () => {
   });
 
 
-  describe.skip('Methods', () => {
-    it('create', () => {
+  describe('Methods', () => {
+    it.skip('create', () => {
 
     });
 
-    it('edit', () => {
+    it.skip('edit', () => {
 
     });
 
-    it('check', () => {
+    it.skip('check', () => {
 
     });
 
-    it('remove', () => {
+    it.skip('remove', () => {
 
     });
 
-    it('discover', () => {
+    it.skip('discover', () => {
 
     });
 
-    it('mailboxCreate', () => {
+    it.skip('mailboxCreate', () => {
 
     });
 
-    it('mailboxUpdate', () => {
+    it.skip('mailboxUpdate', () => {
 
     });
 
-    it('mailboxDelete', () => {
+    it.skip('mailboxDelete', () => {
 
     });
 
-    it('mailboxExpunge', () => {
+    it.skip('mailboxExpunge', () => {
 
     });
 
-    it('saveEditTab', () => {
+    it.skip('saveEditTab', () => {
 
     });
   });

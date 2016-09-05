@@ -4,11 +4,11 @@ classNames = require 'classnames'
 
 MessageHeader  = React.createFactory require './message_header'
 ToolbarMessage = React.createFactory require './toolbar_message'
-MessageContent = React.createFactory require './message-content'
+MessageContent = React.createFactory require './message_content'
 AttachmentPreview = React.createFactory require './attachement_preview'
 
 Format = require '../libs/format'
-FileFormat = require './utils/format_files'
+FileFormat = require '../libs/format_files'
 
 module.exports = React.createClass
     displayName: 'Message'

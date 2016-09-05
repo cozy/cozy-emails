@@ -3,7 +3,7 @@
 const assert = require('chai').assert;
 const Immutable = require('immutable');
 
-const settingsPureGetter = require('../app/puregetters/settings');
+const settingsPureGetter = require('../app/getters/settings');
 
 describe('Settings pure getter', () => {
   describe('Methods', () => {

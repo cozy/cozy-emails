@@ -10,7 +10,7 @@ Router = require './router'
 Reporting = require './libs/reporting'
 Realtime = require './libs/realtime'
 Performances = require './libs/performances'
-reduxStore = require './reducers/_store'
+reduxStore = require './redux_store'
 
 document.addEventListener 'DOMContentLoaded', ->
 

@@ -6,7 +6,7 @@ Routes = require '../routes'
 {MessageActions, AccountActions} = require '../constants/app_constants'
 MessageGetter = require './messages'
 AccountGetter = require './account'
-MessageFetchGetter = require './messagefetch'
+MessageFetchGetter = require './message_fetch'
 MessageGetter = require './messages'
 RequestsGetter = require './requests'
 

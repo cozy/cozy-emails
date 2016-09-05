@@ -28,15 +28,14 @@ module.exports = {
       useCleanCache: true,
     });
 
-    mockery.registerMock('../stores/notification_store', {});
     mockery.registerAllowables([
 
       '../routes',
 
-      '../puregetters/router',
-      '../puregetters/messages',
-      '../puregetters/pagination',
-      '../puregetters/requests',
+      '../getters/router',
+      '../getters/messages',
+      '../getters/pagination',
+      '../getters/requests',
       './messages',
       './accounts',
 
@@ -44,7 +43,7 @@ module.exports = {
       '../models/route',
 
       // reducers can only be required from reducers/_store
-      '../reducers/_store',
+      '../redux_store',
       './root',
       './message',
       './selection',
@@ -54,7 +53,7 @@ module.exports = {
       './layout',
       './contact',
       './refreshes',
-      './messagefetch',
+      './message_fetch',
 
       'superagent-throttle',
       'node-event-emitter',

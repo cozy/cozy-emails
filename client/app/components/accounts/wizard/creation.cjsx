@@ -9,8 +9,8 @@ AccountsUtils = require '../../../libs/accounts'
 Form    = require '../../basics/form'
 Servers = require '../servers'
 
-reduxStore = require '../../../reducers/_store'
-RequestsGetter = require '../../../puregetters/requests'
+reduxStore = require '../../../redux_store'
+RequestsGetter = require '../../../getters/requests'
 
 
 # @TODO in this file

@@ -6,7 +6,7 @@ const Immutable = require('immutable');
 const ActionTypes = require('../app/constants/app_constants').ActionTypes;
 const contactMapper = require('../app/libs/mappers/contact');
 const contactReducer = require('../app/reducers/contact');
-const contactSearchReducer = require('../app/reducers/contactsearch');
+const contactSearchReducer = require('../app/reducers/contact_search');
 
 const fixtures = {
   contact1: {
@@ -76,7 +76,7 @@ describe('ContactReducer', () => {
         contacts: Immutable
           .Map()
           .withMutations(contactMapper.toMapMutator(initialContacts)),
-        contactsearch: null
+        contact_search: null
       });
 
       it('should return matching contacts', () => {

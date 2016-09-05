@@ -15,7 +15,7 @@ function freshRequire(path) {
 }
 
 module.exports = () => {
-  const store = freshRequire('../../app/reducers/_store');
+  const store = freshRequire('../../app/redux_store');
 
   function makeStateFullGetter(stateLessGetter) {
     return Object.keys(stateLessGetter).reduce((acc, fnName) => {

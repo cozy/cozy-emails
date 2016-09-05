@@ -1,5 +1,5 @@
-getAttachmentType = require '../../libs/attachment_types'
-{Icons} = require '../../constants/app_constants'
+getAttachmentType = require '../libs/attachment_types'
+{Icons} = require '../constants/app_constants'
 
 exports.getFileSize = (file) ->
     length = parseInt file?.length, 10

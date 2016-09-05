@@ -7,7 +7,7 @@ Menu                  = React.createFactory require './menu/menu'
 Modal                 = React.createFactory require './modal'
 ToastContainer        = React.createFactory require './toast_container'
 Tooltips              = React.createFactory require './tooltips-manager'
-MessageList           = React.createFactory require './message-list'
+MessageList           = React.createFactory require './message_list'
 Conversation          = React.createFactory require './conversation'
 AccountWizardCreation = React.createFactory require './accounts/wizard/creation'
 

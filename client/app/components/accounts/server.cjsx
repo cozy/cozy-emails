@@ -17,14 +17,7 @@ DEFAULT_PORTS =
         starttls: 587
         none:     25
 
-SECURITY_OPTS = ServersEncProtocols
-    .map (protocol) ->
-        value: protocol
-        label: t "server protocol #{protocol}"
-    .concat
-        value: 'none'
-        label: 'server protocol none'
-
+SECURITY_OPTS = null
 
 module.exports = AccountServer = React.createClass
 
@@ -38,6 +31,16 @@ module.exports = AccountServer = React.createClass
         login:     React.PropTypes.string
         password:  React.PropTypes.string
         onChange:  React.PropTypes.func
+
+    makeSecurityOpts: ->
+        SECURITY_OPTS ?= ServersEncProtocols
+            .map (protocol) ->
+                value: protocol
+                label: t "server protocol #{protocol}"
+            .concat
+                value: 'none'
+                label: 'server protocol none'
+        return SECURITY_OPTS;
 
 
     # Port should be update according to the selected security option, so
@@ -81,7 +84,7 @@ module.exports = AccountServer = React.createClass
                         onChange={_.partial @props.onChange, "#{@props.protocol}Port"} />
             <Form.Select name="#{@props.protocol}-security"
                          label={t("account wizard creation #{@props.protocol} security")}
-                         options={SECURITY_OPTS}
+                         options={makeSecurityOpts()}
                          value={@state.security}
                          onChange={@onSecurityChange} />
             <Form.Input type="text"

@@ -2,7 +2,7 @@
 'use strict';
 
 const makeTestDispatcher = require('./utils/specs_dispatcher');
-const RequestsGetter = require('../app/puregetters/requests');
+const RequestsGetter = require('../app/getters/requests');
 
 
 describe('Requests Store', () => {

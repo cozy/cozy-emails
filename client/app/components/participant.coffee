@@ -3,10 +3,10 @@ Immutable = require 'immutable'
 
 {span} = React.DOM
 
-TooltipUtils = require './utils/participant_tooltip'
+TooltipUtils = require '../libs/participant_tooltip'
 
 ContactActionCreator = require '../actions/contact_action_creator'
-ContactFormat = require './utils/format_adress'
+ContactFormat = require '../libs/format_adress'
 
 # @TODO : this component should use React to manage its tootip
 # @TODO : To be discussed, should this component be boundToStore
