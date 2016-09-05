@@ -5,7 +5,6 @@ toMarkdown  = require 'to-markdown'
 
 t = window.t
 
-# coffeelint: disable=max_line_length
 
 # set source of attached images
 exports.cleanHTML = (props={}) ->
@@ -94,8 +93,24 @@ exports.formatContent = (message) ->
 
     if text?.length
         # Tranform URL into links
-        # coffeelint:
-        urls = /((([A-Za-z]{3,9}:(?:\/\/)?)(?:[-;:&=\+\$,\w]+@)?[A-Za-z0-9.-]+|(?:www.|[-;:&=\+\$,\w]+@)[A-Za-z0-9.-]+)((?:\/[\+~%\/.\w-_]*)?\??(?:[-\+=&;%@.\w_]*)#?(?:[\w]*))?)/gim
+        urls = ///
+            (
+                (
+                    ([A-Za-z]{3,9}:(?:\/\/)?)
+                    (?:[-;:&=\+\$,\w]+@)?
+                    [A-Za-z0-9.-]+
+                    |
+                    (?:www.|[-;:&=\+\$,\w]+@)
+                    [A-Za-z0-9.-]+
+                )
+                (
+                    (?:\/[\+~%\/.\w-_]*)?
+                    \??
+                    (?:[-\+=&;%@.\w_]*)
+                    #?(?:[\w]*)
+                )?
+            )
+        ///gim
 
         rich = text.replace urls, '<a href="$1" target="_blank">$1</a>'
 
