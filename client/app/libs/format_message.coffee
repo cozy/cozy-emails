@@ -5,7 +5,6 @@ toMarkdown  = require 'to-markdown'
 
 t = window.t
 
-# coffeelint: disable=max_line_length
 
 # set source of attached images
 exports.cleanHTML = (props={}) ->
@@ -94,17 +93,32 @@ exports.formatContent = (message) ->
 
     if text?.length
         # Tranform URL into links
-        # coffeelint:
-        urls = /((([A-Za-z]{3,9}:(?:\/\/)?)(?:[-;:&=\+\$,\w]+@)?[A-Za-z0-9.-]+|(?:www.|[-;:&=\+\$,\w]+@)[A-Za-z0-9.-]+)((?:\/[\+~%\/.\w-_]*)?\??(?:[-\+=&;%@.\w_]*)#?(?:[\w]*))?)/gim
+        urls = ///
+            (
+                (
+                    ([A-Za-z]{3,9}:(?:\/\/)?)
+                    (?:[-;:&=\+\$,\w]+@)?
+                    [A-Za-z0-9.-]+
+                    |
+                    (?:www.|[-;:&=\+\$,\w]+@)
+                    [A-Za-z0-9.-]+
+                )
+                (
+                    (?:\/[\+~%\/.\w-_]*)?
+                    \??
+                    (?:[-\+=&;%@.\w_]*)
+                    #?(?:[\w]*)
+                )?
+            )
+        ///gim
 
         rich = text.replace urls, '<a href="$1" target="_blank">$1</a>'
 
         # Tranform Separation chars into HTML
-        rich = rich.replace /^>>>>>[^>]?.*$/gim, '<span class="quote5">$&</span><br />\r\n'
-        rich = rich.replace /^>>>>[^>]?.*$/gim, '<span class="quote4">$&</span><br />\r\n'
-        rich = rich.replace /^>>>[^>]?.*$/gim, '<span class="quote3">$&</span><br />\r\n'
-        rich = rich.replace /^>>[^>]?.*$/gim, '<span class="quote2">$&</span><br />\r\n'
-        rich = rich.replace /^>[^>]?.*$/gim, '<span class="quote1">$&</span><br />\r\n'
+        for n in [5..1]
+            rex = new RegExp "^#{Array(n+1).join('>')}[^>]?.*$", 'gim'
+            rich = rich.replace rex, "<span class='quote#{n}'>$&</span><br>\r\n"
+
 
     attachments = message.get 'attachments'
     if html?.length
