@@ -218,11 +218,10 @@ module.exports = AccountWizardCreation = React.createClass
     # aforementioned element and if there's already one account available
     # (otherwise this setting step is mandatory).
     close: (event) ->
-        disabled  = @state.disable
         success   = event.target is @refs.success
         backdrops = event.target in [ReactDOM.findDOMNode(@), @refs.cancel]
 
-        return if not success and (disabled or not(backdrops))
+        return if not success and not backdrops
 
         event.stopPropagation()
         event.preventDefault()
