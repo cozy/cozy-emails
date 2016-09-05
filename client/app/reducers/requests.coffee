@@ -13,21 +13,16 @@ DEFAULT_STATE = Immutable.Map
 
 module.exports = (state = DEFAULT_STATE, action) ->
 
-    _addRequest = (name) ->
+    _saveRequest = (name) ->
         requests = state.get 'requests'
+        queue = requests.get 'queue'
 
-        unless requests.get 'inflight'
-            requests = requests.set 'inflight', name
+        # Remove Old
+        if (index = queue.indexOf name) > -1
+            queue = queue.splice index, 1
 
-        else
-            # Add this request to requests queue
-            (request = requests.get('queue') or []).push name
-            requests = requests.set 'queue', request
-
-            console.log 'QUEUE', request, requests.get('queue')
-
-        state = state.set 'requests', requests
-        console.log '(ADD)', state.get('requests').toJS()
+        # Update Queue
+        queue = queue.push name
 
         return state
 
@@ -35,39 +30,28 @@ module.exports = (state = DEFAULT_STATE, action) ->
     # Get oldest event added into queue
     # Set as state.inflight
     # Update state.queue
-    _nextRequest = () ->
-        requests = state.get 'requests'
+    _execRequest = () ->
+        requests = state.get('requests')
+        queue = requests.get('queue') or []
+        inflight = requests.get('inflight')
 
-
-        if (queue = requests.get 'queue')?.length
-            request = queue.shift()
-
-            # clean success/error context
-            # not to have returns from previous request
-            _removeSuccess request
-            _removeError request
-
-            console.log 'NEXT', request, queue
-            requests = requests.set 'inflight', request
-            requests = requests.set 'queue', queue
-
-        else
-            requests = requests.set 'inflight', null
-
-
+        inflight = queue.shift() or null
+        requests = requests.set 'inflight', inflight
         state = state.set 'requests', requests
 
         return state
 
 
-    _addError = (name) ->
+    _saveError = (name) ->
+        console.log 'ADD_ERROR', name
         error = state.get 'error'
         error = error.set name, action.value
         state = state.set 'error', error
         return state
 
 
-    _removeError = (name) ->
+    _deleteError = (name) ->
+        console.log 'REMOVE_ERROR', name
         error = state.get 'error'
         error = error.remove name
         state = state.set 'error', error
@@ -75,6 +59,7 @@ module.exports = (state = DEFAULT_STATE, action) ->
 
 
     _addSuccess = (name) ->
+        console.log 'ADD_SUCCESS', name
         success = state.get 'success'
         success = success.set name, action.value
         state = state.set 'success', success
@@ -82,6 +67,7 @@ module.exports = (state = DEFAULT_STATE, action) ->
 
 
     _removeSuccess = (name) ->
+        console.log 'REMOVE_SUCCESS', name
         success = state.get 'success'
         success = success.remove name
         state = state.set 'success', success
@@ -98,123 +84,155 @@ module.exports = (state = DEFAULT_STATE, action) ->
 
 
         when ActionTypes.DISCOVER_ACCOUNT_REQUEST
-            return _addRequest Requests.DISCOVER_ACCOUNT
+            # Save Request
+            _saveRequest Requests.DISCOVER_ACCOUNT
+
+            # Handle next request
+            return _execRequest()
 
 
         when ActionTypes.DISCOVER_ACCOUNT_FAILURE
             # Save error
-            _addError Requests.DISCOVER_ACCOUNT
+            _saveError Requests.DISCOVER_ACCOUNT
 
-            # Handle next request
-            return _nextRequest()
+            # Handle current request
+            return _execRequest()
 
 
         when ActionTypes.DISCOVER_ACCOUNT_SUCCESS
             # Delete error
-            _removeError Requests.DISCOVER_ACCOUNT
+            _deleteError Requests.DISCOVER_ACCOUNT
 
             # Handle next request
-            return _nextRequest()
+            return _execRequest()
 
 
         when ActionTypes.CHECK_ACCOUNT_REQUEST
-            return _addRequest Requests.CHECK_ACCOUNT
+            # Save Request
+            _saveRequest Requests.CHECK_ACCOUNT
+
+            # Handle current request
+            return _execRequest()
 
 
         when ActionTypes.CHECK_ACCOUNT_FAILURE
             # Save error
-            _addError Requests.CHECK_ACCOUNT
+            _saveError Requests.CHECK_ACCOUNT
 
             # Handle next request
-            return _nextRequest()
+            return _execRequest()
 
 
         when ActionTypes.CHECK_ACCOUNT_SUCCESS
             # Delete error
-            _removeError Requests.CHECK_ACCOUNT
+            _deleteError Requests.CHECK_ACCOUNT
 
             # Handle next request
-            return _nextRequest()
+            return _execRequest()
 
 
         when ActionTypes.ADD_ACCOUNT_REQUEST
-            return _addRequest Requests.ADD_ACCOUNT
+            # Save Request
+            _saveRequest Requests.ADD_ACCOUNT
+
+            # Handle current request
+            return _execRequest()
 
 
         when ActionTypes.ADD_ACCOUNT_FAILURE
             # Save error
-            _addError Requests.ADD_ACCOUNT
+            _saveError Requests.ADD_ACCOUNT
 
             # Handle next request
-            return _nextRequest()
+            return _execRequest()
 
 
         when ActionTypes.ADD_ACCOUNT_SUCCESS
             # Delete error
-            _removeError Requests.ADD_ACCOUNT
+            _deleteError Requests.ADD_ACCOUNT
 
             # Handle next request
-            return _nextRequest()
+            return _execRequest()
 
 
         when ActionTypes.RECEIVE_INDEXES_REQUEST
-            return _addRequest Requests.RECEIVE_INDEXES_REQUEST
+            # Save Request
+            _saveRequest Requests.INDEX_MAILBOX
+
+            # Handle next request
+            return _execRequest()
 
 
         when ActionTypes.RECEIVE_INDEXES_COMPLETE
             # Delete error
-            _removeError Requests.INDEX_MAILBOX
+            _deleteError Requests.INDEX_MAILBOX
 
             # Handle next request
-            return _nextRequest()
+            return _execRequest()
 
 
         when ActionTypes.RECEIVE_ACCOUNT_CREATE
-            return _addRequest Requests.ADD_ACCOUNT
+            # Save Request
+            _saveRequest Requests.ADD_ACCOUNT
+
+            # Handle current request
+            return _execRequest()
 
 
         when ActionTypes.RECEIVE_MAILBOX_CREATE
-            return _addRequest Requests.INDEX_MAILBOX
+            # Save Request
+            _saveRequest Requests.INDEX_MAILBOX
+
+            # Handle current request
+            return _execRequest()
 
 
         when ActionTypes.CONVERSATION_FETCH_REQUEST
-            return _addRequest Requests.FETCH_CONVERSATION
+            # Save Request
+            _saveRequest Requests.FETCH_CONVERSATION
+
+            # Handle current request
+            return _execRequest()
 
 
         when ActionTypes.CONVERSATION_FETCH_SUCCESS
             # Delete error
-            _removeError Requests.FETCH_CONVERSATION
+            _deleteError Requests.FETCH_CONVERSATION
 
             # Handle next request
-            return _nextRequest()
+            return _execRequest()
 
 
         when ActionTypes.CONVERSATION_FETCH_FAILURE
             # Save error
-            _addError Requests.FETCH_CONVERSATION
+            _saveError Requests.FETCH_CONVERSATION
 
             # Handle next request
-            return _nextRequest()
+            return _execRequest()
 
 
         when ActionTypes.REFRESH_REQUEST
-            return _addRequest Requests.REFRESH_MAILBOX
+            # Save Request
+            _saveRequest Requests.REFRESH_MAILBOX
+
+            # Handle current request
+            return _execRequest()
 
 
         when ActionTypes.REFRESH_SUCCESS
             # Delete error
-            _removeError Requests.FETCH_CONVERSATION
+            _deleteError Requests.FETCH_CONVERSATION
 
             # Handle next request
-            return _nextRequest()
+            return _execRequest()
 
 
         when ActionTypes.REFRESH_FAILURE
             # Save error
-            _addError Requests.REFRESH_MAILBOX
+            _saveError Requests.REFRESH_MAILBOX
 
             # Handle next request
-            return _nextRequest()
+            return _execRequest()
 
 
     return state
