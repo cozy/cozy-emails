@@ -49,6 +49,7 @@ bindStore = connect(
         newAccountURL           : RouterGetter.getCreateAccountURL(state)
 
         # Mailbox
+        account                 : RouterGetter.getAccount(state)
         mailboxID               : RouterGetter.getMailboxID(state)
         isTrashbox              : RouterGetter.isTrashbox(state)
         nbUnread                : RouterGetter.getUnreadLength(state)

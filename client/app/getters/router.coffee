@@ -147,10 +147,9 @@ module.exports =
         {action, isServer, mailboxID} = params
         delete params.isServer
 
-        # FIXME : il y a une erreur lorsque l'on cherche
-        # à générer une URL alors qu'on n'a pas de compte de crée
+        # Get default mailbox from new Account
         if action is MessageActions.CREATE and not mailboxID
-            params.mailboxID = @getAccount(state)?.get('draftMailbox')
+            params.mailboxID = @getAccount(state)?.get('inboxMailbox')
 
         return Routes.makeURL(action, params, isServer)
 
@@ -332,7 +331,7 @@ module.exports =
 
 
     getComposeURL: (state) ->
-        if state.get('accounts').size
+        if (account = @getAccount(state))?.size
             return @getURL state, {action: MessageActions.CREATE}
 
 

@@ -15,7 +15,7 @@ Servers = require '../servers'
 #  - separate account props from commonent state
 #           (state.account instanceof Account)
 #  - make account state part of the redux store ?
-#  - state.mailboxID is poorly named
+#  - props.mailboxID is poorly named
 #           (its used to determine if we are editing / done)
 
 # FIXME: QUID du target _blank (faille de secu)
@@ -95,9 +95,10 @@ module.exports = AccountWizardCreation = React.createClass
 
         # Enable auto-redirect only on update
         # after an ADD_ACCOUNT_SUCCESS
-        if nextState.mailboxID
-            redirectTimer = setTimeout ->
-                @props.doCloseModal nextState.mailboxID
+        if nextProps.account?.size
+            mailboxID = nextProps.account.get 'inboxMailbox'
+            redirectTimer = setTimeout =>
+                @props.doCloseModal mailboxID
             , AccountsLib.REDIRECT_DELAY
 
 
@@ -157,21 +158,21 @@ module.exports = AccountWizardCreation = React.createClass
                                      name="redirect"
                                      onClick={@close}>
                                 {t('account wizard creation success')}
-                            </button> if @state.mailboxID}
+                            </button> if @props.mailboxID}
 
                             {<button name="cancel"
                                      ref="cancel"
                                      type="button"
                                      onClick={@close}>
                                 {t('app cancel')}
-                            </button> unless @state.mailboxID}
+                            </button> unless @props.mailboxID}
 
                             {<button type="submit"
                                      form="account-wizard-creation"
                                      aria-busy={@state.isBusy}
                                      disabled={@state.disable}>
                                 {t('account wizard creation save')}
-                            </button> unless @state.mailboxID}
+                            </button> unless @props.mailboxID}
                         </nav>
                     </footer>
                 </section>
@@ -231,7 +232,7 @@ module.exports = AccountWizardCreation = React.createClass
 
         # Redirect to mailboxID if available, will automatically fallback to
         # current mailbox if no mailboxID is given (cancel case)
-        @props.doCloseModal @state.mailboxID
+        @props.doCloseModal @props.mailboxID
 
 
     onFieldChange: (event) ->

@@ -108,6 +108,7 @@ module.exports = React.createClass
             if @props.action is AccountActions.CREATE
                 AccountWizardCreation
                     key             : 'modal-account-wizard'
+                    account         : @props.account
                     doAccountCreate : @props.doAccountCreate
                     doCloseModal    : @props.doCloseModal
 
