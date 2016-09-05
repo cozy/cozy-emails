@@ -17,23 +17,19 @@ module.exports = (state=DEFAULT_STATE, action) ->
 
 
         when ActionTypes.ADD_ACCOUNT_SUCCESS
-            account = Account.from action.value.account
-            return _updateAccount state, account
+            return _updateAccount state, action.value.account
 
 
         when ActionTypes.RECEIVE_ACCOUNT_UPDATE
-            account = Account.from action.value
-            return _updateAccount state, account
+            return _updateAccount state, action.value
 
 
         when ActionTypes.EDIT_ACCOUNT_SUCCESS
-            account = Account.from action.value.rawAccount
-            return _updateAccount state, account
+            return _updateAccount state, action.value.rawAccount
 
 
         when ActionTypes.MAILBOX_DELETE_SUCCESS
-            account = action.value
-            return _updateAccount state, account
+            return _updateAccount state, action.value
 
 
         when ActionTypes.REMOVE_ACCOUNT_SUCCESS
@@ -66,14 +62,18 @@ module.exports = (state=DEFAULT_STATE, action) ->
     return state
 
 
-_updateAccount = (state, account) ->
+_updateAccount = (state, rawAccount) ->
+    # Format rawAccount to AccountModel
+    account = Account.from rawAccount
     accountID = account.get 'id'
 
     unless (accounts = state.get 'accounts')?.size
         accounts = Immutable.OrderedMap()
 
     accounts = accounts.set accountID, account
-    return state.set 'accounts', accounts
+    state = state.set 'accounts', accounts
+
+    return state
 
 
 _deleteAccount = (state, account) ->
@@ -82,17 +82,20 @@ _deleteAccount = (state, account) ->
     return state.set 'accounts', accounts
 
 
-_updateMailbox = (state, mailbox) ->
+_updateMailbox = (state, rawMailbox) ->
     unless (accounts = state.get 'accounts')?.size
         return state
 
-    if mailbox.accountID
-        account = accounts.get mailbox.accountID
+    if rawMailbox.accountID
+        account = accounts.get rawMailbox.accountID
     else
         account = accounts.find (account) ->
-            return account.get('mailboxes').get mailbox.id
+            return account.get('mailboxes').get rawMailbox.id
 
-    if not account or not (mailbox = Mailbox.from mailbox, account)
+    # Format rawMailbox to MailboxModel
+    mailbox = Mailbox.from rawMailbox, account
+
+    if not account?.size or not mailbox?.size
         return state
 
-    return _updateAccount account.addMailbox(mailbox)
+    return _updateAccount state, account.addMailbox(mailbox)

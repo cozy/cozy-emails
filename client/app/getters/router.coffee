@@ -147,10 +147,6 @@ module.exports =
         {action, isServer, mailboxID} = params
         delete params.isServer
 
-        # Get default mailbox from new Account
-        if action is MessageActions.CREATE and not mailboxID
-            params.mailboxID = @getAccount(state)?.get('inboxMailbox')
-
         return Routes.makeURL(action, params, isServer)
 
 
@@ -332,7 +328,10 @@ module.exports =
 
     getComposeURL: (state) ->
         if (account = @getAccount(state))?.size
-            return @getURL state, {action: MessageActions.CREATE}
+            return @getURL state, {
+                action: MessageActions.CREATE
+                mailboxID: account.first().get 'inboxMailbox'
+            }
 
 
     getCreateAccountURL: (state) ->
