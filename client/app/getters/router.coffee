@@ -330,7 +330,7 @@ module.exports =
         if (account = @getAccount(state))?.size
             return @getURL state, {
                 action: MessageActions.CREATE
-                mailboxID: account.first().get 'inboxMailbox'
+                mailboxID: account.get 'inboxMailbox'
             }
 
 
