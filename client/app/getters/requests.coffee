@@ -1,26 +1,45 @@
 {RequestStatus, Requests} = require '../constants/app_constants'
 
 module.exports =
-    getRequests: (state) ->
-        state.get('requests')
 
-    get: (state, req) ->
-        @getRequests(state).get req
+    getInFlight: (state) ->
+        state?.get('requests')?.get 'inflight'
+
+
+    getValue: (state, req) ->
+        results = state?.get('requests')?.get 'success'
+        results?.get req
+
+    getError: (state, req) ->
+        results = state?.get('requests')?.get 'error'
+        results?.get req
+
+
+    isRequestError: (state) ->
+        !!state?.get('requests')?.get('error')?.size
+
 
     isLoading: (state, req) ->
-        RequestStatus.INFLIGHT is @get(state, req)?.status
+        @getInFlight(state) is req
+
 
     getRefreshes: (state) ->
         state.get('refreshes')
+
 
     isRefreshError: (state) ->
         length = @getRefreshes(state).get('errors')?.length
         return length isnt undefined and length > 0
 
+
     isRefreshing: (state)->
         @getRefreshes(state).size isnt 0 or
         @isLoading(state, Requests.REFRESH_MAILBOX)
 
+
+    # FIXME : why?
+    # TODO : shouldn'y we remove this
+    # if it is useless?
     isIndexing: (state, accountID) ->
         return false
         # actions = [Requests.INDEX_MAILBOX, Requests.ADD_ACCOUNT]
@@ -28,39 +47,48 @@ module.exports =
         #     if name in actions and @isLoading state, name
         #         return request.res?.accountID is accountID
 
+
     isConversationLoading: (state) ->
         @isLoading state, Requests.FETCH_CONVERSATION
 
+
     isAccountCreationBusy: (state) ->
-        RequestStatus.INFLIGHT in [
-            @get(state, Requests.DISCOVER_ACCOUNT).status
-            @get(state, Requests.CHECK_ACCOUNT).status
-            @get(state, Requests.ADD_ACCOUNT).status
+        @getInFlight(state) in [
+            Requests.DISCOVER_ACCOUNT,
+            Requests.CHECK_ACCOUNT,
+            Requests.ADD_ACCOUNT
         ]
 
-    isAccountDiscoverable: (state) ->
-        discover = @get state, Requests.DISCOVER_ACCOUNT
-        check    = @get state, Requests.CHECK_ACCOUNT
 
-        if discover.status is RequestStatus.SUCCESS
+    getAccountCreationDiscover: (state) ->
+        @getValue state, Requests.DISCOVER_ACCOUNT
+
+
+    isAccountDiscoverable: (state) ->
+        discoverSuccess = @getValue state, Requests.DISCOVER_ACCOUNT
+        discoverFailure = @getError state, Requests.DISCOVER_ACCOUNT
+        checkSuccess = @getValue state, Requests.CHECK_ACCOUNT
+
+        if discoverSuccess
             return true
-        # autodiscover failed w/o check in course: switch to manual config
-        else if discover.status is RequestStatus.ERROR and check.status is null
+        # autodiscover failed w/o check in course:
+        # switch to manual config
+        else if discoverFailure and not checkSuccess
             return false
         else
-            return check.status is null
+            return not checkSuccess
 
 
     getAccountCreationAlert: (state) ->
-        discover = @get state, Requests.DISCOVER_ACCOUNT
-        check    = @get state, Requests.CHECK_ACCOUNT
-        create   = @get state, Requests.ADD_ACCOUNT
+        createFailure = @getError state, Requests.ADD_ACCOUNT
+        checkFailure = @getError state, Requests.CHECK_ACCOUNT
+        discoverFailure = @getError state, Requests.DISCOVER_ACCOUNT
 
-        if create.status is RequestStatus.ERROR
+        if createFailure
             status: 'CREATE_FAILED'
 
-        else if check.status is RequestStatus.ERROR
-            fields = check.res.error.response.body.causeFields
+        if checkFailure
+            fields = checkFailure.error.response.body.causeFields
 
             status: 'CHECK_FAILED'
             type: if fields and 'smtpServer' in fields
@@ -70,38 +98,20 @@ module.exports =
             else
                 'AUTH'
 
-        # autodiscover failed: set an alert only if check isn't already
-        # performed
-        else if discover.status is RequestStatus.ERROR and check.status is null
+        # FIXME : this bahavior is partially implemented
+        # missing last condition
+
+        # 1. autodiscover failed: set an alert
+        # 2. only if check isn't already performed
+        else if discoverFailure
             status: 'DISCOVER_FAILED'
 
         else
             null
 
 
-    isAccountOAuth: (state) ->
-        check = @get state, Requests.CHECK_ACCOUNT
-
-        if check.status is RequestStatus.ERROR
-            check.res.oauth
-        else
-            false
-
-
-    getAccountCreationDiscover: (state) ->
-        discover = @get state, Requests.DISCOVER_ACCOUNT
-
-        if discover.status is RequestStatus.SUCCESS
-            discover.res
-        else
-            false
-
-
+    # FIXME: this may not work
+    # return create request result
+    # i.e. `{account}` on success
     getAccountCreationSuccess: (state) ->
-        create = @get state, Requests.ADD_ACCOUNT
-
-        # return create request result (i.e. `{account}`) on success
-        if create.status is RequestStatus.SUCCESS
-            create.res
-        else
-            false
+        @getValue state, Requests.ADD_ACCOUNT

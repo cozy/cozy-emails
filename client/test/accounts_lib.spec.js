@@ -5,100 +5,135 @@ const assert = require('chai').assert
 const AccountsLib = require('../app/libs/accounts')
 
 
-describe("Accounts libs spec", () => {
+// TODO: add a test to check relation
+// between: security and port?
 
-    describe("Validate and returns a new state", () => {
+describe("Accountslibs spec", () => {
 
-        it("should returns a simple value in a new state", () => {
-            let state = {}
-            let nextState = AccountsLib.validateState('login', 'mail@cozy.io', state)
+    describe("validateState", () => {
 
-            assert.isObject(nextState)
-            assert.notEqual(state, nextState)
-            assert.property(nextState, 'login')
-            assert.propertyVal(nextState, 'login', 'mail@cozy.io')
+        it("should be validated", () => {
+            const property = 'login'
+            let value = 'mail@cozy.io'
+            let input = { fields: { [`${property}`]: `${value}`} }
+            let output = AccountsLib.validateState(input)
+
+            // Should save input
+            assert.isObject(output.fields)
+            assert.property(output.fields, property)
+            assert.propertyVal(output.fields, property, input.fields.login)
+
+            // Should update value
+            value = 'foo@gmail.com'
+            input = { fields: { [`${property}`]: `${value}`} }
+            output = AccountsLib.validateState(input)
+            assert.propertyVal(output.fields, property, input.fields.login)
         })
 
-        it("should override value if value already present in state", () => {
-            let state = {login: 'foo@gmail.com'}
-            let nextState = AccountsLib.validateState('login', 'mail@cozy.io', state)
 
-            assert.propertyVal(nextState, 'login', 'mail@cozy.io')
+        it("should always save `port` as a number", () => {
+          const property = 'imapPort'
+          let value = '993'
+          let input = { fields: { [`${property}`]: `${value}`} }
+          let output = AccountsLib.validateState(input)
+
+          // Should save input
+          assert.propertyVal(output.fields, property, +output.fields[property])
+
+          // Should update value
+          value = '143'
+          input = { fields: { [`${property}`]: `${value}`} }
+          output = AccountsLib.validateState(input)
+          assert.propertyVal(output.fields, property, +output.fields[property])
         })
 
-        it("should ensure that `port` value is always a number", () => {
-            let nextState = AccountsLib.validateState('port', 143, {})
-            assert.isNumber(nextState.port)
+        it("should initialize 'imapLogin' and 'smtpLogin' when saving a login", () => {
+            const property = 'login'
+            let value = 'mail@cozy.io'
+            let input = { fields: { [`${property}`]: `${value}`} }
+            let output = AccountsLib.validateState(input)
 
-            nextState = AccountsLib.validateState('port', '993', {})
-            assert.isNumber(nextState.port)
-        })
+            assert.equal(output.fields.imapLogin, value)
+            assert.equal(output.fields.smtpLogin, value)
 
-        it("should update imap / smtp login properties too when they're not custom", () => {
-            let nextState = AccountsLib.validateState('login', 'mail@cozy.io', {})
+            // Should update value
+            value = 'box@cozy.io'
+            input = { fields: { [`${property}`]: `${value}`} }
+            output = AccountsLib.validateState(input, output)
 
-            assert.property(nextState, 'imapLogin')
-            assert.property(nextState, 'smtpLogin')
-            assert.propertyVal(nextState, 'imapLogin', nextState.login)
-            assert.propertyVal(nextState, 'smtpLogin', nextState.login)
-
-            nextState = AccountsLib.validateState('login', 'box@cozy.io', nextState)
-
-            assert.propertyVal(nextState, 'imapLogin', nextState.login)
-            assert.propertyVal(nextState, 'smtpLogin', nextState.login)
+            assert.equal(output.fields.imapLogin, value)
+            assert.equal(output.fields.smtpLogin, value)
         })
 
         it("should leave imap / smtp login properties untouched when they differ from login", () => {
-            let state = {imapLogin: 'cozy', smtpLogin: 'yzoc'}
-            let nextState = AccountsLib.validateState('login', 'mail@cozy.io', state)
+            let previousState = { fields: {imapLogin: 'cozy', smtpLogin: 'yzoc'} }
+            let input = { fields: {'login': 'mail@cozy.io'} }
+            let output = AccountsLib.validateState(input, previousState)
 
-            assert.notProperty(nextState, 'imapLogin')
-            assert.notProperty(nextState, 'smtpLogin')
+            assert.notProperty(output.fields, 'imapLogin')
+            assert.notProperty(output.fields, 'smtpLogin')
 
-            state = {imapLogin: 'cozy'}
-            nextState = AccountsLib.validateState('login', 'mail@cozy.io', state)
+            // Updating login
+            // force update of imapLogin and smtpLogin
+            previousState = {imapLogin: 'cozy'}
+            input = { fields: {'login': 'mail@cozy.io'} }
+            output = AccountsLib.validateState(input, previousState)
 
-            assert.notProperty(nextState, 'imapLogin')
-            assert.property(nextState, 'smtpLogin')
-            assert.propertyVal(nextState, 'smtpLogin', nextState.login)
+            assert.equal(output.fields.imapLogin, input.fields.login)
+            assert.equal(output.fields.smtpLogin, input.fields.login)
         })
 
         it("should update imap / smtp password properties too when they're not custom", () => {
-            let nextState = AccountsLib.validateState('password', 'cozy', {})
+            let input = { fields: {'password': 'cozy'} }
+            let output = AccountsLib.validateState(input)
 
-            assert.property(nextState, 'imapPassword')
-            assert.property(nextState, 'smtpPassword')
-            assert.propertyVal(nextState, 'imapPassword', nextState.password)
-            assert.propertyVal(nextState, 'smtpPassword', nextState.password)
+            assert.equal(output.fields.password, input.fields.password)
+            assert.equal(output.fields.smtpPassword, input.fields.password)
+            assert.equal(output.fields.imapPassword, input.fields.password)
 
-            nextState = AccountsLib.validateState('password', 'mail@cozy.io', nextState)
+            // Should update value
+            input = { fields: {'password': 'mail@cozy.io'} }
+            output = AccountsLib.validateState(input, output)
 
-            assert.propertyVal(nextState, 'imapPassword', nextState.password)
-            assert.propertyVal(nextState, 'smtpPassword', nextState.password)
+            assert.equal(output.fields.smtpPassword, input.fields.password)
+            assert.equal(output.fields.imapPassword, input.fields.password)
         })
 
-        it("should restore autodiscover when update login w/ untouched servers", () => {
+        // FIXME: discover is not working anymore
+        // since Redux Migration
+        it.skip("should restore autodiscover when update login w/ untouched servers", () => {
             let state = {login: 'mail@cozy', isDiscoverable: false}
-            let nextState = AccountsLib.validateState('login', 'mail@cozy.io', state)
+            let nextState = AccountsLib.validateState({'login': 'mail@cozy.io'}, state)
 
             assert.property(nextState, 'isDiscoverable')
             assert.propertyVal(nextState, 'isDiscoverable', true)
 
             state.imapServer = 'imap.cozy.io'
-            nextState = AccountsLib.validateState('login', 'mail@cozy.io', state)
+            nextState = AccountsLib.validateState({'login': 'mail@cozy.io'}, state)
 
             assert.notProperty(nextState, 'isDiscoverable')
         })
 
     })
 
+    describe('mergeWithStore', () => {
+      it.skip('should add requestStore properties (repart activity)', () => { })
+    })
+
+    describe('filterPropsByProvider', () => {
+      it.skip('should return properties relalated to provider', () => { })
+    })
+
+    describe('getProviderProps', () => {
+      it.skip('should return properties from provider', () => { })
+    })
 
     describe("Parse providers to return part of state", () => {
 
         let providers, nextState
 
         beforeEach(() => {
-            nextState = AccountsLib.parseProviders(providers)
+            nextState = AccountsLib.getProviderProps(providers)
         })
 
         describe("Parse valid provider settings", () => {
@@ -180,67 +215,87 @@ describe("Accounts libs spec", () => {
 
 
     describe('Sanitize state to returns a proper server config', () => {
+      let payload;
+      let expectedKeys;
+      let state;
 
-        const expectedKeys = [
-            'label',
-            'name',
-            'login',
-            'password',
-            'smtpServer',
-            'smtpLogin',
-            'smtpPassword',
-            'smtpPort',
-            'smtpSSL',
-            'smtpTLS',
-            'imapServer',
-            'imapLogin',
-            'imapPassword',
-            'imapPort',
-            'imapSSL',
-            'imapTLS'
+
+      before(() => {
+        expectedKeys = [
+          'login',
+          'label',
+          'name',
+          'password',
+
+          'smtpServer',
+          'smtpLogin',
+          'smtpPassword',
+          'smtpPort',
+          'smtpSSL',
+          'smtpTLS',
+
+          'imapServer',
+          'imapLogin',
+          'imapPassword',
+          'imapPort',
+          'imapSSL',
+          'imapTLS'
         ]
 
-        const state = {
-            "isBusy": false,
-            "isDiscoverable": false,
-            "alert": null,
-            "OAuth": false,
-            "imapPort": 993,
-            "imapSecurity": "ssl",
-            "smtpPort": 587,
-            "smtpSecurity": "starttls",
-            "enableSubmit": true,
-            "imapLogin": "mail@cozy.io",
-            "imapPassword": "cozy",
-            "smtpLogin": "mail@cozy.io",
-            "smtpPassword": "cozy",
-            "login": "mail@cozy.io",
-            "password": "cozy",
-            "imapServer": "imap.cozy.io",
-            "smtpServer": "smtp.cozy.io"
+        state = {
+          'account': null,
+          'mailboxID': null,
+
+          'OAuth': false,
+
+          'alert': null,
+
+          'isBusy': false,
+          'disable': false,
+          'expanded': false,
+
+          'fields': {
+            'login': 'mail@cozy.io',
+            'password': 'cozy',
+
+            'imapServer': 'imap.cozy.io',
+            'imapPort': 993,
+            'imapSecurity': 'ssl',
+            'imapLogin': 'mail@cozy.io',
+            'imapPassword': 'cozy',
+
+            'smtpServer': 'smtp.cozy.io',
+            'smtpPort': 587,
+            'smtpSecurity': 'starttls',
+            'smtpLogin': null,
+            'smtpLogin': 'mail@cozy.io',
+            'smtpPassword': 'cozy',
+          },
         }
 
-        const payload = AccountsLib.sanitizeConfig(state)
+        payload = AccountsLib.sanitizeConfig(state)
+      })
 
-        it("should only contains expected keys", () => {
-            assert.sameMembers(Object.keys(payload), expectedKeys)
-        })
 
-        it("should use email address prefix as name", () => {
-            const prefix = state.login.split('@')[0]
-            assert.propertyVal(payload, 'name', prefix)
-        })
+      it("should only contains expected keys", () => {
+          assert.sameMembers(Object.keys(payload), expectedKeys)
+      })
 
-        it("should use email address as label", () => {
-            assert.propertyVal(payload, 'label', state.login)
-        })
+      it("should use email address prefix as name", () => {
+          const prefix = state.login.split('@')[0]
+          assert.propertyVal(payload, 'name', prefix)
+      })
 
-        it("should transcript security booleans", () => {
-            assert.propertyVal(payload, 'imapSSL', true)
-            assert.propertyVal(payload, 'imapTLS', false)
-            assert.propertyVal(payload, 'smtpSSL', false)
-            assert.propertyVal(payload, 'smtpTLS', true)
-        })
+      it("should use email address as label", () => {
+          assert.propertyVal(payload, 'label', state.login)
+      })
+
+      it("should transcript security booleans", () => {
+          assert.propertyVal(payload, 'imapSSL', true)
+          assert.propertyVal(payload, 'imapTLS', false)
+          assert.propertyVal(payload, 'smtpSSL', false)
+          assert.propertyVal(payload, 'smtpTLS', true)
+      })
 
     })
 

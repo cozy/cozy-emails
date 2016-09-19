@@ -2,7 +2,7 @@
 
 _ = require 'underscore'
 
-AccountsUtils = require '../libs/accounts'
+AccountsLib = require '../libs/accounts'
 XHRUtils      = require '../libs/xhr'
 
 AccountGetter = require '../getters/account'
@@ -66,14 +66,37 @@ module.exports = AccountActionCreator = (dispatch, state) ->
                     type: ActionTypes.EDIT_ACCOUNT_SUCCESS
                     value: {rawAccount}
 
-    check: ({value: account, accountID}) ->
+
+    # FIXME: Redux move all actionsCreator
+    # in an other scope
+    # that's why we can't call here
+    # other methods of this instance
+    # saga may be a solution for this case
+    check: ({config: account, accountID, domain}) ->
         if accountID
             account = AccountGetter.getByID(state,accountID)
             .mergeDeep(account).toJS()
 
-        # Extract domain from login field, to compare w/ know OAuth-aware
-        # domains
-        [..., domain] = account.login.split '@'
+        propTypes =
+            label: String               # human readable label for the account
+            name: String                # user name to put in sent mails
+            login: String               # IMAP & SMTP login
+            password: String            # IMAP & SMTP password
+            smtpServer: String          # SMTP host
+            smtpPort: Number            # SMTP port
+            smtpSSL: Boolean            # Use SSL
+            smtpTLS: Boolean            # Use STARTTLS
+            smtpLogin: String           # SMTP login, if different from default
+            smtpPassword: String        # SMTP password, if different from default
+
+            smtpMethod: String          # SMTP Auth Method
+
+            imapLogin: String           # IMAP login
+            imapServer: String          # IMAP host
+            imapPort: Number            # IMAP port
+            imapSSL: Boolean            # Use SSL
+            imapTLS: Boolean            # Use STARTTLS
+
 
         dispatch
             type: ActionTypes.CHECK_ACCOUNT_REQUEST
@@ -89,9 +112,11 @@ module.exports = AccountActionCreator = (dispatch, state) ->
 
             else
                 AccountActionCreator.create value: account
+
                 dispatch
                     type: ActionTypes.CHECK_ACCOUNT_SUCCESS
                     value: {res}
+
 
     remove: (accountID) ->
         dispatch
@@ -107,7 +132,13 @@ module.exports = AccountActionCreator = (dispatch, state) ->
                     type: ActionTypes.REMOVE_ACCOUNT_SUCCESS
                     value: {accountID}
 
-    discover: (domain, config) ->
+
+    # FIXME: Redux move all actionsCreator
+    # in an other scope
+    # that's why we can't call here
+    # other methods of this instance
+    # saga may be a solution for this case
+    discover: ({domain, config}) ->
         dispatch
             type: ActionTypes.DISCOVER_ACCOUNT_REQUEST
             value: {domain}
@@ -124,14 +155,16 @@ module.exports = AccountActionCreator = (dispatch, state) ->
             # same methods the view component uses by exploiting same mixins).
             # Also, dispatch a success event for the discovery action.
             else
-                servers = AccountsUtils.parseProviders provider
-                config  = AccountsUtils.sanitizeConfig _.extend config, servers
-
-                AccountActionCreator.check value: config
-
                 dispatch
                     type: ActionTypes.DISCOVER_ACCOUNT_SUCCESS
                     value: {domain, provider}
+
+                providerConfig = AccountsLib.getProviderProps provider
+                fields = _.extend {}, config, providerConfig
+                config  = AccountsLib.sanitizeConfig {fields}
+
+                AccountActionCreator.check {config, domain}
+
 
     # FIXME: move this elsewhere
     # Action is not a getter/setter!

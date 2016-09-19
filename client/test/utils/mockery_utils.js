@@ -42,7 +42,7 @@ module.exports = {
       '../models/message',
       '../models/route',
 
-      // reducers can only be required from reducers/_store
+      // reducers can only be required from redux_store
       '../redux_store',
       './root',
       './message',

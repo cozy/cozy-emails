@@ -1,68 +1,114 @@
-{IMAP_OPTIONS} = require '../../../constants/defaults'
-{OAuthDomains} = require '../../../constants/app_constants'
+{IMAP_OPTIONS}  = require '../../../constants/defaults'
+{OAuthDomains}  = require '../../../constants/app_constants'
 
-_             = require 'underscore'
-React         = require 'react'
-ReactDOM      = require 'react-dom'
-AccountsUtils = require '../../../libs/accounts'
+_               = require 'underscore'
+React           = require 'react'
+ReactDOM        = require 'react-dom'
+AccountsLib     = require '../../../libs/accounts'
+
+LinkedStateMixin = require 'react-addons-linked-state-mixin'
 
 Form    = require '../../basics/form'
 Servers = require '../servers'
-
-reduxStore = require '../../../redux_store'
-RequestsGetter = require '../../../getters/requests'
-
 
 # @TODO in this file
 #  - separate account props from commonent state
 #           (state.account instanceof Account)
 #  - make account state part of the redux store ?
-#  - state.mailboxID is poorly named
+#  - props.mailboxID is poorly named
 #           (its used to determine if we are editing / done)
+
+# FIXME: QUID du target _blank (faille de secu)
 
 # Top var for redirect timeout
 redirectTimer = undefined
+
+_getInitialState = ->
+    defaultSecurityValue = 'starttls'
+    return {
+        account: null
+        mailboxID: null
+
+        OAuth: null
+
+        alert: null
+
+        isBusy: false
+        disable: true
+
+        # Auto-open form if discover have failed
+        # otherwise keep close
+        # Don't forget manual opening
+        expanded: false
+
+        # Contain the account values
+        # "discovered" by the API
+        discover: false
+
+        # Check 1rst if API "discover"
+        # a configuration for the login
+        # If not do not try anymore
+        isDiscoverable: true
+
+        fields:
+            login: null
+            password: null
+
+            imapHost: null
+            imapPort: AccountsLib.DEFAULT_PORTS.imap[defaultSecurityValue]
+            imapSecurity: defaultSecurityValue
+            imapLogin: null
+
+            smtpHost: null
+            smtpPort: AccountsLib.DEFAULT_PORTS.smtp[defaultSecurityValue]
+            smtpSecurity: defaultSecurityValue
+            smtpLogin: null
+    }
 
 
 module.exports = AccountWizardCreation = React.createClass
 
     displayName: 'AccountWizardCreation'
 
-    componentWillReceiveProps: () ->
-        appstate = reduxStore.getState()
-        account  = RequestsGetter.getAccountCreationSuccess(appstate)?.account
-        discover = RequestsGetter.getAccountCreationDiscover(appstate)
+    mixins: [LinkedStateMixin]
 
-        state =
-            isBusy:         RequestsGetter.isAccountCreationBusy(appstate)
-            isDiscoverable: RequestsGetter.isAccountDiscoverable(appstate)
-            alert:          RequestsGetter.getAccountCreationAlert(appstate)
-            OAuth:          RequestsGetter.isAccountOAuth(appstate)
+    # TODO: voir quelles props sont à déplacer dans le state
+    # formValues
+    propTypes:
+        doAccountCreate     : React.PropTypes.func.isRequired
+        doCloseModal        : React.PropTypes.func.isRequired
 
-        state.mailboxID = account.inboxMailbox if account
-        _.extend state, AccountsUtils.parseProviders discover if discover
 
-        @setState(state);
-
-    componentWillUpdate: (nextProps, nextState) ->
-        # Only enable submit when a request isnt performed in background and
-        # if required fields (email / password) are filled
-        nextState.enableSubmit = not nextState.isBusy and
-            not _.isEmpty(nextState.login) and
-            not _.isEmpty(nextState.password)
-
-        # Enable auto-redirect only on update after an ADD_ACCOUNT_SUCCESS
-        redirectTimer = setTimeout ->
-            if RequestsGetter.getAccountCreationSuccess(reduxStore.getState())
-                @props.doCloseModal nextState.mailboxID
-        , 5000 if nextState.mailboxID
+    # TODO: lister les clés désirées
+    getInitialState: ->
+        _getInitialState()
 
 
     componentDidMount: ->
-        ReactDOM.findDOMNode(@).querySelector('[name=login]').focus()
+        # Select first field of the form
+        ReactDOM.findDOMNode(@).querySelector('[name=login]')?.focus()
+
+
+    componentWillUpdate: (nextProps, nextState) ->
+        # Update state
+        AccountsLib.mergeWithStore nextState
+
+        # Enable auto-redirect only on update
+        # after an ADD_ACCOUNT_SUCCESS
+        if nextProps.account?.size
+            mailboxID = nextProps.account.get 'inboxMailbox'
+            redirectTimer = setTimeout =>
+                @props.doCloseModal mailboxID
+            , AccountsLib.REDIRECT_DELAY
+
+
+    toValueLink: (name) ->
+        value: @state.fields[name]
+        requestChange: @onFieldChange
 
 
     render: ->
+        console.log 'RENDER', @state
         <div role='complementary' className="backdrop" onClick={@close}>
             <div className="backdrop-wrapper">
                 <section className='settings'>
@@ -75,13 +121,14 @@ module.exports = AccountWizardCreation = React.createClass
                         <Form.Input type="text"
                                     name="login"
                                     label={t('account wizard creation login label')}
-                                    value={@state.login}
-                                    onChange={_.partial @updateState, 'login'} />
+                                    value={@state.fields.login}
+                                    onChange={@onFieldChange} />
+
                         <Form.Input type="password"
                                     name="password"
                                     label={t('account wizard creation password label')}
-                                    value={@state.password}
-                                    onChange={_.partial @updateState, 'password'} />
+                                    value={@state.fields.password}
+                                    onChange={@onFieldChange} />
 
                         {<div className="alert">
                             <p>
@@ -92,15 +139,16 @@ module.exports = AccountWizardCreation = React.createClass
                             </p> if @state.alert.type}
                             {<p>
                                 {t("account wizard alert oauth")}
-                                <a href={OAuthDomains[@state.OAuth]} target="_blank">{t("account wizard alert oauth link label")}</a>.
+                                <a href={OAuthDomains[@state.OAuth]} target="_blank">
+                                    {t("account wizard alert oauth link label")}
+                                </a>.
                             </p> if @state.OAuth}
                         </div> if @state.alert}
 
-                        <Servers expanded={not @state.isDiscoverable}
-                                 legend={t('account wizard creation advanced parameters')}
-                                 onExpand={@onExpand}
-                                 onChange={@updateState}
-                                 {..._.omit @state, 'isOAuth', 'isDiscoverable', 'isBusy'} />
+                        <Servers expanded={@state.expanded}
+                                onExpand={@onExpand}
+                                toValueLink={@toValueLink}
+                                legend={t 'account wizard creation advanced parameters'} />
                     </Form>
 
                     <footer>
@@ -110,20 +158,21 @@ module.exports = AccountWizardCreation = React.createClass
                                      name="redirect"
                                      onClick={@close}>
                                 {t('account wizard creation success')}
-                            </button> if @state.mailboxID}
+                            </button> if @props.mailboxID}
 
                             {<button name="cancel"
                                      ref="cancel"
                                      type="button"
                                      onClick={@close}>
                                 {t('app cancel')}
-                            </button> if @props.hasAccount and not @state.mailboxID}
+                            </button> unless @props.mailboxID}
+
                             {<button type="submit"
                                      form="account-wizard-creation"
                                      aria-busy={@state.isBusy}
-                                     disabled={not @state.enableSubmit}>
+                                     disabled={@state.disable}>
                                 {t('account wizard creation save')}
-                            </button> unless @state.mailboxID}
+                            </button> unless @props.mailboxID}
                         </nav>
                     </footer>
                 </section>
@@ -131,25 +180,33 @@ module.exports = AccountWizardCreation = React.createClass
         </div>
 
 
+    # Save expand value after manual activation
+    # Disable discover after 1rst expand
+    onExpand: (value) ->
+        state = expanded: value
+        state.isDiscoverable = false if value
+        @setState state
+
+
     # Account creation steps:
     # - reset alerts
     # - trigger action:
-    #   1/ if `isDiscoverable` feature is enable, perform a discover action
+    #   1/ if `expanded` feature is enable, perform a discover action
     #   2/ if not, directly check auth
     create: (event) ->
-        event.preventDefault()
+        event.preventDefault() if event?
 
-        if @state.isDiscoverable and not(@state.imapServer or @state.smtpServer)
-            [..., domain] = @state.login.split '@'
-            @props.doAccountDiscover domain, AccountsUtils.sanitizeConfig @state
-        else
-            @props.doAccountCheck
-                value: AccountsUtils.sanitizeConfig @state
+        { expanded, fields: {imapServer, smtpServer} } = @state
+        config = AccountsLib.sanitizeConfig @state
 
+        # Extract domain from login field,
+        # to compare w/ know OAuth-aware domains
+        [..., domain] = @state.fields.login.split '@'
 
-    # Disable autodiscover when advanced settings are expanded
-    onExpand: (expanded) ->
-        @setState isDiscoverable: !expanded
+        # FIXME: discover actions workflow
+        # doesnt work with Redux
+        # so call directly create method
+        @props.doAccountCreate {value: config}
 
 
     # Close the modal when:
@@ -161,11 +218,10 @@ module.exports = AccountWizardCreation = React.createClass
     # aforementioned element and if there's already one account available
     # (otherwise this setting step is mandatory).
     close: (event) ->
-        disabled  = not @props.hasAccount
         success   = event.target is @refs.success
         backdrops = event.target in [ReactDOM.findDOMNode(@), @refs.cancel]
 
-        return if not success and (disabled or not(backdrops))
+        return if not success and not backdrops
 
         event.stopPropagation()
         event.preventDefault()
@@ -175,17 +231,20 @@ module.exports = AccountWizardCreation = React.createClass
 
         # Redirect to mailboxID if available, will automatically fallback to
         # current mailbox if no mailboxID is given (cancel case)
-        @props.doCloseModal @state.mailboxID
+        @props.doCloseModal @props.mailboxID
 
 
-    # Update state according to user inputs
-    #
-    # Can receive:
-    # - an object conainting the new state to push to @state
-    # - a key / event parameters combination that'll be validated
-    updateState: (source, event) ->
-        if _.isObject source
-            @setState source
-        else
-            {target: {value}} = event
-            @setState _.partial AccountsUtils.validateState, source, value
+    onFieldChange: (event) ->
+        {target: {value, name}} = event
+        (source = {})[name] = value
+
+        previousFields = @state.fields
+        nextFields = _.extend {}, previousFields, source
+
+        @updateState {fields: nextFields}
+
+
+    updateState: (nextState) ->
+        state = AccountsLib.validateState nextState, @state
+
+        @setState state

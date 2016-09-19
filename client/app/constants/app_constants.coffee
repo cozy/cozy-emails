@@ -120,6 +120,7 @@ module.exports =
         'ADD_ACCOUNT':          'ADD_ACCOUNT'
         'REFRESH_MAILBOX':      'REFRESH_MAILBOX'
         'INDEX_MAILBOX':        'INDEX_MAILBOX'
+        'FETCH_CONVERSATION':   'FETCH_CONVERSATION'
 
 
     RequestStatus:
