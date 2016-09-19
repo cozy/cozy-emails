@@ -232,7 +232,7 @@ RequestReducer = (state = DEFAULT_STATE, action) ->
 
         when ActionTypes.REFRESH_SUCCESS
             # Delete error
-            _deleteError Requests.FETCH_CONVERSATION
+            _deleteError Requests.REFRESH_MAILBOX
 
             # Handle next request
             return _execRequest()
