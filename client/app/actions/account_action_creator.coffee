@@ -77,9 +77,6 @@ module.exports = AccountActionCreator = (dispatch, state) ->
             account = AccountGetter.getByID(state,accountID)
             .mergeDeep(account).toJS()
 
-        # FIXME: is smtpMethod is the missing propertie
-        # to validate this action?
-
         propTypes =
             label: String               # human readable label for the account
             name: String                # user name to put in sent mails
