@@ -1,5 +1,4 @@
 cozydb = require 'cozydb'
-_ = require 'lodash'
 
 Any = (x) -> x
 

@@ -1,10 +1,8 @@
-
 log = require('../utils/logging')('processes:scheduler')
 ramStore = require '../models/store_account_and_boxes'
 {EventEmitter} = require('events')
 MailboxRefresh = require './mailbox_refresh'
 MailboxRefreshList = require '../processes/mailbox_refresh_list'
-ApplicationStartup = require './application_startup'
 RemoveMessagesFromAccount = require './message_remove_by_account'
 OrphanRemoval = require './orphan_removal'
 async = require 'async'
@@ -24,12 +22,16 @@ Scheduler = module.exports
 Scheduler.ASAP = {Symbol: 'ASAP'}
 Scheduler.LATER = {Symbol: 'LATER'}
 
+
 Scheduler.schedule = (proc, asap, callback) ->
     [asap, callback] = [Scheduler.ASAP, asap] unless callback
 
     if proc.finished
         throw new Error 'scheduling of finished process'
     else
+        unless proc.options?.silent
+            Scheduler.emit 'indexes.request', proc.options?.mailbox
+
         proc.addCallback callback
 
         if asap is Scheduler.ASAP
@@ -50,8 +52,8 @@ Scheduler.schedule = (proc, asap, callback) ->
             queued.push proc
             Scheduler.doNext() unless running
 
-Scheduler.scheduleMultiple = (processes, callback) ->
 
+Scheduler.scheduleMultiple = (processes, callback) ->
     waiters = processes.map (proc) ->
         (cb) -> Scheduler.schedule proc, cb
 
@@ -60,9 +62,13 @@ Scheduler.scheduleMultiple = (processes, callback) ->
 
 Scheduler.doNext = ->
     log.debug "Scheduler.doNext already running = ", running?
+
     unless running
         proc = running = queued.shift()
         if proc
+            unless proc.options?.silent
+                Scheduler.emit 'indexes.request', proc.options?.mailbox
+
             proc.run (err) ->
                 log.debug "process finished #{proc.id} #{err}"
                 running = null
@@ -71,7 +77,6 @@ Scheduler.doNext = ->
             # nothing to do
             Scheduler.onIdle()
 
-        eventEmitter.emit 'change'
 
 Scheduler.onIdle = ->
     log.debug "Scheduler.onIdle"
@@ -82,23 +87,32 @@ Scheduler.onIdle = ->
         Scheduler.startFavoriteRefresh()
 
     else
+        # Fire indexingComplete event
+        # when all tasks are finished
+        Scheduler.emit 'indexes.complete', running?.account
+        Scheduler.emit 'change'
+
         log.debug "nothing to do, waiting 10 MIN"
         setTimeout Scheduler.doNext, 10 * MIN
 
-Scheduler.refreshNow = (mailbox, deep, callback) ->
+
+Scheduler.refreshNow = (mailbox, options={}, callback) ->
+    {silent, deep} = options
 
     isSameBoxRefresh = (processus) ->
         processus instanceof MailboxRefresh and processus.mailbox is mailbox
 
     if running and isSameBoxRefresh running
+        unless silent
+            Scheduler.emit 'indexes.request', running.options?.mailbox
+
         running.addCallback callback
 
     else
-        alreadyScheduled = queued.filter(isSameBoxRefresh)[0]
-        if alreadyScheduled
+        if (alreadyScheduled = queued.filter(isSameBoxRefresh)[0])
             queued = _.without queued, alreadyScheduled
 
-        refresh = new MailboxRefresh {mailbox, deep}
+        refresh = new MailboxRefresh {mailbox, deep, silent}
         Scheduler.schedule refresh, Scheduler.ASAP, callback
 
 
@@ -108,7 +122,6 @@ Scheduler.startAllRefresh = (done) ->
 
     refreshLists = ramStore.getAllAccounts()
         .map (account) -> new MailboxRefreshList {account}
-
 
     Scheduler.scheduleMultiple refreshLists, (err) ->
         log.error err if err
@@ -122,9 +135,11 @@ Scheduler.startAllRefresh = (done) ->
             lastAllRefresh = Date.now()
             done? err
 
+
 # called by the Scheduler every 5Min
 Scheduler.startFavoriteRefresh = ->
     log.debug "Scheduler.startFavoriteRefresh"
+
     processes = ramStore.getFavoriteMailboxes()
         .map (mailbox) -> new MailboxRefresh {mailbox}
 
@@ -132,31 +147,42 @@ Scheduler.startFavoriteRefresh = ->
         log.error err if err
         lastFavoriteRefresh = Date.now()
 
+
+Scheduler.emit = (event, args={}) ->
+    eventEmitter.emit event, args
+
+
 Scheduler.on = (event, listener) ->
     eventEmitter.addListener event, listener
+
 
 Scheduler.clientSummary = ->
     list = queued
     list = [running].concat list if running
     return list.map (proc) -> proc.summary()
 
-Scheduler.applicationStartupRunning = ->
-    running and running instanceof ApplicationStartup
+
+Scheduler.getCurrentProcess = ->
+    running
+
 
 # there is a few time when we want to do an orphan removal after
 # the main operation complete, if the user perform several such
 # operation quickly, we want to do only one OrphanRemoval.
 Scheduler.orphanRemovalDebounced = (accountID) ->
-
+    silent = true
     if accountID
-        Scheduler.schedule new RemoveMessagesFromAccount({accountID}), (err) ->
+        request = new RemoveMessagesFromAccount {accountID, silent}
+        Scheduler.schedule request, (err) ->
             log.error err if err
 
     alreadyQueued = queued.some (proc) ->
         proc instanceof OrphanRemoval
 
     unless alreadyQueued
-        Scheduler.schedule new OrphanRemoval(), (err) ->
+        request = new OrphanRemoval {silent}
+        Scheduler.schedule request, (err) ->
             log.error err if err
+
 
 ramStore.on 'new-orphans', Scheduler.orphanRemovalDebounced

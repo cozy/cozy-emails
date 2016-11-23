@@ -4,10 +4,10 @@ require('./css/mailkeys.css');
 require('./js/mousetrap.js');
 
 var LayoutActionCreator = require('../../app/actions/layout_action_creator');
+var RouterStore = require('../../app/stores/router_store');
 var LayoutStore = require('../../app/stores/layout_store');
-var Dispositions = require('../../app/constants/app_constants').Dispositions;
 var MessageActionCreator = require('../../app/actions/message_action_creator');
-
+var RouterActionCreator = require('../../app/actions/router_action_creator');
 
 if (typeof window.plugins !== "object") {
   window.plugins = {};
@@ -16,7 +16,7 @@ if (typeof window.plugins !== "object") {
   "use strict";
   function bindingNew(e) {
     if (e && e instanceof Event) { e.preventDefault(); }
-    window.cozyMails.messageNew();
+    RouterActionCreator.gotoCompose()
   }
   function bindingHelp() {
     var container, help;
@@ -46,15 +46,6 @@ if (typeof window.plugins !== "object") {
     }
     container.addEventListener('click', closeHelp);
     Mousetrap.bind("esc", closeHelp);
-  }
-  function layoutRatio(direction) {
-    if (direction > 0) {
-      LayoutActionCreator.increasePreviewPanel(direction);
-    } else if (direction < 0) {
-      LayoutActionCreator.decreasePreviewPanel(direction);
-    } else {
-      LayoutActionCreator.resetPreviewPanel();
-    }
   }
   function mailAction(action) {
     var current, btn;
@@ -94,12 +85,6 @@ if (typeof window.plugins !== "object") {
           var btnConfirm = document.querySelector('.modal .modal-footer .modal-action');
           if (btnConfirm !== null) {
             btnConfirm.dispatchEvent(new MouseEvent('click', { 'view': window, 'bubbles': true, 'cancelable': true }));
-          } else {
-            if (window.cozyMails.getCurrentActions().indexOf('account.mailbox.messages') === 0 &&
-               ['INPUT', 'BUTTON'].indexOf(document.activeElement.tagName) === -1) {
-              if (e && e instanceof Event) { e.preventDefault(); }
-              window.cozyMails.messageDisplay();
-            }
           }
         }
       },
@@ -112,7 +97,7 @@ if (typeof window.plugins !== "object") {
             btnClose.dispatchEvent(new MouseEvent('click', { 'view': window, 'bubbles': true, 'cancelable': true }));
           } else {
             if (e && e instanceof Event) { e.preventDefault(); }
-            window.cozyMails.messageClose();
+            RouterActionCreator.closeConversation()
           }
         }
       },
@@ -151,14 +136,14 @@ if (typeof window.plugins !== "object") {
         alias: ['down'],
         action: function (e) {
           if (e && e instanceof Event) { e.preventDefault(); }
-          window.cozyMails.messageNavigate('next');
+          RouterActionCreator.gotoPreviousConversation();
         }
       },
       'right': {
         name: "Next Message in conversation",
         action: function (e) {
           if (e && e instanceof Event) { e.preventDefault(); }
-          window.cozyMails.messageNavigate('next', true);
+          RouterActionCreator.gotoPreviousMessage();
         }
       },
       'k': {
@@ -166,14 +151,14 @@ if (typeof window.plugins !== "object") {
         alias: ['up'],
         action: function (e) {
           if (e && e instanceof Event) { e.preventDefault(); }
-          window.cozyMails.messageNavigate('prev');
+          RouterActionCreator.gotoNextConversation();
         }
       },
       'left': {
         name: "Previous Message in conversation",
         action: function (e) {
           if (e && e instanceof Event) { e.preventDefault(); }
-          window.cozyMails.messageNavigate('prev', true);
+          RouterActionCreator.gotoNextMessage();
         }
       },
       'ctrl+down': {
@@ -184,70 +169,6 @@ if (typeof window.plugins !== "object") {
           if (panel) {
             panel.scrollTop += panel.clientHeight * 0.8;
           }
-        }
-      },
-      '(': {
-        name: 'Increase message layout size',
-        action: function (e) {
-          if (e && e instanceof Event) { e.preventDefault(); }
-          layoutRatio(1);
-        }
-      },
-      'alt+(': {
-        name: 'Increase by 10 message layout size',
-        action: function (e) {
-          if (e && e instanceof Event) { e.preventDefault(); }
-          layoutRatio(10);
-        }
-      },
-      ')': {
-        name: 'Decrease message layout size',
-        action: function (e) {
-          if (e && e instanceof Event) { e.preventDefault(); }
-          layoutRatio(-1);
-        }
-      },
-      'alt+)': {
-        name: 'Decrease by 10 message layout size',
-        action: function (e) {
-          if (e && e instanceof Event) { e.preventDefault(); }
-          layoutRatio(-10);
-        }
-      },
-      '=': {
-        name: 'Reset message layout size',
-        action: function (e) {
-          if (e && e instanceof Event) { e.preventDefault(); }
-          layoutRatio();
-        }
-      },
-      'F': {
-        name: "Toggle fullscreen",
-        action: function (e) {
-          if (e && e instanceof Event) { e.preventDefault(); }
-          LayoutActionCreator.toggleFullscreen();
-        }
-      },
-      'w': {
-        name: "Toggle layout",
-        action: function (e) {
-          if (e && e instanceof Event) { e.preventDefault(); }
-
-          switch (LayoutStore.getDisposition()) {
-          case Dispositions.ROW:
-            LayoutActionCreator.setDisposition(Dispositions.COL);
-            break;
-          case Dispositions.COL:
-            LayoutActionCreator.setDisposition(Dispositions.ROW);
-            break;
-          }
-        }
-      },
-      'W': {
-        name: 'Toggle messages list mode',
-        action: function (e) {
-            if (e && e instanceof Event) { e.preventDefault(); }
-            LayoutActionCreator.toggleListMode();
         }
       },
       'ctrl+up': {
@@ -270,7 +191,9 @@ if (typeof window.plugins !== "object") {
         alias: ['backspace', 'del'],
         action: function (e) {
           if (e && e instanceof Event) { e.preventDefault(); }
-          window.cozyMails.messageDeleteCurrent();
+          var accountID = RouterStore.getAccountID();
+          var messageID = RouterStore.getMessageID();
+          MessageActionCreator.deleteMessage({accountID, messageID});
         }
       },
       'ctrl+z': {

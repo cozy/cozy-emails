@@ -2,62 +2,71 @@ module.exports =
 
     ActionTypes:
         # Account
-        'CHECK_ACCOUNT_REQUEST'     : 'CHECK_ACCOUNT_REQUEST'
-        'CHECK_ACCOUNT_SUCCESS'     : 'CHECK_ACCOUNT_SUCCESS'
-        'CHECK_ACCOUNT_FAILURE'     : 'CHECK_ACCOUNT_FAILURE'
-        'ADD_ACCOUNT_REQUEST'       : 'ADD_ACCOUNT_REQUEST'
-        'ADD_ACCOUNT_SUCCESS'       : 'ADD_ACCOUNT_SUCCESS'
-        'ADD_ACCOUNT_FAILURE'       : 'ADD_ACCOUNT_FAILURE'
-        'REMOVE_ACCOUNT_REQUEST'    : 'REMOVE_ACCOUNT_REQUEST'
-        'REMOVE_ACCOUNT_SUCCESS'    : 'REMOVE_ACCOUNT_SUCCESS'
-        'REMOVE_ACCOUNT_FAILURE'    : 'REMOVE_ACCOUNT_FAILURE'
-        'EDIT_ACCOUNT_REQUEST'      : 'EDIT_ACCOUNT_REQUEST'
-        'EDIT_ACCOUNT_SUCCESS'      : 'EDIT_ACCOUNT_SUCCESS'
-        'EDIT_ACCOUNT_FAILURE'      : 'EDIT_ACCOUNT_FAILURE'
-        'SELECT_ACCOUNT'            : 'SELECT_ACCOUNT'
-        'NEW_ACCOUNT_SETTING'       : 'NEW_ACCOUNT_SETTING'
+        'DISCOVER_ACCOUNT_REQUEST': 'DISCOVER_ACCOUNT_REQUEST'
+        'DISCOVER_ACCOUNT_SUCCESS': 'DISCOVER_ACCOUNT_SUCCESS'
+        'DISCOVER_ACCOUNT_FAILURE': 'DISCOVER_ACCOUNT_FAILURE'
+        'CHECK_ACCOUNT_REQUEST':    'CHECK_ACCOUNT_REQUEST'
+        'CHECK_ACCOUNT_SUCCESS':    'CHECK_ACCOUNT_SUCCESS'
+        'CHECK_ACCOUNT_FAILURE':    'CHECK_ACCOUNT_FAILURE'
+        'ADD_ACCOUNT_REQUEST':      'ADD_ACCOUNT_REQUEST'
+        'ADD_ACCOUNT_SUCCESS':      'ADD_ACCOUNT_SUCCESS'
+        'ADD_ACCOUNT_FAILURE':      'ADD_ACCOUNT_FAILURE'
+        'REMOVE_ACCOUNT_REQUEST':   'REMOVE_ACCOUNT_REQUEST'
+        'REMOVE_ACCOUNT_SUCCESS':   'REMOVE_ACCOUNT_SUCCESS'
+        'REMOVE_ACCOUNT_FAILURE':   'REMOVE_ACCOUNT_FAILURE'
+        'EDIT_ACCOUNT_REQUEST':     'EDIT_ACCOUNT_REQUEST'
+        'EDIT_ACCOUNT_SUCCESS':     'EDIT_ACCOUNT_SUCCESS'
+        'EDIT_ACCOUNT_FAILURE':     'EDIT_ACCOUNT_FAILURE'
+        'EDIT_ACCOUNT_TAB':         'EDIT_ACCOUNT_TAB'
+        'SELECT_ACCOUNT':           'SELECT_ACCOUNT'
+        'NEW_ACCOUNT_SETTING':      'NEW_ACCOUNT_SETTING'
 
         # Mailbox
-        'MAILBOX_ADD'               : 'MAILBOX_ADD'
-        'MAILBOX_CREATE'            : 'MAILBOX_CREATE'
-        'MAILBOX_UPDATE'            : 'MAILBOX_UPDATE'
-        'MAILBOX_DELETE'            : 'MAILBOX_DELETE'
+        # 'MAILBOX_ADD'               : 'MAILBOX_ADD'
+        'MAILBOX_CREATE_REQUEST'    : 'MAILBOX_CREATE_REQUEST'
+        'MAILBOX_CREATE_SUCCESS'    : 'MAILBOX_CREATE_SUCCESS'
+        'MAILBOX_CREATE_FAILURE'    : 'MAILBOX_CREATE_FAILURE'
+        'MAILBOX_UPDATE_REQUEST'    : 'MAILBOX_UPDATE_REQUEST'
+        'MAILBOX_UPDATE_SUCCESS'    : 'MAILBOX_UPDATE_SUCCESS'
+        'MAILBOX_UPDATE_FAILURE'    : 'MAILBOX_UPDATE_FAILURE'
+        'MAILBOX_DELETE_REQUEST'    : 'MAILBOX_DELETE_REQUEST'
+        'MAILBOX_DELETE_SUCCESS'    : 'MAILBOX_DELETE_SUCCESS'
+        'MAILBOX_DELETE_FAILURE'    : 'MAILBOX_DELETE_FAILURE'
+        'MAILBOX_EXPUNGE_REQUEST'   : 'MAILBOX_EXPUNGE_REQUEST'
+        'MAILBOX_EXPUNGE_SUCCESS'   : 'MAILBOX_EXPUNGE_SUCCESS'
+        'MAILBOX_EXPUNGE_FAILURE'   : 'MAILBOX_EXPUNGE_FAILURE'
         'MAILBOX_EXPUNGE'           : 'MAILBOX_EXPUNGE'
+        'MAILBOX_SELECT'            : 'MAILBOX_SELECT'
+        'MAILBOX_SELECT_ALL'        : 'MAILBOX_SELECT_ALL'
 
         # Message
-        'RECEIVE_RAW_MESSAGE'       : 'RECEIVE_RAW_MESSAGE'
-        'RECEIVE_RAW_MESSAGES'      : 'RECEIVE_RAW_MESSAGES'
-        'RECEIVE_RAW_MESSAGE_REALTIME' : 'RECEIVE_RAW_MESSAGE_REALTIME'
-        'MESSAGE_SEND'              : 'MESSAGE_SEND'
-        'MESSAGE_CURRENT'           : 'MESSAGE_CURRENT'
-        'RECEIVE_MESSAGE_DELETE'    : 'RECEIVE_MESSAGE_DELETE'
-        'RECEIVE_MAILBOX_UPDATE'    : 'RECEIVE_MAILBOX_UPDATE'
+        'RECEIVE_ACCOUNT_CREATE'        : 'RECEIVE_ACCOUNT_CREATE'
+        'RECEIVE_ACCOUNT_UPDATE'        : 'RECEIVE_ACCOUNT_UPDATE'
+        'RESET_ACCOUNT_REQUEST'         : 'RESET_ACCOUNT_REQUEST'
+        'RECEIVE_RAW_MESSAGE'           : 'RECEIVE_RAW_MESSAGE'
+        'RECEIVE_RAW_MESSAGES'          : 'RECEIVE_RAW_MESSAGES'
+        'RECEIVE_RAW_MESSAGE_REALTIME'  : 'RECEIVE_RAW_MESSAGE_REALTIME'
+        'MESSAGE_RESET_REQUEST'         : 'MESSAGE_RESET_REQUEST'
+        'MESSAGE_SEND_REQUEST'          : 'MESSAGE_SEND_REQUEST'
+        'MESSAGE_SEND_SUCCESS'          : 'MESSAGE_SEND_SUCCESS'
+        'MESSAGE_SEND_FAILURE'          : 'MESSAGE_SEND_FAILURE'
+        'RECEIVE_MESSAGE_DELETE'        : 'RECEIVE_MESSAGE_DELETE'
+        'RECEIVE_MAILBOX_CREATE'        : 'RECEIVE_MAILBOX_CREATE'
+        'RECEIVE_MAILBOX_UPDATE'        : 'RECEIVE_MAILBOX_UPDATE'
 
-        'MESSAGE_TRASH_REQUEST'     : 'MESSAGE_TRASH_REQUEST'
-        'MESSAGE_TRASH_SUCCESS'     : 'MESSAGE_TRASH_SUCCESS'
-        'MESSAGE_TRASH_FAILURE'     : 'MESSAGE_TRASH_FAILURE'
-        'MESSAGE_MOVE_REQUEST'     : 'MESSAGE_MOVE_REQUEST'
-        'MESSAGE_MOVE_SUCCESS'     : 'MESSAGE_MOVE_SUCCESS'
-        'MESSAGE_MOVE_FAILURE'     : 'MESSAGE_MOVE_FAILURE'
-        'MESSAGE_FLAGS_REQUEST'     : 'MESSAGE_FLAGS_REQUEST'
-        'MESSAGE_FLAGS_SUCCESS'     : 'MESSAGE_FLAGS_SUCCESS'
-        'MESSAGE_FLAGS_FAILURE'     : 'MESSAGE_FLAGS_FAILURE'
-        'MESSAGE_FETCH_REQUEST'     : 'MESSAGE_FETCH_REQUEST'
-        'MESSAGE_FETCH_SUCCESS'     : 'MESSAGE_FETCH_SUCCESS'
-        'MESSAGE_FETCH_FAILURE'     : 'MESSAGE_FETCH_FAILURE'
-        'MESSAGE_UNDO_REQUEST'     : 'MESSAGE_UNDO_REQUEST'
-        'MESSAGE_UNDO_SUCCESS'     : 'MESSAGE_UNDO_SUCCESS'
-        'MESSAGE_UNDO_FAILURE'     : 'MESSAGE_UNDO_FAILURE'
-        'MESSAGE_UNDO_TIMEOUT'     : 'MESSAGE_UNDO_TIMEOUT'
+        'MESSAGE_TRASH_REQUEST'         : 'MESSAGE_TRASH_REQUEST'
+        'MESSAGE_TRASH_SUCCESS'         : 'MESSAGE_TRASH_SUCCESS'
+        'MESSAGE_TRASH_FAILURE'         : 'MESSAGE_TRASH_FAILURE'
+        'MESSAGE_MOVE_REQUEST'          : 'MESSAGE_MOVE_REQUEST'
+        'MESSAGE_MOVE_SUCCESS'          : 'MESSAGE_MOVE_SUCCESS'
+        'MESSAGE_MOVE_FAILURE'          : 'MESSAGE_MOVE_FAILURE'
+        'MESSAGE_FLAGS_REQUEST'         : 'MESSAGE_FLAGS_REQUEST'
+        'MESSAGE_FLAGS_SUCCESS'         : 'MESSAGE_FLAGS_SUCCESS'
+        'MESSAGE_FLAGS_FAILURE'         : 'MESSAGE_FLAGS_FAILURE'
+        'MESSAGE_FETCH_REQUEST'         : 'MESSAGE_FETCH_REQUEST'
+        'MESSAGE_FETCH_SUCCESS'         : 'MESSAGE_FETCH_SUCCESS'
+        'MESSAGE_FETCH_FAILURE'         : 'MESSAGE_FETCH_FAILURE'
 
-        'CONVERSATION_FETCH_REQUEST'     : 'CONVERSATION_FETCH_REQUEST'
-        'CONVERSATION_FETCH_SUCCESS'     : 'CONVERSATION_FETCH_SUCCESS'
-        'CONVERSATION_FETCH_FAILURE'     : 'CONVERSATION_FETCH_FAILURE'
-
-
-        'MESSAGE_RECOVER_REQUEST'     : 'MESSAGE_RECOVER_REQUEST'
-        'MESSAGE_RECOVER_SUCCESS'     : 'MESSAGE_RECOVER_SUCCESS'
-        'MESSAGE_RECOVER_FAILURE'     : 'MESSAGE_RECOVER_FAILURE'
 
         # Search
         'SEARCH_PARAMETER_CHANGED' : 'SEARCH_PARAMETER_CHANGED'
@@ -66,25 +75,27 @@ module.exports =
         'SEARCH_FAILURE'           : 'SEARCH_FAILURE'
 
         # Contacts
-        'SET_CONTACT_QUERY'          : 'SET_CONTACT_QUERY'
-        'RECEIVE_RAW_CONTACT_RESULTS': 'RECEIVE_RAW_CONTACT_RESULTS'
-        'CLEAR_CONTACT_RESULTS'      : 'CLEAR_CONTACT_RESULTS'
+        'SEARCH_CONTACT_REQUEST'    : 'SEARCH_CONTACT_REQUEST'
+        'SEARCH_CONTACT_SUCCESS'    : 'SEARCH_CONTACT_SUCCESS'
+        'SEARCH_CONTACT_FAILURE'    : 'SEARCH_CONTACT_FAILURE'
+        'CREATE_CONTACT_REQUEST'    : 'CREATE_CONTACT_REQUEST'
+        'CREATE_CONTACT_SUCCESS'    : 'CREATE_CONTACT_SUCCESS'
+        'CREATE_CONTACT_FAILURE'    : 'CREATE_CONTACT_FAILURE'
         'CONTACT_LOCAL_SEARCH'       : 'CONTACT_LOCAL_SEARCH'
 
+        # Router
+        'ROUTES_INITIALIZE'     : 'ROUTES_INITIALIZE'
+        'ROUTE_CHANGE'          : 'ROUTE_CHANGE'
+
         # Layout
-        'SET_DISPOSITION'           : 'SET_DISPOSITION'
-        'TOGGLE_LIST_MODE'          : 'TOGGLE_LIST_MODE'
-        'RESIZE_PREVIEW_PANE'       : 'RESIZE_PREVIEW_PANE'
-        'MAXIMIZE_PREVIEW_PANE'     : 'MAXIMIZE_PREVIEW_PANE'
-        'MINIMIZE_PREVIEW_PANE'     : 'MINIMIZE_PREVIEW_PANE'
         'DISPLAY_MODAL'             : 'DISPLAY_MODAL'
         'HIDE_MODAL'                : 'HIDE_MODAL'
-        'REFRESH'                   : 'REFRESH'
-        'FOCUS'                     : 'FOCUS'
         'INTENT_AVAILABLE'          : 'INTENT_AVAILABLE'
 
         # Settings
-        'SETTINGS_UPDATED'          : 'SETTINGS_UPDATED'
+        'SETTINGS_UPDATE_REQUEST'  : 'SETTINGS_UPDATE_REQUEST'
+        'SETTINGS_UPDATE_SUCCESS'   : 'SETTINGS_UPDATE_SUCCESS'
+        'SETTINGS_UPDATE_FAILURE'   : 'SETTINGS_UPDATE_FAILURE'
 
         # Tasks
         'RECEIVE_TASK_UPDATE'       : 'RECEIVE_TASK_UPDATE'
@@ -92,37 +103,64 @@ module.exports =
         'CLEAR_TOASTS'              : 'CLEAR_TOASTS'
 
         # Refreshes
+        'RECEIVE_INDEXES_REQUEST'      : 'RECEIVE_INDEXES_REQUEST'
+        'RECEIVE_INDEXES_COMPLETE'     : 'RECEIVE_INDEXES_COMPLETE'
         'RECEIVE_REFRESH_UPDATE'       : 'RECEIVE_REFRESH_UPDATE'
         'RECEIVE_REFRESH_STATUS'       : 'RECEIVE_REFRESH_STATUS'
-        'RECEIVE_REFRESH_DELETE'       : 'RECEIVE_REFRESH_DELETE'
         'RECEIVE_REFRESH_NOTIF'        : 'RECEIVE_REFRESH_NOTIF'
 
         'REFRESH_REQUEST'              : 'REFRESH_REQUEST'
         'REFRESH_SUCCESS'              : 'REFRESH_SUCCESS'
         'REFRESH_FAILURE'              : 'REFRESH_FAILURE'
 
-        # List
-        'QUERY_PARAMETER_CHANGED'   : 'QUERY_PARAMETER_CHANGED'
-
         # Toasts
         'TOASTS_SHOW'               : 'TOASTS_SHOW'
         'TOASTS_HIDE'               : 'TOASTS_HIDE'
 
-        # Drawer
-        'DRAWER_SHOW':   'DRAWER_SHOW'
-        'DRAWER_HIDE':   'DRAWER_HIDE'
-        'DRAWER_TOGGLE': 'DRAWER_TOGGLE'
+
+    Requests:
+        'DISCOVER_ACCOUNT':     'DISCOVER_ACCOUNT'
+        'CHECK_ACCOUNT':        'CHECK_ACCOUNT'
+        'ADD_ACCOUNT':          'ADD_ACCOUNT'
+        'REFRESH_MAILBOX':      'REFRESH_MAILBOX'
+        'INDEX_MAILBOX':        'INDEX_MAILBOX'
+
+
+    RequestStatus:
+        'SUCCESS':  'SUCCESS'
+        'ERROR':    'ERROR'
+        'INFLIGHT': 'INFLIGHT'
 
 
     PayloadSources:
         'VIEW_ACTION'   : 'VIEW_ACTION'
         'SERVER_ACTION' : 'SERVER_ACTION'
 
-    ComposeActions:
-        'REPLY'         : 'REPLY'
-        'REPLY_ALL'     : 'REPLY_ALL'
-        'FORWARD'       : 'FORWARD'
-        'EDIT'          : 'EDIT'
+
+    AccountActions:
+        'EDIT'      : 'account.edit'
+        'CREATE'    : 'account.new'
+
+    MessageActions:
+        'SHOW_ALL'      : 'message.list'
+        'SHOW'          : 'message.show'
+        'EDIT'          : 'message.edit'
+        'REPLY'         : 'message.reply'
+        'REPLY_ALL'     : 'message.reply.all'
+        'FORWARD'       : 'message.forward'
+        'CREATE'        : 'message.new'
+
+    SearchActions:
+        'SHOW_ALL'      : 'search'
+
+    OAuthDomains:
+        'gmail.com':      'https://www.google.com/settings/security/lesssecureapps'
+        'googlemail.com': 'https://www.google.com/settings/security/lesssecureapps'
+
+    ServersEncProtocols: [
+        'ssl'
+        'starttls'
+    ]
 
     AlertLevel:
         'SUCCESS'      : 'SUCCESS'
@@ -142,30 +180,56 @@ module.exports =
         'UNSEEN'       : 'unseen'
 
     MailboxFlags:
+        'INBOX'   :  '\\Inbox'
         'DRAFT'   :  '\\Drafts'
         'SENT'    :  '\\Sent'
         'TRASH'   :  '\\Trash'
         'ALL'     :  '\\All'
         'SPAM'    :  '\\Junk'
+        'JUNK'    :  '\\Junk'
+        'UNSEEN'  : 'Unseen'
         'FLAGGED' :  '\\Flagged'
 
+    MailboxSpecial:
+        'inboxMailbox'      : 'INBOX'
+        'unreadMailbox'     : 'DRAFT'
+        'flaggedMailbox'    : 'FLAGGED'
+        'draftMailbox'      : 'DRAFT'
+        'sentMailbox'       : 'SENT'
+        'trashMailbox'      : ['TRASH', 'DELETE']
+        'junkMailbox'       : ['SPAM', 'JUNK']
+        'allMailbox'        : 'ALL'
+
+    # FIXME: should decide between:
+    # FlagsConstants or MessageFlags
     FlagsConstants:
         SEEN   : '\\Seen'
         UNSEEN : 'Unseen'
         FLAGGED: '\\Flagged'
         NOFLAG : 'Noflag'
 
-    Dispositions:
-        COL:  'column'
-        ROW:  'row'
+    Icons:
+        'inboxMailbox'  : 'fa-inbox'
+        'draftMailbox'  : 'fa-file-text-o'
+        'sentMailbox'   : 'fa-send-o'
+        'trashMailbox'  : 'fa-trash-o'
+        'junkMailbox'   : 'fa-fire'
+        'allMailbox'    : 'fa-archive'
+        'unreadMailbox' : 'fa-eye'
+        'flaggedMailbox': 'fa-star'
 
-    SpecialBoxIcons:
-        inboxMailbox: 'fa-inbox'
-        draftMailbox: 'fa-file-text-o'
-        sentMailbox: 'fa-send-o'
-        trashMailbox: 'fa-trash-o'
-        junkMailbox: 'fa-fire'
-        allMailbox: 'fa-archive'
+        'archive'       : 'fa-file-archive-o'
+        'audio'         : 'fa-file-audio-o'
+        'code'          : 'fa-file-code-o'
+        'image'         : 'fa-file-image-o'
+        'pdf'           : 'fa-file-pdf-o'
+        'word'          : 'fa-file-word-o'
+        'presentation'  : 'fa-file-powerpoint-o'
+        'spreadsheet'   : 'fa-file-excel-o'
+        'text'          : 'fa-file-text-o'
+        'video'         : 'fa-file-video-o'
+        'word'          : 'fa-file-word-o'
+
 
     Tooltips:
         REPLY                       : 'TOOLTIP_REPLY'

@@ -1,49 +1,47 @@
 language: node_js
 matrix:
-    fast_finish: true
-    allow_failures:
-        - node_js: "5"
+  fast_finish: true
+  allow_failures:
+  - node_js: '5'
 node_js:
-    - "0.10"
-    - "0.12"
-    - "4"
-    - "5"
+- '4'
 services:
-    - couchdb
+- couchdb
 env:
-    global:
-        - NODE_ENV=test
-        - DEBUG_LEVEL=0
-        - NAME=emails
-        - TOKEN=apptoken
-        - CXX=g++-4.8
+  global:
+  - NODE_ENV=test
+  - DEBUG_LEVEL=0
+  - NAME=emails
+  - TOKEN=apptoken
+  - CXX=g++-4.8
+  - secure: FVtPCjIQ5GdH4bANNbfZnkFKCPnakGJGFrhngBM/RpBGAs8SAb9C5AmniToYaT/NMIt+nFms87E/mYjqoFFjcrawqWPkaPwZqZqWaSX3mgNZz7cLiEo5+L59SDajqVcRACWFw9R4k4PtMnB4YW1j/cOp0HTUD8DIHU9gFpO/f80=
 addons:
-    apt:
-        sources:
-            - ubuntu-toolchain-r-test
-        packages:
-            - gcc-4.8
-            - g++-4.8
-
+  apt:
+    sources:
+    - ubuntu-toolchain-r-test
+    packages:
+    - gcc-4.8
+    - g++-4.8
 before_install:
-    - travis_retry npm install npm@latest-2 -g
-    - travis_retry npm install forever coffee-script -g
-    - travis_retry pip install --user transifex-client
-    - travis_retry git clone git://github.com/cozy/cozy-data-system.git
-    - cd cozy-data-system
-    - travis_retry npm install #data-system
-    - env NAME=data-system TOKEN=token forever start -o forever-ds.log build/server.js
-    - sleep 5
-    - coffee commands.coffee test-install emails
-    - cd ..
-    - mkdir log
-    - travis_retry npm install # do it now, DovecotTesting needs it
-
+- travis_retry npm install npm@latest-2 -g
+- travis_retry npm install forever coffee-script -g
+- travis_retry pip install --user transifex-client
+- travis_retry git clone git://github.com/cozy/cozy-data-system.git
+- cd cozy-data-system
+- travis_retry npm install
+- env NAME=data-system TOKEN=token forever start -o forever-ds.log build/server.js
+- sleep 5
+- coffee commands.coffee test-install emails
+- cd ..
+- mkdir log
+- travis_retry npm install
 script:
-    - npm run build
-    - npm run fixtures
-    - npm run test:build
-
+- npm run build
+- npm run fixtures
+- npm run test
+- npm run lint:server
 after_failure:
-    - cat cozy-data-system/forever-ds.log
-    - cat cozy-data-system/log/test.log
+- cat cozy-data-system/forever-ds.log
+- cat cozy-data-system/log/test.log
+after_success:
+- test $TRAVIS_BRANCH = "development" && npm run deploy

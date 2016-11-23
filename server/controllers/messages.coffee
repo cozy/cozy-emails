@@ -79,11 +79,13 @@ module.exports.listByMailboxOptions = (req, res, next) ->
     sortField = sort.substring(1)
     before = req.query.before
     after = req.query.after
+
     if sortField is 'date'
         before ?= new Date(0).toISOString()
         after ?= new Date().toISOString()
-        if new Date(before).toISOString() isnt before or
-           new Date(after).toISOString() isnt after
+
+        if new Date(before).toISOString() isnt before \
+        or new Date(after).toISOString() isnt after
             return next new BadRequest "before & after should be a valid JS " +
                 "date.toISOString()"
 
@@ -141,31 +143,9 @@ module.exports.listByMailbox = (req, res, next) ->
     , (err, result) ->
         return next err if err
 
-        messages = result.messages
-        if messages.length is MSGBYPAGE
-            last = messages[messages.length - 1]
-            # for 'from' and 'dest', we use pageAfter as the number of records
-            # to skip
-            if req.sortField is 'from' or req.sortField is 'dest'
-                pageAfter = messages.length + (parseInt(req.pageAfter, 10) or 0)
-            else
-                lastDate = last.date or new Date()
-                pageAfter = lastDate.toISOString()
-
-            links = next: "mailbox/#{mailboxID}/?" + querystring.stringify
-                flag: req.flagcode
-                sort: req.sort
-                before: req.before
-                after: req.after
-                pageAfter: pageAfter
-
-        else
-            links = {}
-
         result.messages ?= []
         result.mailboxID = mailboxID
         result.messages = result.messages.map (msg) -> msg.toClientObject()
-        result.links = links
 
         res.send result
 
@@ -322,28 +302,6 @@ module.exports.batchMove = (req, res, next) ->
 module.exports.search = (req, res, next) ->
 
     return next new Error('search is disabled')
-
-    params =
-        query: req.query.search
-        facets: accountID: {}
-
-    if req.query.accountID
-        params.filter =
-            accountID: [[req.query.accountID, req.query.accountID]]
-
-    params.numByPage = req.query.pageSize or 10
-    params.numPage = req.query.page or 0
-
-    Message.search params, (err, results) ->
-        return next err if err
-        accounts = {}
-        for facet in results.facets when facet.key is 'accountID'
-            for account in facet.value
-                accounts[account.key] = account.value
-
-        res.send
-            accounts: accounts
-            rows: results.map (msg) -> msg.toClientObject()
 
 
 # fetch from IMAP and send the raw rfc822 message

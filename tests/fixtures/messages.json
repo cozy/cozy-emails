@@ -31,7 +31,6 @@
         "text": "Hello, how are you ?",
         "html": "Hello, how are you ?",
         "reads": false,
-        "hasAttachments": false,
         "mailboxIDs": {"gmail-ID-folder1": 1},
         "account": "gmail-ID"
     },
@@ -67,7 +66,6 @@
         "text": "Hello, how are you ? bis",
         "html": "Hello, how are you ? bis",
         "reads": false,
-        "hasAttachments": false,
         "mailboxIDs": {"gmail-ID-folder1": 2},
         "account": "gmail-ID"
     },
@@ -103,7 +101,6 @@
         "text": "Hello, how are you ? bis",
         "html": "<b>Hello, how are you ? bis</b>",
         "reads": false,
-        "hasAttachments": false,
         "mailboxIDs": {"gmail-ID-folder1": 3},
         "account": "gmail-ID"
     },
@@ -139,7 +136,6 @@
         "text": "Hello, how are you ? bis",
         "html": "Hello, how are you ? bis",
         "reads": false,
-        "hasAttachments": false,
         "mailboxIDs": {"gmail-ID-folder2": 1},
         "account": "gmail-ID"
     },
@@ -176,7 +172,6 @@
         "text": "Hello, how are you ? bis",
         "html": "Hello, how are you ? bis",
         "reads": false,
-        "hasAttachments": false,
         "mailboxIDs": {"gmail-ID-folder1": 4},
         "account": "gmail-ID"
     },
@@ -212,7 +207,6 @@
         "text": "Hello, how are you ? bis",
         "html": "Hello, how are you ? bis",
         "reads": false,
-        "hasAttachments": false,
         "mailboxIDs": {"gmail-ID-folder1": 5},
         "account": "gmail-ID"
     },
@@ -248,7 +242,6 @@
         "text": "Hello, how are you ? bis",
         "html": "Hello, how are you ? bis",
         "reads": false,
-        "hasAttachments": false,
         "mailboxIDs": {"dovecot-ID-folder1": 1},
         "account": "dovecot-ID"
     },
@@ -284,7 +277,6 @@
         "text": "Hello, how are you ? bis",
         "html": "Hello, how are you ? bis",
         "reads": false,
-        "hasAttachments": false,
         "mailboxIDs": {"dovecot-ID-folder2": 1},
         "account": "dovecot-ID"
     },
@@ -320,7 +312,6 @@
         "text": "Hello, how are you ? bis",
         "html": "Hello, how are you ? bis",
         "reads": false,
-        "hasAttachments": false,
         "mailboxIDs": {"dovecot-ID-folder2": 2},
         "account": "dovecot-ID"
     }

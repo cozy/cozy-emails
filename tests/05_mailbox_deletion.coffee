@@ -5,7 +5,7 @@ describe "mailbox deletion", ->
     it "When I delete the draft box", (done) ->
         @timeout 4000
 
-        client.del "/mailbox/#{store.draftBoxID}", (err, res, body) =>
+        client.del "/mailbox/#{store.draftBoxID}", (err, res, body) ->
             res.statusCode.should.equal 200
             body.should.have.property('mailboxes').with.lengthOf(5)
             for box in body.mailboxes

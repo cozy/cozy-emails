@@ -64,61 +64,61 @@ ARBO1 =
 
 
 ARBO2 = INBOX:
-     attribs: [ '\\HasChildren' ]
-     delimiter: '.'
-     children:
+    attribs: [ '\\HasChildren' ]
+    delimiter: '.'
+    children:
         perso:
-           attribs: [ '\\HasNoChildren' ]
-           delimiter: '.'
-           children: null
+            attribs: [ '\\HasNoChildren' ]
+            delimiter: '.'
+            children: null
         '[Gmail]':
-           children:
-              Spam:
-                 attribs: []
-                 delimiter: '.'
-                 children: null
-              Important:
-                 attribs: []
-                 delimiter: '.'
-                 children: null
-              'Tous les messages':
-                 attribs: []
-                 delimiter: '.'
-                 children: null
+            children:
+                Spam:
+                    attribs: []
+                    delimiter: '.'
+                    children: null
+                Important:
+                    attribs: []
+                    delimiter: '.'
+                    children: null
+                'Tous les messages':
+                    attribs: []
+                    delimiter: '.'
+                    children: null
         INBOX:
-           children:
-              Sent:
-                 attribs: []
-                 delimiter: '.'
-                 children: null
-              Drafts:
-                 attribs: []
-                 delimiter: '.'
-                 children: null
-              Junk:
-                 attribs: []
-                 delimiter: '.'
-                 children: null
-              Trash:
-                 attribs: []
-                 delimiter: '.'
-                 children: null
+            children:
+                Sent:
+                    attribs: []
+                    delimiter: '.'
+                    children: null
+                Drafts:
+                    attribs: []
+                    delimiter: '.'
+                    children: null
+                Junk:
+                    attribs: []
+                    delimiter: '.'
+                    children: null
+                Trash:
+                    attribs: []
+                    delimiter: '.'
+                    children: null
         'Box 1':
-           attribs: [ '\\HasNoChildren' ]
-           delimiter: '.'
-           children: null
+            attribs: [ '\\HasNoChildren' ]
+            delimiter: '.'
+            children: null
         Brouillons:
-           attribs: [ '\\HasNoChildren' ]
-           delimiter: '.'
-           children: null
+            attribs: [ '\\HasNoChildren' ]
+            delimiter: '.'
+            children: null
         Sent:
-           attribs: [ '\\HasNoChildren' ]
-           delimiter: '.'
-           children: null
+            attribs: [ '\\HasNoChildren' ]
+            delimiter: '.'
+            children: null
         test:
-           attribs: [ '\\HasNoChildren' ]
-           delimiter: '.'
-           children: null
+            attribs: [ '\\HasNoChildren' ]
+            delimiter: '.'
+            children: null
      parent: null
 
 ARBO3 =
@@ -175,3 +175,4 @@ ARBO3 =
                 delimiter: '/'
                 children: null
                 special_use_attrib: '\\All'
+

@@ -109,7 +109,7 @@ module.exports = class SaveOrSendMessage extends Process
                 log.error "Attachment streaming error", err if err
 
             # we buffer the attachment in RAM to be used in the mailbuilder
-            bufferer = new stream_to_buffer.Bufferer (err, buffer) =>
+            bufferer = new stream_to_buffer.Bufferer (err, buffer) ->
                 return callback err if err
                 handleBuffer buffer
 

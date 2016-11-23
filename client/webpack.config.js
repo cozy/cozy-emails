@@ -1,3 +1,5 @@
+/* eslint indent: [2, 4] */
+
 var path = require('path');
 
 var webpack = require('webpack');
@@ -22,6 +24,14 @@ var cssOptions = optimize? 'css?-svgo&-autoprefixer!postcss':'css';
 var imgPath = 'img/' + '[name]' + (optimize? '.[hash]': '') + '.[ext]';
 var loaders = [
     {
+        test: /\.js$/,
+        loader: 'babel',
+        exclude: /node_modules(?!\/superagent-throttle)/,
+        query: {
+            presets: ['es2015']
+        }
+    },
+    {
         test: /\.coffee$/,
         loader: 'coffee'
     },
@@ -34,8 +44,8 @@ var loaders = [
         loader: ExtractTextPlugin.extract('style', cssOptions)
     },
     {
-        test: /\.jade$/,
-        loader: 'jade'
+        test: /\.cjsx$/,
+        loader: 'coffee-jsx'
     },
     {
         test: /\.json$/,
@@ -107,7 +117,8 @@ if (optimize) {
     plugins = plugins.concat([
         new BrowserSyncPlugin({
             proxy: 'http://localhost:' + (process.env.PORT || 9125) + '/',
-            open: false
+            open: false,
+            ws: true
         })
     ]);
 }
@@ -138,7 +149,7 @@ module.exports = {
         chunkFilename: optimize? 'register.[hash].js' : 'register.js'
     },
     resolve: {
-        extensions: ['', '.js', '.coffee', '.jade', '.json']
+        extensions: ['', '.js', '.coffee', '.cjsx', '.json']
     },
     debug: !optimize,
     devtool: 'source-map',

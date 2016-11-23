@@ -5,7 +5,7 @@ log = require('../utils/logging')(prefix: 'controllers:activity')
 
 
 ContactActivity =
-    search: (data, callback) ->
+    search: (data={}, callback) ->
 
         if data.query?
             request = 'mailByName'
@@ -19,7 +19,7 @@ ContactActivity =
         Contact.requestWithPictures request, params, callback
 
 
-    create: (data, callback) ->
+    create: (data={}, callback) ->
         if data.contact?.address?
             Contact.createNoDuplicate data.contact, callback
         else
@@ -31,8 +31,10 @@ ContactActivity =
             return callback new NotFound "CONTACT #{data.id}" unless contact
             contact.destroy callback
 
-module.exports.create = (req, res, next) ->
+module.exports.create = (req={}, res={}, next) ->
     activity = req.body
+    activity ?= {data: {type: 'error'}}
+
     switch activity.data.type
         when 'contact'
             if ContactActivity[activity.name]?
@@ -46,14 +48,26 @@ module.exports.create = (req, res, next) ->
                     name: "Unknown activity name",
                     error: true
         when 'error'
-            log.error activity.data
-            log.error activity.data.error?.stack
+            # Browser errors sent contains `stack`, otherwise it's a
+            # `console.error` message to parse
+            if (stack = activity.data.error?.stack)
+                log.error activity.data
+                log.error stack
+            else
+                msg = activity.data.error.msg
+                msg ?= "Missing req argument"
+                log.error msg
+            res.send 'ok'
+        when 'warn'
+            log.warn activity.data.msg
+            res.send 'ok'
+        when 'info', 'log'
+            log.info activity.data.msg
             res.send 'ok'
         when 'debug'
-            log.info activity.data.message
+            log.debug activity.data.msg
             res.send 'ok'
         else
             res.status(400).send
                 name: "Unknown activity data type",
                 error: true
-

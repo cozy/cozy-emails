@@ -13,16 +13,6 @@ ramStore     = require '../models/store_account_and_boxes'
 # with all necessary imports
 module.exports.main = (req, res, next) ->
 
-    if Scheduler.applicationStartupRunning()
-        if req.hasWaitedForStart
-            res.render 'reindexing'
-        else
-            req.hasWaitedForStart = true
-            tryAgain = -> module.exports.main req, res, next
-             # if the app can start under 2s, we wont show the need reindexing
-            setTimeout tryAgain, 2000
-        return null
-
     async.series [
         (cb) -> Settings.getDefault cb
         (cb) -> cozydb.api.getCozyLocale cb
@@ -46,6 +36,8 @@ module.exports.main = (req, res, next) ->
             [settings, locale, accounts, contacts] = results
 
             # Prepare page pre-loaded data
+            # TODO: should be fetched into Stores instead
+            # using globals is a nasty pattern
             imports = """
                 window.settings  = #{JSON.stringify settings}
                 window.refreshes = #{JSON.stringify refreshes};
