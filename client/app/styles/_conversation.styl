@@ -5,12 +5,21 @@
 */
 
 .conversation
-    padding 1.5em
+    position relative
+
+    & > section
+        position relative
+        z-index 0
+        padding 1.5em 1.5em 1em
+
 
     & > header
         display       flex
         align-items   flex-start
-        margin-bottom 1em
+
+        padding 1.5em 1.5em 1em
+        z-index 1
+        background-color white
 
         h3
             flex 1
@@ -40,12 +49,6 @@
 
             &:hover
                 color basecolor
-
-        // Mask the fullscreen toggle below 768px, because the conversation view
-        // is always fullscreen for those resolutions.
-        @media(max-width: (768/16)em)
-            .fullscreen
-                display none
 
 
     &.enable

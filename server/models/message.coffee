@@ -143,14 +143,6 @@ module.exports = class Message extends cozydb.CozyModel
         else
             callback null, uuid.v4()
 
-    # Public: get messages in cozy by their uids
-    #
-    # mailboxID - {String} id of the mailbox to check
-    #
-    # Returns (callback) an {Array} of {String} uids in the cozy
-    @UIDsInCozy: (mailboxID, callback) ->
-
-
     # Public: find a message by its message id
     #
     # accountID - id of the account to scan
@@ -177,17 +169,14 @@ module.exports = class Message extends cozydb.CozyModel
     # Returns (callback) an {Object} with conversationsIDs as keys and
     #                    counts as values
     @getConversationLengths: (conversationIDs, callback) ->
-
         Message.rawRequest 'byConversationID',
             keys: conversationIDs
             group: true
             reduce: true
-
-        , (err, rows) ->
-            return callback err if err
-            out = {}
-            out[row.key] = row.value for row in rows
-            callback null, out
+        , (error, rows={}) ->
+            conversations = {}
+            conversations[row.key] = row.value for row in rows
+            callback error, conversations
 
 
 
@@ -243,7 +232,6 @@ module.exports = class Message extends cozydb.CozyModel
     # Returns (callback) an {Object} with properties
     #           :messages - the result of {.getResults}
     #           :count - the result of {.getCount}
-    #           :conversationLengths - length of conversations in the result
     @getResultsAndCount: (mailboxID, params, callback) ->
         params.flag ?= null
         if params.descending
@@ -252,19 +240,17 @@ module.exports = class Message extends cozydb.CozyModel
         async.parallel [
             (cb) -> Message.getCount mailboxID, params, cb
             (cb) -> Message.getResults mailboxID, params, cb
-        ], (err, results) ->
-            return callback err if err
-            [count, messages] = results
+        ], (error, results) ->
+            return callback error if error
 
+            [count, messages] = results
             conversationIDs = _.uniq _.pluck messages, 'conversationID'
 
-            Message.getConversationLengths conversationIDs, (err, lengths) ->
-                return callback err if err
-
-                callback null,
-                    messages: messages
-                    count: count
-                    conversationLengths: lengths
+            Message.getConversationLengths(
+                conversationIDs, (error, conversationLength) ->
+                    return callback error if error
+                    callback null, {conversationLength, messages, count}
+            )
 
     # Public: get messages in a box depending on the query params
     #
@@ -592,7 +578,6 @@ module.exports = class Message extends cozydb.CozyModel
     @doGroupedByBox: (messages, iterator, done) ->
         return done null if messages.length is 0
 
-        accountID = messages[0].accountID
         messagesByBoxID = {}
         for message in messages
             for boxID, uid of message.mailboxIDs
@@ -662,8 +647,8 @@ module.exports = class Message extends cozydb.CozyModel
 module.exports = Message
 mailutils = require '../utils/jwz_tools'
 CONSTANTS = require '../utils/constants'
-{MSGBYPAGE, LIMIT_DESTROY, CONCURRENT_DESTROY} = CONSTANTS
-{NotFound, BadRequest, AccountConfigError} = require '../utils/errors'
+{MSGBYPAGE} = CONSTANTS
+{NotFound, BadRequest} = require '../utils/errors'
 uuid = require 'uuid'
 _ = require 'lodash'
 async = require 'async'

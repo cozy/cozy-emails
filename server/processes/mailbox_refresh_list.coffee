@@ -6,12 +6,13 @@ _ = require 'lodash'
 Mailbox = require '../models/mailbox'
 safeLoop = require '../utils/safeloop'
 
+
 module.exports = class MailboxRefreshList extends Process
 
     code: 'mailbox-refresh-list'
 
-    initialize: (options, callback) ->
 
+    initialize: (options={}, callback) ->
         @account = options.account
         async.series [
             @diffBoxesList
@@ -37,6 +38,7 @@ module.exports = class MailboxRefreshList extends Process
                 imapBoxes.length, @destroyed.length
 
             callback null
+
 
     createNewBoxes: (callback) =>
         log.debug "creating", @created.length, "boxes"

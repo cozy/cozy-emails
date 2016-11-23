@@ -1,60 +1,41 @@
-var assert = require('chai').assert
-var mockery = require('mockery')
-var sinon = require('sinon')
+'use strict';
+const assert = require('chai').assert;
 
-var SpecDispatcher = require('./utils/specs_dispatcher')
-
-var Dispositions = require('../app/constants/app_constants').Dispositions
-var ActionTypes = require('../app/constants/app_constants').ActionTypes
+const mockeryUtils = require('./utils/mockery_utils');
+const SpecDispatcher = require('./utils/specs_dispatcher');
+const ActionTypes = require('../app/constants/app_constants').ActionTypes;
 
 
-describe('LayoutStore spec', function() {
+describe('Layout Store', () => {
+  let layoutStore;
+  let dispatcher;
 
-    var sandbox, layoutStore, dispatcher
+  before(() => {
+    dispatcher = new SpecDispatcher();
+    mockeryUtils.initDispatcher(dispatcher);
+    mockeryUtils.initForStores(['../app/stores/layout_store']);
+    layoutStore = require('../app/stores/layout_store');
+  });
 
-    before(function () {
-        dispatcher = new SpecDispatcher()
-        sandbox = sinon.sandbox.create()
-        mockery.enable({
-            warnOnUnregistered: false,
-            useCleanCache: true
-        })
+  describe('Actions', () => {
+    it.skip('TOASTS_SHOW', () => {
+      dispatcher.dispatch({ type: ActionTypes.TOASTS_SHOW });
+      assert.equal(layoutStore.isToastHidden(), false);
+    });
+    it.skip('TOASTS_HIDE', () => {
+      dispatcher.dispatch({ type: ActionTypes.TOASTS_HIDE });
+      assert.equal(layoutStore.isToastHidden(), true);
+    });
+    it.skip('INTENT_AVAILABLE', () => {
+      dispatcher.dispatch({
+        type: ActionTypes.INTENT_AVAILABLE,
+        value: true,
+      });
+      assert.equal(layoutStore.isIntentAvailable(), true);
+    });
+  });
 
-        mockery.registerMock('../app_dispatcher', dispatcher)
-        mockery.registerMock('../../../app_dispatcher', dispatcher)
-        mockery.registerMock('./account_store', {})
-        mockery.registerAllowables([
-            'node-event-emitter',
-            '../constants/app_constants',
-            '../libs/flux/store/store',
-            '../app/stores/layout_store'
-        ])
-
-        global.window = { innerWidth: 1600 }
-        layoutStore = require('../app/stores/layout_store')
-    })
-
-    after(function () {
-        mockery.disable()
-        sandbox.restore()
-    })
-
-    describe('Disposition', function () {
-
-        it('Default: DISPOSITION is COLUMN', function () {
-            assert.equal(layoutStore.getDisposition(), Dispositions.COL)
-        })
-
-        it('Switch to ROW: DISPOSITION is ROW', function (done) {
-            layoutStore.on('change', function () {
-                assert.equal(layoutStore.getDisposition(), Dispositions.ROW)
-                done()
-            })
-
-            dispatcher.dispatch({
-                type: ActionTypes.SET_DISPOSITION,
-                value: Dispositions.ROW
-            })
-        })
-    })
-})
+  after(() => {
+    mockeryUtils.clean();
+  });
+});

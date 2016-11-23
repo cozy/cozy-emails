@@ -10,14 +10,16 @@ module.exports = class MailboxRefresh extends Process
 
     code: 'mailbox-refresh'
 
+
     getProgress = =>
         @actualRefresh?.getProgress() or 0
 
-    initialize: (options, callback) ->
 
+    initialize: (options={}, callback) ->
         @mailbox = mailbox = options.mailbox
-        account = ramStore.getAccount mailbox.accountID
         @shouldNotif = false
+
+        account = ramStore.getAccount mailbox.accountID
         return callback null unless account
 
         return callback null if "\\Noselect" in mailbox.attribs
@@ -53,6 +55,7 @@ module.exports = class MailboxRefresh extends Process
         @actualRefresh.run (err) =>
             @shouldNotif = @actualRefresh.shouldNotif
             callback err
+
 
     refreshDeep: (callback) =>
         @actualRefresh = new MailboxRefreshDeep @options

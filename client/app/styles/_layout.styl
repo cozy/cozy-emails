@@ -13,9 +13,6 @@ body
         box-shadow    0 0
         border-radius 0
 
-    .drawer-toggle
-        display none
-
 
     main
         position    relative
@@ -58,9 +55,6 @@ body
             width    100%
             height   100%
 
-        [role=toolbar]
-            .drawer-toggle
-                display block
 
 
     @media(max-width: (1024/16)em)
@@ -75,19 +69,12 @@ body
                 &[aria-expanded=true]
                     left 0
 
-        // set rules for drawer
         [role=menubar][aria-expanded=true]
             min-width 85vw !important
 
             + main
                 .panel
                     width 100vw
-
-
-    @media(min-width: 30.0625em)
-        [role=menubar]
-            .drawer-toggle
-                display block
 
 
     @media(min-width: 48.0625em)
@@ -121,3 +108,188 @@ body
                 max-width 38em
             .conversation[aria-expanded=true]
                 max-width none
+
+
+.app + [role=complementary]
+
+    &.backdrop
+        // Backdrop definition
+        position         absolute
+        top              0
+        left             0
+        bottom           0
+        right            0
+        overflow-y       auto
+        background-color rgba(0, 0, 0, .45)
+
+    .backdrop-wrapper
+        padding 2em
+
+    // Modalbox
+    section
+        position  relative
+        min-width (450/16)em
+        max-width (640/16)em
+        left      50%
+        transform translateX(-50%)
+
+        padding 1em
+
+        background-color #fff
+
+        // Header
+        h1
+            margin         0
+            margin-bottom  .5em
+            padding-bottom .25em
+            border-bottom  1px solid grey-01
+
+        // Actions
+        footer
+            margin-top  1em
+            padding-top 1em
+            border-top  1px solid grey-01
+
+        nav
+            display flex
+
+            button
+            .alert
+                flex   1
+                margin 0
+
+        button
+        [role=button]
+            padding          .55em .8em
+            border           none
+            background-color basecolor
+            color            white
+            text-align       center
+
+            &:hover
+                text-decoration  none
+
+            &[disabled]
+                opacity .35
+
+            &[name=cancel]
+                margin-right      2em
+                border           1px solid red
+                background-color transparent
+                color            red
+
+            &.success
+                border           1px solid green
+                background-color contrastcolor
+                color            white
+
+        .alert
+            margin       2em 0
+            border-color red
+
+        // Forms
+        form
+            display   flex
+            flex-wrap wrap
+
+        label
+            flex           1
+            display        flex
+            flex-direction column
+            margin         .5em 0
+
+            &:nth-child(odd)
+                margin-right 1em
+
+            input
+            select
+                width 100%
+
+        fieldset
+        .alert
+            flex 1 100%
+
+        .server
+            display      flex
+            flex-wrap    wrap
+            margin-top   1em
+            padding-left 1em
+            border-left  1px dotted grey-05
+
+            h2
+                width      100%
+                margin-top 0
+
+            label
+                margin .5em 0
+
+            label[for$=login]
+            label[for$=password]
+                flex 1 0 40%
+
+            label[for$=login]
+                margin-right 1em
+
+            label[for$=host]
+                flex         1 50%
+                margin-right 1em
+
+            label[for$=security]
+                flex 1 10%
+                margin-left 1em
+
+
+    // Expanded fieldsets
+    fieldset[aria-expanded]
+        margin 1em 0 0
+
+        legend
+            margin         0
+            vertical-align baseline
+            color          basecolor
+            font-size      1em
+            border         0
+            cursor         pointer
+
+            &::before
+                font-size      .65em
+                margin-right   .35em
+
+    fieldset[aria-expanded=false]
+        legend
+            margin-bottom 0
+
+            &::before
+                content '➡'
+
+        .content
+            display none
+
+    fieldset[aria-expanded=true]
+        legend::before
+            content '⬇'
+
+    // Servers styles
+    .content
+        h2
+            font-size      1em
+            font-weight    normal
+            color          basecolor
+            text-transform uppercase
+
+        input[name$=port]
+            text-align right
+
+        span
+        input
+            transition opacity 350ms
+
+    .server:not(.customized)
+        [for$=login]
+        [for$=password]
+            span
+            input
+                opacity .45
+
+        input:focus
+            opacity 1

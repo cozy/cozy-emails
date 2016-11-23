@@ -164,9 +164,9 @@ module.exports = class MailboxRefreshFast extends Process
             reduce: true
             group_level: 3
          , (err, rows) =>
-            return callback err if err
-            @cozyUIDs = (row.key[2] for row in rows)
-            callback null
+             return callback err if err
+             @cozyUIDs = (row.key[2] for row in rows)
+             callback null
 
     fetchImapUIDs: (callback) =>
         @mailbox.doLaterWithBox (imap, imapbox, cb) ->
@@ -218,8 +218,8 @@ module.exports = class MailboxRefreshFast extends Process
 
 
     storeLastSync: (callback) =>
-        if @newImapTotal isnt @mailbox.lastTotal or
-           @newHighestModSeq isnt @mailbox.lastHighestModSeq
+        if @newImapTotal isnt @mailbox.lastTotal \
+        or @newHighestModSeq isnt @mailbox.lastHighestModSeq
 
             changes =
                 lastHighestModSeq: @newHighestModSeq

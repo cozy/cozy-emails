@@ -6,8 +6,9 @@ React      = require 'react'
 
 Animate             = React.createFactory require 'rc-animate'
 Toast               = React.createFactory require './toast'
-StoreWatchMixin     = require '../mixins/store_watch_mixin'
-LayoutStore         = require '../stores/layout_store'
+
+LayoutGetter        = require '../getters/layout'
+RouterGetter        = require '../getters/router'
 LayoutActionCreator = require '../actions/layout_action_creator'
 
 
@@ -15,15 +16,21 @@ LayoutActionCreator = require '../actions/layout_action_creator'
 module.exports = ToastContainer = React.createClass
     displayName: 'ToastContainer'
 
-    mixins: [
-        StoreWatchMixin [LayoutStore]
-    ]
+    # FIXME : use getters instead
+    # such as : ToastContainer.getState()
+    getInitialState: ->
+        @getStateFromStores()
 
+    # FIXME : use getters instead
+    # such as : ToastContainer.getState()
+    componentWillReceiveProps: (nextProps={}) ->
+        @setState @getStateFromStores()
+        nextProps
 
     getStateFromStores: ->
         return {
-            toasts: LayoutStore.getToasts()
-            hidden: not LayoutStore.isShown()
+            toasts: RouterGetter.getToasts()
+            hidden: LayoutGetter.isToastHidden()
         }
 
 
@@ -39,12 +46,12 @@ module.exports = ToastContainer = React.createClass
             ["toast-#{id}", Toast {key: id, toast}]
         .toArray()
 
-        classes = classNames
-            'toasts-container': true
-            'action-hidden': @state.hidden
-            'has-toasts': toasts.size isnt 0
-
-        div className: classes,
+        div
+            className: classNames
+                'toasts-container': true
+                'has-toasts': toasts.size isnt 0
+            'aria-hidden': @state.hidden,
+            
             Animate transitionName: 'toast', toasts
 
 

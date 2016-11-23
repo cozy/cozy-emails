@@ -15,7 +15,8 @@ for box in require './mailboxes.json'
     mailboxes[box.accountID] = [] unless mailboxes[box.accountID]?
     # test folder will only be used for loaded messages
     # we don't want messages in trash to make testing message deletion easier
-    mailboxes[box.accountID].push box unless box.label is "Test Folder" or box.label is "Trash"
+    unless box.label is "Test Folder" or box.label is "Trash"
+        mailboxes[box.accountID].push box
 
 numberOfEmails = process.argv[2] or 100
 
@@ -68,8 +69,14 @@ for i in [1..numberOfEmails] by 1
     mailboxObject = {}
     mailboxObject[mailboxID] = mailboxUID[mailboxID]
 
-    subject = loremIpsum count: getRandom(5), units: 'words', random: randomWithSeed
-    content = loremIpsum count: getRandom(10), units: 'paragraphs', random: randomWithSeed
+    subject = loremIpsum
+        count: getRandom(5)
+        units: 'words'
+        random: randomWithSeed
+    content = loremIpsum
+        count: getRandom(10)
+        units: 'paragraphs'
+        random: randomWithSeed
 
     # simulate email thread
     if mailbox.label isnt 'noconv' and getRandom(10) > 3 and i > 2
@@ -85,13 +92,12 @@ for i in [1..numberOfEmails] by 1
     priority  = getRandomElmt priorities
 
     # random date this year before now
-    today = moment("2014-10-29T23:59:59Z")
-    month = getRandom today.month()
-    day = getRandom today.date()
-    hour = getRandom today.hours()
-    minute = getRandom today.minutes()
-    date = moment().months(month).days(day).hours(hour).minutes(minute)
-        .second(0).millisecond(0)
+    now  = moment()
+    date = moment
+        month:  getRandom now.month()
+        day:    getRandom now.date()
+        hour:   getRandom now.hours()
+        minute: getRandom now.minutes()
 
     flags = []
     flags.push '\\Seen' if getRandom(10) > 5
@@ -101,21 +107,24 @@ for i in [1..numberOfEmails] by 1
 
     messages.push
         "_id": "generated_id_#{i}"
-        "docType": "Message",
-        "date": date.toISOString(),
-        "subject": subject,
-        "normSubject": subject,
+        "docType": "Message"
+        "date": date.toISOString()
+        "subject": subject
+        "normSubject": subject
         "from": [from]
-        "to": to,
-        "cc": cc,
-        "inReplyTo": inReplyTo,
+        "to": to
+        "cc": cc
+        "inReplyTo": inReplyTo
         "references": references
-        "replyTo": replyTo,
-        "text": loremIpsum count: getRandom(10), units: 'paragraphs', random: randomWithSeed
-        "html": "<html><body><div>#{htmlContent}</div></body></html>",
-        "priority": priority,
-        "mailboxIDs": mailboxObject,
-        "accountID": account,
+        "replyTo": replyTo
+        "text": loremIpsum
+            count: getRandom(10)
+            units: 'paragraphs'
+            random: randomWithSeed
+        "html": "<html><body><div>#{htmlContent}</div></body></html>"
+        "priority": priority
+        "mailboxIDs": mailboxObject
+        "accountID": account
         "attachments": []
         "flags": flags
         "messageID": "generated_id_#{i}"

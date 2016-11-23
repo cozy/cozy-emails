@@ -6,7 +6,7 @@ describe 'Message actions', ->
 
 
     it "Pick a message from the inbox", (done) ->
-        client.get "/mailbox/#{store.inboxID}", (err, res, body) =>
+        client.get "/mailbox/#{store.inboxID}", (err, res, body) ->
             store.latestInboxMessageId = body.messages[0].id
             store.someIds = body.messages[1..4].map (msg) -> msg.id
             done()
@@ -18,7 +18,7 @@ describe 'Message actions', ->
         body =
             messageID: store.latestInboxMessageId
             flag: '\\Seen'
-        client.put path, body, (err, res, body) =>
+        client.put path, body, (err, res, body) ->
             res.statusCode.should.equal 200
             body.should.be.instanceof(Array).and.have.lengthOf(1)
             body[0].id.should.equal store.latestInboxMessageId
@@ -41,7 +41,7 @@ describe 'Message actions', ->
             from: store.inboxID
             to: [store.testBoxID, store.sentBoxID]
 
-        client.put path, body, (err, res, body) =>
+        client.put path, body, (err, res, body) ->
             res.statusCode.should.equal 200
             body.should.be.instanceof(Array).and.have.lengthOf(1)
             body[0].id.should.equal store.latestInboxMessageId
@@ -64,7 +64,7 @@ describe 'Message actions', ->
             subject     : 'Wanted : dragon slayer'
             content     : 'Hi, I am a recruiter and ...'
 
-        req = client.post "/message", null, (err, res, body) =>
+        req = client.post "/message", null, (err, res, body) ->
             res.statusCode.should.equal 200
             body.should.have.property 'id'
             body.should.have.property 'mailboxIDs'
@@ -90,7 +90,7 @@ describe 'Message actions', ->
             subject     : 'Wanted : magician'
             content     : 'Hi, I am a recruiter and ...'
 
-        req = client.post "/message", null, (err, res, body) =>
+        req = client.post "/message", null, (err, res, body) ->
             res.statusCode.should.equal 200
             body.should.have.property 'id'
             body.should.have.property 'mailboxIDs'
@@ -108,7 +108,7 @@ describe 'Message actions', ->
             Hi, I am a recruiter and we need you for epic quest'
         """
 
-        req = client.post "/message", null, (err, res, body) =>
+        req = client.post "/message", null, (err, res, body) ->
             should.not.exist err
             res.statusCode.should.equal 200
             body.should.have.property 'id'
@@ -137,7 +137,7 @@ describe 'Message actions', ->
             generatedFileName:  'README-2.md'
         }
 
-        req = client.post "/message", null, (err, res, body) =>
+        req = client.post "/message", null, (err, res, body) ->
             should.not.exist err
             res.statusCode.should.equal 200
             body.should.have.property 'id'
@@ -149,8 +149,12 @@ describe 'Message actions', ->
 
         form = req.form()
         form.append 'body', JSON.stringify store.draftStatus
-        form.append 'README.md', fs.createReadStream __dirname + '/../README.md'
-        form.append 'README-2.md', fs.createReadStream __dirname + '/../README.md'
+        form.append(
+            'README.md', fs.createReadStream "#{__dirname}/../README.md"
+        )
+        form.append(
+            'README-2.md', fs.createReadStream "#{__dirname}/../README.md"
+        )
 
     it "When I edit a Draft (add other attachment)", (done) ->
         @timeout 5000
@@ -162,7 +166,7 @@ describe 'Message actions', ->
             generatedFileName:  'README-3.md'
         }
 
-        req = client.post "/message", null, (err, res, body) =>
+        req = client.post "/message", null, (err, res, body) ->
             should.not.exist err
             res.statusCode.should.equal 200
             body.should.have.property 'id'
@@ -174,15 +178,18 @@ describe 'Message actions', ->
 
         form = req.form()
         form.append 'body', JSON.stringify store.draftStatus
-        form.append 'README-3.md', fs.createReadStream __dirname + '/../README.md'
+        form.append(
+            'README-3.md', fs.createReadStream "#{__dirname}/../README.md"
+        )
 
     it "When I edit a Draft (remove first attachment)", (done) ->
         @timeout 5000
 
-        store.draftStatus.attachments = store.draftStatus.attachments.filter (file) ->
+        attachments = store.draftStatus.attachments
+        store.draftStatus.attachments = attachments.filter (file) ->
             file.generatedFileName isnt 'README-2.md'
 
-        req = client.post "/message", null, (err, res, body) =>
+        req = client.post "/message", null, (err, res, body) ->
             should.not.exist err
             res.statusCode.should.equal 200
             body.should.have.property 'id'
@@ -200,7 +207,7 @@ describe 'Message actions', ->
 
         store.draftStatus.isDraft = false
 
-        req = client.post "/message", null, (err, res, body) =>
+        req = client.post "/message", null, (err, res, body) ->
             should.not.exist err
             res.statusCode.should.equal 200
             body.should.have.property 'id', store.draftID
@@ -227,7 +234,7 @@ describe 'Message actions', ->
 
         store.secondDraftStatus.isDraft = false
 
-        req = client.post "/message", null, (err, res, body) =>
+        req = client.post "/message", null, (err, res, body) ->
             should.not.exist err
             res.statusCode.should.equal 200
             body.should.have.property 'id', store.secondDraftStatus.id
@@ -254,7 +261,7 @@ describe 'Message actions', ->
             subject     : 'Wanted : magician'
             content     : 'Hi, I am a recruiter and ...'
 
-        req = client.post "/message", null, (err, res, body) =>
+        req = client.post "/message", null, (err, res, body) ->
             res.statusCode.should.equal 200
             body.should.have.property 'id'
             body.should.have.property 'mailboxIDs'
@@ -274,7 +281,7 @@ describe 'Message actions', ->
             parentID: null
 
 
-        client.post "/mailbox/", box, (err, res, body) =>
+        client.post "/mailbox/", box, (err, res, body) ->
             res.statusCode.should.equal 200
             body.id.should.equal store.accountID
             body.should.have.property('mailboxes').with.lengthOf(6)
@@ -284,7 +291,7 @@ describe 'Message actions', ->
 
             store.accountState.trashMailbox = store.trashBoxID
             data = store.accountState
-            client.put "/account/#{store.accountID}", data, (err, res, body) =>
+            client.put "/account/#{store.accountID}", data, (err, res, body) ->
                 res.statusCode.should.equal 200
                 body.should.have.property 'trashMailbox', store.trashBoxID
                 done()
@@ -295,13 +302,13 @@ describe 'Message actions', ->
             accountID: store.accountID
             messageIDs: store.someIds
 
-        req = client.put "/messages/batchTrash", data, (err, res, body) =>
+        req = client.put "/messages/batchTrash", data, (err, res, body) ->
             should.not.exist err
             res.statusCode.should.equal 200
             done()
 
     it "Then they have been moved to trash", (done) ->
-        client.get "/mailbox/#{store.trashBoxID}", (err, res, body) =>
+        client.get "/mailbox/#{store.trashBoxID}", (err, res, body) ->
             should.not.exist err
             body.messages.should.have.lengthOf 4
             done()
@@ -312,13 +319,13 @@ describe 'Message actions', ->
             accountID: store.accountID
             messageID: store.thirdDraftStatus.id
 
-        req = client.put "/messages/batchTrash", data, (err, res, body) =>
+        req = client.put "/messages/batchTrash", data, (err, res, body) ->
             should.not.exist err
             res.statusCode.should.equal 200
             done()
 
     it "Then the message has been deleted", (done) ->
-        client.get "/message/#{store.thirdDraftStatus.id}", (err, res, body) =>
+        client.get "/message/#{store.thirdDraftStatus.id}", (err, res, body) ->
             should.not.exist err
             body.error.should.equal true
             body.name.should.equal 'NotFound'
