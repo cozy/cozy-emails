@@ -3,40 +3,31 @@ React = require 'react'
 {div, label, input, textarea} = React.DOM
 {ErrorLine, Dropdown} = require('./basic_components').factories
 
-RouterMixin      = require '../mixins/router_mixin'
 LinkedStateMixin = require 'react-addons-linked-state-mixin'
-
 
 # Input used in the account configuration/creation form. An account input can
 # display an error message below it.
 module.exports = AccountInput = React.createClass
     displayName: 'AccountInput'
 
-    mixins: [
-        RouterMixin
-        LinkedStateMixin
-    ]
+    # Update parent from child
+    # or child from parent
+    shouldComponentUpdate: (nextProps) ->
+        # Check props update
+        # excluding valueLink (special case)
+        nextValue = nextProps.valueLink.value
+        unless (hasChanged = nextValue isnt @props.valueLink.value)
+            _props = _.omit @props, 'valueLink'
+            _nextProps = _.omit nextProps, 'valueLink'
+            hasChanged = not _.isEqual _props, _nextProps
+        hasChanged
 
-    propTypes:
-        name: React.PropTypes.string.isRequired
-        error: React.PropTypes.string
+    onChange: (event) ->
+        type = event.target.getAttribute 'type'
+        value = event.target.value
+        value = event.target.checked if type in ['checkbox', 'radio']
 
-        className: React.PropTypes.string
-        onClick: React.PropTypes.func
-        onInput: React.PropTypes.func
-        onBlur: React.PropTypes.func
-        type: React.PropTypes.oneOf [
-            'checkbox', 'textarea', 'email', 'text', 'password'
-        ]
-        valueLink: React.PropTypes.shape
-            value: React.PropTypes.any
-            requestChange: React.PropTypes.func.isRequired
-        options: (props) ->
-            if props.type is 'dropdown'
-                React.PropTypes.object.isRequired.apply this, arguments
-
-
-    getDefaultProps: -> type: 'text'
+        @props.valueLink.requestChange value
 
     render: ->
         name = @props.name
@@ -57,35 +48,34 @@ module.exports = AccountInput = React.createClass
                     input
                         id: "mailbox-#{name}"
                         name: "mailbox-#{name}"
-                        checkedLink: @props.valueLink
+                        checked: @props.valueLink.value
+                        onChange: @onChange
                         type: type
-                        onClick: @props.onClick
                 else if type is 'textarea'
                     textarea
                         id: "mailbox-#{name}"
                         name: "mailbox-#{name}"
-                        valueLink: @props.valueLink
+                        value: @props.valueLink.value
+                        onChange: @onChange
                         className: 'form-control'
                         placeholder: placeHolder
-                        onBlur: @props.onBlur
-                        onInput: @props.onInput
                 else if type is 'dropdown'
                     Dropdown
                         id: "mailbox-#{name}"
                         name: "mailbox-#{name}"
-                        valueLink: @props.valueLink
+                        value: @props.valueLink.value
+                        onChange: @onChange
                         options: @props.options
                         allowUndefined: @props.allowUndefined
                 else
                     input
                         id: "mailbox-#{name}"
                         name: "mailbox-#{name}"
-                        valueLink: @props.valueLink
+                        value: @props.valueLink.value
+                        onChange: @onChange
                         type: type
                         className: 'form-control'
                         placeholder: placeHolder
-                        onBlur: @props.onBlur
-                        onInput: @props.onInput
 
             if @props.error
                 ErrorLine text: @props.error

@@ -1,32 +1,32 @@
 require '../styles/application.styl'
+require '../../vendor/aria-tips/aria-tips.css'
 
 React = require 'react'
+{div, section, main} = React.DOM
+AriaTips = require '../../vendor/aria-tips/aria-tips'
 
 # React components
-{div, section, main, p, span, a, i, strong, form, input, button} = React.DOM
-Menu           = React.createFactory require './menu'
-Modal          = React.createFactory require './modal'
-Panel          = React.createFactory require './panel'
-ToastContainer = React.createFactory require './toast_container'
-Tooltips       = React.createFactory require './tooltips-manager'
+Menu                  = React.createFactory require './menu'
+Modal                 = React.createFactory require './modal'
+ToastContainer        = React.createFactory require './toast_container'
+Tooltips              = React.createFactory require './tooltips-manager'
+MessageList           = React.createFactory require './message-list'
+Conversation          = React.createFactory require './conversation'
+AccountConfig         = React.createFactory require './account_config'
+Compose               = React.createFactory require './compose'
+AccountWizardCreation = React.createFactory require './accounts/wizard/creation'
 
 # React Mixins
-RouterMixin          = require '../mixins/router_mixin'
+RouterStore          = require '../stores/router_store'
+SettingsStore        = require '../stores/settings_store'
+RefreshesStore       = require '../stores/refreshes_store'
 StoreWatchMixin      = require '../mixins/store_watch_mixin'
-TooltipRefesherMixin = require '../mixins/tooltip_refresher_mixin'
 
-# Flux stores
-AccountStore  = require '../stores/account_store'
-MessageStore  = require '../stores/message_store'
-LayoutStore   = require '../stores/layout_store'
-SearchStore   = require '../stores/search_store'
-Stores        = [AccountStore, MessageStore, LayoutStore, SearchStore]
+RouterGetter = require '../getters/router'
+LayoutGetter = require '../getters/layout'
+SelectionGetter = require '../getters/selection'
 
-# Flux actions
-LayoutActionCreator  = require '../actions/layout_action_creator'
-MessageActionCreator = require '../actions/message_action_creator'
-
-{MessageFilter} = require '../constants/app_constants'
+{MessageActions, AccountActions} = require '../constants/app_constants'
 
 ###
     This component is the root of the React tree.
@@ -35,158 +35,118 @@ MessageActionCreator = require '../actions/message_action_creator'
         - building the layout based on the router
         - listening for changes in  the model (Flux stores)
           and re-render accordingly
-
-    About routing: it uses Backbone.Router as a source of truth for the layout.
-    (based on:
-        https://medium.com/react-tutorials/react-backbone-router-c00be0cf1592)
 ###
-module.exports = Application = React.createClass
+
+module.exports = React.createClass
     displayName: 'Application'
 
     mixins: [
-        StoreWatchMixin Stores
-        RouterMixin
-        TooltipRefesherMixin
+        StoreWatchMixin [SettingsStore, RefreshesStore, RouterStore]
     ]
 
+    getStateFromStores: (props) ->
+        previewSize = LayoutGetter.getPreviewSize()
+        className = "layout layout-column layout-preview-#{previewSize}"
+
+        if (mailbox = RouterGetter.getMailbox())
+            return {
+                mailboxID       : (mailboxID = RouterGetter.getMailboxID())
+                accountID       : RouterGetter.getAccountID()
+                conversationID  : RouterGetter.getConversationID()
+                messageID       : RouterGetter.getMessageID()
+                action          : RouterGetter.getAction()
+                isEditable      : RouterGetter.isEditable()
+                modal           : RouterGetter.getModal()
+                className       : className
+                messages        : RouterGetter.getMessagesList mailboxID
+                conversation    : RouterGetter.getConversation()
+                isMailbox       : RouterGetter.isMailboxExist()
+                isLoading       : RouterGetter.isMailboxLoading()
+            }
+
+        return {
+            action          : RouterGetter.getAction()
+            modal           : RouterGetter.getModal()
+            className       : className
+        }
+
+
+    # AriaTips must bind the elements declared as tooltip to their
+    # respective tooltip when the component is mounted (DOM elements exist).
+    componentDidMount: ->
+        AriaTips.bind()
+
+
+
     render: ->
-        # Shortcut
-        # TODO: Improve the way we display a loader when app isn't ready
-        layout = @props.router.current
-        return div null, t "app loading" unless layout?
+        action = MessageActions.CREATE
+        composeURL = RouterGetter.getURL {action}
 
-        disposition = LayoutStore.getDisposition()
-        isCompact   = LayoutStore.getListModeCompact()
-        fullscreen  = LayoutStore.isPreviewFullscreen()
-        previewSize = LayoutStore.getPreviewSize()
+        action = AccountActions.CREATE
+        newAccountURL = RouterGetter.getURL {action}
 
-        modal = @state.modal
+        isAccount = -1 < @state.action?.indexOf 'account'
 
-        layoutClasses = ['layout'
-            "layout-#{disposition}"
-            if isCompact then "layout-compact"
-            if fullscreen then "layout-preview-fullscreen"
-            "layout-preview-#{previewSize}"].join(' ')
+        message = RouterGetter.getMessage()
 
-        div className: layoutClasses,
-            # Actual layout
+        div className: @state.className,
             div className: 'app',
-                # Menu is self-managed because this part of the layout
-                # is always the same.
-                Menu ref: 'menu', layout: @props.router.current
+                Menu
+                    ref             : 'menu'
+                    key             : 'menu-' + @state.accountID
+                    accountID       : @state.accountID
+                    mailboxID       : @state.mailboxID
+                    accounts        : RouterGetter.getAccounts()?.toArray()
+                    composeURL      : composeURL
+                    newAccountURL   : newAccountURL
+                    mailboxes       : RouterGetter.getMailboxes()
+                    nbUnread        : RouterGetter.getUnreadLength()
+                    nbFlagged       : RouterGetter.getFlaggedLength()
+
 
                 main
-                    className: if layout.secondPanel? then null else 'full',
+                    className: @props.layout
 
                     div
                         className: 'panels'
+                        if RouterGetter.getAccounts().size
+                            MessageList
+                                ref             : "messageList"
+                                key             : "messageList-#{@state.mailboxID}"
+                                accountID       : @state.accountID
+                                mailboxID       : @state.mailboxID
+                                messages        : @state.messages
+                                emptyMessages   : RouterGetter.getEmptyMessage()
+                                isAllSelected   : SelectionGetter.isAllSelected()
+                                selection       : SelectionGetter.getSelection @state.messages
+                                hasNextPage     : RouterGetter.hasNextPage()
+                                isMailbox       : @state.isMailbox
+                                isLoading       : @state.isLoading
 
-                        @getPanel layout.firstPanel, 'firstPanel'
-                        if layout.secondPanel?
-                            @getPanel layout.secondPanel, 'secondPanel'
+                        if @state.isMailbox and @state.messageID
+                            Conversation
+                                ref             : "conversation"
+                                key             : "conversation-#{@state.messageID}"
+                                messageID       : @state.messageID
+                                conversationID  : message?.get 'conversationID'
+                                subject         : message?.get 'subject'
+                                messages        : @state.conversation
                         else
                             section
-                                key:             'placeholder'
+                                'key'          : 'placeholder'
                                 'aria-expanded': false
 
+            if @state.action is AccountActions.CREATE
+                AccountWizardCreation
+                    key: 'modal-account-wizard'
+                    hasDefaultAccount: RouterGetter.getAccountID()?
+
             # Display feedback
-            if modal?
-                Modal modal
+            Modal @state.modal if @state.modal?
+
             ToastContainer()
 
             # Tooltips' content is declared once at the application level.
             # It's hidden so it doesn't break the layout. Other components
             # can then reference the tooltips by their ID to trigger them.
-            Tooltips(key: "tooltips")
-
-
-    getPanel: (panel, ref) ->
-        params = panel.parameters
-        prefix = ref + '-' + params.mailboxID
-        Panel
-            ref               : ref
-            key               : MessageStore.getQueryKey prefix
-            action            : panel.action
-            accountID         : params.accountID
-            mailboxID         : params.mailboxID
-            messageID         : params.messageID
-            tab               : params.tab
-            useIntents        : @state.useIntents
-            selectedMailboxID : @state.selectedMailboxID
-
-
-    getStateFromStores: ->
-        selectedAccount = AccountStore.getSelectedOrDefault()
-
-        firstPanelInfo = @props.router.current?.firstPanel
-        if firstPanelInfo?.action is 'account.mailbox.messages'
-            selectedMailboxID = firstPanelInfo.parameters.mailboxID
-        else
-            selectedMailboxID = null
-
-
-        return {
-            selectedAccount       : selectedAccount
-            currentSearch         : SearchStore.getCurrentSearch()
-            modal                 : LayoutStore.getModal()
-            useIntents            : LayoutStore.intentAvailable()
-            selectedMailboxID     : selectedMailboxID
-        }
-
-
-    # Listens to router changes. Renders the component on changes.
-    componentWillMount: ->
-        # Uses `forceUpdate` with the proper scope because React doesn't allow
-        # to rebind its scope on the fly
-        @onRoute = (params) =>
-            {firstPanel, secondPanel} = params
-            if firstPanel?
-                @checkAccount firstPanel.action
-            if secondPanel?
-                @checkAccount secondPanel.action
-
-            # Store current message ID if selected
-            if secondPanel? and secondPanel.parameters.messageID?
-                isConv = secondPanel.parameters.conversationID?
-                messageID = secondPanel.parameters.messageID
-                MessageActionCreator.setCurrent messageID, isConv
-            else
-                # Remove Fullscreen
-                LayoutActionCreator.toggleFullscreen false
-
-                if firstPanel isnt 'compose'
-                    MessageActionCreator.setCurrent null
-
-            @forceUpdate()
-
-        @props.router.on 'fluxRoute', @onRoute
-
-    checkAccount: (action) ->
-        # "special" mailboxes must be set before accessing to the account
-        # otherwise, redirect to account config
-        account = @state.selectedAccount
-
-        noSpecialFolder = not account?.get('draftMailbox')? or
-               not account?.get('sentMailbox')? or
-               not account?.get('trashMailbox')?
-
-        needSpecialFolder = action in [
-            'account.mailbox.messages'
-            'message'
-            'conversation'
-            'compose'
-            'edit'
-        ]
-
-        if account? and noSpecialFolder and needSpecialFolder
-            @redirect
-                direction: 'first'
-                action: 'account.config'
-                parameters: [ account.get('id'), 'mailboxes']
-                fullWidth: true
-            LayoutActionCreator.alertError t 'account no special mailboxes'
-
-
-    componentWillUnmount: ->
-        # Stops listening to router changes
-        @props.router.off 'fluxRoute', @onRoute
+            Tooltips key: "tooltips"

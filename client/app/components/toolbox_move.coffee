@@ -3,16 +3,11 @@ React = require 'react'
 
 {div, ul, li, span, i, p, a, button} = React.DOM
 
-{MenuHeader, MenuItem} = require('./basic_components').factories
+{MenuHeader} = require('./basic_components').factories
+ToolboxMailboxes = React.createFactory require './toolbox_mailboxes'
 
-
-module.exports = ToolboxMove = React.createClass
+ToolboxMove = React.createClass
     displayName: 'ToolboxMove'
-
-
-    shouldComponentUpdate: (nextProps, nextState) ->
-        return not(_.isEqual(nextState, @state)) or
-               not(_.isEqual(nextProps, @props))
 
     render: ->
         direction = if @props.direction is 'right' then 'right' else 'left'
@@ -28,17 +23,6 @@ module.exports = ToolboxMove = React.createClass
                 className: "dropdown-menu dropdown-menu-#{direction}"
                 role: 'menu',
                     MenuHeader null, t 'mail action move'
-                    @renderMailboxes()
+                    ToolboxMailboxes()
 
-
-    renderMailboxes: ->
-        @props.mailboxes
-        .filter (box, id) => id isnt @props.selectedMailboxID
-        .map (mbox, id) =>
-            MenuItem
-                key: id
-                className: "pusher pusher-#{mbox.get('depth')}"
-                onClick: @props.onMove
-                onClickValue: id
-                mbox.get('label')
-        .toArray()
+module.exports = ToolboxMove

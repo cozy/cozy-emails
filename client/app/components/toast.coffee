@@ -2,13 +2,11 @@ React      = require 'react'
 classNames = require 'classnames'
 
 {a, h4,  pre, div, button, span, strong, i} = React.DOM
-SocketUtils     = require '../utils/socketio_utils'
-AppDispatcher   = require '../app_dispatcher'
-StoreWatchMixin = require '../mixins/store_watch_mixin'
-LayoutStore      = require '../stores/layout_store'
-LayoutActionCreator = require '../actions/layout_action_creator'
-{ActionTypes, AlertLevel} = require '../constants/app_constants'
 
+LayoutActionCreator = require '../actions/layout_action_creator'
+NotificationActionCreator = require '../actions/notification_action_creator'
+
+{ActionTypes, AlertLevel} = require '../constants/app_constants'
 
 
 # The toast is a notification widget displayed on the top right of the screen.
@@ -68,6 +66,7 @@ module.exports = Toast = React.createClass
                         onClick: @onModalShowClicked,
                         t 'there were errors', smart_count: toast.errors.length
 
+
     onModalShowClicked: ->
         errorText = JSON.stringify(@props.toast.get('errors')[0])
 
@@ -81,6 +80,4 @@ module.exports = Toast = React.createClass
 
 
     acknowledge: ->
-        AppDispatcher.handleViewAction
-            type: ActionTypes.RECEIVE_TASK_DELETE
-            value: @props.toast.get 'id'
+        NotificationActionCreator.taskDelete @props.toast.get 'id'

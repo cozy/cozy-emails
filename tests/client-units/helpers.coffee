@@ -17,7 +17,7 @@ requireNoCache = (modulePath) ->
     return require modulePathResolved
 
 exports.getCleanStore = (which) ->
-    Dispatcher = requireNoCache '../../client/app/app_dispatcher'
+    Dispatcher = requireNoCache '../../client/app/libs/flux/dispatcher/dispatcher'
     Store = requireNoCache "../../client/app/stores/#{which}"
-    dispatch = (type, value) -> Dispatcher.handleViewAction {type, value}
+    dispatch = (type, value) -> Dispatcher.dispatch {type, value}
     return {dispatch, Store}

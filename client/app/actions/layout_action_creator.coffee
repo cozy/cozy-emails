@@ -1,210 +1,56 @@
-XHRUtils = require '../utils/xhr_utils'
-SocketUtils = require '../utils/socketio_utils'
+AppDispatcher = require '../libs/flux/dispatcher/dispatcher'
 
-LayoutStore  = require '../stores/layout_store'
-AccountStore = require '../stores/account_store'
-MessageStore = require '../stores/message_store'
-
-AppDispatcher = require '../app_dispatcher'
-
-{ActionTypes, AlertLevel, MessageFlags} = require '../constants/app_constants'
-
-AccountActionCreator = require './account_action_creator'
-MessageActionCreator = require './message_action_creator'
-
-uniqID = 0
+{ActionTypes} = require '../constants/app_constants'
 
 module.exports = LayoutActionCreator =
 
-    setDisposition: (type) ->
-        AppDispatcher.handleViewAction
-            type: ActionTypes.SET_DISPOSITION
-            value: type
+    selectAll: (value) ->
+        type = ActionTypes.MAILBOX_SELECT_ALL
+        AppDispatcher.dispatch {type}
 
-    toggleListMode: ->
-        AppDispatcher.handleViewAction
-            type: ActionTypes.TOGGLE_LIST_MODE
 
-    # TODO: use a global method to DRY this 3-ones
-    increasePreviewPanel: (factor = 1) ->
-        AppDispatcher.handleViewAction
-            type: ActionTypes.RESIZE_PREVIEW_PANE
-            value: Math.abs factor
+    updateSelection: (value) ->
+        type = ActionTypes.MAILBOX_SELECT
+        AppDispatcher.dispatch {type, value}
 
-    decreasePreviewPanel: (factor = 1) ->
-        AppDispatcher.handleViewAction
-            type: ActionTypes.RESIZE_PREVIEW_PANE
-            value: -1 * Math.abs factor
-
-    resetPreviewPanel: ->
-        AppDispatcher.handleViewAction
-            type: ActionTypes.RESIZE_PREVIEW_PANE
-            value: null
-
-    toggleFullscreen: (value) ->
-        # Get contextual value if
-        # no value is in arguments
-        unless typeof value is 'boolean'
-            value = not LayoutStore.isPreviewFullscreen()
-
-        type = if value
-            ActionTypes.MAXIMIZE_PREVIEW_PANE
-        else
-            ActionTypes.MINIMIZE_PREVIEW_PANE
-
-        AppDispatcher.handleViewAction
-            type: type
-
-    focus: (path) ->
-        AppDispatcher.handleViewAction
-            type: ActionTypes.FOCUS
-            value: path
-
-    refresh: ->
-        AppDispatcher.handleViewAction
-            type: ActionTypes.REFRESH
-            value: null
-
-    alert: (message) ->
-        LayoutActionCreator.notify message,
-            level: AlertLevel.INFO
-            autoclose: true
-
-    alertSuccess: (message) ->
-        LayoutActionCreator.notify message,
-            level: AlertLevel.SUCCESS
-            autoclose: true
-
-    alertWarning: (message) ->
-        LayoutActionCreator.notify message,
-            level: AlertLevel.WARNING
-            autoclose: true
-
-    alertError: (message) ->
-        LayoutActionCreator.notify message,
-            level: AlertLevel.ERROR
-            autoclose: true
-
-    notify: (message, options) ->
-        if not message? or message.toString().trim() is ''
-            # Throw an error to get the stack trace in server logs
-            throw new Error 'Empty notification'
-        else
-            task =
-                id: "taskid-#{uniqID++}"
-                finished: true
-                message: message.toString()
-
-            if options?
-                task.autoclose = options.autoclose
-                task.errors = options.errors
-                task.finished = options.finished
-                task.actions = options.actions
-                task.level = options.level
-
-            AppDispatcher.handleViewAction
-                type: ActionTypes.RECEIVE_TASK_UPDATE
-                value: task
 
     clearToasts: ->
-        AppDispatcher.handleViewAction
+        AppDispatcher.dispatch
             type: ActionTypes.CLEAR_TOASTS
             value: null
 
-    getDefaultRoute: ->
-        # if there is no account, we display the configAccount
-        if AccountStore.getAll().size is 0 then 'account.new'
-        # else go directly to first account
-        else 'account.mailbox.messages'
+    showSearchResult: (parameters) ->
+        {accountID, search} = parameters
 
-    showMessageList: (panelInfo) ->
-        params = panelInfo.parameters
+        AppDispatcher.dispatch
+            type: ActionTypes.SELECT_ACCOUNT
+            value: {accountID}
 
-        # ensure the proper account is selected
-        {accountID, mailboxID} = params
-        AccountActionCreator.ensureSelected accountID, mailboxID
-
-        AppDispatcher.handleViewAction
-            type: ActionTypes.QUERY_PARAMETER_CHANGED
-            value: params
-
-    showSearchResult: (panelInfo) ->
-        {accountID, search} = panelInfo.parameters
-
-        if accountID isnt 'all'
-            AccountActionCreator.ensureSelected accountID
-        else
-            AccountActionCreator.selectAccount null
-
-        AppDispatcher.handleViewAction
+        AppDispatcher.dispatch
             type: ActionTypes.SEARCH_PARAMETER_CHANGED
             value: {accountID, search}
 
-        if search isnt '-'
-            MessageActionCreator.fetchSearchResults accountID, search
-
-    showMessage: (panelInfo) ->
-        {messageID} = panelInfo.parameters
-        return unless messageID
-
-        message = MessageStore.getByID messageID
-        if message?
-            AccountActionCreator.selectAccountForMessage message
-        else
-            XHRUtils.fetchMessage messageID, (err, rawMessage) ->
-
-                if err?
-                    LayoutActionCreator.alertError err
-                else
-                    MessageActionCreator.receiveRawMessage rawMessage
-                    AccountActionCreator.selectAccountForMessage rawMessage
-
-    # Display compose widget but this time it's aimed to be pre-filled:
-    # either with reply/forward or with draft information.
-    showComposeMessage: (panelInfo, direction) ->
-        AccountActionCreator.selectDefaultIfNoneSelected()
-        LayoutActionCreator.showMessage panelInfo
-
-    showCreateAccount: (panelInfo, direction) ->
-        AccountActionCreator.selectAccount null
-
-    showConfigAccount: (panelInfo, direction) ->
-        AccountActionCreator.selectAccount panelInfo.parameters.accountID
-
-    showSettings: (panelInfo, direction) ->
-
     toastsShow: ->
-        AppDispatcher.handleViewAction
+        AppDispatcher.dispatch
             type: ActionTypes.TOASTS_SHOW
 
     toastsHide: ->
-        AppDispatcher.handleViewAction
+        AppDispatcher.dispatch
             type: ActionTypes.TOASTS_HIDE
 
+
     intentAvailability: (availability) ->
-        AppDispatcher.handleViewAction
+        AppDispatcher.dispatch
             type: ActionTypes.INTENT_AVAILABLE
             value: availability
 
-    # Drawer
-    drawerShow: ->
-        AppDispatcher.handleViewAction
-            type: ActionTypes.DRAWER_SHOW
-
-    drawerHide: ->
-        AppDispatcher.handleViewAction
-            type: ActionTypes.DRAWER_HIDE
-
-    drawerToggle: ->
-        AppDispatcher.handleViewAction
-            type: ActionTypes.DRAWER_TOGGLE
 
     displayModal: (params) ->
         params.closeModal ?= -> LayoutActionCreator.hideModal()
-        AppDispatcher.handleViewAction
+        AppDispatcher.dispatch
             type: ActionTypes.DISPLAY_MODAL
             value: params
 
     hideModal: ->
-        AppDispatcher.handleViewAction
+        AppDispatcher.dispatch
             type: ActionTypes.HIDE_MODAL

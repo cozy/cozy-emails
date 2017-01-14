@@ -5,9 +5,7 @@ React          = require 'react'
 
 FileItem = React.createFactory require './file_item'
 
-MessageUtils = require '../utils/message_utils'
-{getFileURL} = require '../utils/file_utils'
-
+FileGetter = require '../getters/file'
 
 # file picker file format = mailparser result
 FileShape = React.PropTypes.shape
@@ -73,7 +71,7 @@ module.exports = FilePicker = React.createClass
         @props.valueLink.requestChange files
 
     displayFile: (file) ->
-        unless (url = getFileURL file)
+        unless (url = FileGetter.getFileURL file)
             console.error "broken file : ", file
             return
         window.open url

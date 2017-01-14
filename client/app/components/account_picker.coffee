@@ -3,18 +3,10 @@ React = require 'react'
 
 {div, ul, li, p, span, a, button, input} = React.DOM
 
-RouterMixin = require '../mixins/router_mixin'
-
 
 module.exports = React.createClass
 
     displayName: 'AccountPicker'
-
-
-    shouldComponentUpdate: (nextProps, nextState) ->
-        return not(_.isEqual(nextState, @state)) or
-            not (_.isEqual(nextProps, @props))
-
 
     render: ->
         accounts = @props.accounts

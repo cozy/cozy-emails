@@ -4,7 +4,6 @@ var sinon = require('sinon')
 
 var SpecDispatcher = require('./utils/specs_dispatcher')
 
-var Dispositions = require('../app/constants/app_constants').Dispositions
 var ActionTypes = require('../app/constants/app_constants').ActionTypes
 
 
@@ -20,8 +19,7 @@ describe('LayoutStore spec', function() {
             useCleanCache: true
         })
 
-        mockery.registerMock('../app_dispatcher', dispatcher)
-        mockery.registerMock('../../../app_dispatcher', dispatcher)
+        mockery.registerMock('../libs/flux/dispatcher/dispatcher', dispatcher)
         mockery.registerMock('./account_store', {})
         mockery.registerAllowables([
             'node-event-emitter',
@@ -39,22 +37,4 @@ describe('LayoutStore spec', function() {
         sandbox.restore()
     })
 
-    describe('Disposition', function () {
-
-        it('Default: DISPOSITION is COLUMN', function () {
-            assert.equal(layoutStore.getDisposition(), Dispositions.COL)
-        })
-
-        it('Switch to ROW: DISPOSITION is ROW', function (done) {
-            layoutStore.on('change', function () {
-                assert.equal(layoutStore.getDisposition(), Dispositions.ROW)
-                done()
-            })
-
-            dispatcher.dispatch({
-                type: ActionTypes.SET_DISPOSITION,
-                value: Dispositions.ROW
-            })
-        })
-    })
 })
