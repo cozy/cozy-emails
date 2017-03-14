@@ -1,0 +1,30 @@
+dl.acount
+    dt(aria-controls="account-#{slug}")
+        span.avatar Gl
+        | Gmail
+        span.addr me@gmail.com
+    dd(id="account-#{slug}" aria-expanded=(slug == 'gmail'?'true':'false'))
+        ul.main
+            li
+                a(href="#" aria-selected=(slug == 'gmail'?'true':'false')) Inbox
+                span.badge= Math.random()*10+1|0
+            li: a(href="#")= slug == 'gmail'? 'All mails' : 'Archives'
+            li: a(href="#") Drafts
+            li: a(href="#") Sent
+            li(id="mailbox-#{slug}-junk" aria-expanded="false"): a(href="#") Junk
+        ul.filters
+            li
+                a(href="#") Unread
+                span.badge= Math.random()*20+3|0
+            li
+                a(href="#") Importants
+                span.badge= Math.random()*35+3|0
+        ul(id="mailboxes-#{slug}" role="tree" aria-expanded="false")
+            li(role="treeitem"): a(href="#") Family
+            li(role="treeitem")
+                a(href="#") Friends
+                ul(role="tree")
+                    li(role="treeitem"): a(href="#") Joey
+                    li(role="treeitem"): a(href="#") Monica
+            li(role="treeitem"): a(href="#") Work
+        button(aria-controls="mailboxes-#{slug} mailbox-#{slug}-junk") more

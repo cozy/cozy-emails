@@ -1,0 +1,13 @@
+doctype
+html(lang='en')
+    meta(charset="utf-8")
+    title STATIC MOCKUPS | Cozy Emails - Conversations list
+    link(rel="stylesheet" charset="utf-8" href="./styles/app.css")
+
+body
+    div(role="application")
+        include ./components/menu/index.jade
+
+        div(role="contentinfo")
+            include ./components/conversations/index.jade
+            include ./components/conversation/empty.jade

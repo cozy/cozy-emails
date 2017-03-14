@@ -1,0 +1,29 @@
+section.composer
+    header.segments
+        div.segment
+            h1 New Message
+
+            nav: ul
+                li: button: i.minimize minimize
+                li: a(href="index.html"): i.close close
+
+        label.segment(for="composer-sender")
+            span.label From
+            select#composer-sender
+                option me@gmail.com
+                option me@gandi.net
+                
+        label.segment(for="composer-to")
+            span.label To
+            input#composer-to
+            
+            nav(role="toolbar"): ul
+                li: button Cc
+                li: button Bcc
+
+    div.content
+        input#composer-subject(placeholder="Subject")
+        .editor(contenteditable=true)
+            | Type your message here…
+
+    include ./toolbar.jade

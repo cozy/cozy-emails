@@ -1,0 +1,9 @@
+- var counter = 0
+
+section#messages-list.pane
+    ul
+        while counter < 50
+            include ./item.jade
+            - counter++
+
+    include ../commons/toolbars/conversations/index.jade

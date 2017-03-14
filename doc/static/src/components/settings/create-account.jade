@@ -1,0 +1,7 @@
+section.settings
+    h1 Create a new account
+    include ./account.jade
+
+    footer
+        nav: ul(role="toolbar")
+            li: a(role="button" href=(error? './index.html':'./create-account-2fa.html')) Save

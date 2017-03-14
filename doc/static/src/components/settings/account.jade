@@ -1,0 +1,52 @@
+.content
+    label(data-input="text" for="new-account-email")
+        span email
+        input#new-account-email(type="text" name="email" placeholder="john@die.hard")
+        span.validate: i.ok valid
+    if error
+        p.error your account seems to have a two-factor authentication security enabled. #[a(target="_blank" href="#") Create a single token] for the Cozy email application and put it in the password field below.
+    label(data-input="text" for="new-account-password")
+        span password
+        input#new-account-password(type="password" name="password")
+
+    fieldset(aria-expanded=false)
+        legend Advanced parameters
+        .content
+            label(data-input="text" for="new-account-imap-username")
+                span imap username
+                input#new-account-imap-username(type="text" name="imap-username")
+            label(data-input="text" for="new-account-imap-password")
+                span imap password
+                input#new-account-imap-password(type="password" name="imap-password")
+            label(data-input="text" for="new-account-imap-server")
+                span imap server
+                input#new-account-imap-server(type="text" name="imap-server")
+            label(data-input="text" for="new-account-imap-port")
+                span imap port
+                input#new-account-imap-port(type="number" name="imap-port" value="993")
+            label(data-input="select" for="new-account-imap-security")
+                span security
+                select#new-account-imap-security(name="imap-security")
+                    option(value="false") none
+                    option(value="ssl" selected=true) SSL/TLS
+                    option(value="starttls") STARTTLS
+        .content
+            label(data-input="text" for="new-account-smtp-username")
+                span smtp username
+                input#new-account-smtp-username(type="text" name="smtp-username")
+            label(data-input="text" for="new-account-smtp-password")
+                span smtp password
+                input#new-account-smtp-password(type="password" name="smtp-password")
+            label(data-input="text" for="new-account-smtp-server")
+                span smtp server
+                input#new-account-smtp-server(type="text" name="smtp-server")
+            label(data-input="text" for="new-account-smtp-port")
+                span smtp port
+                input#new-account-smtp-port(type="number" name="smtp-port" value="465")
+            label(data-input="select" for="new-account-smtp-security")
+                span security
+                select#new-account-smtp-security(name="smtp-security")
+                    option(value="false") none
+                    option(value="ssl" selected=true) SSL/TLS
+                    option(value="starttls") STARTTLS
+                    

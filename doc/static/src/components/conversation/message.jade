@@ -1,0 +1,42 @@
+- var isFavorite = !(Math.random()+.5|0)
+- var hasAttachments = !(Math.random()+.5|0)
+
+div.segment(class={compact: !unread, unread: unread})
+    header
+        h2.sender
+            | J.J. Abrams
+            span.addr jjabrams@gmail.com
+            button: i.person actions
+        dl.recipients
+            dt To
+            dd: ul
+                li
+                    | me
+                    span.addr me@gmail.com
+                li
+                    | Frank Rousseau
+                    span.addr frank@cozycloud.cc
+                    button: i.person actions
+            dt Cc
+            dd: ul
+                li
+                    | Steven
+                    span.addr steven.s@hollywood.com
+                    button: i.person actions
+        p.date 19/02/2016
+        ul.flags
+            if hasAttachments
+                li: i.attachment A
+            li(aria-hidden=(isFavorite?'true':'false')): i.favorite F
+        nav(role="toolbar"): ul
+            ul(role="group")
+                li: a(href="#" role="button"): i.reply reply
+                li: a(href="#" role="button"): i.reply-all reply all
+                li: a(href="#" role="button"): i.forward forward
+            button: i(class={unread: !unread, read: unread}) mark as #{unread?'read':'unread'}
+            a(href="#" role="button"): i.delete delete
+    .content
+        p.message.warn
+            | Display of images inside message has been blocked
+            button Display images
+        iframe(src="./message-body.html")

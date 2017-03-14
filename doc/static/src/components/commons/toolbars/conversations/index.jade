@@ -1,0 +1,14 @@
+aside
+    nav: ul(role="toolbar")
+        li
+            if active
+                a(href="./multi-select.html"): i [-]
+            else if all
+                a(href="./index.html"): i [x]
+            else
+                a(href="./multi-select.html"): i [ ]
+    if active || all
+        include ./bulk.jade
+    else
+        include ./status.jade
+        
