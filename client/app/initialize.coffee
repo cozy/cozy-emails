@@ -4,8 +4,6 @@ require 'bootstrap/dist/css/bootstrap.css'
 
 require 'imports?jQuery=jquery!bootstrap/dist/js/bootstrap.js'
 
-React    = require 'react'
-ReactDOM = require 'react-dom'
 Backbone = require 'backbone'
 Perf     = require 'react-addons-perf'
 
@@ -120,26 +118,9 @@ document.addEventListener 'DOMContentLoaded', ->
         # Init Web Intents
         initIntent()
 
-        # Flux initialization (must be called at the begining)
-        AccountStore  = require './stores/account_store'
-        ContactStore  = require './stores/contact_store'
-        LayoutStore   = require './stores/layout_store'
-        MessageStore  = require './stores/message_store'
-        SettingsStore = require './stores/settings_store'
-
         # Routing management
         Router = require './router'
-        @router = new Router()
-        window.router = @router
-
-        # Binds the router and flux to the React application
-        Application = React.createFactory require './components/application'
-        application = Application router: @router
-        rootNode    = document.querySelector '[role=application]'
-        ReactDOM.render application, rootNode
-
-        # Starts the application by initializing the router
-        Backbone.history.start()
+        window.router = new Router()
 
         # begin realtime
         require './utils/socketio_utils'

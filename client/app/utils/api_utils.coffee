@@ -3,20 +3,24 @@ _        = require 'underscore'
 Polyglot = require 'node-polyglot'
 moment   = require 'moment'
 
+RouterGetter = require '../getters/router'
+
+# FIXME : remove all this from Stores to  RouterGetter
 AccountStore  = require '../stores/account_store'
 MessageStore  = require '../stores/message_store'
+RouterStore  = require '../stores/router_store'
+
 SettingsStore = require '../stores/settings_store'
 LayoutActionCreator  = require '../actions/layout_action_creator'
 MessageActionCreator = require '../actions/message_action_creator'
+RouterActionCreator  = require '../actions/layout_action_creator'
+NotificationActionsCreator = require '../actions/notification_action_creator'
+
+{MessageActions, AccountActions} = require '../constants/app_constants'
 
 
 onMessageList = ->
-    actions = [
-        "account.mailbox.messages",
-        "account.mailbox.messages.filter",
-        "account.mailbox.messages.date"
-    ]
-    return router.current.firstPanel?.action in actions
+    return RouterStore.getAction() is MessageActions.SHOW_ALL
 
 
 module.exports = Utils =
@@ -42,11 +46,6 @@ module.exports = Utils =
     getMessage: (id) ->
         message = MessageStore.getByID id
         return message?.toJS()
-
-
-    getCurrentConversation: ->
-        MessageStore.getCurrentConversation()?.toJS()
-
 
     getCurrentActions: ->
         res = []
@@ -94,21 +93,12 @@ module.exports = Utils =
         else
             settings[key] = value
         AppDispatcher.handleViewAction
-            type: ActionTypes.SETTINGS_UPDATED
+            type: ActionTypes.SETTINGS_UPDATE_SUCCESS
             value: settings
 
     messageNavigate: (direction, inConv) ->
         return unless onMessageList()
-
-        # when key top is pressed, direction=prev
-        # when key bottom is pressed, direction=next
-        # strange (?!)
-        if direction is 'prev'
-            next = MessageStore.getNextConversation()
-        else
-            next = MessageStore.getPreviousConversation()
-
-        @messageSetCurrent(next)
+        RouterActionCreator.navigate action: MessageActions.GROUP_NEXT
 
 
     messageSetCurrent: (message) ->
@@ -123,41 +113,17 @@ module.exports = Utils =
     ##
     # Display a message
     # @params {Immutable} message the message (current one if null)
-    # @params {Boolean}   force   if false do nothing if right panel is not open
-    messageDisplay: (message, force) ->
-        if not message?
-            message = MessageStore.getByID(MessageStore.getCurrentID())
-        if not message?
-            return
-        # return if second panel isn't already open
-        if force is false and not window.router.current.secondPanel?
-            return
-
-        if (conversationID = message.get 'conversationID')?
-            action = 'conversation'
-            params =
-                messageID: message.get 'id'
-                conversationID: conversationID
-        else
-            action = 'message'
-            params =
-                messageID: message.get 'id'
-
-        urlOptions =
-            direction: 'second'
-            action: action
-            parameters: params
-
-        url = window.router.buildUrl urlOptions
-        window.router.navigate url, {trigger: true}
+    messageDisplay: (message) ->
+        messageID = message?.get('id') or MessageStore.getCurrentID()
+        RouterActionCreator.navigate {messageID}
 
 
     messageClose: ->
-        href = window.location.href
-        href = href.replace /\/message\/[\w-]+/gi, ''
-        href = href.replace /\/conversation\/[\w-]+\/[\w-]+/gi, ''
-        href = href.replace /\/edit\/[\w-]+/gi, ''
-        window.location.href = href
+        url = window.location.href
+        url = url.replace /\/message\/[\w-]+/gi, ''
+        url = url.replace /\/conversation\/[\w-]+\/[\w-]+/gi, ''
+        url = url.replace /\/edit\/[\w-]+/gi, ''
+        RouterActionCreator.navigate {url}
 
     messageDeleteCurrent: ->
         messageID = MessageStore.getCurrentID()
@@ -165,20 +131,8 @@ module.exports = Utils =
             return
 
         deleteMessage = (isModal) ->
-            # Get next message information
-            # before delete (context changes)
-            next = MessageStore.getPreviousConversation()
-            next = MessageStore.getNextConversation() unless next.size
-
             MessageActionCreator.delete {messageID}
-            LayoutActionCreator.hideModal() if isModal
-
-            if next?.size
-                # Goto next message
-                Utils.messageSetCurrent next
-            else
-                # Close 2nd panel
-                Utils.messageClose()
+            RouterActionCreator.navigate action: MessageActions.GROUP_NEXT
 
         settings = SettingsStore.get()
 
@@ -244,7 +198,7 @@ module.exports = Utils =
                     body: title
             # prevent dispatching when already dispatching
             window.setTimeout ->
-                LayoutActionCreator.notify "#{title} - #{options.body}"
+                NotificationActionsCreator.alert "#{title} - #{options.body}"
             , 0
 
 

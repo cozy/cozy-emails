@@ -17,7 +17,7 @@ class SettingsStore extends Store
     ###
     __bindHandlers: (handle) ->
 
-        handle ActionTypes.SETTINGS_UPDATED, (settings) ->
+        handle ActionTypes.SETTINGS_UPDATE_SUCCESS, (settings) ->
             _settings = Immutable.Map settings
             @emit 'change'
 

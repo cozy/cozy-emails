@@ -1,77 +1,93 @@
-PanelRouter = require './libs/panel_router'
+RouterActionCreator = require './actions/router_action_creator'
+LayoutActionCreator = require './actions/layout_action_creator'
+AccountActionCreator = require './actions/account_action_creator'
 
-AccountStore = require './stores/account_store'
-MessageStore = require './stores/message_store'
+AppDispatcher = require './app_dispatcher'
 
-module.exports = class Router extends PanelRouter
+{ActionTypes, MessageActions, AccountActions, SearchActions} = require './constants/app_constants'
 
-    patterns:
-        'account.config':
-            pattern: 'account/:accountID/config/:tab'
-            fluxAction: 'showConfigAccount'
-        'account.new':
-            pattern: 'account/new'
-            fluxAction: 'showCreateAccount'
+_ = require 'lodash'
 
-        'account.mailbox.messages':
-            pattern: 'account/:accountID/mailbox/:mailboxID/sort/:sort/' +
-                     ':type/:flag/before/:before/after/:after'
-            fluxAction: 'showMessageList'
+# MessageList :
+# ?sort=asc&filters=&status=unseen&start=2016-02-27T23:00:00.000Z&end=2016-03-05T22:59:59.999Z
 
-        'search':
-            pattern: 'account/:accountID/search/:search'
-            fluxAction: 'showSearchResult'
+# Search :
+# #account/3510d24990c596125ecc9e1fc800616a/mailbox/3510d24990c596125ecc9e1fc80064d3/search/?q=plop
 
-        'message':
-            pattern: 'message/:messageID'
-            fluxAction: 'showMessage'
+class Router extends Backbone.Router
 
-        'conversation':
-            pattern: 'conversation/:conversationID/:messageID/'
-            fluxAction: 'showConversation'
+    routes:
+        'mailbox/:mailboxID/*'                      : 'messageList'
+        'account/new'                               : 'accountNew'
+        'account/:accountID/settings/:tab'            : 'accountEdit'
+        # 'search/?q=:search'                         : 'search'
+        # 'mailbox/:mailboxID/search/?q=:search'      : 'search'
+        'mailbox/:mailboxID/new'                    : 'messageNew'
+        'mailbox/:mailboxID/:messageID/edit'        : 'messageEdit'
+        'mailbox/:mailboxID/:messageID/forward'     : 'messageForward'
+        'mailbox/:mailboxID/:messageID/reply'       : 'messageReply'
+        'mailbox/:mailboxID/:messageID/reply-all'   : 'messageReplyAll'
+        'mailbox/:mailboxID/:messageID/*'           : 'messageShow'
+        '/*'                                        : 'messageList'
 
-        'default':
-            pattern: ''
-            fluxAction: ''
+    initialize: ->
+        # Save Routes in Stores
+        AppDispatcher.handleViewAction
+            type: ActionTypes.ROUTES_INITIALIZE
+            value: @
 
-    # default route
-    routes: '': 'default'
+        # Start Navigation
+        Backbone.history.start()
 
-    # Determines and gets the default parameters regarding a specific action
-    _getDefaultParameters: (action, parameters) ->
-        switch action
+        # Display application
+        _displayApplication()
 
-            when 'account.mailbox.messages'
-                defaultAccountID = AccountStore.getDefault()?.get 'id'
-                # if parameters contains accountID but no mailboxID,
-                # get the default mailbox for this account
-                if parameters.accountID?
-                    mailbox = AccountStore.getDefaultMailbox parameters.accountID
-                else
-                    mailbox = AccountStore.getDefaultMailbox defaultAccountID
-                defaultMailboxID = mailbox?.get 'id'
-                defaultParameters = {}
-                defaultParameters.accountID = defaultAccountID
-                defaultParameters.mailboxID = defaultMailboxID
-                defaultParameters.pageAfter = '-'
-                defaultParameters.sort = '-date'
-                defaultParameters.after = '-'
-                defaultParameters.before = '-'
-                defaultParameters.type = 'nofilter'
-                defaultParameters.flag = '-'
+    accountNew: ->
+        RouterActionCreator.setAction AccountActions.CREATE
+        AccountActionCreator.selectAccount()
 
-            when 'account.config'
-                defaultAccount = AccountStore.getDefault()?.get 'id'
-                defaultParameters =
-                    accountID: defaultAccount
-                    tab: 'account'
+    accountEdit: (accountID, tab) ->
+        RouterActionCreator.setAction AccountActions.EDIT
+        AccountActionCreator.saveEditTab tab
+        AccountActionCreator.selectAccount accountID
 
-            when 'search'
-                defaultParameters =
-                    accountID: 'all'
-                    search: '-'
+    messageList: (mailboxID, query) ->
+        RouterActionCreator.setAction MessageActions.SHOW_ALL
+        LayoutActionCreator.updateMessageList {mailboxID, query}
 
-            else
-                defaultParameters = null
+    messageShow: (mailboxID, messageID, query) ->
+        RouterActionCreator.setAction MessageActions.SHOW
+        LayoutActionCreator.updateMessageList {mailboxID, messageID, query}
 
-        return defaultParameters
+    messageEdit: (mailboxID, messageID) ->
+        RouterActionCreator.setAction MessageActions.EDIT
+        LayoutActionCreator.saveMessage {mailboxID, messageID}
+
+    messageNew: (mailboxID) ->
+        RouterActionCreator.setAction MessageActions.CREATE
+        LayoutActionCreator.saveMessage {mailboxID}
+
+    messageForward: (mailboxID, messageID) ->
+        RouterActionCreator.setAction MessageActions.FORWARD
+        LayoutActionCreator.saveMessage {mailboxID, messageID}
+
+    messageReply: (mailboxID, messageID) ->
+        RouterActionCreator.setAction MessageActions.REPLY
+        LayoutActionCreator.saveMessage {mailboxID, messageID}
+
+    messageReplyAll: (mailboxID, messageID) ->
+        RouterActionCreator.setAction MessageActions.REPLY_ALL
+        LayoutActionCreator.saveMessage {mailboxID, messageID}
+
+    # search: (accountID, mailboxID, value) ->
+    #     RouterActionCreator.setAction SearchActions.SHOW_ALL
+    #     console.log 'Search', accountID, mailboxID, value
+
+_displayApplication = ->
+    React = require 'react'
+    ReactDOM   = require 'react-dom'
+
+    Application = React.createFactory require './components/application'
+    ReactDOM.render Application(), document.querySelector '[role=application]'
+
+module.exports = Router

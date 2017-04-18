@@ -9,7 +9,7 @@ toMarkdown = require 'to-markdown'
 _      = require 'underscore'
 jQuery = require 'jquery'
 
-{ComposeActions} = require '../constants/app_constants'
+{MessageActions} = require '../constants/app_constants'
 ContactStore     = require '../stores/contact_store'
 SearchStore      = require '../stores/search_store'
 
@@ -125,46 +125,41 @@ module.exports = MessageUtils =
     # required too.
     # It adds signature at the end of the zone where the user will type.
     createBasicMessage: (props) ->
-        account = props.accounts.get props.selectedAccountID
-        account =
-            id: props.selectedAccountID
-            name: account.get 'name'
-            address: account.get 'login'
-            signature: account.get 'signature'
+        props = _.clone props
 
-        # FIXME : reset HTML editing
-        # composeInHTML = props.settings.get 'composeInHTML'
+        account =
+            id: props.account?.get 'id'
+            name: props.account?.get 'name'
+            address: props.account?.get 'login'
+            signature: props.account?.get 'signature'
+
+        composeInHTML = props.settings.get 'composeInHTML'
         message =
-            id              : props.messageID
+            id              : props.id
             attachments     : Immutable.List()
             accountID       : account.id
             isDraft         : true
             composeInHTML   : false
-            from            : [
-                    name: account.name
-                    address: account.address
-                ]
+            from            : [name: account.name, address: account.address]
 
         # edition of an existing draft
         if (_message = props.message)
-            props.action = ComposeActions.EDIT unless props.action
+            props.action = MessageActions.EDIT unless props.action
             _.extend message, _message.toJS()
             message.attachments = _message.get 'attachments'
-            delete props.message
 
         # Format text
         {text, html} = MessageUtils.cleanContent message
 
-        inReplyTo = props.inReplyTo
-        inReplyTo = null if inReplyTo and _.isString inReplyTo
-        if inReplyTo
+        if (inReplyTo = props.inReplyTo)
             replyID = inReplyTo.get 'id'
             html = inReplyTo?.get 'html'
             _.extend message,
                 inReplyTo: inReplyTo
                 references: (inReplyTo.get('references') or []).concat replyID
 
-        isSignature = !!!_.isEmpty(signature = account.signature)
+        signature = account.signature
+        isSignature = !!!_.isEmpty signature
         dateHuman = @formatReplyDate message.createdAt
         sender = @displayAddresses message.from
         options = {
@@ -177,14 +172,15 @@ module.exports = MessageUtils =
             signature
             isSignature
         }
+
         switch props.action
-            when ComposeActions.REPLY
+            when MessageActions.REPLY
                 @setMessageAsReply options
 
-            when ComposeActions.REPLY_ALL
+            when MessageActions.REPLY_ALL
                 @setMessageAsReplyAll options
 
-            when ComposeActions.FORWARD
+            when MessageActions.FORWARD
                 @setMessageAsForward options
 
             when null
@@ -210,6 +206,7 @@ module.exports = MessageUtils =
             signature
             isSignature
         } = options
+
 
         params = date: dateHuman, sender: sender
         separator = t 'compose reply separator', params
@@ -253,14 +250,14 @@ module.exports = MessageUtils =
         separator = t 'compose reply separator', params
         message.to = @getReplyToAddress inReplyTo
         # filter to don't have same address twice
-        toAddresses = message.to.map (dest) -> return dest.address
+        toAddresses = message.to?.map (dest) -> return dest.address
 
         message.cc = [].concat(
-            inReplyTo.get('from'),
-            inReplyTo.get('to'),
-            inReplyTo.get('cc')
+            inReplyTo?.get 'from'
+            inReplyTo?.get 'to'
+            inReplyTo?.get 'cc'
         ).filter (dest) ->
-            return dest? and toAddresses.indexOf(dest.address) is -1
+            return dest? and -1 is toAddresses.indexOf dest.address
         message.bcc = []
 
         message.subject = @getReplySubject inReplyTo
@@ -297,7 +294,7 @@ module.exports = MessageUtils =
             isSignature
         } = options
 
-        addresses = inReplyTo.get('to')
+        addresses = inReplyTo?.get('to')
         .map (address) -> address.address
         .join ', '
 
@@ -305,11 +302,11 @@ module.exports = MessageUtils =
         senderName = ""
 
         senderAddress =
-        if senderInfos.length > 0
+        if senderInfos?.length
             senderName = senderInfos[0].name
             senderAddress = senderInfos[0].address
 
-        if senderName.length > 0
+        if senderName?.length
             fromField = "#{senderName} &lt;#{senderAddress}&gt;"
         else
             fromField = senderAddress

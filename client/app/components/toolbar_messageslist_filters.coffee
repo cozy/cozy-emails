@@ -4,10 +4,10 @@ React = require 'react'
 {div, ul, li, span, i, button} = React.DOM
 {MessageFilter, Tooltips}      = require '../constants/app_constants'
 
-LayoutActionCreator = require '../actions/layout_action_creator'
+RouterGetter = require '../getters/router'
+RouterActionCreator = require '../actions/router_action_creator'
 
 DateRangePicker = React.createFactory require './date_range_picker'
-
 
 module.exports = FiltersToolbarMessagesList = React.createClass
     displayName: 'FiltersToolbarMessagesList'
@@ -19,29 +19,13 @@ module.exports = FiltersToolbarMessagesList = React.createClass
     getInitialState: ->
         expanded:  false
 
-    shouldComponentUpdate: (nextProps, nextState) ->
-        should = not(_.isEqual(nextState, @state)) or
-            not (_.isEqual(nextProps, @props))
-        return should
+    onDateFilter: (before, after) ->
+        RouterActionCreator.addFilter {before, after}
 
-    onDateFilter: (start, end) ->
-        date = if !!start and !!end then [start, end] else null
-        @props.onFilterChange
-            type: 'date',
-            range: date
-
-    toggleFilters: (name) ->
-        wasActive = @props.queryParams.type is 'flag' and
-                    @props.queryParams.filter is name
-        @props.onFilterChange
-            type: 'flag',
-            value: if wasActive then '-' else name
+    toggleFilters: (filter) ->
+        RouterActionCreator.addFilter filter
 
     render: ->
-
-        currentFilter = @props.queryParams.type is 'flag' and
-                        @props.queryParams.filter
-
         div
             role:            'group'
             className:       'filters'
@@ -55,8 +39,8 @@ module.exports = FiltersToolbarMessagesList = React.createClass
 
             button
                 role: 'menuitem'
-                'aria-selected': currentFilter is MessageFilter.UNSEEN
-                onClick: => @toggleFilters MessageFilter.UNSEEN
+                'aria-selected': RouterGetter.isFlags 'UNSEEN'
+                onClick: => @toggleFilters flags: MessageFilter.UNSEEN
                 'aria-describedby': Tooltips.FILTER_ONLY_UNREAD
                 'data-tooltip-direction': 'bottom'
 
@@ -65,8 +49,8 @@ module.exports = FiltersToolbarMessagesList = React.createClass
 
             button
                 role: 'menuitem'
-                'aria-selected': currentFilter is MessageFilter.FLAGGED
-                onClick: => @toggleFilters MessageFilter.FLAGGED
+                'aria-selected': RouterGetter.isFlags 'FLAGGED'
+                onClick: => @toggleFilters flags: MessageFilter.FLAGGED
                 'aria-describedby': Tooltips.FILTER_ONLY_IMPORTANT
                 'data-tooltip-direction': 'bottom'
 
@@ -75,8 +59,8 @@ module.exports = FiltersToolbarMessagesList = React.createClass
 
             button
                 role: 'menuitem'
-                'aria-selected': currentFilter is MessageFilter.ATTACH
-                onClick: => @toggleFilters MessageFilter.ATTACH
+                'aria-selected': RouterGetter.isFlags 'ATTACH'
+                onClick: => @toggleFilters flags: MessageFilter.ATTACH
                 'aria-describedby': Tooltips.FILTER_ONLY_WITH_ATTACHMENT
                 'data-tooltip-direction': 'bottom'
 
@@ -84,5 +68,4 @@ module.exports = FiltersToolbarMessagesList = React.createClass
                 span className: 'btn-label', t 'filters attach'
 
             DateRangePicker
-                active: @props.queryParams.type is 'date'
                 onDateFilter: @onDateFilter

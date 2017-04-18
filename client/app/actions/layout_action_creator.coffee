@@ -1,18 +1,8 @@
-XHRUtils = require '../utils/xhr_utils'
-SocketUtils = require '../utils/socketio_utils'
-
-LayoutStore  = require '../stores/layout_store'
-AccountStore = require '../stores/account_store'
-MessageStore = require '../stores/message_store'
+RouterGetter = require '../getters/router'
 
 AppDispatcher = require '../app_dispatcher'
 
-{ActionTypes, AlertLevel, MessageFlags} = require '../constants/app_constants'
-
-AccountActionCreator = require './account_action_creator'
-MessageActionCreator = require './message_action_creator'
-
-uniqID = 0
+{ActionTypes, MessageActions} = require '../constants/app_constants'
 
 module.exports = LayoutActionCreator =
 
@@ -24,6 +14,14 @@ module.exports = LayoutActionCreator =
     toggleListMode: ->
         AppDispatcher.handleViewAction
             type: ActionTypes.TOGGLE_LIST_MODE
+
+    selectAll: (value) ->
+        type = ActionTypes.MAILBOX_SELECT_ALL
+        AppDispatcher.handleViewAction {type}
+
+    updateSelection: (value) ->
+        type = ActionTypes.MAILBOX_SELECT
+        AppDispatcher.handleViewAction {type, value}
 
     # TODO: use a global method to DRY this 3-ones
     increasePreviewPanel: (factor = 1) ->
@@ -41,137 +39,78 @@ module.exports = LayoutActionCreator =
             type: ActionTypes.RESIZE_PREVIEW_PANE
             value: null
 
-    toggleFullscreen: (value) ->
-        # Get contextual value if
-        # no value is in arguments
-        unless typeof value is 'boolean'
-            value = not LayoutStore.isPreviewFullscreen()
-
-        type = if value
-            ActionTypes.MAXIMIZE_PREVIEW_PANE
-        else
-            ActionTypes.MINIMIZE_PREVIEW_PANE
-
-        AppDispatcher.handleViewAction
-            type: type
-
     focus: (path) ->
         AppDispatcher.handleViewAction
             type: ActionTypes.FOCUS
             value: path
-
-    refresh: ->
-        AppDispatcher.handleViewAction
-            type: ActionTypes.REFRESH
-            value: null
-
-    alert: (message) ->
-        LayoutActionCreator.notify message,
-            level: AlertLevel.INFO
-            autoclose: true
-
-    alertSuccess: (message) ->
-        LayoutActionCreator.notify message,
-            level: AlertLevel.SUCCESS
-            autoclose: true
-
-    alertWarning: (message) ->
-        LayoutActionCreator.notify message,
-            level: AlertLevel.WARNING
-            autoclose: true
-
-    alertError: (message) ->
-        LayoutActionCreator.notify message,
-            level: AlertLevel.ERROR
-            autoclose: true
-
-    notify: (message, options) ->
-        if not message? or message.toString().trim() is ''
-            # Throw an error to get the stack trace in server logs
-            throw new Error 'Empty notification'
-        else
-            task =
-                id: "taskid-#{uniqID++}"
-                finished: true
-                message: message.toString()
-
-            if options?
-                task.autoclose = options.autoclose
-                task.errors = options.errors
-                task.finished = options.finished
-                task.actions = options.actions
-                task.level = options.level
-
-            AppDispatcher.handleViewAction
-                type: ActionTypes.RECEIVE_TASK_UPDATE
-                value: task
 
     clearToasts: ->
         AppDispatcher.handleViewAction
             type: ActionTypes.CLEAR_TOASTS
             value: null
 
-    getDefaultRoute: ->
-        # if there is no account, we display the configAccount
-        if AccountStore.getAll().size is 0 then 'account.new'
-        # else go directly to first account
-        else 'account.mailbox.messages'
+    updateMessageList: (params) ->
+        {accountID, mailboxID, messageID, query} = params
+        accountID ?= RouterGetter.getAccountID()
+        mailboxID ?= RouterGetter.getMailboxID()
+        messageID ?= RouterGetter.getCurrentMessageID()
 
-    showMessageList: (panelInfo) ->
-        params = panelInfo.parameters
+        unless accountID
+            # TODO : si pas accountID
+            # alors aller à la page de config
+            console.log 'NO ACCOUNT FOUND'
+            return
 
-        # ensure the proper account is selected
-        {accountID, mailboxID} = params
-        AccountActionCreator.ensureSelected accountID, mailboxID
+        # Select Mailbox
+        AppDispatcher.handleViewAction
+            type: ActionTypes.SELECT_ACCOUNT
+            value: {accountID, mailboxID}
+
+        # Set message as current
+        AppDispatcher.handleViewAction
+            type: ActionTypes.MESSAGE_CURRENT
+            value: {messageID}
+
+        if query
+            AppDispatcher.handleViewAction
+                type: ActionTypes.QUERY_PARAMETER_CHANGED
+                value: {query}
 
         AppDispatcher.handleViewAction
-            type: ActionTypes.QUERY_PARAMETER_CHANGED
-            value: params
+            type: ActionTypes.MESSAGE_FETCH_REQUEST
+            value: {action: MessageActions.SHOW_ALL, messageID}
 
-    showSearchResult: (panelInfo) ->
-        {accountID, search} = panelInfo.parameters
 
-        if accountID isnt 'all'
-            AccountActionCreator.ensureSelected accountID
-        else
-            AccountActionCreator.selectAccount null
+    showSearchResult: (parameters) ->
+        {accountID, search} = parameters
+
+        AppDispatcher.handleViewAction
+            type: ActionTypes.SELECT_ACCOUNT
+            value: {accountID}
 
         AppDispatcher.handleViewAction
             type: ActionTypes.SEARCH_PARAMETER_CHANGED
             value: {accountID, search}
 
-        if search isnt '-'
-            MessageActionCreator.fetchSearchResults accountID, search
+    saveMessage: (params) ->
+        {accountID, mailboxID, messageID} = params
+        accountID ?= RouterGetter.getAccountID()
+        mailboxID ?= RouterGetter.getMailboxID()
 
-    showMessage: (panelInfo) ->
-        {messageID} = panelInfo.parameters
-        return unless messageID
+        # Select Mailbox
+        AppDispatcher.handleViewAction
+            type: ActionTypes.SELECT_ACCOUNT
+            value: {accountID, mailboxID}
 
-        message = MessageStore.getByID messageID
-        if message?
-            AccountActionCreator.selectAccountForMessage message
-        else
-            XHRUtils.fetchMessage messageID, (err, rawMessage) ->
+        # Set message as current
+        if messageID
+            AppDispatcher.handleViewAction
+                type: ActionTypes.MESSAGE_CURRENT
+                value: {messageID}
 
-                if err?
-                    LayoutActionCreator.alertError err
-                else
-                    MessageActionCreator.receiveRawMessage rawMessage
-                    AccountActionCreator.selectAccountForMessage rawMessage
-
-    # Display compose widget but this time it's aimed to be pre-filled:
-    # either with reply/forward or with draft information.
-    showComposeMessage: (panelInfo, direction) ->
-        AccountActionCreator.selectDefaultIfNoneSelected()
-        LayoutActionCreator.showMessage panelInfo
-
-    showCreateAccount: (panelInfo, direction) ->
-        AccountActionCreator.selectAccount null
-
-    showConfigAccount: (panelInfo, direction) ->
-        AccountActionCreator.selectAccount panelInfo.parameters.accountID
-
-    showSettings: (panelInfo, direction) ->
+            AppDispatcher.handleViewAction
+                type: ActionTypes.MESSAGE_FETCH_REQUEST
+                value: {messageID}
 
     toastsShow: ->
         AppDispatcher.handleViewAction
@@ -185,19 +124,6 @@ module.exports = LayoutActionCreator =
         AppDispatcher.handleViewAction
             type: ActionTypes.INTENT_AVAILABLE
             value: availability
-
-    # Drawer
-    drawerShow: ->
-        AppDispatcher.handleViewAction
-            type: ActionTypes.DRAWER_SHOW
-
-    drawerHide: ->
-        AppDispatcher.handleViewAction
-            type: ActionTypes.DRAWER_HIDE
-
-    drawerToggle: ->
-        AppDispatcher.handleViewAction
-            type: ActionTypes.DRAWER_TOGGLE
 
     displayModal: (params) ->
         params.closeModal ?= -> LayoutActionCreator.hideModal()

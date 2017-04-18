@@ -1,6 +1,5 @@
 Immutable      = require 'immutable'
 React          = require 'react'
-
 {div, h4, ul, li, span, p, form, i, input, label} = React.DOM
 
 {SubTitle, Form} = require('./basic_components').factories
@@ -11,8 +10,6 @@ AccountDelete    = React.createFactory require './account_config_delete'
 AccountActionCreator = require '../actions/account_action_creator'
 LayoutActionCreator  = require '../actions/layout_action_creator'
 
-RouterMixin           = require '../mixins/router_mixin'
-ShouldComponentUpdate = require '../mixins/should_update_mixin'
 LinkedStateMixin      = require 'react-addons-linked-state-mixin'
 
 cachedTransform = require '../libs/cached_transform'
@@ -22,9 +19,7 @@ module.exports = AccountConfigMailboxes = React.createClass
     displayName: 'AccountConfigMailboxes'
 
     mixins: [
-        RouterMixin
         LinkedStateMixin
-        ShouldComponentUpdate.UnderscoreEqualitySlow
     ]
 
     propTypes:
@@ -166,9 +161,10 @@ module.exports = AccountConfigMailboxes = React.createClass
             accountID: @props.editedAccount.get 'id'
             parentID: @state.newMailboxParent
 
-        AccountActionCreator.mailboxCreate mailbox, (error) =>
-            @setState newMailboxName: '' unless error
-
+        # FIXME : normalement, la vue devrait se re-render
+        # avec le bon state
+        # TODO : vérifier le bon fctionnement
+        AccountActionCreator.mailboxCreate mailbox
 
     # Undo mailbox creation (hide the mailbox creation widget).
     resetMailboxClicked: (event) ->

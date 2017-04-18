@@ -1,145 +1,86 @@
 _ = require 'underscore'
-React = require 'react'
+React     = require 'react'
+ReactDOM  = require 'react-dom'
 
 {section, header, ul, li, span, i, p, h3, a, button} = React.DOM
+DomUtils = require '../utils/dom_utils'
 
-{MessageFlags} = require '../constants/app_constants'
+{MessageFlags, MessageActions} = require '../constants/app_constants'
 
-Message = React.createFactory require './message'
+Message             = React.createFactory require './message'
 ToolbarConversation = React.createFactory require './toolbar_conversation'
 
-RouterMixin = require '../mixins/router_mixin'
-StoreWatchMixin = require '../mixins/store_watch_mixin'
-ShouldComponentUpdate = require '../mixins/should_update_mixin'
+RouterGetter = require '../getters/router'
 
-LayoutActionCreator = require '../actions/layout_action_creator'
-SettingsStore = require '../stores/settings_store'
-AccountStore = require '../stores/account_store'
-MessageStore = require '../stores/message_store'
-LayoutStore = require '../stores/layout_store'
+# FIXME : use Getters instead of Stores
+AccountStore        = require '../stores/account_store'
+MessageStore        = require '../stores/message_store'
+LayoutStore         = require '../stores/layout_store'
+SelectionStore       = require '../stores/selection_store'
+StoreWatchMixin      = require '../mixins/store_watch_mixin'
 
 module.exports = React.createClass
     displayName: 'Conversation'
 
     mixins: [
-        RouterMixin,
-        StoreWatchMixin [SettingsStore, AccountStore, MessageStore, LayoutStore]
-        ShouldComponentUpdate.UnderscoreEqualitySlow
+        StoreWatchMixin [SelectionStore, MessageStore]
     ]
 
-    propTypes:
-        messageID: React.PropTypes.string
+    componentDidMount: ->
+        @_initScroll()
+
+    componentDidUpdate: ->
+        @_initScroll()
 
     getStateFromStores: ->
-        message = MessageStore.getByID @props.messageID
-        selectedMailboxID = AccountStore.getSelectedMailbox()?.get 'id'
-        selectedAccount = AccountStore.getSelectedOrDefault()
+        return {
+            isLoading: RouterGetter.isLoading()
+            message: RouterGetter.getMessage()
+            conversation: RouterGetter.getConversation()
+            # compactMin: 3
+            # compact: if @state then @state.compact else true
+            # isCompacted: if @state then @state.isCompacted else false
+        }
 
-        if message?
-            conversationID = message?.get('conversationID')
-            trashMailboxID = selectedAccount?.get('trashMailbox')
+    renderMessage: (message, index) ->
+        # isCompactMode = not @state.isCompacted and @state.compact
+        # doCompact = index <= @state.compactMin
+        # if isCompactMode and doCompact
+        #     hiddenSize = @state.conversation?.size -  @state.compactMin
+        #     @state.isCompacted = true
+        #     return button
+        #         ref: 'button-expand'
+        #         key: 'button-expand-' + message.get 'id'
+        #         className: 'more'
+        #         onClick: =>
+        #             @setState compact: false
+        #         i className: 'fa fa-refresh'
+        #         t 'load more messages', hiddenSize
 
-            conversation = MessageStore.getConversation {conversationID}
-            prevMessage = MessageStore.getPreviousConversation {conversationID}
-            nextMessage = MessageStore.getNextConversation {conversationID}
-
-            length = MessageStore.getConversationsLength().get conversationID
-            selectedMailboxID ?= Object.keys(message.get('mailboxIDs'))[0]
-
-        nextState =
-            accounts             : AccountStore.getAll()
-            mailboxes            : AccountStore.getSelectedMailboxes()
-            selectedAccount      : AccountStore.getSelectedOrDefault()
-            selectedMailboxID    : selectedMailboxID
-            settings             : SettingsStore.get()
-            useIntents           : LayoutStore.intentAvailable()
-            conversationID       : conversationID
-            conversation         : conversation
-            conversationLength   : length
-            prevMessage          : prevMessage
-            nextMessage          : nextMessage
-            fullscreen           : LayoutStore.isPreviewFullscreen()
-
-        nextState.compact = true if @state?.compact isnt false
-
-        if nextState.conversation?.size isnt @state?.conversation?.size
-            nextState.expanded = []
-            conversation?.forEach (message, key) ->
-                isUnread = MessageFlags.SEEN not in message.get 'flags'
-                isLast   = key is conversation.size - 1
-                if (nextState.expanded.length is 0 and (isUnread or isLast))
-                    nextState.expanded.push key
-            nextState.compact = true
-
-        return nextState
-
-    renderMessage: (key, active) ->
-        # allow the Message component to update current active message
-        # in conversation. Needed to open the first unread message when
-        # opening a conversation
-        toggleActive = =>
-            expanded = @state.expanded[..]
-            if key in expanded
-                expanded = expanded.filter (id) -> return key isnt id
-            else
-                expanded.push key
-            @setState expanded: expanded
-
+        accounts = AccountStore.getAll()
+        accountID = RouterGetter.getAccountID()
+        messageID = message.get 'id'
+        conversationID = message.get('conversationID')
         Message
             ref                 : 'message'
-            accounts            : @state.accounts
-            active              : active
-            inConversation      : @state.conversation.size > 1
-            key                 : key.toString()
-            mailboxes           : @state.mailboxes
-            message             : @state.conversation.get key
-            selectedAccountID   : @state.selectedAccount.get 'id'
-            selectedAccountLogin: @state.selectedAccount.get 'login'
-            selectedMailboxID   : @state.selectedMailboxID
-            settings            : @state.settings
-            useIntents          : @state.useIntents
-            toggleActive        : toggleActive
-
-
-    renderGroup: (messages, key) ->
-        # if there are more than 3 messages, by default only render
-        # first and last ones
-        if messages.size > 3 and @state.compact
-            items = []
-            [first, ..., last] = messages
-            items.push @renderMessage(first, false)
-            items.push button
-                className: 'more'
-                onClick: =>
-                    @setState compact: false
-                i className: 'fa fa-refresh'
-                t 'load more messages', messages.size - 2
-            items.push @renderMessage(last, false)
-        else
-            items = (@renderMessage(key, false) for key in messages)
-
-        return items
-
+            key                 : 'message-' + messageID
+            message             : message
+            active              : RouterGetter.isCurrentConversation conversationID
+            url                 : RouterGetter.getURL {messageID}
+            selectedMailboxID   : @props.mailboxID
+            useIntents          : LayoutStore.intentAvailable()
+            trashMailbox        : accounts[accountID]?.trashMailbox
 
     render: ->
-        if not @state.conversation or not (message = @state.conversation.get 0)
+        unless @state.conversation?.length
             return section
                 key: 'conversation'
                 className: 'conversation panel'
                 'aria-expanded': true,
                 p null, t "app loading"
 
-
-        # Sort messages in conversation to find seen messages and group them
-        messages = []
-        lastMessageIndex = @state.conversation.size - 1
-        @state.conversation.forEach (message, key) =>
-            if key in @state.expanded
-                messages.push key
-            else
-                [..., last] = messages
-                messages.push(last = []) unless _.isArray(last)
-                last.push key
+        conversationID = @state.message.get 'conversationID'
+        subject = @state.message.get 'subject'
 
         # Starts components rendering
         section
@@ -149,24 +90,26 @@ module.exports = React.createClass
 
             header null,
                 h3 className: 'conversation-title',
-                    message.get 'subject'
+                    subject
 
                 ToolbarConversation
-                    conversation        : @state.conversation
-                    conversationID      : @state.conversationID
-                    moveFromMailbox     : @state.selectedMailboxID
-                    moveToMailboxes     : @state.mailboxes
-                    nextMessageID       : @state.nextMessage?.get('id')
-                    nextConversationID  : @state.nextMessage?.get('conversationID')
-                    prevMessageID       : @state.prevMessage?.get('id')
-                    prevConversationID  : @state.prevMessage?.get('conversationID')
-                    fullscreen          : @state.fullscreen
+                    key                 : 'ToolbarConversation-' + conversationID
+                    conversationID      : conversationID
+                    mailboxID           : @props.mailboxID
                 a
                     className: 'clickable btn btn-default fa fa-close'
-                    href: @buildClosePanelUrl 'second'
+                    href: RouterGetter.getURL
+                        action: MessageActions.SHOW_ALL
 
-            for glob, index in messages
-                if _.isArray glob
-                    @renderGroup glob, index
-                else
-                    @renderMessage glob, true
+            section
+                ref: 'scrollable',
+                    @state.conversation.map @renderMessage
+
+    _initScroll: ->
+        if not (scrollable = ReactDOM.findDOMNode @refs.scrollable) or scrollable.scrollTop
+            return
+
+        if (activeElement = scrollable.querySelector '[data-message-active="true"]')
+            unless DomUtils.isVisible activeElement
+                coords = activeElement.getBoundingClientRect()
+                scrollable.scrollTop = coords.top

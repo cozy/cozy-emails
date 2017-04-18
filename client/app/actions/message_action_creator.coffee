@@ -1,20 +1,20 @@
 AppDispatcher = require '../app_dispatcher'
-Constants = require '../constants/app_constants'
-{ActionTypes, MessageFlags, FlagsConstants} = Constants
+
+{ActionTypes, MessageFlags, FlagsConstants} = require '../constants/app_constants'
+
 XHRUtils      = require '../utils/xhr_utils'
+
 AccountStore  = require "../stores/account_store"
 MessageStore  = require '../stores/message_store'
-SearchStore  = require '../stores/search_store'
+
 refCounter = 1
 
-module.exports = MessageActionCreator =
-
+MessageActionCreator =
 
     receiveRawMessages: (messages) ->
         AppDispatcher.handleViewAction
             type: ActionTypes.RECEIVE_RAW_MESSAGES
             value: messages
-
 
     receiveRawMessage: (message) ->
         AppDispatcher.handleViewAction
@@ -22,7 +22,7 @@ module.exports = MessageActionCreator =
             value: message
 
 
-    send: (action, message, callback) ->
+    send: (action, message) ->
         conversationID = message.conversationID
 
         # Message should have a html content
@@ -30,24 +30,19 @@ module.exports = MessageActionCreator =
         unless message.composeInHTML
             message.html = message.text
 
+        AppDispatcher.handleViewAction
+            type: ActionTypes.MESSAGE_SEND_REQUEST
+            value: message
+
         XHRUtils.messageSend message, (error, message) =>
-            if error? or not message?
-                if 'MESSAGE_SEND' is action
-                    msgKo = t "message action sent ko"
-                else
-                    msgKo = t "message action draft ko"
-                LayoutActionCreator.alertError "#{msgKo} #{error}"
-                return
-
-            if conversationID and action in ['UNMOUNT', 'MESSAGE_SEND']
-                @fetchConversation conversationID
-
-            AppDispatcher.handleViewAction
-                type: ActionTypes.MESSAGE_SEND
-                value: message
-
-            if callback?
-                callback error, message
+            if error?
+                AppDispatcher.handleViewAction
+                    type: ActionTypes.MESSAGE_SEND_FAILURE
+                    value: {error, action, message}
+            else
+                AppDispatcher.handleViewAction
+                    type: ActionTypes.MESSAGE_SEND_SUCCESS
+                    value: {action, message}
 
 
     # set conv to true to update current conversation ID
@@ -58,66 +53,23 @@ module.exports = MessageActionCreator =
             type: ActionTypes.MESSAGE_CURRENT
             value:
                 messageID: messageID
-                conv: conv
 
-    fetchMoreOfCurrentQuery: ->
-        url = MessageStore.getNextUrl()
-        return unless url
-        mailboxID = AccountStore.getSelectedMailbox().get 'id'
+    fetchConversation: (messageID) ->
 
-        AppDispatcher.handleViewAction
-            type: ActionTypes.MESSAGE_FETCH_REQUEST
-            value: {mailboxID}
-
-        ts = Date.now()
-        XHRUtils.fetchMessagesByFolder url, (err, rawMsg) ->
-            if err?
-                AppDispatcher.handleViewAction
-                    type: ActionTypes.MESSAGE_FETCH_FAILURE
-                    value: {mailboxID}
-            else
-                # This prevent to override local updates with older ones
-                # from server
-                rawMsg.messages.forEach (msg) -> msg.updated = ts
-                AppDispatcher.handleViewAction
-                    type: ActionTypes.MESSAGE_FETCH_SUCCESS
-                    value: {mailboxID, fetchResult: rawMsg}
-
-
-    fetchSearchResults: (accountID, search) ->
-        return null if search is '-'
-        url = SearchStore.getNextSearchUrl()
-        return unless url
-
-        AppDispatcher.handleViewAction
-            type: ActionTypes.SEARCH_REQUEST
-            value: {search}
-
-        XHRUtils.search url, (error, searchResults) ->
-            if error?
-                AppDispatcher.handleViewAction
-                    type: ActionTypes.SEARCH_FAILURE
-                    value: {error}
-            else
-                AppDispatcher.handleViewAction
-                    type: ActionTypes.SEARCH_SUCCESS
-                    value: {searchResults}
-
-    fetchConversation: (conversationID) ->
-
-        AppDispatcher.handleViewAction
-            type: ActionTypes.CONVERSATION_FETCH_REQUEST
-            value: {conversationID}
-
-        XHRUtils.fetchConversation conversationID, (error, updated) ->
-            if error
-                AppDispatcher.handleViewAction
-                    type: ActionTypes.CONVERSATION_FETCH_FAILURE
-                    value: {error}
-            else
-                AppDispatcher.handleViewAction
-                    type: ActionTypes.CONVERSATION_FETCH_SUCCESS
-                    value: {updated}
+        console.log 'FETCH_CONVERSATION'
+        # AppDispatcher.handleViewAction
+        #     type: ActionTypes.CONVERSATION_FETCH_REQUEST
+        #     value: {conversationID}
+        #
+        # XHRUtils.fetchConversation conversationID, (error, updated) ->
+        #     if error
+        #         AppDispatcher.handleViewAction
+        #             type: ActionTypes.CONVERSATION_FETCH_FAILURE
+        #             value: {error}
+        #     else
+        #         AppDispatcher.handleViewAction
+        #             type: ActionTypes.CONVERSATION_FETCH_SUCCESS
+        #             value: {updated}
 
 
     # Immediately synchronise some messages with the server
@@ -137,41 +89,38 @@ module.exports = MessageActionCreator =
                     type: ActionTypes.MESSAGE_RECOVER_SUCCESS
                     value: {ref}
 
-
     refreshMailbox: (mailboxID) ->
-        unless AccountStore.isMailboxRefreshing(mailboxID)
-            AppDispatcher.handleViewAction
-                type: ActionTypes.REFRESH_REQUEST
-                value: {mailboxID}
+        AppDispatcher.handleViewAction
+            type: ActionTypes.REFRESH_REQUEST
+            value: {mailboxID}
 
-            account = AccountStore.getSelected()
-            options = deep: account.get('draftMailbox') is mailboxID
+        account = AccountStore.getSelected()
+        options = deep: account.get('draftMailbox') is mailboxID
 
-            XHRUtils.refreshMailbox mailboxID, options, (error, updated) ->
-                if error?
-                    AppDispatcher.handleViewAction
-                        type: ActionTypes.REFRESH_FAILURE
-                        value: {mailboxID, error}
-                else
-                    AppDispatcher.handleViewAction
-                        type: ActionTypes.REFRESH_SUCCESS
-                        value: {mailboxID, updated}
+        XHRUtils.refreshMailbox mailboxID, options, (error, updated) ->
+            if error?
+                AppDispatcher.handleViewAction
+                    type: ActionTypes.REFRESH_FAILURE
+                    value: {mailboxID, error}
+            else
+                AppDispatcher.handleViewAction
+                    type: ActionTypes.REFRESH_SUCCESS
+                    value: {mailboxID, updated}
 
 
     # Delete message(s)
     # target:
     #  - messageID or messageIDs or conversationIDs or conversationIDs
-    #  - isDraft?
-    #  - silent? (don't display confirmation message when deleting
-    #    an empty draft)
-    delete: (target, callback) ->
+    delete: (target) ->
         ref = refCounter++
+
         AppDispatcher.handleViewAction
             type: ActionTypes.MESSAGE_TRASH_REQUEST
             value: {target, ref}
 
         # send request
         ts = Date.now()
+        next = MessageStore.getNextConversation()
         XHRUtils.batchDelete target, (error, updated) =>
             if error
                 AppDispatcher.handleViewAction
@@ -182,14 +131,12 @@ module.exports = MessageActionCreator =
                 # in doubt, recover the changed to messages to sync with
                 # server
                 @recover target, ref
-            else if updated?.length
-                msg.updated = ts for msg in updated
-                AppDispatcher.handleViewAction
-                    type: ActionTypes.MESSAGE_TRASH_SUCCESS
-                    value: {target, ref, updated}
+                return
 
-            callback? error, updated
-
+            msg.updated = ts for msg in updated
+            AppDispatcher.handleViewAction
+                type: ActionTypes.MESSAGE_TRASH_SUCCESS
+                value: {target, ref, updated, next}
 
     move: (target, from, to, callback) ->
         ref = refCounter++
@@ -217,7 +164,7 @@ module.exports = MessageActionCreator =
 
             callback? error, updated
 
-    mark: (target, flagAction, callback) ->
+    mark: (target, flagAction) ->
         ref = refCounter++
 
         switch flagAction
@@ -236,11 +183,11 @@ module.exports = MessageActionCreator =
             else
                 throw new Error "Wrong usage : unrecognized FlagsConstants"
 
+        ts = Date.now()
+
         AppDispatcher.handleViewAction
             type: ActionTypes.MESSAGE_FLAGS_REQUEST
             value: {target, ref, op, flag, flagAction}
-
-        ts = Date.now()
 
         XHRUtils[op] target, flag, (error, updated) =>
             if error
@@ -257,8 +204,6 @@ module.exports = MessageActionCreator =
                 AppDispatcher.handleViewAction
                     type: ActionTypes.MESSAGE_FLAGS_SUCCESS
                     value: {target, ref, updated, op, flag, flagAction}
-
-            callback? error, updated
 
     undo: (ref) ->
 
@@ -308,3 +253,5 @@ _loopSeries = (obj, iterator, done) ->
             return done err if err
             return done null if ++i is keys.length
             step()
+
+module.exports = MessageActionCreator
