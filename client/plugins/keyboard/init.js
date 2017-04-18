@@ -8,6 +8,7 @@ var LayoutStore = require('../../app/stores/layout_store');
 var Dispositions = require('../../app/constants/app_constants').Dispositions;
 var MessageActionCreator = require('../../app/actions/message_action_creator');
 
+ApiUtils = require '../../app/utils/api_utils'
 
 if (typeof window.plugins !== "object") {
   window.plugins = {};
@@ -16,7 +17,7 @@ if (typeof window.plugins !== "object") {
   "use strict";
   function bindingNew(e) {
     if (e && e instanceof Event) { e.preventDefault(); }
-    window.cozyMails.messageNew();
+    ApiUtils.messageNew();
   }
   function bindingHelp() {
     var container, help;
@@ -95,10 +96,10 @@ if (typeof window.plugins !== "object") {
           if (btnConfirm !== null) {
             btnConfirm.dispatchEvent(new MouseEvent('click', { 'view': window, 'bubbles': true, 'cancelable': true }));
           } else {
-            if (window.cozyMails.getCurrentActions().indexOf('account.mailbox.messages') === 0 &&
+            if (ApiUtils.getCurrentActions().indexOf('account.mailbox.messages') === 0 &&
                ['INPUT', 'BUTTON'].indexOf(document.activeElement.tagName) === -1) {
               if (e && e instanceof Event) { e.preventDefault(); }
-              window.cozyMails.messageDisplay();
+              ApiUtils.messageDisplay();
             }
           }
         }
@@ -112,7 +113,7 @@ if (typeof window.plugins !== "object") {
             btnClose.dispatchEvent(new MouseEvent('click', { 'view': window, 'bubbles': true, 'cancelable': true }));
           } else {
             if (e && e instanceof Event) { e.preventDefault(); }
-            window.cozyMails.messageClose();
+            ApiUtils.messageClose();
           }
         }
       },
@@ -151,14 +152,14 @@ if (typeof window.plugins !== "object") {
         alias: ['down'],
         action: function (e) {
           if (e && e instanceof Event) { e.preventDefault(); }
-          window.cozyMails.messageNavigate('next');
+          ApiUtils.messageNavigate('next');
         }
       },
       'right': {
         name: "Next Message in conversation",
         action: function (e) {
           if (e && e instanceof Event) { e.preventDefault(); }
-          window.cozyMails.messageNavigate('next', true);
+          ApiUtils.messageNavigate('next', true);
         }
       },
       'k': {
@@ -166,14 +167,14 @@ if (typeof window.plugins !== "object") {
         alias: ['up'],
         action: function (e) {
           if (e && e instanceof Event) { e.preventDefault(); }
-          window.cozyMails.messageNavigate('prev');
+          ApiUtils.messageNavigate('prev');
         }
       },
       'left': {
         name: "Previous Message in conversation",
         action: function (e) {
           if (e && e instanceof Event) { e.preventDefault(); }
-          window.cozyMails.messageNavigate('prev', true);
+          ApiUtils.messageNavigate('prev', true);
         }
       },
       'ctrl+down': {
@@ -221,13 +222,6 @@ if (typeof window.plugins !== "object") {
           layoutRatio();
         }
       },
-      'F': {
-        name: "Toggle fullscreen",
-        action: function (e) {
-          if (e && e instanceof Event) { e.preventDefault(); }
-          LayoutActionCreator.toggleFullscreen();
-        }
-      },
       'w': {
         name: "Toggle layout",
         action: function (e) {
@@ -270,7 +264,7 @@ if (typeof window.plugins !== "object") {
         alias: ['backspace', 'del'],
         action: function (e) {
           if (e && e instanceof Event) { e.preventDefault(); }
-          window.cozyMails.messageDeleteCurrent();
+          ApiUtils.messageDeleteCurrent();
         }
       },
       'ctrl+z': {

@@ -4,67 +4,40 @@ classNames = require 'classnames'
 
 {div, section, p, ul, li, a, span, i, button, input, img} = React.DOM
 
-{MessageFlags, MailboxFlags} = require '../constants/app_constants'
-colorhash                    = require '../utils/colorhash'
-MessageUtils                 = require '../utils/message_utils'
+{MessageFlags} = require '../constants/app_constants'
 
-RouterMixin          = require '../mixins/router_mixin'
-MessageActionCreator = require '../actions/message_action_creator'
+colorhash = require '../utils/colorhash'
+
+RouterActionCreator = require '../actions/router_action_creator'
+LayoutActionCreator = require '../actions/layout_action_creator'
 
 {Icon}       = require('./basic_components').factories
 Participants = React.createFactory require './participants'
 
+RouterGetter = require '../getters/router'
+ContactGetter = require '../getters/contact'
+SearchGetter = require '../getters/search'
 
-module.exports = MessageItem = React.createClass
+module.exports = React.createClass
     displayName: 'MessagesItem'
 
-    mixins: [RouterMixin]
-
-    shouldComponentUpdate: (nextProps, nextState) ->
-        # we must do the comparison manually because the property "onSelect" is
-        # a function (therefore it should not be compared)
-        updatedProps = Object.keys(nextProps).filter (prop) =>
-            return typeof nextProps[prop] isnt 'function' and
-                not (_.isEqual(nextProps[prop], @props[prop]))
-        shouldUpdate = not _.isEqual(nextState, @state) or
-            updatedProps.length > 0
-
-        return shouldUpdate
-
     render: ->
-        message = @props.message
-        flags = message.get('flags')
-
-        classes = classNames
-            message: true
-            unseen:  MessageFlags.SEEN not in flags
-            active:  @props.isActive
-            edited:  @props.edited
-
-        compact = @props.settings.get('listStyle') is 'compact'
-        date    = MessageUtils.formatDate message.get('createdAt'), compact
-        avatar  = MessageUtils.getAvatar message
-
-        # Change tag type if current message is in edited mode
-        tagType  = if @props.edited then span else a
-
-
+        date    = RouterGetter.getCreatedAt @props.message, @props.isCompact
+        avatar  = ContactGetter.getAvatar @props.message
+        flags   = @props.message.get 'flags'
         li
-            className:              classes
+            className:  classNames
+                message:    true
+                unseen:     MessageFlags.SEEN not in flags
+                active:     @props.isActive
             key:                    @props.key
-            'data-message-id':      message.get('id')
-            'data-conversation-id': message.get('conversationID')
-            draggable:              not @props.edited
+            'data-message-active':  @props.isActive
+            draggable:              false
             onClick:                @onMessageClick
-            onDragStart:            @onDragStart,
 
-            tagType
-                href:              @getUrl()
-                className:         'wrapper'
-                'data-message-id': message.get('id')
-                onClick:           @onMessageClick
-                onDoubleClick:     @onMessageDblClick
+            a
                 ref:               'target'
+                className:         'wrapper'
 
                 div className: 'markers-wrapper',
                     Icon
@@ -74,19 +47,17 @@ module.exports = MessageItem = React.createClass
                     Icon
                         className: 'select'
                         onClick:   @onSelect
-                        type: (if @props.selected then 'check-square-o'
-                        else 'square-o')
+                        type: if @props.isSelected then 'check-square-o' else 'square-o'
 
                     Icon
                         type: 'star'
                         className: 'hidden' if MessageFlags.FLAGGED not in flags
 
-
                 div className: 'avatar-wrapper select-target',
                     if avatar?
                         img className: 'avatar', src: avatar
                     else
-                        from  = message.get('from')[0]
+                        from  = @props.message.get('from')[0]
                         cHash = "#{from?.name} <#{from?.address}>"
                         i
                             className: 'avatar placeholder'
@@ -97,102 +68,46 @@ module.exports = MessageItem = React.createClass
                 div className: 'metas-wrapper',
                     div className: 'metas',
                         div className: 'participants ellipsable',
-                            @getParticipants message
+                            @getParticipants @props.message
                         div className: 'subject ellipsable',
-                            @highlightSearch message.get('subject')
+                            @highlightSearch text: @props.message.get 'subject'
                         div className: 'mailboxes',
-                            @getMailboxTags(message)...
+                            @props.tags.map (tag) ->
+                                span className: 'mailbox-tag', tag
                         div className: 'date',
-                            # TODO: use time-elements component here for the date
                             date
                         div className: 'extras',
-                            if message.get 'hasAttachments'
+                            if @props.message.get 'hasAttachments'
                                 i className: 'attachments fa fa-paperclip'
                             if @props.conversationLengths > 1
                                 span className: 'conversation-length',
-                                    "#{@props.conversationLengths}"
+                                    @props.conversationLengths
                         div className: 'preview ellipsable',
-                            @highlightSearch MessageUtils.getPreview(message)
+                            @highlightSearch message: @props.message
 
-    highlightSearch: (text, opts = null) ->
-        return p opts, MessageUtils.highlightSearch(text)...
 
-    getMailboxTags: ->
+    highlightSearch: (props, options = null) ->
+        {message, text} = props
 
-        accountID = @props.message.get('accountID')
+        if message and not (text = message.get 'text')
+            text = toMarkdown html if (html = message.get 'html')?
 
-        Object.keys @props.message.get('mailboxIDs')
-        .filter (boxID) =>
-            box = @props.mailboxes.get boxID
-            unless box # box was just deleted
-                return false
+        text = (text or '').substr 0, 1024
+        props = SearchGetter.highlightSearch text
+        p options, props...
 
-            if @props.mailboxID and MailboxFlags.ALL in box.get 'attribs'
-                return false # dont display "all messages" labels
 
-            if @props.mailboxID is boxID
-                return false # dont display same box labels
+    onSelect: (event) ->
+        event.stopPropagation()
+        id = @props.message.get 'id'
+        value = not @props.isSelected
+        LayoutActionCreator.updateSelection {id, value}
 
-            return true
-
-        .map (boxID) =>
-            box = @props.mailboxes.get boxID
-            label = box.get 'label'
-            unless @props.accountID
-                label = "#{@props.accountLabel}:#{label}"
-
-            span className: 'mailbox-tag', label
-
-    onSelect: (e) ->
-        @props.onSelect(not @props.selected)
-        e.preventDefault()
-        e.stopPropagation()
-
-    getUrl: ->
-        params =
-            messageID: @props.message.get 'id'
-
-        action = 'conversation'
-        params.conversationID = @props.message.get 'conversationID'
-
-        return @buildUrl
-            direction: 'second'
-            action: action
-            parameters: params
 
     onMessageClick: (event) ->
-        node = @refs.target
-        if @props.edited and event.target.classList.contains 'select-target'
-            @props.onSelect(not @props.selected)
-            event.preventDefault()
-            event.stopPropagation()
-        # When hitting `enter` in deletion confirmation dialog, this
-        # event is fired on last active link. We must cancel it to prevent
-        # navigating to the last message the user clicked
-        else if event.target.classList.contains 'wrapper'
-            event.preventDefault()
-            event.stopPropagation()
-        else if not (event.target.getAttribute('type') is 'checkbox')
-            event.preventDefault()
-            event.stopPropagation()
-            MessageActionCreator.setCurrent node.dataset.messageId, true
-            if @props.settings.get('displayPreview')
-                href = '#' + node.getAttribute('href').split('#')[1]
-                @redirect href
+        RouterActionCreator.gotoMessage
+            messageID: @props.message.get 'id'
 
-    onMessageDblClick: (event) ->
-        if not @props.edited
-            url = event.currentTarget.href.split('#')[1]
-            window.router.navigate url, {trigger: true}
-
-    onDragStart: (event) ->
-        event.stopPropagation()
-        data = mailboxID: @props.mailboxID
-        data.conversationID = event.currentTarget.dataset.conversationId
-
-        event.dataTransfer.setData 'text', JSON.stringify(data)
-        event.dataTransfer.effectAllowed = 'move'
-        event.dataTransfer.dropEffect = 'move'
 
     getParticipants: (message) ->
         from = message.get 'from'
@@ -203,15 +118,10 @@ module.exports = MessageItem = React.createClass
         p null,
             Participants
                 participants: from
-                onAdd: @addAddress
                 ref: 'from'
                 tooltip: false
             span null, separator
             Participants
                 participants: to
-                onAdd: @addAddress
                 ref: 'to'
                 tooltip: false
-
-    addAddress: (address) ->
-        ContactActionCreator.createContact address

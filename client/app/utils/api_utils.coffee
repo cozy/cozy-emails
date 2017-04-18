@@ -3,20 +3,23 @@ _        = require 'underscore'
 Polyglot = require 'node-polyglot'
 moment   = require 'moment'
 
+AppDispatcher = require '../libs/flux/dispatcher/dispatcher'
+
+{sendReport} = require './error_manager'
+
 AccountStore  = require '../stores/account_store'
 MessageStore  = require '../stores/message_store'
+RouterStore  = require '../stores/router_store'
 SettingsStore = require '../stores/settings_store'
-LayoutActionCreator  = require '../actions/layout_action_creator'
-MessageActionCreator = require '../actions/message_action_creator'
 
+LayoutActionCreator  = require '../actions/layout_action_creator'
+RouterActionCreator  = require '../actions/router_action_creator'
+NotificationActionsCreator = require '../actions/notification_action_creator'
+
+{MessageActions, AccountActions} = require '../constants/app_constants'
 
 onMessageList = ->
-    actions = [
-        "account.mailbox.messages",
-        "account.mailbox.messages.filter",
-        "account.mailbox.messages.date"
-    ]
-    return router.current.firstPanel?.action in actions
+    return RouterStore.getAction() in [MessageActions.SHOW_ALL, MessageActions.SHOW]
 
 
 module.exports = Utils =
@@ -26,27 +29,15 @@ module.exports = Utils =
 
 
     getCurrentAccount: ->
-        AccountStore.getSelected()?.toJS()
+        RouterStore.getAccount()?.toJS()
 
 
     getCurrentMailbox: ->
-        AccountStore.getSelectedMailbox()?.toJS()
+        RouterStore.getMailbox()?.toJS()
 
 
-    getCurrentMessage: ->
-        messageID = MessageStore.getCurrentID()
-        message = MessageStore.getByID messageID
-        return message?.toJS()
-
-
-    getMessage: (id) ->
-        message = MessageStore.getByID id
-        return message?.toJS()
-
-
-    getCurrentConversation: ->
-        MessageStore.getCurrentConversation()?.toJS()
-
+    getMessage: (messageID) ->
+        MessageStore.getByID(messageID)?.toJS()
 
     getCurrentActions: ->
         res = []
@@ -57,11 +48,12 @@ module.exports = Utils =
 
 
     messageNew: ->
-        router.navigate('compose/', {trigger: true})
+        RouterActionCreator.gotoCompose()
 
 
     # update locate (without saving it into settings)
     setLocale: (lang) ->
+        lang ?= window.locale or window.navigator.language or 'en'
         moment.locale lang
         locales = {}
         try
@@ -85,7 +77,6 @@ module.exports = Utils =
 
     # warning: don't update setting value server side
     setSetting: (key, value) ->
-        AppDispatcher = require '../app_dispatcher'
         {ActionTypes} = require '../constants/app_constants'
         settings = SettingsStore.get().toJS()
         if typeof key is 'object'
@@ -93,98 +84,45 @@ module.exports = Utils =
                 settings[k] = v
         else
             settings[key] = value
-        AppDispatcher.handleViewAction
-            type: ActionTypes.SETTINGS_UPDATED
+        AppDispatcher.dispatch
+            type: ActionTypes.SETTINGS_UPDATE_SUCCESS
             value: settings
 
-    messageNavigate: (direction, inConv) ->
-        return unless onMessageList()
-
-        # when key top is pressed, direction=prev
-        # when key bottom is pressed, direction=next
-        # strange (?!)
-        if direction is 'prev'
-            next = MessageStore.getNextConversation()
-        else
-            next = MessageStore.getPreviousConversation()
-
-        @messageSetCurrent(next)
-
-
-    messageSetCurrent: (message) ->
-        return unless message?.get('id')
-
-        MessageActionCreator.setCurrent message.get('id'), true
-
-        if SettingsStore.get('displayPreview')
-            @messageDisplay message
-
+    # top/bottom navigation
+    # `top` key     -> direction is prev
+    # `bottom` key  -> direction is next
+    messageNavigate: (direction) ->
+        message = if 'prev' is direction
+        then RouterStore.getNextConversation()
+        else RouterStore.getPreviousConversation()
+        messageID = message?.get 'id'
+        mailboxID = message?.get 'mailboxID'
+        RouterActionCreator.gotoMessage {messageID, mailboxID}
 
     ##
     # Display a message
     # @params {Immutable} message the message (current one if null)
-    # @params {Boolean}   force   if false do nothing if right panel is not open
-    messageDisplay: (message, force) ->
-        if not message?
-            message = MessageStore.getByID(MessageStore.getCurrentID())
-        if not message?
-            return
-        # return if second panel isn't already open
-        if force is false and not window.router.current.secondPanel?
-            return
-
-        if (conversationID = message.get 'conversationID')?
-            action = 'conversation'
-            params =
-                messageID: message.get 'id'
-                conversationID: conversationID
-        else
-            action = 'message'
-            params =
-                messageID: message.get 'id'
-
-        urlOptions =
-            direction: 'second'
-            action: action
-            parameters: params
-
-        url = window.router.buildUrl urlOptions
-        window.router.navigate url, {trigger: true}
+    messageDisplay: (message) ->
+        messageID = message?.get 'id'
+        mailboxID = message?.get 'mailboxID'
+        RouterActionCreator.gotoMessage {messageID, mailboxID}
 
 
     messageClose: ->
-        href = window.location.href
-        href = href.replace /\/message\/[\w-]+/gi, ''
-        href = href.replace /\/conversation\/[\w-]+\/[\w-]+/gi, ''
-        href = href.replace /\/edit\/[\w-]+/gi, ''
-        window.location.href = href
+        RouterActionCreator.closeConversation()
+
 
     messageDeleteCurrent: ->
-        messageID = MessageStore.getCurrentID()
+        messageID = RouterStore.getMessageID()
         if not onMessageList() or not messageID?
             return
 
-        deleteMessage = (isModal) ->
-            # Get next message information
-            # before delete (context changes)
-            next = MessageStore.getPreviousConversation()
-            next = MessageStore.getNextConversation() unless next.size
-
-            MessageActionCreator.delete {messageID}
-            LayoutActionCreator.hideModal() if isModal
-
-            if next?.size
-                # Goto next message
-                Utils.messageSetCurrent next
-            else
-                # Close 2nd panel
-                Utils.messageClose()
-
-        settings = SettingsStore.get()
+        deleteMessage = ->
+            RouterActionCreator.deleteMessage {messageID}
 
         # Delete Message without modal
-        unless (confirm = settings.get 'messageConfirmDelete')
-            deleteMessage false
+        unless SettingsStore.get 'messageConfirmDelete'
+            deleteMessage()
             return
 
         # Display 'delete' modal
@@ -199,22 +137,11 @@ module.exports = Utils =
         LayoutActionCreator.displayModal modal
 
 
-    messageUndo: ->
-        MessageActionCreator.undo()
-
-
-    customEvent: (name, data) ->
-        domEvent = new CustomEvent name, detail: data
-        window.dispatchEvent domEvent
-
-
     simulateUpdate: ->
-
-        AppDispatcher = require '../app_dispatcher'
         window.setInterval ->
             content =
-                "accountID": AccountStore.getDefault()?.get('id'),
-                "id": AccountStore.getDefaultMailbox()?.get('id'),
+                "accountID": RouterStore.getAccountID()
+                "id": RouterStore.getMailboxID()
                 "label": "INBOX",
                 "path": "INBOX",
                 "tree": ["INBOX"],
@@ -228,7 +155,7 @@ module.exports = Utils =
                 "nbRecent": 5,
                 "weight": 1000,
                 "depth": 0
-            AppDispatcher.handleServerAction
+            AppDispatcher.dispatch
                 type: 'RECEIVE_MAILBOX_UPDATE'
                 value: content
         , 5000
@@ -244,12 +171,12 @@ module.exports = Utils =
                     body: title
             # prevent dispatching when already dispatching
             window.setTimeout ->
-                LayoutActionCreator.notify "#{title} - #{options.body}"
+                NotificationActionsCreator.alert "#{title} - #{options.body}"
             , 0
 
 
     # Send errors to serveur
-    # Usage: window.cozyMails.log(new Error('message'))
+    # Usage: Utils.(new Error('message'))
     log: (error) ->
         url = error.stack.split('\n')[0].split('@')[1]
             .split(/:\d/)[0].split('/').slice(0, -2).join('/')
@@ -258,15 +185,7 @@ module.exports = Utils =
 
     # Log message into server logs
     logInfo: (message) ->
-        data =
-            data:
-                type: 'debug'
-                message: message
-        xhr = new XMLHttpRequest()
-        xhr.open 'POST', 'activity', true
-        xhr.setRequestHeader "Content-Type", "application/json;charset=UTF-8"
-        xhr.send JSON.stringify(data)
-        console.info message
+        sendReport 'debug', message
 
 
     # Log every Flux action (only in development environment)
@@ -308,10 +227,10 @@ module.exports = Utils =
                 _log.action = actionCleanup action
             if message?
                 _log.message = message
-            window.cozyMails.debugLogs.unshift _log
+            Utils.debugLogs.unshift _log
 
             # only keep the last 100 lines of logs
-            window.cozyMails.debugLogs = window.cozyMails.debugLogs.slice 0, 100
+            Utils.debugLogs = Utils.debugLogs.slice 0, 100
 
 
     # display action logs in a modal window
@@ -324,10 +243,10 @@ module.exports = Utils =
             content     : React.DOM.pre
                 style: "max-height": "300px",
                 "word-wrap": "normal",
-                    JSON.stringify(window.cozyMails.debugLogs, null, 4)
+                    JSON.stringify(Utils.debugLogs, null, 4)
         LayoutActionCreator.displayModal modal
 
 
     # clear action logs
     clearLogs: ->
-        window.cozyMails.debugLogs = []
+        Utils.debugLogs = []

@@ -7,7 +7,6 @@ React = require 'react'
     FormButton} = require('./basic_components').factories
 AccountInput = React.createFactory require './account_config_input'
 
-ShouldComponentUpdate = require '../mixins/should_update_mixin'
 LinkedStateMixin      = require 'react-addons-linked-state-mixin'
 
 cachedTransform = require '../libs/cached_transform'
@@ -20,7 +19,6 @@ module.exports = React.createClass
 
     mixins: [
         LinkedStateMixin
-        ShouldComponentUpdate.UnderscoreEqualitySlow
     ]
 
     propTypes:

@@ -4,8 +4,7 @@ React = require 'react'
 
 {Dropdown}  = require('./basic_components').factories
 SearchInput = React.createFactory require './search_input'
-
-{MessageFilter, Tooltips} = require '../constants/app_constants'
+RouterActionCreator = require '../actions/router_action_creator'
 
 filters =
     from: t "list filter from"
@@ -28,10 +27,8 @@ module.exports = SearchToolbarMessagesList = React.createClass
     onTypeChange: (filter) ->
         @setState type: filter, value: ''
 
-    onValueChange: (newvalue) ->
-        @props.onFilterChange
-            type: @state.type
-            value: newvalue
+    onValueChange: (value) ->
+        RouterActionCreator.addFilter {type: @state.type, value}
 
     render: ->
         form

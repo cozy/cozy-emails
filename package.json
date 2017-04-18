@@ -23,7 +23,7 @@
     "html-to-text": "0.1.0",
     "iconv": "2.1.11",
     "imap": "0.8.13",
-    "lodash": "2.4.1",
+    "lodash": "2.4.2",
     "mailparser": "0.4.6",
     "moment": "2.11.0",
     "multiparty": "4.0.0",

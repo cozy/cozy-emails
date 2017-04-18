@@ -324,12 +324,14 @@ registry.Progress = createClass
         max: PropTypes.number.isRequired
 
     render: ->
+        isActive = @props.value < @props.max
+        width = if isActive then "0" else "100%"
         div className: 'progress',
             div
                 className: classNames
                     'progress-bar': true
-                    'actived': @props.value > 0
-                style: width: 0
+                    'actived': isActive
+                style: {width}
                 role: 'progressbar'
                 "aria-valuenow": @props.value
                 "aria-valuemin": '0'

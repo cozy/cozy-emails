@@ -16,7 +16,7 @@ invariant = require '../invariant'
 _lastID = 1
 _prefix = 'ID_'
 
-module.exports = Dispatcher = class Dispatcher
+class Dispatcher
     constructor: ->
         this._callbacks = {}
         this._isPending = {}
@@ -90,7 +90,7 @@ module.exports = Dispatcher = class Dispatcher
         @param {object} payload
     ###
     dispatch: (payload) ->
-        console.debug "DIS", payload.action.type, payload.action.value
+        console.debug "DIS", payload.type, payload.value
         message = 'Dispatch.dispatch(...): Cannot dispatch in the middle ' + \
                   'of a dispatch.'
         invariant(
@@ -147,3 +147,6 @@ module.exports = Dispatcher = class Dispatcher
     _stopDispatching: ->
         this._pendingPayload = null
         this._isDispatching = false
+
+
+module.exports = new Dispatcher()

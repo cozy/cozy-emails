@@ -4,19 +4,19 @@ React = require 'react'
 
 Participant = React.createFactory require './participant'
 
+ContactGetter = require '../getters/contact'
 
-module.exports = Participants = React.createClass
+module.exports = React.createClass
     displayName: 'Participants'
 
     render: ->
         span className: 'address-list',
-            if @props.participants
-                for address, key in @props.participants
-                    span key: key,
-                        Participant
-                            key:     key,
-                            address: address,
-                            onAdd:   @props.onAdd,
-                            tooltip: @props.tooltip
-                        if key < ( @props.participants.length - 1)
-                            span null, ', '
+            for address, index in @props.participants
+                span key: "participants-#{index}",
+                    Participant
+                        key     : "participants-#{index}-#{address}"
+                        address : address
+                        tooltip : @props.tooltip
+                        name    : ContactGetter.displayAddress(address)
+                    if index < ( @props.participants.length - 1)
+                        span null, ', '

@@ -1,15 +1,16 @@
 React = require 'react'
 
 {span} = React.DOM
-MessageUtils   = require '../utils/message_utils'
 
+MessageGetter = require '../getters/message'
+SearchGetter = require '../getters/search'
 
-module.exports = Participant = React.createClass
+ContactActionCreator = require '../actions/contact_action_creator'
+
+module.exports = React.createClass
     displayName: 'Participant'
 
     render: ->
-        name = MessageUtils.displayAddress @props.address
-
         if not @props.address?
             span null
         else
@@ -20,11 +21,15 @@ module.exports = Participant = React.createClass
                 title: @props.address.address
                 key: @props.key
 
-                MessageUtils.highlightSearch(name)...
+                SearchGetter.highlightSearch(@props.name)...
+
+
+    addAddress: (address) ->
+        ContactActionCreator.createContact address
 
     _initTooltip: ->
         if @props.tooltip and @refs.participant?
-            MessageUtils.tooltip @refs.participant, @props.address, @props.onAdd
+            MessageGetter.tooltip @refs.participant, @props.address, @addAddress
 
     componentDidMount: ->
         @_initTooltip()

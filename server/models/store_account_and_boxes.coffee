@@ -70,6 +70,8 @@ retrieveCounts = (callback) ->
                 countsByMailboxID[boxID].recent = row.recent
             if flag is "!\\Seen"
                 countsByMailboxID[boxID].unread = row.value
+            if flag is "\\Flagged"
+                countsByMailboxID[boxID].flagged = row.value
             else if flag is null
                 countsByMailboxID[boxID].total = row.value
 
@@ -120,6 +122,7 @@ exports.getMailboxClientObject = (id) ->
         nbTotal  : count?.total  or 0
         nbUnread : count?.unread or 0
         nbRecent : count?.recent or 0
+        nbFlagged : count?.flagged or 0
         lastSync : box.lastSync
 
 
@@ -248,11 +251,13 @@ Mailbox.on 'delete', (id, deleted) ->
 Message.on 'create', onMessageCreated = (created) ->
     isRead = '\\Seen' in created.flags
     isRecent = '\\Recent' in created.flags
+    isFlagged = '\\Flagged' in created.flags
 
     for boxID, uid of created.mailboxIDs
         countsByMailboxID[boxID].total  += 1
         countsByMailboxID[boxID].unread += 1 unless isRead
         countsByMailboxID[boxID].recent += 1 if isRecent
+        countsByMailboxID[boxID].flagged += 1 if isFlagged
 
     unreadByAccountID[created.accountID] += 1 if isRead
     eventEmitter.emit 'change', created.accountID
@@ -260,11 +265,13 @@ Message.on 'create', onMessageCreated = (created) ->
 Message.on 'delete', onMessageDestroyed = (id, old) ->
     wasRead = '\\Seen' in old.flags
     wasRecent = '\\Recent' in old.flags
+    wasFlagged = '\\Flagged' in old.flags
 
     for boxID, uid of old.mailboxIDs
         countsByMailboxID[boxID].total  -= 1
         countsByMailboxID[boxID].unread -= 1 unless wasRead
         countsByMailboxID[boxID].recent -= 1 if wasRecent
+        countsByMailboxID[boxID].flagged -= 1 if wasFlagged
 
     unreadByAccountID[old.accountID] -= 1 if wasRead
     eventEmitter.emit 'change', old.accountID
@@ -272,5 +279,3 @@ Message.on 'delete', onMessageDestroyed = (id, old) ->
 Message.on 'update', (updated, old) ->
     onMessageDestroyed old.id, old
     onMessageCreated updated
-
-

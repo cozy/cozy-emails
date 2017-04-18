@@ -1,64 +1,59 @@
 React     = require 'react'
+{div} = React.DOM
+
 Immutable = require 'immutable'
 
-AccountStore = require '../stores/account_store'
-
 AccountActionCreator = require '../actions/account_action_creator'
-LayoutActions = require '../actions/layout_action_creator'
+NotificationActionsCreator = require '../actions/notification_action_creator'
 
-RouterMixin = require '../mixins/router_mixin'
-StoreWatchMixin      = require '../mixins/store_watch_mixin'
-ShouldComponentUpdate = require '../mixins/should_update_mixin'
+RouterGetter = require '../getters/router'
 
 {Container, Title, Tabs} = require('./basic_components').factories
 AccountDelete = React.createFactory require './account_config_delete'
 AccountConfigMain = React.createFactory require './account_config_main'
 AccountConfigMailboxes = React.createFactory require './account_config_mailboxes'
 AccountConfigSignature = React.createFactory require './account_config_signature'
-{div} = React.DOM
 
-REQUIRED_FIELDS_NEW = [
+AccountStore         = require '../stores/account_store'
+RouterStore         = require '../stores/router_store'
+SettingsStore        = require '../stores/settings_store'
+StoreWatchMixin      = require '../mixins/store_watch_mixin'
+
+{AccountActions} = require '../constants/app_constants'
+
+REQUIRED_FIELDS = [
     'label', 'name', 'login', 'password', 'imapServer', 'imapPort',
     'smtpServer', 'smtpPort', 'smtpMethod'
 ]
-
-REQUIRED_FIELDS_EDIT = REQUIRED_FIELDS_NEW
 
 TABS = ['account', 'mailboxes', 'signature']
 
 module.exports = React.createClass
     displayName: 'AccountConfig'
 
-    _lastDiscovered: ''
-
     mixins: [
-        RouterMixin
-        ShouldComponentUpdate.UnderscoreEqualitySlow
-        StoreWatchMixin [AccountStore]
+        StoreWatchMixin [SettingsStore, AccountStore]
     ]
 
-    getStateFromStores: ->
+    _lastDiscovered: ''
 
+    getStateFromStores: ->
         nstate = {}
 
         # dont overwrite editedAccount when stores state changed
-        nstate.serverErrors      = AccountStore.getErrors()
-        nstate.selectedAccount   = AccountStore.getSelected()
-        nstate.isWaiting         = AccountStore.isWaiting()
-        nstate.isChecking        = AccountStore.isChecking()
-        nstate.mailboxes         = AccountStore.getSelectedMailboxes(true)
-        nstate.favoriteMailboxes = AccountStore.getSelectedFavorites()
-        nstate.submitted         = AccountStore.getSelected()?
+        nstate.serverErrors      = RouterStore.getErrors()
+        nstate.selectedAccount   = RouterStore.getAccount()
+        nstate.isWaiting         = RouterStore.isWaiting()
+        nstate.isChecking        = RouterStore.isChecking()
+        nstate.tab               = RouterGetter.getSelectedTab()
 
-        # getInitialState
-        if not @state
-            editedAccount = AccountStore.getSelected()
-            editedAccount ?= AccountStore.makeEmptyAccount()
+        unless (nstate.editedAccount = nstate.selectedAccount)
+            nstate.editedAccount = AccountStore.makeEmptyAccount()
+
+        unless @state
             nstate.isWaiting = false
             nstate.errors = Immutable.Map()
-            nstate.editedAccount = editedAccount
         else
-
             # the account has changed from the server
             if @state.selectedAccount isnt nstate.selectedAccount
                 nedited = @state.editedAccount.merge nstate.selectedAccount
@@ -70,49 +65,40 @@ module.exports = React.createClass
 
         return nstate
 
-    isOauth: ->
-        @state.selectedAccount?.get('oauthProvider')?
-
     isNew: ->
         not @state.selectedAccount?
 
-    getCurrentTab: ->
-        mailboxes = @state.editedAccount.get 'mailboxes'
-        defaultTab = if mailboxes?.size is 0 then 'mailboxes' else 'account'
-        return @props.tab or defaultTab
-
     onTabChangesDoSubmit: (changes) ->
-        @onTabChanges changes, => @onSubmit()
+        @onTabChanges changes
+        @onSubmit()
 
-    onTabChanges: (changes, callback = ->) ->
+    onTabChanges: (changes) ->
         nextstate =
-            editedAccount: @state.editedAccount.merge(changes)
+            editedAccount: @state.editedAccount.merge changes
             errors: Immutable.Map()
-
-        if @state.submitted
+        if @state.selectedAccount?
             validErrors = @getLocalValidationErrors nextstate.editedAccount
             nextstate.errors = Immutable.Map validErrors
 
-        @setState nextstate, callback
+        @setState nextstate
 
     render: ->
-        activeTab = @getCurrentTab()
-
+        title = if @isNew() then 'account new' else 'account edit'
         Container
             id: 'mailbox-config'
             expand: true,
 
-            Title text: t if @isNew() then 'account new' else 'account edit'
-            if @state.editedAccount.get('id')
+            Title text: t title
+            if (accountID = @state.editedAccount.get('id'))
                 Tabs tabs: TABS.map (name) =>
-                    class: if activeTab is name then 'active' else ''
+                    class: if @state.tab is name then 'active' else ''
                     text: t "account tab #{name}"
-                    url: @buildUrl
-                        direction: 'first'
-                        action: 'account.config'
-                        parameters: [@state.editedAccount.get('id'), name]
+                    url: RouterGetter.getURL
+                        action: AccountActions.EDIT
+                        accountID: accountID
+                        tab: name
 
-            switch activeTab
+            switch @state.tab
 
                 when 'signature'
                     AccountConfigSignature
@@ -133,7 +119,7 @@ module.exports = React.createClass
 
                 else
                     AccountConfigMain
-                        editedAccount: @state.editedAccount
+                        account: @state.editedAccount
                         requestChange: @onTabChanges
                         isWaiting: @state.isWaiting
                         checking: @state.isChecking
@@ -146,8 +132,7 @@ module.exports = React.createClass
 
     getLocalValidationErrors: (accountWithChanges) ->
         out = {}
-        requiredFields = if @isNew() then REQUIRED_FIELDS_NEW
-        else REQUIRED_FIELDS_EDIT
+        requiredFields = REQUIRED_FIELDS
 
         for field in requiredFields
             unless accountWithChanges.get(field)
@@ -159,22 +144,20 @@ module.exports = React.createClass
     # If everything is ok, it runs the checking, the account edition and the
     # creation depending on the current state and if the user submitted it
     # with the check button.
-    onSubmit: (event, check) ->
+    onSubmit: (event, isCheck) ->
         event?.preventDefault()
+
         errors = @getLocalValidationErrors @state.editedAccount
-
-        id = @state.editedAccount?.get('id')
-        accountValue = @state.editedAccount.toJS()
-
-        if Object.keys(errors).length > 0
-            LayoutActions.alertError t 'account errors'
+        if Object.keys(errors).length
+            NotificationActionsCreator.alertError t 'account errors'
             @setState submitted: true, errors: Immutable.Map(errors)
+            return
 
-        else if check is true
-            AccountActionCreator.check accountValue, id
-
-        else if id
-            AccountActionCreator.edit accountValue, id
-
+        accountID = @state.editedAccount?.get('id')
+        value = @state.editedAccount.toJS()
+        if isCheck
+            AccountActionCreator.check {accountID, value}
+        else if accountID
+            AccountActionCreator.edit {accountID, value}
         else
-            AccountActionCreator.create accountValue
+            AccountActionCreator.create {value}
