@@ -70,19 +70,44 @@ Complex filters (in opposite to boolean filters like previous) can have paramete
 
 ## Redirection
 
-Redirection is handled after updating `RouterStore`. Here is the list of properties that should update URL :
- - `action`: get from `routes` the right URL pattern,
- - `mailboxID`: the ID of the mailbox,
- - `MessageID`: the ID of selected message,
- - `query` : filters into messages list,
- - `tab` : change `tabComponent` (ie. `accountEdit`)
+### How works redirection
 
- Whats happening into `routerStore`:
+At first, lets describe routes files:
+ - `client/app/router`: route mapper,
+ - `client/app/stores/router_store`: save status from `RouterActions`,
+ - all other stores are object that manipulate data without storing it.
+ - `client/app/mixins/store_watch_mixin` links `ApplicationComponent` to `Stores:change` events.
 
- Each property related to route is changed after `ActionTypes.ROUTE_CHANGE` into `routerStore` file. After all updates are done, the URL is updated if needed :
 
- ```
- currentURL = @getCurrentURL isServer: false
- if location.hash isnt currentURL
-     _router.navigate currentURL
+### Update application from route
+
+What is happening when typing URL `http://localhost:9125/#mailbox/:mailboxID` into your browser?
+
+- `Router.messageList` is matched and dispatch the action: `ROUTE_CHANGE`,
+- `RouterStore` is updated with new status (ie. `mailboxID`, `accountID`).
+- a `RouterStore:change` event is emitted,
+- a new `ApplicationState` is defined from `Getters` (which get data from `Stores`),
+- if `ApplicationState` has changed, `ApplicationComponent` is updated,
+- otherwise `ApplicationComponent` wait for new `RouterStore:change` event.
+
+Only the route component listen to `Stores:changes` to keep component consistency.
+
+
+### Update route from components
+
+If you want to update `Stores` from `Components`you will have to dispatch a `StoreActions` with `ActionCreator` files. In example, if you want a button to close `messageComponent`, you can write:
 ```
+    button onClick: -> RouterActionCreator.closeConversation(), "close"
+```
+
+Then the `MessageComponent` will be closed; no need to know more contextual data to prevent what will be happening next. `RouterStore` knows everything and prevent you to know this.
+
+### Need a real link to handle `ctrl + click`
+
+If you really want to generate a link, you can also use:
+```
+    MenuComponent
+        mailboxURL: RouterGetter.getURL {mailboxID, isServer: false}
+```
+
+But keep in mind that previous method is safer/faster.
