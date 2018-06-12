@@ -1,3 +1,8 @@
+This repository was part of CozyV2 which has been deprecated. [Read more](https://blog.cozycloud.cc/post/2016/11/21/On-the-road-to-Cozy-version-3).
+
+---
+
+
 # [Cozy](http://cozy.io) Emails
 
 Cozy Emails lets you read and write your emails from your Cozy. The project is about to start, here are the main features we want to have:
